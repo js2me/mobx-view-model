@@ -15,7 +15,7 @@ postBuildScript({
         commitAllCurrentChanges: true,
         createTag: true,
         githubRepoLink: 'https://github.com/js2me/mobx-view-model',
-        cleanupCommand: 'pnpm clean && npm deprecate mobx-vm-entities "This project has been renamed. Install mobx-view-model instead."', 
+        cleanupCommand: 'pnpm clean', 
         targetPackageJson,
         otherNames: ['mobx-view-model']
       })

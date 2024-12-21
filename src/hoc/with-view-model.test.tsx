@@ -1,10 +1,11 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { observer } from 'mobx-react-lite';
-import { ReactNode, useState } from 'react';
+import { PropsWithChildren, ReactNode, useState } from 'react';
 import { describe, expect, test, vi } from 'vitest';
 
 import { ViewModelStore, ViewModelStoreImpl, ViewModelsProvider } from '..';
 import { createCounter } from '../utils';
+import { EmptyObject } from '../utils/types';
 import { ViewModelMock } from '../view-model/view-model.impl.test';
 
 import { ViewModelProps, withViewModel } from './with-view-model';
@@ -220,6 +221,64 @@ describe('withViewModel', () => {
 
     // @ts-ignore
     expect(vm?.payload).toEqual({ counter: 3 });
+  });
+
+  test('access to parent view model x3', async ({ task }) => {
+    class VM1 extends ViewModelMock {
+      vm1Value = 'foo';
+    }
+    const Component1 = withViewModel(VM1)(({
+      children,
+      model,
+    }: PropsWithChildren & ViewModelProps<VM1>) => {
+      return <div data-testid={`vm-${model.vm1Value}`}>{children}</div>;
+    });
+
+    class VM2 extends ViewModelMock<EmptyObject, VM1> {
+      vm2Value = 'bar';
+    }
+    const Component2 = withViewModel(VM2)(({
+      children,
+      model,
+    }: PropsWithChildren & ViewModelProps<VM2>) => {
+      return (
+        <div
+          data-testid={`vm-${model.vm2Value}-${model.parentViewModel.vm1Value}`}
+        >
+          {children}
+        </div>
+      );
+    });
+
+    class VM3 extends ViewModelMock<EmptyObject, VM2> {
+      vm3Value = 'baz';
+    }
+    const Component3 = withViewModel(VM3)(({
+      children,
+      model,
+    }: PropsWithChildren & ViewModelProps<VM3>) => {
+      return (
+        <div
+          data-testid={`vm-${model.vm3Value}-${model.parentViewModel.vm2Value}`}
+        >
+          {children}
+        </div>
+      );
+    });
+
+    const { container } = await act(async () =>
+      render(
+        <Component1>
+          <Component2>
+            <Component3 />
+          </Component2>
+        </Component1>,
+      ),
+    );
+
+    expect(container.firstChild).toMatchFileSnapshot(
+      `../../tests/snapshots/hoc/with-view-model/${task.name}.html`,
+    );
   });
 
   describe('with ViewModelStore', () => {
