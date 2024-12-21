@@ -232,8 +232,6 @@ describe('withViewModel', () => {
       children,
       model,
     }: PropsWithChildren & ViewModelProps<VM1>) => {
-      expect(model.isMounted).toBeTruthy();
-      expect(model.spies.mount).toBeCalledTimes(1);
       return <div data-testid={`vm-${model.vm1Value}`}>{children}</div>;
     });
 
@@ -244,8 +242,6 @@ describe('withViewModel', () => {
       children,
       model,
     }: PropsWithChildren & ViewModelProps<VM2>) => {
-      expect(model.isMounted).toBeTruthy();
-      expect(model.spies.mount).toBeCalledTimes(1);
       return (
         <div
           data-testid={`vm-${model.vm2Value}-${model.parentViewModel.vm1Value}`}
@@ -262,8 +258,6 @@ describe('withViewModel', () => {
       children,
       model,
     }: PropsWithChildren & ViewModelProps<VM3>) => {
-      expect(model.isMounted).toBeTruthy();
-      expect(model.spies.mount).toBeCalledTimes(1);
       return (
         <div
           data-testid={`vm-${model.vm3Value}-${model.parentViewModel.vm2Value}`}
