@@ -6,7 +6,10 @@ import { AbstractViewModelParams } from './abstract-view-model.types';
 import { ViewModel } from './view-model';
 import { ViewModelMock } from './view-model.impl.test';
 import { ViewModelStore } from './view-model.store';
-import { ViewModelGenerateIdConfig } from './view-model.store.types';
+import {
+  ViewModelGenerateIdConfig,
+  ViewModelLookup,
+} from './view-model.store.types';
 import { AnyViewModel } from './view-model.types';
 
 import { ViewModelStoreImpl } from '.';
@@ -14,17 +17,39 @@ import { ViewModelStoreImpl } from '.';
 export class ViewModelStoreMock extends ViewModelStoreImpl {
   spies = {
     generateViewModelId: vi.fn(),
+    get: vi.fn(),
   };
 
+  get _viewModels() {
+    return this.viewModels;
+  }
+  get _linkedComponentVMClasses() {
+    return this.linkedComponentVMClasses;
+  }
+  get _viewModelIdsByClasses() {
+    return this.viewModelIdsByClasses;
+  }
   get _instanceAttachedCount() {
     return this.instanceAttachedCount;
+  }
+  get _mountingViews() {
+    return this.mountingViews;
+  }
+  get _unmountingViews() {
+    return this.unmountingViews;
   }
 
   generateViewModelId<VM extends ViewModel>(
     config: ViewModelGenerateIdConfig<VM>,
   ): string {
     const result = super.generateViewModelId(config);
-    this.spies.generateViewModelId(result, config);
+    this.spies.generateViewModelId.mockReturnValue(result)(config);
+    return result;
+  }
+
+  get<T extends AnyViewModel>(vmLookup: Maybe<ViewModelLookup<T>>): T | null {
+    const result = super.get<T>(vmLookup);
+    this.spies.get.mockReturnValue(result)(vmLookup);
     return result;
   }
 }

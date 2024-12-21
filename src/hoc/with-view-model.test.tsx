@@ -3,10 +3,11 @@ import { observer } from 'mobx-react-lite';
 import { PropsWithChildren, ReactNode, useState } from 'react';
 import { describe, expect, test, vi } from 'vitest';
 
-import { ViewModelStore, ViewModelStoreImpl, ViewModelsProvider } from '..';
+import { ViewModelStore, ViewModelsProvider } from '..';
 import { createCounter } from '../utils';
 import { EmptyObject } from '../utils/types';
 import { ViewModelMock } from '../view-model/view-model.impl.test';
+import { ViewModelStoreMock } from '../view-model/view-model.store.impl.test';
 
 import { ViewModelProps, withViewModel } from './with-view-model';
 
@@ -223,7 +224,7 @@ describe('withViewModel', () => {
     expect(vm?.payload).toEqual({ counter: 3 });
   });
 
-  test('access to parent view model x3', async ({ task }) => {
+  test('access to parent view model x3', async ({ task, expect }) => {
     class VM1 extends ViewModelMock {
       vm1Value = 'foo';
     }
@@ -231,6 +232,8 @@ describe('withViewModel', () => {
       children,
       model,
     }: PropsWithChildren & ViewModelProps<VM1>) => {
+      expect(model.isMounted).toBeTruthy();
+      expect(model.spies.mount).toBeCalledTimes(1);
       return <div data-testid={`vm-${model.vm1Value}`}>{children}</div>;
     });
 
@@ -241,6 +244,8 @@ describe('withViewModel', () => {
       children,
       model,
     }: PropsWithChildren & ViewModelProps<VM2>) => {
+      expect(model.isMounted).toBeTruthy();
+      expect(model.spies.mount).toBeCalledTimes(1);
       return (
         <div
           data-testid={`vm-${model.vm2Value}-${model.parentViewModel.vm1Value}`}
@@ -257,6 +262,8 @@ describe('withViewModel', () => {
       children,
       model,
     }: PropsWithChildren & ViewModelProps<VM3>) => {
+      expect(model.isMounted).toBeTruthy();
+      expect(model.spies.mount).toBeCalledTimes(1);
       return (
         <div
           data-testid={`vm-${model.vm3Value}-${model.parentViewModel.vm2Value}`}
@@ -292,7 +299,7 @@ describe('withViewModel', () => {
         );
       });
       const Component = withViewModel(VM, { generateId: () => '1' })(View);
-      const vmStore = new ViewModelStoreImpl();
+      const vmStore = new ViewModelStoreMock();
 
       const Wrapper = ({ children }: { children?: ReactNode }) => {
         return (
@@ -328,7 +335,7 @@ describe('withViewModel', () => {
         );
       });
       const Component = withViewModel(VM, { generateId: () => '1' })(View);
-      const vmStore = new ViewModelStoreImpl();
+      const vmStore = new ViewModelStoreMock();
 
       const Wrapper = ({ children }: { children?: ReactNode }) => {
         return (
@@ -343,10 +350,15 @@ describe('withViewModel', () => {
       );
 
       expect(viewModels).toBeDefined();
+      expect(vmStore.spies.get).toHaveBeenCalledTimes(0);
+      expect(vmStore._instanceAttachedCount.size).toBe(1);
+      expect(vmStore._unmountingViews.size).toBe(0);
+      expect(vmStore.mountedViewsCount).toBe(1);
+      expect(vmStore._mountingViews.size).toBe(0);
     });
 
     test('access to parent view model x3', async ({ task }) => {
-      const vmStore = new ViewModelStoreImpl();
+      const vmStore = new ViewModelStoreMock();
 
       const Wrapper = ({ children }: { children?: ReactNode }) => {
         return (
@@ -412,6 +424,11 @@ describe('withViewModel', () => {
       expect(container.firstChild).toMatchFileSnapshot(
         `../../tests/snapshots/hoc/with-view-model/view-model-store/${task.name}.html`,
       );
+      expect(vmStore.spies.get).toHaveBeenCalledTimes(0);
+      expect(vmStore._instanceAttachedCount.size).toBe(3);
+      expect(vmStore._unmountingViews.size).toBe(0);
+      expect(vmStore.mountedViewsCount).toBe(3);
+      expect(vmStore._mountingViews.size).toBe(0);
     });
   });
 });

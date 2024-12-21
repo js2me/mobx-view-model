@@ -2,9 +2,10 @@ import { act, fireEvent, render, screen } from '@testing-library/react';
 import { ReactNode, useState } from 'react';
 import { beforeEach, describe, expect, test } from 'vitest';
 
-import { ViewModelStore, ViewModelStoreImpl, ViewModelsProvider } from '..';
+import { ViewModelStore, ViewModelsProvider } from '..';
 import { withViewModel } from '../hoc';
 import { ViewModelMock } from '../view-model/view-model.impl.test';
+import { ViewModelStoreMock } from '../view-model/view-model.store.impl.test';
 
 import { useViewModel } from './use-view-model';
 
@@ -118,7 +119,7 @@ describe('withViewModel', () => {
         });
 
       test(`renders (${depth} depth)`, async () => {
-        const vmStore = new ViewModelStoreImpl();
+        const vmStore = new ViewModelStoreMock();
 
         const WrappedDepthComponent = () => {
           const reversed = [...depthsComponents].reverse();
@@ -220,7 +221,7 @@ describe('withViewModel', () => {
     test('container renders VM with fixed id and some child with dynamic id', async ({
       task,
     }) => {
-      const vmStore = new ViewModelStoreImpl();
+      const vmStore = new ViewModelStoreMock();
 
       class LayoutVM extends ViewModelMock {}
 
@@ -257,7 +258,7 @@ describe('withViewModel', () => {
     test('container remounts VM with fixed id and some child with dynamic id', async ({
       task,
     }) => {
-      const vmStore = new ViewModelStoreImpl();
+      const vmStore = new ViewModelStoreMock();
 
       class LayoutVM extends ViewModelMock {}
 

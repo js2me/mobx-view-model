@@ -22,22 +22,23 @@ export class ViewModelMock<
     super({
       ...params,
       id: params?.id ?? '1',
-      payload: params?.payload ?? ({} as any),
+      payload: params?.payload as Payload,
     });
   }
 
   didMount(): void {
+    super.didMount();
     this.spies.didMount();
   }
 
   mount(): void {
-    super.mount();
     this.spies.mount();
+    super.mount();
   }
 
   unmount(): void {
-    super.unmount();
     this.spies.unmount();
+    super.unmount();
   }
 
   payloadChanged(payload: any): void {
@@ -46,6 +47,7 @@ export class ViewModelMock<
 
   didUnmount(): void {
     this.spies.didUnmount();
+    super.didUnmount();
   }
 }
 

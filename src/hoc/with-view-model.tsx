@@ -137,17 +137,17 @@ export function withViewModel(
           new Model(configCreate);
 
         instances.set(id, instance);
-      }
 
-      const instance: ViewModel = instances.get(id)!;
-
-      useEffect(() => {
         if (viewModels) {
           viewModels.attach(instance);
         } else {
           instance.mount();
         }
+      }
 
+      const instance: ViewModel = instances.get(id)!;
+
+      useEffect(() => {
         return () => {
           if (viewModels) {
             viewModels.detach(id);
@@ -166,7 +166,10 @@ export function withViewModel(
 
       config?.reactHooks?.(allProps);
 
-      if ((!viewModels || viewModels.isAbleToRenderView(id)) && instance) {
+      if (
+        (!viewModels || viewModels.isAbleToRenderView(id)) &&
+        instance.isMounted
+      ) {
         return (
           <ActiveViewModelContext.Provider value={instance}>
             <Component {...(componentProps as any)} model={instance} />
