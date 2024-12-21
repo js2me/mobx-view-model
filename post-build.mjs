@@ -11,7 +11,7 @@ postBuildScript({
       publishScript({
         nextVersion: versionsDiff?.next ?? packageJson.version,
         currVersion: versionsDiff?.current,
-        publishCommand: 'pnpm publish',
+        publishCommand: 'pnpm publish && npm deprecate mobx-vm-entities "This project has been renamed. Install mobx-view-model instead."',
         commitAllCurrentChanges: true,
         createTag: true,
         githubRepoLink: 'https://github.com/js2me/mobx-view-model',
