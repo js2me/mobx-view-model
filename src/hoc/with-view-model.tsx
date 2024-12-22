@@ -4,15 +4,15 @@ import {
   ComponentType,
   ReactNode,
   useContext,
-  useEffect,
   useLayoutEffect,
+  useMemo,
   useRef,
 } from 'react';
 
 import { ActiveViewModelContext, ViewModelsContext } from '../contexts';
 import { generateVMId } from '../utils';
 import { AnyObject, Class, EmptyObject, Maybe } from '../utils/types';
-import { AnyViewModel, ViewModel, ViewModelCreateConfig } from '../view-model';
+import { AnyViewModel, ViewModelCreateConfig } from '../view-model';
 
 declare const process: { env: { NODE_ENV?: string } };
 
@@ -25,38 +25,38 @@ export type ViewModelInputProps<VM extends AnyViewModel> =
 
 export type ViewModelHocConfig<VM extends AnyViewModel> = {
   /**
-   * Уникальный идентификатор вьюшки
+   * Unique identifier for the view
    */
   id?: Maybe<string>;
 
   /**
-   * Функция генератор идентификатор для вью модели
+   * Function to generate an identifier for the view model
    */
   generateId?: (ctx: AnyObject) => string;
 
   /**
-   * Компонент, который будет отрисован в случае если инциализация вью модели происходит слишком долго
+   * Component to render if the view model initialization takes too long
    */
   fallback?: ComponentType;
 
   /**
-   * Доп. данные, которые могут быть полезны при создании VM
+   * Additional data that may be useful when creating the VM
    */
   ctx?: AnyObject;
 
   /**
-   * Функция, в которой можно вызывать доп. реакт хуки в результирующем компоненте
+   * Function to invoke additional React hooks in the resulting component
    */
   reactHooks?: (allProps: any) => void;
 
   /**
-   * Функция, которая должна возвращать payload для VM
-   * по умолчанию это - (props) => props.payload
+   * Function that should return the payload for the VM
+   * by default, it is - (props) => props.payload
    */
   getPayload?: (allProps: any) => any;
 
   /**
-   * Функция создания экземпляра класса VM
+   * Function to create an instance of the VM class
    */
   factory?: (config: ViewModelCreateConfig<VM>) => VM;
 };
@@ -85,8 +85,6 @@ export function withViewModel(
   ctx.generateId = config?.generateId;
 
   return (Component: ComponentType<any>) => {
-    const instances = new Map<string, AnyViewModel>();
-
     const ConnectedViewModel = observer((allProps: any) => {
       const { payload: rawPayload, ...componentProps } = allProps;
 
@@ -106,7 +104,6 @@ export function withViewModel(
             VM: Model,
             parentViewModelId: parentViewModel?.id,
             fallback: config?.fallback,
-            instances,
           }) ??
           config?.id ??
           generateVMId(ctx);
@@ -114,7 +111,13 @@ export function withViewModel(
 
       const id = idRef.current;
 
-      if (!instances.has(id)) {
+      const instanceFromStore = viewModels ? viewModels.get(id) : null;
+
+      const instance = useMemo(() => {
+        if (instanceFromStore) {
+          return instanceFromStore;
+        }
+
         const configCreate: ViewModelCreateConfig<any> = {
           id,
           parentViewModelId: parentViewModel?.id,
@@ -123,7 +126,6 @@ export function withViewModel(
           viewModels,
           parentViewModel,
           fallback: config?.fallback,
-          instances,
           ctx,
           component: ConnectedViewModel,
           componentProps,
@@ -136,37 +138,36 @@ export function withViewModel(
           viewModels?.createViewModel<any>(configCreate) ??
           new Model(configCreate);
 
-        instances.set(id, instance);
-      }
+        return instance;
+      }, [instanceFromStore]);
 
-      const instance: ViewModel = instances.get(id)!;
+      const isRenderAllowedByStore =
+        !viewModels || viewModels.isAbleToRenderView(id);
+      const isRenderAllowedLocally = !!instance?.isMounted;
+      const isRenderAllowed = isRenderAllowedByStore && isRenderAllowedLocally;
 
-      useEffect(() => {
+      useLayoutEffect(() => {
         if (viewModels) {
           viewModels.attach(instance);
+          return () => {
+            viewModels.detach(id);
+          };
         } else {
           instance.mount();
-        }
-
-        return () => {
-          if (viewModels) {
-            viewModels.detach(id);
-          } else {
+          return () => {
             instance.unmount();
-          }
-          instances.delete(id);
-        };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+          };
+        }
       }, []);
 
       useLayoutEffect(() => {
-        instance.setPayload(payload);
+        instance?.setPayload(payload);
         // eslint-disable-next-line react-hooks/exhaustive-deps
       }, [payload]);
 
       config?.reactHooks?.(allProps);
 
-      if ((!viewModels || viewModels.isAbleToRenderView(id)) && instance) {
+      if (isRenderAllowed) {
         return (
           <ActiveViewModelContext.Provider value={instance}>
             <Component {...(componentProps as any)} model={instance} />

@@ -17,17 +17,82 @@ const createIdGenerator = (prefix?: string) => {
 };
 
 describe('withViewModel', () => {
-  test('renders', () => {
-    class VM extends ViewModelMock {}
+  test('renders', async () => {
+    class VM extends ViewModelMock {
+      mount() {
+        super.mount();
+      }
+    }
     const View = ({ model }: ViewModelProps<VM>) => {
-      return <div>{`hello ${model.id}`}</div>;
+      return <div data-testid={'view'}>{`hello ${model.id}`}</div>;
     };
     const Component = withViewModel(VM, { generateId: createIdGenerator() })(
       View,
     );
 
-    render(<Component />);
+    await act(async () => render(<Component />));
     expect(screen.getByText('hello VM_0')).toBeDefined();
+  });
+
+  test('renders fallback', async () => {
+    class VM extends ViewModelMock {
+      // eslint-disable-next-line sonarjs/no-empty-function
+      mount() {}
+    }
+    const View = ({ model }: ViewModelProps<VM>) => {
+      return <div data-testid={'view'}>{`hello ${model.id}`}</div>;
+    };
+    const Component = withViewModel(VM, {
+      generateId: createIdGenerator(),
+      fallback: () => {
+        return 'fallback';
+      },
+    })(View);
+
+    const { container } = await act(async () => render(<Component />));
+    expect(container).toMatchInlineSnapshot(`
+      <div>
+        fallback
+      </div>
+    `);
+  });
+
+  test('renders fallback (times)', async () => {
+    class VM extends ViewModelMock {
+      // eslint-disable-next-line sonarjs/no-empty-function
+      mount() {}
+    }
+    const View = ({ model }: ViewModelProps<VM>) => {
+      return <div data-testid={'view'}>{`hello ${model.id}`}</div>;
+    };
+
+    const spyFallbackRender = vi.fn(() => 'fallback');
+
+    const Component = withViewModel(VM, {
+      generateId: createIdGenerator(),
+      fallback: spyFallbackRender,
+    })(View);
+
+    await act(async () => render(<Component />));
+    expect(spyFallbackRender).toHaveBeenCalledTimes(1);
+  });
+
+  test('renders fallback before render REAL COMPONENT (times)', async () => {
+    class VM extends ViewModelMock {}
+    const View = ({ model }: ViewModelProps<VM>) => {
+      return <div data-testid={'view'}>{`hello ${model.id}`}</div>;
+    };
+
+    const spyFallbackRender = vi.fn(() => 'fallback');
+
+    const Component = withViewModel(VM, {
+      generateId: createIdGenerator(),
+      fallback: spyFallbackRender,
+    })(View);
+
+    await act(async () => render(<Component />));
+
+    expect(spyFallbackRender).toHaveBeenCalledTimes(1);
   });
 
   test('renders nesting', () => {
@@ -126,7 +191,7 @@ describe('withViewModel', () => {
     expect(View).toHaveBeenCalledTimes(1);
   });
 
-  test('withViewModel wrapper should by only mounted (renders only 1 time)', () => {
+  test('withViewModel wrapper should by only mounted (renders 2 times)', () => {
     class VM extends ViewModelMock {}
     const View = vi.fn(({ model }: ViewModelProps<VM>) => {
       return <div>{`hello ${model.id}`}</div>;
@@ -140,7 +205,7 @@ describe('withViewModel', () => {
     })(View);
 
     render(<Component />);
-    expect(useHookSpy).toHaveBeenCalledTimes(1);
+    expect(useHookSpy).toHaveBeenCalledTimes(2);
   });
 
   test('View should be updated when payload is changed', async () => {
@@ -344,7 +409,7 @@ describe('withViewModel', () => {
       );
 
       expect(viewModels).toBeDefined();
-      expect(vmStore.spies.get).toHaveBeenCalledTimes(0);
+      expect(vmStore.spies.get).toHaveBeenCalledTimes(3);
       expect(vmStore._instanceAttachedCount.size).toBe(1);
       expect(vmStore._unmountingViews.size).toBe(0);
       expect(vmStore.mountedViewsCount).toBe(1);
@@ -418,7 +483,7 @@ describe('withViewModel', () => {
       expect(container.firstChild).toMatchFileSnapshot(
         `../../tests/snapshots/hoc/with-view-model/view-model-store/${task.name}.html`,
       );
-      expect(vmStore.spies.get).toHaveBeenCalledTimes(0);
+      expect(vmStore.spies.get).toHaveBeenCalledTimes(15);
       expect(vmStore._instanceAttachedCount.size).toBe(3);
       expect(vmStore._unmountingViews.size).toBe(0);
       expect(vmStore.mountedViewsCount).toBe(3);
