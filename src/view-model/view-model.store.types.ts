@@ -7,7 +7,7 @@ import { AnyViewModel, ViewModelParams } from './view-model.types';
 
 export interface ViewModelGenerateIdConfig<VM extends AnyViewModel> {
   VM: Class<VM>;
-  id: Maybe<string>;
+  id?: Maybe<string>;
   ctx: AnyObject;
   parentViewModelId: string | null;
   fallback?: ComponentType;

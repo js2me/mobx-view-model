@@ -76,12 +76,12 @@ export function withViewModel<TViewModel extends AnyViewModel>(
 ) => ComponentWithViewModel<TViewModel, TComponentOriginProps>;
 
 export function withViewModel(
-  Model: Class<any>,
+  VM: Class<any>,
   config?: ViewModelHocConfig<any>,
 ) {
   const ctx: AnyObject = config?.ctx ?? {};
 
-  ctx.VM = Model;
+  ctx.VM = VM;
   ctx.generateId = config?.generateId;
 
   return (Component: ComponentType<any>) => {
@@ -99,11 +99,10 @@ export function withViewModel(
       if (!idRef.current) {
         idRef.current =
           viewModels?.generateViewModelId({
+            ...config,
             ctx,
-            id: config?.id,
-            VM: Model,
+            VM,
             parentViewModelId: parentViewModel?.id,
-            fallback: config?.fallback,
           }) ??
           config?.id ??
           generateVMId(ctx);
@@ -119,13 +118,13 @@ export function withViewModel(
         }
 
         const configCreate: ViewModelCreateConfig<any> = {
+          ...config,
           id,
           parentViewModelId: parentViewModel?.id,
           payload,
-          VM: Model,
+          VM,
           viewModels,
           parentViewModel,
-          fallback: config?.fallback,
           ctx,
           component: ConnectedViewModel,
           componentProps,
@@ -136,7 +135,7 @@ export function withViewModel(
         const instance =
           config?.factory?.(configCreate) ??
           viewModels?.createViewModel<any>(configCreate) ??
-          new Model(configCreate);
+          new VM(configCreate);
 
         return instance;
       }, [instanceFromStore]);
@@ -180,7 +179,7 @@ export function withViewModel(
 
     if (process.env.NODE_ENV !== 'production') {
       Object.assign(ConnectedViewModel, {
-        displayName: `ConnectedViewModel(${Model.name}->Component)`,
+        displayName: `ConnectedViewModel(${VM.name}->Component)`,
       });
     }
 
