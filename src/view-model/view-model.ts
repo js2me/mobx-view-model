@@ -75,11 +75,6 @@ export interface ViewModel<
    * This method is called with the new payload and should update the view model according to the new payload.
    */
   payloadChanged(payload: Payload): void;
-
-  /**
-   * @deprecated use {didUnmount} instead
-   */
-  dispose(): void;
 }
 
 export type ViewModelClass<T extends AnyViewModel = AnyViewModel> = Class<

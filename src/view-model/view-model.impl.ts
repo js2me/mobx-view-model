@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { Disposer, IDisposer } from 'disposer-util';
 import { isEqual } from 'lodash-es';
 import { action, computed, makeObservable, observable } from 'mobx';
 
@@ -20,11 +19,6 @@ export class ViewModelImpl<
 
   public unmountSignal: AbortSignal;
 
-  /**
-   * @deprecated Removed since 5.0.0. Please use {unmountSignal} instead
-   */
-  protected disposer: IDisposer = new Disposer();
-
   id: string;
 
   isMounted = false;
@@ -36,10 +30,6 @@ export class ViewModelImpl<
     this.payload = params.payload;
     this.abortController = new AbortController();
     this.unmountSignal = this.abortController.signal;
-
-    this.unmountSignal.addEventListener('abort', () => {
-      this.disposer.dispose();
-    });
 
     observable.ref(this, 'isMounted');
     computed(this, 'parentViewModel');
@@ -132,12 +122,5 @@ export class ViewModelImpl<
       this.params.parentViewModel ??
       (this.viewModels?.get(parentViewModelId) as unknown as ParentViewModel)
     );
-  }
-
-  /**
-   * @deprecated Removed since 5.0.0. Use {didUnmount} instead
-   */
-  dispose(): void {
-    this.abortController.abort();
   }
 }

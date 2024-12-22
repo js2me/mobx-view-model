@@ -232,11 +232,4 @@ export class ViewModelStoreImpl<VMBase extends AnyViewModel = AnyViewModel>
     this.mountingViews.clear();
     this.unmountingViews.clear();
   }
-
-  /**
-   * @deprecated Removed since 5.0.0. Use {clean} instead
-   */
-  dispose(): void {
-    this.clean();
-  }
 }

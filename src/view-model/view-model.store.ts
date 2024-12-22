@@ -105,9 +105,4 @@ export interface ViewModelStore<VMBase extends AnyViewModel = AnyViewModel>
   generateViewModelId<VM extends VMBase>(
     config: ViewModelGenerateIdConfig<VM>,
   ): string;
-
-  /**
-   * @deprecated Removed since 5.0.0. Use {clean} instead
-   */
-  dispose(): void;
 }

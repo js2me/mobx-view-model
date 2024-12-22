@@ -2,7 +2,6 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { AnyObject, EmptyObject, Maybe } from '../utils/types';
 
-import { AbstractViewModelParams } from './abstract-view-model.types';
 import { ViewModel } from './view-model';
 import { ViewModelMock } from './view-model.impl.test';
 import { ViewModelStore } from './view-model.store';
@@ -10,7 +9,7 @@ import {
   ViewModelGenerateIdConfig,
   ViewModelLookup,
 } from './view-model.store.types';
-import { AnyViewModel } from './view-model.types';
+import { AnyViewModel, ViewModelParams } from './view-model.types';
 
 import { ViewModelStoreImpl } from '.';
 
@@ -58,10 +57,6 @@ describe('ViewModelStoreImpl', () => {
   it('has clean method', () => {
     const vmStore = new ViewModelStoreMock();
     expect(vmStore.clean).toBeDefined();
-  });
-  it('has dispose method', () => {
-    const vmStore = new ViewModelStoreMock();
-    expect(vmStore.dispose).toBeDefined();
   });
   it('has attach method', () => {
     const vmStore = new ViewModelStoreMock();
@@ -112,7 +107,7 @@ describe('ViewModelStoreImpl', () => {
     > extends ViewModelMock<Payload, ParentViewModel> {
       constructor(
         private vmStore: ViewModelStore,
-        params?: Partial<AbstractViewModelParams<Payload>>,
+        params?: Partial<ViewModelParams<Payload>>,
       ) {
         super(params);
       }
