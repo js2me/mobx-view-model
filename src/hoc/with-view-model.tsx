@@ -47,7 +47,7 @@ export type ViewModelHocConfig<VM extends AnyViewModel> = {
   /**
    * Function to invoke additional React hooks in the resulting component
    */
-  reactHooks?: (allProps: any) => void;
+  reactHooks?: (allProps: any, ctx: AnyObject) => void;
 
   /**
    * Function that should return the payload for the VM
@@ -95,6 +95,8 @@ export function withViewModel(
       const idRef = useRef<string>('');
       const viewModels = useContext(ViewModelsContext);
       const parentViewModel = useContext(ActiveViewModelContext) || null;
+
+      config?.reactHooks?.(allProps, ctx);
 
       if (!idRef.current) {
         idRef.current =
@@ -163,8 +165,6 @@ export function withViewModel(
         instance?.setPayload(payload);
         // eslint-disable-next-line react-hooks/exhaustive-deps
       }, [payload]);
-
-      config?.reactHooks?.(allProps);
 
       if (isRenderAllowed) {
         return (
