@@ -1,6 +1,12 @@
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from '@testing-library/react';
 import { observer } from 'mobx-react-lite';
-import { PropsWithChildren, ReactNode, useState } from 'react';
+import { PropsWithChildren, ReactNode, useEffect, useState } from 'react';
 import { describe, expect, test, vi } from 'vitest';
 
 import { ViewModelStore, ViewModelsProvider } from '..';
@@ -488,6 +494,102 @@ describe('withViewModel', () => {
       expect(vmStore._unmountingViews.size).toBe(0);
       expect(vmStore.mountedViewsCount).toBe(3);
       expect(vmStore._mountingViews.size).toBe(0);
+    });
+
+    test('access to child view model through VM in the middle (Parent -> Middle -> Child)', async ({
+      task,
+      expect,
+    }) => {
+      const vmStore = new ViewModelStoreMock();
+
+      const Wrapper = ({ children }: { children?: ReactNode }) => {
+        return (
+          <ViewModelsProvider value={vmStore}>{children}</ViewModelsProvider>
+        );
+      };
+
+      class ChildVM extends ViewModelMock<EmptyObject, MiddleVM> {
+        value = 'value-from-child';
+      }
+      const Child = withViewModel(ChildVM)(({
+        children,
+        model,
+      }: PropsWithChildren & ViewModelProps<ChildVM>) => {
+        return (
+          <div data-testid={'child'}>
+            <label>{model.value}</label>
+            {children}
+          </div>
+        );
+      });
+
+      class ParentVM extends ViewModelMock {
+        value = 'value-from-parent';
+
+        get child() {
+          return vmStore.get(Child);
+        }
+
+        get childValue() {
+          return this.child?.value;
+        }
+      }
+      const Parent = withViewModel(ParentVM)(({
+        children,
+        model,
+      }: PropsWithChildren & ViewModelProps<ParentVM>) => {
+        return (
+          <div data-testid={'parent'}>
+            <label>
+              {model.value}
+              {`and this is child value: "${model.childValue}"`}
+            </label>
+            {children}
+            {model.child?.id}
+          </div>
+        );
+      });
+
+      class MiddleVM extends ViewModelMock<EmptyObject, ParentVM> {
+        value = 'value-from-middle';
+      }
+      const Middle = withViewModel(MiddleVM)(({
+        model,
+      }: PropsWithChildren & ViewModelProps<MiddleVM>) => {
+        const [showChild, setShowChild] = useState(false);
+
+        useEffect(() => {
+          setTimeout(() => {
+            setShowChild(true);
+          }, 400);
+        }, []);
+
+        return (
+          <div data-testid={'middle'}>
+            <label>{model.value}</label>
+            {showChild && <Child />}
+          </div>
+        );
+      });
+
+      const { container } = await act(async () =>
+        render(
+          <Parent>
+            <Middle />
+          </Parent>,
+          {
+            wrapper: Wrapper,
+          },
+        ),
+      );
+
+      await waitFor(async () => {
+        await screen.findByTestId('child');
+      });
+
+      expect(container).toMatchFileSnapshot(
+        `../../tests/snapshots/hoc/with-view-model/view-model-store/${task.name}.html`,
+      );
     });
   });
 });
