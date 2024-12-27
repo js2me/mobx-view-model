@@ -141,6 +141,8 @@ export class ViewModelStoreImpl<VMBase extends AnyViewModel = AnyViewModel>
   }
 
   get<T extends VMBase>(vmLookup: Maybe<ViewModelLookup<T>>): T | null {
+    this.viewModels.keys();
+
     const id = this.getId(vmLookup);
 
     if (!id) return null;
