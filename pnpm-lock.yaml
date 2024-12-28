@@ -24,8 +24,8 @@ importers:
         specifier: ^18.3.1
         version: 18.3.1(react@18.3.1)
       react-simple-loadable:
-        specifier: ^2.0.3
-        version: 2.0.3(react@18.3.1)
+        specifier: ^2.0.4
+        version: 2.0.4(react@18.3.1)
     devDependencies:
       '@testing-library/react':
         specifier: ^16.1.0
@@ -2584,8 +2584,8 @@ packages:
   react-is@17.0.2:
     resolution: {integrity: sha512-w2GsyukL62IJnlaff/nRegPQR94C/XXamvMWmSHRJ4y7Ts/4ocGRmTHvOs8PSE6pB3dWOrD/nueuU5sduBsQ4w==}
 
-  react-simple-loadable@2.0.3:
-    resolution: {integrity: sha512-PtFenY/KE1IRsDph5eWB5hJAh4jZ5vdBemioSb17spY4U+ynQmLPWH0y6iCY2ynDo7cH/99a1fMxIp8yuZcvbg==}
+  react-simple-loadable@2.0.4:
+    resolution: {integrity: sha512-WWmqZB8yjhKa1CwMA1oKkx9m3LZI13vz3FJki3813TEhnhyMzXcqL5uOLGiBEKAzTQogcDC4xckFLCsYiEJXVw==}
     peerDependencies:
       react: ^18.3.1
 
@@ -6040,7 +6040,7 @@ snapshots:
 
   react-is@17.0.2: {}
 
-  react-simple-loadable@2.0.3(react@18.3.1):
+  react-simple-loadable@2.0.4(react@18.3.1):
     dependencies:
       react: 18.3.1
 
