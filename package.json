@@ -39,13 +39,13 @@
   },
   "dependencies": {
     "lodash-es": "^4.17.21",
-    "react-simple-loadable": "^2.0.2"
+    "react-simple-loadable": "^2.0.3"
   },
   "peerDependencies": {
-    "mobx": ">=6.12.4",
-    "mobx-react-lite": ">=4.0.7",
-    "react": ">=18.3.1",
-    "react-dom": ">=18.3.1"
+    "mobx": "^6.12.4",
+    "mobx-react-lite": "^4.0.7",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
   },
   "devDependencies": {
     "@testing-library/react": "^16.1.0",
