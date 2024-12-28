@@ -1,6 +1,6 @@
 import { ComponentType } from 'react';
 
-import { ComponentWithViewModel } from '../hoc';
+import { ComponentWithLazyViewModel, ComponentWithViewModel } from '../hoc';
 import { AnyObject, Class, Maybe } from '../utils/types';
 
 import { AnyViewModel, ViewModelParams } from './view-model.types';
@@ -27,4 +27,5 @@ export interface ViewModelCreateConfig<VM extends AnyViewModel>
 export type ViewModelLookup<T extends AnyViewModel> =
   | AnyViewModel['id']
   | Class<T>
-  | ComponentWithViewModel<T, any>;
+  | ComponentWithViewModel<T, any>
+  | ComponentWithLazyViewModel<T, any>;

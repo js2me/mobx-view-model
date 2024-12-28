@@ -6,7 +6,7 @@ import {
   runInAction,
 } from 'mobx';
 
-import { ComponentWithViewModel } from '../hoc';
+import { ComponentWithLazyViewModel, ComponentWithViewModel } from '../hoc';
 import { generateVMId } from '../utils';
 import { Class, Maybe } from '../utils/types';
 
@@ -91,7 +91,10 @@ export class ViewModelStoreImpl<VMBase extends AnyViewModel = AnyViewModel>
 
   linkComponents(
     VM: Class<VMBase>,
-    ...components: Maybe<ComponentWithViewModel<VMBase, any>>[]
+    ...components: Maybe<
+      | ComponentWithViewModel<VMBase, any>
+      | ComponentWithLazyViewModel<VMBase, any>
+    >[]
   ): void {
     components.forEach((component) => {
       if (component && !this.linkedComponentVMClasses.has(component)) {
@@ -101,7 +104,10 @@ export class ViewModelStoreImpl<VMBase extends AnyViewModel = AnyViewModel>
   }
 
   unlinkComponents(
-    ...components: Maybe<ComponentWithViewModel<VMBase, any>>[]
+    ...components: Maybe<
+      | ComponentWithViewModel<VMBase, any>
+      | ComponentWithLazyViewModel<VMBase, any>
+    >[]
   ): void {
     components.forEach((component) => {
       if (component && this.linkedComponentVMClasses.has(component)) {

@@ -1,4 +1,4 @@
-import { ComponentWithViewModel } from '../hoc';
+import { ComponentWithLazyViewModel, ComponentWithViewModel } from '../hoc';
 import { Cleanable } from '../utils/cleanable';
 import { Class, Maybe } from '../utils/types';
 
@@ -86,7 +86,10 @@ export interface ViewModelStore<VMBase extends AnyViewModel = AnyViewModel>
    */
   linkComponents(
     VM: Class<VMBase>,
-    ...components: Maybe<ComponentWithViewModel<VMBase, any>>[]
+    ...components: Maybe<
+      | ComponentWithViewModel<VMBase, any>
+      | ComponentWithLazyViewModel<VMBase, any>
+    >[]
   ): void;
 
   /**
@@ -94,7 +97,10 @@ export interface ViewModelStore<VMBase extends AnyViewModel = AnyViewModel>
    * @param components - The components to unlink.
    */
   unlinkComponents(
-    ...components: Maybe<ComponentWithViewModel<VMBase, any>>[]
+    ...components: Maybe<
+      | ComponentWithViewModel<VMBase, any>
+      | ComponentWithLazyViewModel<VMBase, any>
+    >[]
   ): void;
 
   /**
