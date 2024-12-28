@@ -18,13 +18,18 @@ export interface LazyViewAndModel<
   View: TView;
 }
 
+export type ComponentWithLazyViewModel<
+  TViewModel extends AnyViewModel,
+  TView extends ComponentType<any>,
+> = ComponentWithViewModel<TViewModel, ComponentProps<TView>> & LoadableMixin;
+
 export function withLazyViewModel<
   TViewModel extends AnyViewModel,
   TView extends ComponentType<any>,
 >(
   loadFunction: () => Promise<LazyViewAndModel<TViewModel, TView>>,
   config?: ViewModelHocConfig<any>,
-) {
+): ComponentWithLazyViewModel<TViewModel, TView> {
   const patchedConfig: ViewModelHocConfig<any> = {
     ...config,
     ctx: {
@@ -36,11 +41,7 @@ export function withLazyViewModel<
   const lazyVM = loadable(async () => {
     const { Model, View } = await loadFunction();
     return withViewModel(Model, patchedConfig)(View);
-  }, patchedConfig?.fallback) as unknown as ComponentWithViewModel<
-    TViewModel,
-    ComponentProps<TView>
-  > &
-    LoadableMixin;
+  }, patchedConfig?.fallback) as ComponentWithLazyViewModel<TViewModel, TView>;
 
   patchedConfig.ctx!.externalComponent = lazyVM;
 
