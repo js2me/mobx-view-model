@@ -142,7 +142,7 @@ describe('withViewModel', () => {
           }),
         );
 
-        expect(container.firstChild).toMatchFileSnapshot(
+        await expect(container.firstChild).toMatchFileSnapshot(
           `../../tests/snapshots/hooks/use-view-model/${getParent ? 'parent-instance' : 'self-instance'}/access-using-${accessUsing}/${withVmStore ? 'with-view-model-store/' : ''}${depth}-depth.html`,
         );
       });
@@ -251,7 +251,7 @@ describe('withViewModel', () => {
         render(<App />, { wrapper: createVMStoreWrapper(vmStore) }),
       );
 
-      expect(container.firstChild).toMatchFileSnapshot(
+      await expect(container.firstChild).toMatchFileSnapshot(
         `../../tests/snapshots/hooks/use-view-model/scenarios/${task.name}.html`,
       );
     });
@@ -306,7 +306,7 @@ describe('withViewModel', () => {
         fireEvent.click(button);
       });
 
-      expect(container.firstChild).toMatchFileSnapshot(
+      await expect(container.firstChild).toMatchFileSnapshot(
         `../../tests/snapshots/hooks/use-view-model/scenarios/${task.name}.html`,
       );
     });

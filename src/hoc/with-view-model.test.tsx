@@ -703,7 +703,7 @@ describe('withViewModel', () => {
         await screen.findByTestId('child');
       });
 
-      expect(container).toMatchFileSnapshot(
+      await expect(container).toMatchFileSnapshot(
         `../../tests/snapshots/hoc/with-view-model/view-model-store/${task.name}.html`,
       );
     });

@@ -1,5 +1,5 @@
 import { ComponentProps, ComponentType } from 'react';
-import { loadable } from 'react-simple-loadable/loadable';
+import { loadable, LoadableMixin } from 'react-simple-loadable/loadable';
 
 import { Class } from '../utils/types';
 import { AnyViewModel } from '../view-model';
@@ -39,7 +39,8 @@ export function withLazyViewModel<
   }, patchedConfig?.fallback) as unknown as ComponentWithViewModel<
     TViewModel,
     ComponentProps<TView>
-  >;
+  > &
+    LoadableMixin;
 
   patchedConfig.ctx!.externalComponent = lazyVM;
 
