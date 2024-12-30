@@ -15,7 +15,7 @@ export interface LazyViewAndModel<
   TView extends ComponentType<any>,
 > {
   Model: Class<TViewModel>;
-  View: TView;
+  View?: TView;
 }
 
 export type ComponentWithLazyViewModel<

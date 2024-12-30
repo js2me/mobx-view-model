@@ -72,7 +72,7 @@ export function withViewModel<TViewModel extends AnyViewModel>(
   model: Class<TViewModel>,
   config?: ViewModelHocConfig<TViewModel>,
 ): <TComponentOriginProps extends AnyObject = ViewModelProps<TViewModel>>(
-  Component: ComponentType<TComponentOriginProps & ViewModelProps<TViewModel>>,
+  Component?: ComponentType<TComponentOriginProps & ViewModelProps<TViewModel>>,
 ) => ComponentWithViewModel<TViewModel, TComponentOriginProps>;
 
 export function withViewModel(
@@ -84,7 +84,7 @@ export function withViewModel(
   ctx.VM = VM;
   ctx.generateId = config?.generateId;
 
-  return (Component: ComponentType<any>) => {
+  return (Component?: ComponentType<any>) => {
     const ConnectedViewModel = observer((allProps: any) => {
       const { payload: rawPayload, ...componentProps } = allProps;
 
@@ -169,7 +169,9 @@ export function withViewModel(
       if (isRenderAllowed) {
         return (
           <ActiveViewModelContext.Provider value={instance}>
-            <Component {...(componentProps as any)} model={instance} />
+            {Component && (
+              <Component {...(componentProps as any)} model={instance} />
+            )}
           </ActiveViewModelContext.Provider>
         );
       }
