@@ -23,7 +23,7 @@
     "noEmit": false,
     "jsx": "react-jsx",
     "paths": {
-      "#/*": ["./*"],
+      "@/*": ["./*"],
     }
   },
   "include": [
