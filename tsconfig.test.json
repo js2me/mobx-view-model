@@ -23,12 +23,13 @@
     "noEmit": false,
     "jsx": "react-jsx",
     "paths": {
-      "@/*": ["./*"],
+      "@/*": ["./src/*"],
     }
   },
   "include": [
     "src/**/*.test.ts",
     "tests",
+    "src/lib",
     "src/**/*.test.tsx",
     "node_modules"
   ],

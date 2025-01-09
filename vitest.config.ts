@@ -6,6 +6,9 @@ export default defineConfig({
   plugins: [react({
     tsDecorators: true,
   })],
+  resolve: {
+    alias: [{ find: '@', replacement: '/src' }],
+  },
   test: {
     globals: true,
     environment: "jsdom",
