@@ -127,10 +127,15 @@ export function withViewModel(
       const id = idRef.current;
 
       const instanceFromStore = viewModels ? viewModels.get(id) : null;
+      const lastInstance = useRef<any>(null);
 
       const instance = useMemo(() => {
         if (instanceFromStore) {
           return instanceFromStore;
+        }
+
+        if (lastInstance.current) {
+          return lastInstance.current;
         }
 
         const configCreate: ViewModelCreateConfig<any> = {
@@ -153,6 +158,8 @@ export function withViewModel(
           viewModels?.createViewModel<any>(configCreate) ??
           new VM(configCreate);
 
+        lastInstance.current = instance;
+
         return instance;
       }, [instanceFromStore]);
 
@@ -166,11 +173,13 @@ export function withViewModel(
           viewModels.attach(instance);
           return () => {
             viewModels.detach(id);
+            lastInstance.current = null;
           };
         } else {
           instance.mount();
           return () => {
             instance.unmount();
+            lastInstance.current = null;
           };
         }
       }, []);
