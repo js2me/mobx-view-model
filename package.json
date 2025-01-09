@@ -3,7 +3,9 @@
   "version": "5.0.14",
   "scripts": {
     "clean": "rimraf dist",
-    "check": "eslint . --fix",
+    "lint:check": "eslint . --fix",
+    "ts:check": "tsc --noEmit",
+    "check": "npm run lint:check && npm run ts:check",
     "prebuild": "npm run clean && npm run check",
     "build": "tsc && node ./post-build.mjs",
     "pub": "PUBLISH=true pnpm run build",

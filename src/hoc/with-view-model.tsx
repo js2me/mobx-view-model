@@ -11,7 +11,13 @@ import {
 
 import { ActiveViewModelContext, ViewModelsContext } from '../contexts';
 import { generateVMId } from '../utils';
-import { AnyObject, Class, EmptyObject, Maybe } from '../utils/types';
+import {
+  AllPropertiesOptional,
+  AnyObject,
+  Class,
+  EmptyObject,
+  Maybe,
+} from '../utils/types';
 import { AnyViewModel, ViewModelCreateConfig } from '../view-model';
 
 declare const process: { env: { NODE_ENV?: string } };
@@ -21,7 +27,15 @@ export type ViewModelProps<VM extends AnyViewModel> = {
 };
 
 export type ViewModelInputProps<VM extends AnyViewModel> =
-  VM['payload'] extends EmptyObject ? AnyObject : { payload: VM['payload'] };
+  VM['payload'] extends EmptyObject
+    ? AnyObject
+    : AllPropertiesOptional<VM['payload']> extends true
+      ? {
+          payload?: VM['payload'];
+        }
+      : {
+          payload: VM['payload'];
+        };
 
 export type ViewModelHocConfig<VM extends AnyViewModel> = {
   /**
