@@ -1,7 +1,6 @@
 import { ComponentProps, ComponentType } from 'react';
 
-import { loadable, LoadableMixin } from '@/lib/react-simple-loadable';
-
+import { loadable, LoadableMixin } from '../lib/react-simple-loadable';
 import { Class } from '../utils/types';
 import { AnyViewModel } from '../view-model';
 
