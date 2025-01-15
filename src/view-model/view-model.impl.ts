@@ -1,7 +1,10 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { isEqual } from 'lodash-es';
 import { action, computed, makeObservable, observable } from 'mobx';
+import { startViewTransitionSafety } from 'yummies/html';
 
+import { ViewModelsConfig } from '../config';
+import { mergeVMConfigs } from '../config/utils/merge-vm-configs';
 import { AnyObject, EmptyObject, Maybe } from '../utils/types';
 
 import { ViewModel } from './view-model';
@@ -25,8 +28,11 @@ export class ViewModelImpl<
 
   public payload: Payload;
 
+  protected vmConfig: ViewModelsConfig;
+
   constructor(protected params: ViewModelParams<Payload, ParentViewModel>) {
     this.id = params.id;
+    this.vmConfig = mergeVMConfigs(params.config);
     this.payload = params.payload;
     this.abortController = new AbortController();
     this.unmountSignal = this.abortController.signal;
@@ -57,7 +63,14 @@ export class ViewModelImpl<
    * The method is called when the view starts mounting
    */
   mount() {
-    this.isMounted = true;
+    startViewTransitionSafety(
+      () => {
+        this.isMounted = true;
+      },
+      {
+        disabled: !this.vmConfig.enableStartViewTransitions,
+      },
+    );
 
     this.didMount();
   }
@@ -73,7 +86,14 @@ export class ViewModelImpl<
    * The method is called when the view starts unmounting
    */
   unmount() {
-    this.isMounted = false;
+    startViewTransitionSafety(
+      () => {
+        this.isMounted = false;
+      },
+      {
+        disabled: !this.vmConfig.enableStartViewTransitions,
+      },
+    );
 
     this.didUnmount();
   }
@@ -107,8 +127,15 @@ export class ViewModelImpl<
    */
   setPayload(payload: Payload) {
     if (!isEqual(this.payload, payload)) {
-      this.payload = payload;
-      this.payloadChanged(payload);
+      startViewTransitionSafety(
+        () => {
+          this.payload = payload;
+          this.payloadChanged(payload);
+        },
+        {
+          disabled: !this.vmConfig.enableStartViewTransitions,
+        },
+      );
     }
   }
 

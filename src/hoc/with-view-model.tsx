@@ -9,6 +9,8 @@ import {
   useRef,
 } from 'react';
 
+import { ViewModelsConfig } from '../config';
+import { mergeVMConfigs } from '../config/utils/merge-vm-configs';
 import { ActiveViewModelContext, ViewModelsContext } from '../contexts';
 import { generateVMId } from '../utils';
 import {
@@ -18,7 +20,11 @@ import {
   EmptyObject,
   Maybe,
 } from '../utils/types';
-import { AnyViewModel, ViewModelCreateConfig } from '../view-model';
+import {
+  AnyViewModel,
+  ViewModelCreateConfig,
+  ViewModelParams,
+} from '../view-model';
 
 declare const process: { env: { NODE_ENV?: string } };
 
@@ -52,6 +58,12 @@ export type ViewModelHocConfig<VM extends AnyViewModel> = {
    * Component to render if the view model initialization takes too long
    */
   fallback?: ComponentType;
+
+  /**
+   * Additional configuration for the view model
+   * See {@link ViewModelsConfig}
+   */
+  config?: Partial<ViewModelsConfig>;
 
   /**
    * Additional data that may be useful when creating the VM
@@ -140,6 +152,7 @@ export function withViewModel(
 
         const configCreate: ViewModelCreateConfig<any> = {
           ...config,
+          config: config?.config,
           id,
           parentViewModelId: parentViewModel?.id,
           payload,
@@ -156,7 +169,10 @@ export function withViewModel(
         const instance =
           config?.factory?.(configCreate) ??
           viewModels?.createViewModel<any>(configCreate) ??
-          new VM(configCreate);
+          new VM({
+            ...configCreate,
+            config: mergeVMConfigs(configCreate.config),
+          } satisfies ViewModelParams<any>);
 
         lastInstance.current = instance;
 
