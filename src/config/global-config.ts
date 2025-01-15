@@ -1,4 +1,4 @@
-import { ViewModelsConfig } from './types';
+import { ViewModelsConfig } from './types.js';
 
 const accessSymbol = Symbol();
 

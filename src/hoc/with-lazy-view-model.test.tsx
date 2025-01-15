@@ -1,10 +1,10 @@
 import { act, render } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 
-import { ViewModelMock } from '../view-model/view-model.impl.test';
+import { ViewModelMock } from '../view-model/view-model.impl.test.js';
 
-import { withLazyViewModel } from './with-lazy-view-model';
-import { ViewModelProps } from './with-view-model';
+import { withLazyViewModel } from './with-lazy-view-model.js';
+import { ViewModelProps } from './with-view-model.js';
 
 describe('withLazyViewModel', () => {
   test('should has preload static method', async () => {

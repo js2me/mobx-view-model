@@ -1,5 +1,5 @@
-import { internalCounter, createCounter } from './counter';
-import { AnyObject } from './types';
+import { internalCounter, createCounter } from './counter.js';
+import { AnyObject } from './types.js';
 
 declare const process: { env: { NODE_ENV?: string } };
 

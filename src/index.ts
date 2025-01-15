@@ -1,8 +1,8 @@
-import { ViewModelsContext } from './contexts';
+import { ViewModelsContext } from './contexts/index.js';
 
-export * from './view-model';
-export * from './hoc';
-export * from './hooks';
-export * from './config';
+export * from './view-model/index.js';
+export * from './hoc/index.js';
+export * from './hooks/index.js';
+export * from './config/index.js';
 
 export const ViewModelsProvider = ViewModelsContext.Provider;

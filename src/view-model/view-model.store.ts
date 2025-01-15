@@ -1,20 +1,21 @@
-import { ComponentWithLazyViewModel, ComponentWithViewModel } from '../hoc';
-import { Cleanable } from '../utils/cleanable';
-import { Class, Maybe } from '../utils/types';
+import {
+  ComponentWithLazyViewModel,
+  ComponentWithViewModel,
+} from '../hoc/index.js';
+import { Class, Maybe } from '../utils/types.js';
 
 import {
   ViewModelCreateConfig,
   ViewModelGenerateIdConfig,
   ViewModelLookup,
-} from './view-model.store.types';
-import { AnyViewModel } from './view-model.types';
+} from './view-model.store.types.js';
+import { AnyViewModel } from './view-model.types.js';
 
 /**
  * Interface representing a store for managing view models.
  * It extends the Disposable interface, allowing for cleanup of resources.
  */
-export interface ViewModelStore<VMBase extends AnyViewModel = AnyViewModel>
-  extends Cleanable {
+export interface ViewModelStore<VMBase extends AnyViewModel = AnyViewModel> {
   /**
    * Retrieves the ID of a view model based on a given ID or class type.
    * @param vmLookup - The ID or class type of the view model. See {@link ViewModelLookup}.
@@ -111,4 +112,10 @@ export interface ViewModelStore<VMBase extends AnyViewModel = AnyViewModel>
   generateViewModelId<VM extends VMBase>(
     config: ViewModelGenerateIdConfig<VM>,
   ): string;
+
+  /**
+   * Clean up resources associated with the view model store.
+   * Clean all inner data structures.
+   */
+  clean(): void;
 }

@@ -1,2 +1,2 @@
-export * from './with-view-model';
-export * from './with-lazy-view-model';
+export * from './with-view-model.js';
+export * from './with-lazy-view-model.js';

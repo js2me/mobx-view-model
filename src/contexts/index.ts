@@ -1,2 +1,2 @@
-export * from './active-view-context';
-export * from './view-models-context';
+export * from './active-view-context.js';
+export * from './view-models-context.js';

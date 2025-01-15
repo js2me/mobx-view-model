@@ -10,13 +10,17 @@ import { observer } from 'mobx-react-lite';
 import { PropsWithChildren, ReactNode, useEffect, useState } from 'react';
 import { describe, expect, test, vi } from 'vitest';
 
-import { ViewModelParams, ViewModelStore, ViewModelsProvider } from '..';
-import { createCounter } from '../utils';
-import { EmptyObject } from '../utils/types';
-import { ViewModelMock } from '../view-model/view-model.impl.test';
-import { ViewModelStoreMock } from '../view-model/view-model.store.impl.test';
+import {
+  ViewModelParams,
+  ViewModelStore,
+  ViewModelsProvider,
+} from '../index.js';
+import { createCounter } from '../utils/index.js';
+import { EmptyObject } from '../utils/types.js';
+import { ViewModelMock } from '../view-model/view-model.impl.test.js';
+import { ViewModelStoreMock } from '../view-model/view-model.store.impl.test.js';
 
-import { ViewModelProps, withViewModel } from './with-view-model';
+import { ViewModelProps, withViewModel } from './with-view-model.js';
 
 const createIdGenerator = (prefix?: string) => {
   const counter = createCounter();

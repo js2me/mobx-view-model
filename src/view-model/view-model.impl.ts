@@ -3,13 +3,13 @@ import { isEqual } from 'lodash-es';
 import { action, computed, makeObservable, observable } from 'mobx';
 import { startViewTransitionSafety } from 'yummies/html';
 
-import { ViewModelsConfig } from '../config';
-import { mergeVMConfigs } from '../config/utils/merge-vm-configs';
-import { AnyObject, EmptyObject, Maybe } from '../utils/types';
+import { ViewModelsConfig } from '../config/index.js';
+import { mergeVMConfigs } from '../config/utils/merge-vm-configs.js';
+import { AnyObject, EmptyObject, Maybe } from '../utils/types.js';
 
-import { ViewModel } from './view-model';
-import { ViewModelStore } from './view-model.store';
-import { AnyViewModel, ViewModelParams } from './view-model.types';
+import { ViewModel } from './view-model.js';
+import { ViewModelStore } from './view-model.store.js';
+import { AnyViewModel, ViewModelParams } from './view-model.types.js';
 
 declare const process: { env: { NODE_ENV?: string } };
 

@@ -1,1 +1,1 @@
-export * from './use-view-model';
+export * from './use-view-model.js';

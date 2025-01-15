@@ -10,22 +10,25 @@ import {
 } from 'react';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import type { ViewModelsConfig, ViewModelsRawConfig } from '../config';
-import { mergeVMConfigs } from '../config/utils/merge-vm-configs';
-import { ActiveViewModelContext, ViewModelsContext } from '../contexts';
-import { generateVMId } from '../utils';
+import type { ViewModelsConfig, ViewModelsRawConfig } from '../config/index.js';
+import { mergeVMConfigs } from '../config/utils/merge-vm-configs.js';
+import {
+  ActiveViewModelContext,
+  ViewModelsContext,
+} from '../contexts/index.js';
+import { generateVMId } from '../utils/index.js';
 import {
   AllPropertiesOptional,
   AnyObject,
   Class,
   EmptyObject,
   Maybe,
-} from '../utils/types';
+} from '../utils/types.js';
 import {
   AnyViewModel,
   ViewModelCreateConfig,
   ViewModelParams,
-} from '../view-model';
+} from '../view-model/index.js';
 
 declare const process: { env: { NODE_ENV?: string } };
 

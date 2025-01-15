@@ -2,12 +2,12 @@ import { act, fireEvent, render, screen } from '@testing-library/react';
 import { ReactNode, useState } from 'react';
 import { beforeEach, describe, expect, test } from 'vitest';
 
-import { ViewModelStore, ViewModelsProvider } from '..';
-import { withViewModel } from '../hoc';
-import { ViewModelMock } from '../view-model/view-model.impl.test';
-import { ViewModelStoreMock } from '../view-model/view-model.store.impl.test';
+import { withViewModel } from '../hoc/index.js';
+import { ViewModelStore, ViewModelsProvider } from '../index.js';
+import { ViewModelMock } from '../view-model/view-model.impl.test.js';
+import { ViewModelStoreMock } from '../view-model/view-model.store.impl.test.js';
 
-import { useViewModel } from './use-view-model';
+import { useViewModel } from './use-view-model.js';
 
 describe('withViewModel', () => {
   let counter = 0;

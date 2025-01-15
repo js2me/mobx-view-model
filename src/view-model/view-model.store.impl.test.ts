@@ -1,17 +1,16 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { AnyObject, EmptyObject, Maybe } from '../utils/types';
+import { AnyObject, EmptyObject, Maybe } from '../utils/types.js';
 
-import { ViewModel } from './view-model';
-import { ViewModelMock } from './view-model.impl.test';
-import { ViewModelStore } from './view-model.store';
+import { ViewModelMock } from './view-model.impl.test.js';
+import { ViewModel } from './view-model.js';
+import { ViewModelStoreImpl } from './view-model.store.impl.js';
+import { ViewModelStore } from './view-model.store.js';
 import {
   ViewModelGenerateIdConfig,
   ViewModelLookup,
-} from './view-model.store.types';
-import { AnyViewModel, ViewModelParams } from './view-model.types';
-
-import { ViewModelStoreImpl } from '.';
+} from './view-model.store.types.js';
+import { AnyViewModel, ViewModelParams } from './view-model.types.js';
 
 export class ViewModelStoreMock extends ViewModelStoreImpl {
   spies = {

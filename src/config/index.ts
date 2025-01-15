@@ -1,2 +1,2 @@
-export * from './global-config';
-export * from './types';
+export * from './global-config.js';
+export * from './types.js';

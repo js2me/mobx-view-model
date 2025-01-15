@@ -1,2 +1,2 @@
-export * from './counter';
-export * from './create-vm-id-generator';
+export * from './counter.js';
+export * from './create-vm-id-generator.js';

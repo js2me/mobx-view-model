@@ -6,21 +6,24 @@ import {
   runInAction,
 } from 'mobx';
 
-import { ViewModelsConfig } from '../config';
-import { mergeVMConfigs } from '../config/utils/merge-vm-configs';
-import { ComponentWithLazyViewModel, ComponentWithViewModel } from '../hoc';
-import { generateVMId } from '../utils';
-import { Class, Maybe } from '../utils/types';
+import { ViewModelsConfig } from '../config/index.js';
+import { mergeVMConfigs } from '../config/utils/merge-vm-configs.js';
+import {
+  ComponentWithLazyViewModel,
+  ComponentWithViewModel,
+} from '../hoc/index.js';
+import { generateVMId } from '../utils/index.js';
+import { Class, Maybe } from '../utils/types.js';
 
-import { ViewModelImpl } from './view-model.impl';
-import { ViewModelStore } from './view-model.store';
+import { ViewModelImpl } from './view-model.impl.js';
+import { ViewModelStore } from './view-model.store.js';
 import {
   ViewModelCreateConfig,
   ViewModelGenerateIdConfig,
   ViewModelLookup,
   ViewModelStoreConfig,
-} from './view-model.store.types';
-import { AnyViewModel } from './view-model.types';
+} from './view-model.store.types.js';
+import { AnyViewModel } from './view-model.types.js';
 
 export class ViewModelStoreImpl<VMBase extends AnyViewModel = AnyViewModel>
   implements ViewModelStore<VMBase>

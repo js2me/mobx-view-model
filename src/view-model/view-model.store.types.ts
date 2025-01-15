@@ -1,10 +1,13 @@
 import { ComponentType } from 'react';
 
-import { ViewModelsRawConfig } from '../config';
-import { ComponentWithLazyViewModel, ComponentWithViewModel } from '../hoc';
-import { AnyObject, Class, Maybe } from '../utils/types';
+import { ViewModelsRawConfig } from '../config/index.js';
+import {
+  ComponentWithLazyViewModel,
+  ComponentWithViewModel,
+} from '../hoc/index.js';
+import { AnyObject, Class, Maybe } from '../utils/types.js';
 
-import { AnyViewModel, ViewModelParams } from './view-model.types';
+import { AnyViewModel, ViewModelParams } from './view-model.types.js';
 
 export interface ViewModelStoreConfig {
   vmConfig?: ViewModelsRawConfig;

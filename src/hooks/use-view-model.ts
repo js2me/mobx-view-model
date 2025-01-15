@@ -1,7 +1,10 @@
 import { useContext } from 'react';
 
-import { ActiveViewModelContext, ViewModelsContext } from '../contexts';
-import { AnyViewModel, ViewModelLookup } from '../view-model';
+import {
+  ActiveViewModelContext,
+  ViewModelsContext,
+} from '../contexts/index.js';
+import { AnyViewModel, ViewModelLookup } from '../view-model/index.js';
 
 export const useViewModel = <T extends AnyViewModel>(
   vmLookup?: ViewModelLookup<T>,
