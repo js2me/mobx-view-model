@@ -1,15 +1,21 @@
 import { Maybe } from 'yummies/utils/types';
 
 import { viewModelsConfig } from '../global-config';
-import { ViewModelsConfig } from '../types';
+import { ViewModelsRawConfig } from '../types';
 
-export const mergeVMConfigs = (
-  ...configs: Maybe<Partial<ViewModelsConfig>>[]
-) => {
+export const mergeVMConfigs = (...configs: Maybe<ViewModelsRawConfig>[]) => {
   const result = { ...viewModelsConfig };
 
   configs.forEach((config) => {
-    Object.assign(result, config || {});
+    if (!config) {
+      return;
+    }
+
+    const { startViewTransitions } = result;
+
+    if (startViewTransitions) {
+      Object.assign(result.startViewTransitions, startViewTransitions);
+    }
   });
 
   return result;

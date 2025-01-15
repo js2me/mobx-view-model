@@ -1,13 +1,13 @@
 import { ComponentType } from 'react';
 
-import { ViewModelsConfig } from '../config';
+import { ViewModelsRawConfig } from '../config';
 import { ComponentWithLazyViewModel, ComponentWithViewModel } from '../hoc';
 import { AnyObject, Class, Maybe } from '../utils/types';
 
 import { AnyViewModel, ViewModelParams } from './view-model.types';
 
 export interface ViewModelStoreConfig {
-  vmConfig?: Partial<ViewModelsConfig>;
+  vmConfig?: ViewModelsRawConfig;
 }
 
 export interface ViewModelGenerateIdConfig<VM extends AnyViewModel> {

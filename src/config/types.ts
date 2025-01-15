@@ -1,3 +1,5 @@
+import { DeepPartial } from 'yummies/utils/types';
+
 /**
  * Configuration options for view models.
  */
@@ -9,5 +11,11 @@ export interface ViewModelsConfig {
    *
    * [MDN Reference](https://developer.mozilla.org/docs/Web/API/DOMException)
    */
-  enableStartViewTransitions: boolean;
+  startViewTransitions: {
+    mount: boolean;
+    unmount: boolean;
+    payloadChange: boolean;
+  };
 }
+
+export type ViewModelsRawConfig = DeepPartial<ViewModelsConfig>;

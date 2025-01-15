@@ -68,7 +68,7 @@ export class ViewModelImpl<
         this.isMounted = true;
       },
       {
-        disabled: !this.vmConfig.enableStartViewTransitions,
+        disabled: !this.vmConfig.startViewTransitions.mount,
       },
     );
 
@@ -91,7 +91,7 @@ export class ViewModelImpl<
         this.isMounted = false;
       },
       {
-        disabled: !this.vmConfig.enableStartViewTransitions,
+        disabled: !this.vmConfig.startViewTransitions.unmount,
       },
     );
 
@@ -133,7 +133,7 @@ export class ViewModelImpl<
           this.payloadChanged(payload);
         },
         {
-          disabled: !this.vmConfig.enableStartViewTransitions,
+          disabled: !this.vmConfig.startViewTransitions.payloadChange,
         },
       );
     }

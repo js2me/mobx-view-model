@@ -8,8 +8,15 @@ const _globalThis = globalThis as typeof globalThis & {
 
 if (!_globalThis[accessSymbol]) {
   _globalThis[accessSymbol] = {
-    enableStartViewTransitions: false,
+    startViewTransitions: {
+      mount: false,
+      payloadChange: false,
+      unmount: false,
+    },
   };
 }
 
+/**
+ * Global configuration options for view models
+ */
 export const viewModelsConfig: ViewModelsConfig = _globalThis[accessSymbol];

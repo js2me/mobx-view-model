@@ -1,4 +1,4 @@
-import { ViewModelsConfig } from '../config';
+import { ViewModelsRawConfig } from '../config';
 import { AnyObject, EmptyObject, Maybe } from '../utils/types';
 
 import { ViewModel } from './view-model';
@@ -16,5 +16,5 @@ export interface ViewModelParams<
   parentViewModelId?: Maybe<string>;
   parentViewModel?: Maybe<ParentViewModel>;
   ctx?: AnyObject;
-  config?: Partial<ViewModelsConfig>;
+  config?: ViewModelsRawConfig;
 }

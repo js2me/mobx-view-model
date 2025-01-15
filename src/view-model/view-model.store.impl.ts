@@ -6,6 +6,7 @@ import {
   runInAction,
 } from 'mobx';
 
+import { ViewModelsConfig } from '../config';
 import { mergeVMConfigs } from '../config/utils/merge-vm-configs';
 import { ComponentWithLazyViewModel, ComponentWithViewModel } from '../hoc';
 import { generateVMId } from '../utils';
@@ -42,6 +43,8 @@ export class ViewModelStoreImpl<VMBase extends AnyViewModel = AnyViewModel>
    */
   protected unmountingViews: Set<string>;
 
+  protected vmConfig: ViewModelsConfig;
+
   constructor(protected config?: ViewModelStoreConfig) {
     this.viewModels = observable.map([], { deep: false });
     this.linkedComponentVMClasses = observable.map([], { deep: false });
@@ -49,6 +52,7 @@ export class ViewModelStoreImpl<VMBase extends AnyViewModel = AnyViewModel>
     this.instanceAttachedCount = observable.map([], { deep: false });
     this.mountingViews = observable.set([], { deep: false });
     this.unmountingViews = observable.set([], { deep: false });
+    this.vmConfig = mergeVMConfigs(config?.vmConfig);
 
     computed(this, 'mountedViewsCount');
     action(this, 'mount');
@@ -81,7 +85,7 @@ export class ViewModelStoreImpl<VMBase extends AnyViewModel = AnyViewModel>
     const ViewModelConstructor = config.VM as unknown as typeof ViewModelImpl;
     return new ViewModelConstructor({
       ...config,
-      config: mergeVMConfigs(config.config),
+      config: mergeVMConfigs(this.vmConfig, config.config),
     }) as unknown as VM;
   }
 

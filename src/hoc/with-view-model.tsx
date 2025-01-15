@@ -9,7 +9,8 @@ import {
   useRef,
 } from 'react';
 
-import { ViewModelsConfig } from '../config';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import type { ViewModelsConfig, ViewModelsRawConfig } from '../config';
 import { mergeVMConfigs } from '../config/utils/merge-vm-configs';
 import { ActiveViewModelContext, ViewModelsContext } from '../contexts';
 import { generateVMId } from '../utils';
@@ -63,7 +64,7 @@ export type ViewModelHocConfig<VM extends AnyViewModel> = {
    * Additional configuration for the view model
    * See {@link ViewModelsConfig}
    */
-  config?: Partial<ViewModelsConfig>;
+  config?: ViewModelsRawConfig;
 
   /**
    * Additional data that may be useful when creating the VM
