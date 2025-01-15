@@ -1,6 +1,12 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { isEqual } from 'lodash-es';
-import { action, computed, makeObservable, observable } from 'mobx';
+import {
+  action,
+  computed,
+  makeObservable,
+  observable,
+  runInAction,
+} from 'mobx';
 import { startViewTransitionSafety } from 'yummies/html';
 
 import { ViewModelsConfig } from '../config/index.js';
@@ -65,7 +71,9 @@ export class ViewModelImpl<
   mount() {
     startViewTransitionSafety(
       () => {
-        this.isMounted = true;
+        runInAction(() => {
+          this.isMounted = true;
+        });
       },
       {
         disabled: !this.vmConfig.startViewTransitions.mount,
@@ -88,7 +96,9 @@ export class ViewModelImpl<
   unmount() {
     startViewTransitionSafety(
       () => {
-        this.isMounted = false;
+        runInAction(() => {
+          this.isMounted = false;
+        });
       },
       {
         disabled: !this.vmConfig.startViewTransitions.unmount,
@@ -129,8 +139,10 @@ export class ViewModelImpl<
     if (!isEqual(this.payload, payload)) {
       startViewTransitionSafety(
         () => {
-          this.payload = payload;
-          this.payloadChanged(payload);
+          runInAction(() => {
+            this.payload = payload;
+            this.payloadChanged(payload);
+          });
         },
         {
           disabled: !this.vmConfig.startViewTransitions.payloadChange,
