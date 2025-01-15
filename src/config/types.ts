@@ -18,4 +18,11 @@ export interface ViewModelsConfig {
   };
 }
 
-export type ViewModelsRawConfig = DeepPartial<ViewModelsConfig>;
+export type ViewModelsRawConfig = Omit<
+  ViewModelsConfig,
+  'startViewTransitions'
+> & {
+  startViewTransitions?:
+    | DeepPartial<ViewModelsConfig['startViewTransitions']>
+    | boolean;
+};

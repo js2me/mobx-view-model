@@ -1,7 +1,7 @@
 import { Maybe } from 'yummies/utils/types';
 
 import { viewModelsConfig } from '../global-config';
-import { ViewModelsRawConfig } from '../types';
+import { ViewModelsConfig, ViewModelsRawConfig } from '../types';
 
 export const mergeVMConfigs = (...configs: Maybe<ViewModelsRawConfig>[]) => {
   const result = { ...viewModelsConfig };
@@ -11,10 +11,21 @@ export const mergeVMConfigs = (...configs: Maybe<ViewModelsRawConfig>[]) => {
       return;
     }
 
-    const { startViewTransitions } = result;
+    const { startViewTransitions } = config;
 
     if (startViewTransitions) {
-      Object.assign(result.startViewTransitions, startViewTransitions);
+      const startViewTransitonsUpdate: Partial<
+        ViewModelsConfig['startViewTransitions']
+      > =
+        typeof startViewTransitions === 'boolean'
+          ? ({
+              mount: startViewTransitions,
+              payloadChange: startViewTransitions,
+              unmount: startViewTransitions,
+            } satisfies ViewModelsConfig['startViewTransitions'])
+          : startViewTransitions;
+
+      Object.assign(result.startViewTransitions, startViewTransitonsUpdate);
     }
   });
 
