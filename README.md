@@ -21,41 +21,86 @@ _MobX ViewModel power for ReactJS_
 
 ## What package has   
 
-### [`ViewModelImpl`](src/view-model/view-model.impl.ts), [`ViewModel`](src/view-model/view-model.ts)   
+## [`ViewModelImpl`](src/view-model/view-model.impl.ts), [`ViewModel`](src/view-model/view-model.ts)   
 It is a class that helps to manage state and lifecycle of a component in **React**.  
 
 
-### [`ViewModelStoreImpl`](src/view-model/view-model.store.impl.ts), [`ViewModelStore`](src/view-model/view-model.store.ts)  
+## [`ViewModelStoreImpl`](src/view-model/view-model.store.impl.ts), [`ViewModelStore`](src/view-model/view-model.store.ts)  
 It is store for managing view models.  
 P.S not required entity for targeted usage of this package, but can be helpful for accessing view models from everywhere by view model id or view model class name.   
 
+## [`useCreateViewModel(VM, payload, config)`](src/hooks/use-create-view-model.ts)  
+Creates [`ViewModel`](#viewmodelimpl-viewmodel) instance.  
+Using in [`withViewModel()`](#withviewmodel) HOC.    
 
-### [`useViewModel()`](src/hooks/use-view-model.ts)  
+## [`useViewModel()`](src/hooks/use-view-model.ts)  
 Hook that helps to get access to your view model in **React**.  
   Possible usage:   
     - `useViewModel<YourViewModel>()` - using generic to define type of returning view model instance  
     - `useViewModel<YourViewModel>(id)` - using `id` to define specific identifier of returning view model instance and generic for the same as above usage    
 
 
-### [`withViewModel()`](src/hoc/with-view-model.tsx)  
+## [`withViewModel()()`](src/hoc/with-view-model.tsx)  
 Required for usage HOC that connects your `ViewModel` class with `View` (**React** Component)  
-  Possible usage:   
-    - `withViewModel(ViewModel)(View)` - simple usage   
-    - `withViewModel(ViewModel, { factory })(View)` -  advanced usage that needed to create your own implementations of `withViewModel` HOC, `ViewModelStore` and `ViewModel` classes.Example below:
+
+#### Usage   
+
+**1.** Simple   
+
 ```tsx
-withViewModel(ViewModel, {
+import { View } from "./view";
+import { Model } from "./model";
+
+export const Component = withViewModel(Model)(View?)  
+
+...
+
+<Component />
+```   
+
+**2.** Custom factory   
+
+Advanced usage that needed to create your own implementations of `withViewModel` HOC, `ViewModelStore` and `ViewModel`  
+
+```tsx
+import { View } from "./view";
+import { Model } from "./model";
+
+export const Component = withViewModel(Model, {
   factory: (config) => {
     // also you can achieve this your view model store implementation
     return new config.VM(rootStore, config);
   }
-})(View)
-```  
+})(View?)  
 
+...
 
-### [`withLazyViewModel()`](src/hoc/with-lazy-view-model.tsx)  
+<Component />
+```   
+
+## [`withLazyViewModel()()`](src/hoc/with-lazy-view-model.tsx)  
 Optional for usage HOC that doing the same thing as `withViewModel`, but fetching `ViewModel` and `View` "lazy"  
 
-## Simple usage  
+## [`ViewModelsConfig`](src/config/types.ts)  
+Additional configuration for all view models creating using library.  
+You can override default global config using import [`viewModelsConfig`](src/config/global-config.ts). You should do this before start whole app  
+```ts
+import { viewModelsConfig } from "mobx-view-model"
+
+viewModelsConfig.startViewTransitions = {
+  mount: false,
+  payloadChange: false,
+  unmount: false,
+};
+
+```
+
+
+<br />
+
+# Usage  
+
+## Simple  
 
 ```tsx
 import { ViewModelProps, ViewModelImpl, withViewModel } from 'mobx-view-model';
@@ -89,10 +134,10 @@ export const MyPage = withViewModel(MyPageVM)(MyPageView);
 
 ## Detailed Configuration  
 
-### Make your own ViewModelStore implementation   
+1. Make your own ViewModelStore implementation   
 
-`view-model.store.impl.ts`  
 ```ts
+// view-model.store.impl.ts
 import {
   AbstractViewModelParams,
   AbstractViewModelStore,
@@ -115,10 +160,10 @@ export class ViewModelStoreImpl extends AbstractViewModelStore {
 }
 ```
 
-### Make your own `ViewModel` implementation with sharing `RootStore`   
+2. Make your own `ViewModel` implementation with sharing `RootStore`   
 
-`view-model.ts`  
 ```ts
+// view-model.ts
 import { ViewModel as ViewModelBase } from 'mobx-view-model';
 
 export interface ViewModel<
@@ -127,8 +172,8 @@ export interface ViewModel<
 > extends ViewModelBase<Payload, ParentViewModel> {}
 ```
 
-`view-model.impl.ts`  
 ```ts
+// view-model.impl.ts
 import { AbstractViewModel, AbstractViewModelParams } from 'mobx-view-model';
 import { ViewModel } from './view-model';
 
@@ -159,7 +204,7 @@ export class ViewModelImpl<
 
 ```
 
-### Add `ViewModelStore` into your `RootStore`   
+3. Add `ViewModelStore` into your `RootStore`   
 
 ```ts
 import { ViewModelStore } from 'mobx-view-model';
@@ -176,7 +221,7 @@ export class RootStoreImpl implements RootStore {
 ```  
 
 
-### Create `View` with `ViewModel`   
+4. Create `View` with `ViewModel`   
 
 ```tsx
 import { ViewModelProps, withViewModel } from 'mobx-view-model';
