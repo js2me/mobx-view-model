@@ -10,11 +10,21 @@ export interface ViewModelParams<
   Payload extends AnyObject = EmptyObject,
   ParentViewModel extends AnyViewModel | null = null,
 > {
+  /**
+   * Unique identifier for the view
+   */
   id: string;
   payload: Payload;
   viewModels?: Maybe<ViewModelStore>;
   parentViewModelId?: Maybe<string>;
   parentViewModel?: Maybe<ParentViewModel>;
+  /**
+   * Additional data that may be useful when creating the VM
+   */
   ctx?: AnyObject;
+  /**
+   * Additional configuration for the view model
+   * See {@link ViewModelsConfig}
+   */
   config?: ViewModelsRawConfig;
 }

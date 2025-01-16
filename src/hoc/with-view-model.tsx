@@ -1,34 +1,23 @@
 /* eslint-disable sonarjs/no-nested-functions */
 import { observer } from 'mobx-react-lite';
-import {
-  ComponentType,
-  ReactNode,
-  useContext,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-} from 'react';
+import { ComponentType, ReactNode, useContext } from 'react';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import type { ViewModelsConfig, ViewModelsRawConfig } from '../config/index.js';
-import { mergeVMConfigs } from '../config/utils/merge-vm-configs.js';
 import {
   ActiveViewModelContext,
   ViewModelsContext,
 } from '../contexts/index.js';
-import { generateVMId } from '../utils/index.js';
+import {
+  useCreateViewModel,
+  UseCreateViewModelConfig,
+} from '../hooks/use-create-view-model.js';
 import {
   AllPropertiesOptional,
   AnyObject,
   Class,
   EmptyObject,
-  Maybe,
 } from '../utils/types.js';
-import {
-  AnyViewModel,
-  ViewModelCreateConfig,
-  ViewModelParams,
-} from '../view-model/index.js';
+import { AnyViewModel } from '../view-model/index.js';
 
 declare const process: { env: { NODE_ENV?: string } };
 
@@ -47,49 +36,24 @@ export type ViewModelInputProps<VM extends AnyViewModel> =
           payload: VM['payload'];
         };
 
-export type ViewModelHocConfig<VM extends AnyViewModel> = {
-  /**
-   * Unique identifier for the view
-   */
-  id?: Maybe<string>;
+export type ViewModelHocConfig<VM extends AnyViewModel> =
+  UseCreateViewModelConfig<VM> & {
+    /**
+     * Component to render if the view model initialization takes too long
+     */
+    fallback?: ComponentType;
 
-  /**
-   * Function to generate an identifier for the view model
-   */
-  generateId?: (ctx: AnyObject) => string;
+    /**
+     * Function to invoke additional React hooks in the resulting component
+     */
+    reactHooks?: (allProps: any, ctx: AnyObject) => void;
 
-  /**
-   * Component to render if the view model initialization takes too long
-   */
-  fallback?: ComponentType;
-
-  /**
-   * Additional configuration for the view model
-   * See {@link ViewModelsConfig}
-   */
-  config?: ViewModelsRawConfig;
-
-  /**
-   * Additional data that may be useful when creating the VM
-   */
-  ctx?: AnyObject;
-
-  /**
-   * Function to invoke additional React hooks in the resulting component
-   */
-  reactHooks?: (allProps: any, ctx: AnyObject) => void;
-
-  /**
-   * Function that should return the payload for the VM
-   * by default, it is - (props) => props.payload
-   */
-  getPayload?: (allProps: any) => any;
-
-  /**
-   * Function to create an instance of the VM class
-   */
-  factory?: (config: ViewModelCreateConfig<VM>) => VM;
-};
+    /**
+     * Function that should return the payload for the VM
+     * by default, it is - (props) => props.payload
+     */
+    getPayload?: (allProps: any) => any;
+  };
 
 export type ComponentWithViewModel<
   TViewModel extends AnyViewModel,
@@ -107,12 +71,14 @@ export function withViewModel<TViewModel extends AnyViewModel>(
 
 export function withViewModel(
   VM: Class<any>,
-  config?: ViewModelHocConfig<any>,
+  config: ViewModelHocConfig<any> = {},
 ) {
-  const ctx: AnyObject = config?.ctx ?? {};
+  const ctx: AnyObject = config.ctx ?? {};
 
   ctx.VM = VM;
   ctx.generateId = config?.generateId;
+
+  config.ctx = ctx;
 
   return (Component?: ComponentType<any>) => {
     const ConnectedViewModel = observer((allProps: any) => {
@@ -122,92 +88,20 @@ export function withViewModel(
         ? config.getPayload(allProps)
         : rawPayload;
 
-      const idRef = useRef<string>('');
       const viewModels = useContext(ViewModelsContext);
-      const parentViewModel = useContext(ActiveViewModelContext) || null;
 
       config?.reactHooks?.(allProps, ctx);
 
-      if (!idRef.current) {
-        idRef.current =
-          viewModels?.generateViewModelId({
-            ...config,
-            ctx,
-            VM,
-            parentViewModelId: parentViewModel?.id,
-          }) ??
-          config?.id ??
-          generateVMId(ctx);
-      }
-
-      const id = idRef.current;
-
-      const instanceFromStore = viewModels ? viewModels.get(id) : null;
-      const lastInstance = useRef<any>(null);
-
-      const instance = useMemo(() => {
-        if (instanceFromStore) {
-          return instanceFromStore;
-        }
-
-        if (lastInstance.current) {
-          return lastInstance.current;
-        }
-
-        const configCreate: ViewModelCreateConfig<any> = {
-          ...config,
-          config: config?.config,
-          id,
-          parentViewModelId: parentViewModel?.id,
-          payload,
-          VM,
-          viewModels,
-          parentViewModel,
-          ctx,
-          component: ConnectedViewModel,
-          componentProps,
-        };
-
-        viewModels?.processCreateConfig(configCreate);
-
-        const instance =
-          config?.factory?.(configCreate) ??
-          viewModels?.createViewModel<any>(configCreate) ??
-          new VM({
-            ...configCreate,
-            config: mergeVMConfigs(configCreate.config),
-          } satisfies ViewModelParams<any>);
-
-        lastInstance.current = instance;
-
-        return instance;
-      }, [instanceFromStore]);
+      const instance = useCreateViewModel(VM, payload, {
+        ...config,
+        component: ConnectedViewModel,
+        componentProps,
+      });
 
       const isRenderAllowedByStore =
-        !viewModels || viewModels.isAbleToRenderView(id);
+        !viewModels || viewModels.isAbleToRenderView(instance.id);
       const isRenderAllowedLocally = !!instance?.isMounted;
       const isRenderAllowed = isRenderAllowedByStore && isRenderAllowedLocally;
-
-      useLayoutEffect(() => {
-        if (viewModels) {
-          viewModels.attach(instance);
-          return () => {
-            viewModels.detach(id);
-            lastInstance.current = null;
-          };
-        } else {
-          instance.mount();
-          return () => {
-            instance.unmount();
-            lastInstance.current = null;
-          };
-        }
-      }, []);
-
-      useLayoutEffect(() => {
-        instance?.setPayload(payload);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-      }, [payload]);
 
       if (isRenderAllowed) {
         return (

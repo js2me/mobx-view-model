@@ -25,8 +25,8 @@ export interface ViewModelCreateConfig<VM extends AnyViewModel>
   extends ViewModelParams<VM['payload'], VM['parentViewModel']> {
   VM: Class<VM>;
   fallback?: ComponentType;
-  component: ComponentWithViewModel<AnyViewModel, any>;
-  componentProps: AnyObject;
+  component?: ComponentWithViewModel<AnyViewModel, any>;
+  componentProps?: AnyObject;
 }
 
 /**
