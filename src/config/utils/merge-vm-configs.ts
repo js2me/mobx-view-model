@@ -4,7 +4,7 @@ import { viewModelsConfig } from '../global-config.js';
 import { ViewModelsConfig, ViewModelsRawConfig } from '../types.js';
 
 export const mergeVMConfigs = (...configs: Maybe<ViewModelsRawConfig>[]) => {
-  const result = { ...viewModelsConfig };
+  const result = structuredClone(viewModelsConfig);
 
   configs.forEach((config) => {
     if (!config) {
