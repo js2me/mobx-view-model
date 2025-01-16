@@ -129,11 +129,11 @@ export class ViewModelStoreImpl<VMBase extends AnyViewModel = AnyViewModel>
     });
   }
 
-  getId<T extends VMBase>(vmLookup: Maybe<ViewModelLookup<T>>): string | null {
-    if (!vmLookup) return null;
+  getIds<T extends VMBase>(vmLookup: Maybe<ViewModelLookup<T>>): string[] {
+    if (!vmLookup) return [];
 
     if (typeof vmLookup === 'string') {
-      return vmLookup;
+      return [vmLookup];
     }
 
     const viewModelClass = (this.linkedComponentVMClasses.get(
@@ -142,9 +142,17 @@ export class ViewModelStoreImpl<VMBase extends AnyViewModel = AnyViewModel>
 
     const viewModelIds = this.viewModelIdsByClasses.get(viewModelClass) || [];
 
+    return viewModelIds;
+  }
+
+  getId<T extends VMBase>(vmLookup: Maybe<ViewModelLookup<T>>): string | null {
+    const viewModelIds = this.getIds(vmLookup);
+
+    if (viewModelIds.length === 0) return null;
+
     if (process.env.NODE_ENV !== 'production' && viewModelIds.length > 1) {
       console.warn(
-        `Found more than 1 view model with the same identifier "${vmLookup.name}". Last instance will been returned`,
+        `Found more than 1 view model with the same identifier. Last instance will been returned`,
       );
     }
 
@@ -167,6 +175,12 @@ export class ViewModelStoreImpl<VMBase extends AnyViewModel = AnyViewModel>
     if (!id) return null;
 
     return (this.viewModels.get(id) as Maybe<T>) ?? null;
+  }
+
+  getAll<T extends VMBase>(vmLookup: Maybe<ViewModelLookup<T>>): T[] {
+    const viewModelIds = this.getIds(vmLookup);
+
+    return viewModelIds.map((id) => this.viewModels.get(id) as T);
   }
 
   async mount(model: VMBase) {

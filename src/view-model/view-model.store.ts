@@ -36,11 +36,18 @@ export interface ViewModelStore<VMBase extends AnyViewModel = AnyViewModel> {
   has<T extends VMBase>(vmLookup: Maybe<ViewModelLookup<T>>): boolean;
 
   /**
-   * Retrieves a view model instance from the store.
+   * Retrieves a last view model instance from the store. If you node more than one VM use getAll method
    * @param vmLookup - The ID or class type of the view model. See {@link ViewModelLookup}.
    * @returns The view model instance, or null if not found.
    */
   get<T extends VMBase>(vmLookup: Maybe<ViewModelLookup<T>>): T | null;
+
+  /**
+   * Retrieves all view model instances from the store.
+   * @param vmLookup - The ID or class type of the view model. See {@link ViewModelLookup}.
+   * @returns The view model instance, or null if not found.
+   */
+  getAll<T extends VMBase>(vmLookup: Maybe<ViewModelLookup<T>>): T[];
 
   /**
    * Attaches a view model to the store.
