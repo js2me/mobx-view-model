@@ -1,6 +1,6 @@
 {
   "name": "mobx-vm-entities",
-  "version": "5.1.7",
+  "version": "5.1.8",
   "scripts": {
     "clean": "rimraf dist",
     "lint:check": "eslint . --fix",
