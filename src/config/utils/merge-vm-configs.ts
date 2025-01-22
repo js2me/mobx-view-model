@@ -4,7 +4,12 @@ import { viewModelsConfig } from '../global-config.js';
 import { ViewModelsConfig, ViewModelsRawConfig } from '../types.js';
 
 export const mergeVMConfigs = (...configs: Maybe<ViewModelsRawConfig>[]) => {
-  const result = structuredClone(viewModelsConfig);
+  const result: ViewModelsConfig = {
+    ...viewModelsConfig,
+    startViewTransitions: structuredClone(
+      viewModelsConfig.startViewTransitions,
+    ),
+  };
 
   configs.forEach((config) => {
     if (!config) {
