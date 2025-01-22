@@ -1,6 +1,7 @@
 import { useContext, useLayoutEffect, useMemo, useRef } from 'react';
 import { AnyObject, Class, EmptyObject, Maybe } from 'yummies/utils/types';
 
+import { viewModelsConfig } from '../config/global-config.js';
 import { mergeVMConfigs } from '../config/utils/merge-vm-configs.js';
 import { ActiveViewModelContext } from '../contexts/active-view-context.js';
 import { ViewModelsContext } from '../contexts/view-models-context.js';
@@ -95,6 +96,7 @@ export const useCreateViewModel = <TViewModel extends AnyViewModel>(
     const instance: TViewModel =
       config?.factory?.(configCreate) ??
       viewModels?.createViewModel<any>(configCreate) ??
+      viewModelsConfig.factory?.(configCreate) ??
       new VM({
         ...configCreate,
         config: mergeVMConfigs(configCreate.config),

@@ -23,7 +23,7 @@ import {
   ViewModelLookup,
   ViewModelStoreConfig,
 } from './view-model.store.types.js';
-import { AnyViewModel } from './view-model.types.js';
+import { AnyViewModel, ViewModelParams } from './view-model.types.js';
 
 export class ViewModelStoreImpl<VMBase extends AnyViewModel = AnyViewModel>
   implements ViewModelStore<VMBase>
@@ -85,11 +85,18 @@ export class ViewModelStoreImpl<VMBase extends AnyViewModel = AnyViewModel>
   }
 
   createViewModel<VM extends VMBase>(config: ViewModelCreateConfig<VM>): VM {
-    const ViewModelConstructor = config.VM as unknown as typeof ViewModelImpl;
-    return new ViewModelConstructor({
+    const VMConstructor = config.VM as unknown as typeof ViewModelImpl;
+    const vmConfig = mergeVMConfigs(this.vmConfig, config.config);
+    const vmParams: ViewModelParams<any, any> & ViewModelCreateConfig<VM> = {
       ...config,
       config: mergeVMConfigs(this.vmConfig, config.config),
-    }) as unknown as VM;
+    };
+
+    if (vmConfig.factory) {
+      return vmConfig.factory(vmParams) as VM;
+    }
+
+    return new VMConstructor(vmParams) as unknown as VM;
   }
 
   generateViewModelId<VM extends VMBase>(
@@ -97,6 +104,8 @@ export class ViewModelStoreImpl<VMBase extends AnyViewModel = AnyViewModel>
   ): string {
     if (config.id) {
       return config.id;
+    } else if (this.vmConfig.generateId) {
+      return this.vmConfig.generateId(config);
     } else {
       return generateVMId(config.ctx);
     }

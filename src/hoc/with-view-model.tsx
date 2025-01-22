@@ -3,6 +3,7 @@ import { observer } from 'mobx-react-lite';
 import { ComponentType, ReactNode, useContext } from 'react';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { viewModelsConfig } from '../config/global-config.js';
 import {
   ActiveViewModelContext,
   ViewModelsContext,
@@ -113,7 +114,12 @@ export function withViewModel(
         );
       }
 
-      return config?.fallback ? <config.fallback /> : null;
+      const FallbackComponent =
+        config?.fallback ?? viewModelsConfig.fallbackComponent;
+
+      return FallbackComponent ? (
+        <FallbackComponent {...allProps} payload={payload} />
+      ) : null;
     });
 
     if (process.env.NODE_ENV !== 'production') {

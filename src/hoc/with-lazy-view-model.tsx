@@ -1,5 +1,6 @@
 import { ComponentProps, ComponentType } from 'react';
 
+import { viewModelsConfig } from '../config/global-config.js';
 import { loadable, LoadableMixin } from '../lib/react-simple-loadable.js';
 import { Class } from '../utils/types.js';
 import { AnyViewModel } from '../view-model/index.js';
@@ -38,10 +39,13 @@ export function withLazyViewModel<
     },
   };
 
+  const fallbackComponent =
+    patchedConfig?.fallback ?? viewModelsConfig.fallbackComponent;
+
   const lazyVM = loadable(async () => {
     const { Model, View } = await loadFunction();
     return withViewModel(Model, patchedConfig)(View);
-  }, patchedConfig?.fallback) as ComponentWithLazyViewModel<TViewModel, TView>;
+  }, fallbackComponent) as ComponentWithLazyViewModel<TViewModel, TView>;
 
   patchedConfig.ctx!.externalComponent = lazyVM;
 
