@@ -33,6 +33,8 @@ export interface ViewModelsConfig {
    * Fallback component to use when a view model is loading or processing to render.
    */
   fallbackComponent?: ComponentType;
+  onMount?: (viewModel: AnyViewModel) => void;
+  onUnmount?: (viewModel: AnyViewModel) => void;
 }
 
 export type ViewModelsRawConfig = Omit<

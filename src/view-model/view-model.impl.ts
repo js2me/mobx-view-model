@@ -69,6 +69,7 @@ export class ViewModelImpl<
    * The method is called when the view starts mounting
    */
   mount() {
+    this.vmConfig.onMount?.(this);
     startViewTransitionSafety(
       () => {
         runInAction(() => {
@@ -94,6 +95,7 @@ export class ViewModelImpl<
    * The method is called when the view starts unmounting
    */
   unmount() {
+    this.vmConfig.onUnmount?.(this);
     startViewTransitionSafety(
       () => {
         runInAction(() => {
