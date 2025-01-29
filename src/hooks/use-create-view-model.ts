@@ -68,7 +68,7 @@ export const useCreateViewModel = <TViewModel extends AnyViewModel>(
   const id = idRef.current;
 
   const instanceFromStore = viewModels ? viewModels.get(id) : null;
-  const lastInstance = useRef<any>(null);
+  const lastInstance = useRef<TViewModel | null>(null);
 
   const instance = useMemo((): TViewModel => {
     if (instanceFromStore) {
