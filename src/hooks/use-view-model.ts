@@ -21,7 +21,14 @@ export const useViewModel = <T extends AnyViewModel>(
     }
 
     if (!activeViewModel) {
-      throw new Error('No active view model');
+      if (process.env.NODE_ENV !== 'production') {
+        console.error(
+          'Active ViewModel not found.' +
+            'This happens because vm lookup for hook "useViewModel" is not provided and hook trying to lookup active view model using ActiveViewModelContext which works only with using "withViewModel" HOC.' +
+            'Please provide vm lookup (first argument for "useViewModel" hook) or use "withViewModel" HOC',
+        );
+      }
+      throw new Error('active view model not found');
     }
 
     return activeViewModel as unknown as T;
