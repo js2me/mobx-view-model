@@ -19,7 +19,7 @@ import { AnyViewModel, ViewModelParams } from './view-model.types.js';
 
 declare const process: { env: { NODE_ENV?: string } };
 
-export class ViewModelImpl<
+export class ViewModelBase<
   Payload extends AnyObject = EmptyObject,
   ParentViewModel extends AnyViewModel | null = null,
 > implements ViewModel<Payload, ParentViewModel>
@@ -58,7 +58,7 @@ export class ViewModelImpl<
   protected get viewModels(): ViewModelStore {
     if (process.env.NODE_ENV !== 'production' && !this.params.viewModels) {
       console.warn(
-        'accessing to viewModels is not possible. [viewModels] param is not setted during to creating instance AbstractViewModel',
+        'accessing to viewModels is not possible. [viewModels] param is not setted during to creating instance ViewModelBase',
       );
     }
 

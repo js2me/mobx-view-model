@@ -4,8 +4,8 @@ import { beforeEach, describe, expect, test } from 'vitest';
 
 import { withViewModel } from '../hoc/index.js';
 import { ViewModelStore, ViewModelsProvider } from '../index.js';
-import { ViewModelMock } from '../view-model/view-model.impl.test.js';
-import { ViewModelStoreMock } from '../view-model/view-model.store.impl.test.js';
+import { ViewModelBaseMock } from '../view-model/view-model.base.test.js';
+import { ViewModelStoreBaseMock } from '../view-model/view-model.store.base.test.js';
 
 import { useViewModel } from './use-view-model.js';
 
@@ -32,7 +32,7 @@ describe('withViewModel', () => {
       getParent?: boolean;
     },
   ) => {
-    class VM1 extends ViewModelMock {
+    class VM1 extends ViewModelBaseMock {
       depth = `${depth}`;
     }
 
@@ -119,7 +119,7 @@ describe('withViewModel', () => {
         });
 
       test(`renders (${depth} depth)`, async () => {
-        const vmStore = new ViewModelStoreMock();
+        const vmStore = new ViewModelStoreBaseMock();
 
         const WrappedDepthComponent = () => {
           const reversed = [...depthsComponents].reverse();
@@ -221,9 +221,9 @@ describe('withViewModel', () => {
     test('container renders VM with fixed id and some child with dynamic id', async ({
       task,
     }) => {
-      const vmStore = new ViewModelStoreMock();
+      const vmStore = new ViewModelStoreBaseMock();
 
-      class LayoutVM extends ViewModelMock {}
+      class LayoutVM extends ViewModelBaseMock {}
 
       const Layout = withViewModel(LayoutVM, {
         id: 'layout',
@@ -231,7 +231,7 @@ describe('withViewModel', () => {
         <div data-testid={'layout'}>{children}</div>
       ));
 
-      class ChildVM extends ViewModelMock {}
+      class ChildVM extends ViewModelBaseMock {}
 
       const Child = withViewModel(ChildVM)(() => (
         <div data-testid={'child'}></div>
@@ -258,9 +258,9 @@ describe('withViewModel', () => {
     test('container remounts VM with fixed id and some child with dynamic id', async ({
       task,
     }) => {
-      const vmStore = new ViewModelStoreMock();
+      const vmStore = new ViewModelStoreBaseMock();
 
-      class LayoutVM extends ViewModelMock {}
+      class LayoutVM extends ViewModelBaseMock {}
 
       const Layout = withViewModel(LayoutVM, {
         id: 'layout',
@@ -269,7 +269,7 @@ describe('withViewModel', () => {
         <div data-testid={'layout'}>{children}</div>
       ));
 
-      class ChildVM extends ViewModelMock {}
+      class ChildVM extends ViewModelBaseMock {}
 
       const Child = withViewModel(ChildVM, {
         fallback: () => <div data-testid={'child-fallback'}> </div>,

@@ -15,7 +15,7 @@ import {
 import { generateVMId } from '../utils/index.js';
 import { Class, Maybe } from '../utils/types.js';
 
-import { ViewModelImpl } from './view-model.impl.js';
+import { ViewModelBase } from './view-model.base.js';
 import { ViewModelStore } from './view-model.store.js';
 import {
   ViewModelCreateConfig,
@@ -25,7 +25,7 @@ import {
 } from './view-model.store.types.js';
 import { AnyViewModel, ViewModelParams } from './view-model.types.js';
 
-export class ViewModelStoreImpl<VMBase extends AnyViewModel = AnyViewModel>
+export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
   implements ViewModelStore<VMBase>
 {
   protected viewModels: Map<string, VMBase>;
@@ -85,7 +85,7 @@ export class ViewModelStoreImpl<VMBase extends AnyViewModel = AnyViewModel>
   }
 
   createViewModel<VM extends VMBase>(config: ViewModelCreateConfig<VM>): VM {
-    const VMConstructor = config.VM as unknown as typeof ViewModelImpl;
+    const VMConstructor = config.VM as unknown as typeof ViewModelBase;
     const vmConfig = mergeVMConfigs(this.vmConfig, config.config);
     const vmParams: ViewModelParams<any, any> & ViewModelCreateConfig<VM> = {
       ...config,

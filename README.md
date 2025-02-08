@@ -21,11 +21,11 @@ _MobX ViewModel power for ReactJS_
 
 ## What package has   
 
-## [`ViewModelImpl`](src/view-model/view-model.impl.ts), [`ViewModel`](src/view-model/view-model.ts)   
+## [`ViewModelBase`](src/view-model/view-model.base.ts), [`ViewModel`](src/view-model/view-model.ts)   
 It is a class that helps to manage state and lifecycle of a component in **React**.  
 
 
-## [`ViewModelStoreImpl`](src/view-model/view-model.store.impl.ts), [`ViewModelStore`](src/view-model/view-model.store.ts)  
+## [`ViewModelStoreBase`](src/view-model/view-model.store.base.ts), [`ViewModelStore`](src/view-model/view-model.store.ts)  
 It is store for managing view models.  
 P.S not required entity for targeted usage of this package, but can be helpful for accessing view models from everywhere by view model id or view model class name.   
 
@@ -139,13 +139,13 @@ export const MyPage = withViewModel(MyPageVM)(MyPageView);
 ```ts
 // view-model.store.impl.ts
 import {
-  AbstractViewModelParams,
-  AbstractViewModelStore,
+  ViewModelParams,
+  ViewModelStoreBase,
   ViewModel,
   ViewModelCreateConfig,
 } from 'mobx-view-model';
 
-export class ViewModelStoreImpl extends AbstractViewModelStore {
+export class ViewModelStoreImpl extends ViewModelStoreBase {
   constructor(protected rootStore: RootStore) {
     super();
   }
@@ -174,19 +174,19 @@ export interface ViewModel<
 
 ```ts
 // view-model.impl.ts
-import { AbstractViewModel, AbstractViewModelParams } from 'mobx-view-model';
+import { ViewModelBase, ViewModelParams } from 'mobx-view-model';
 import { ViewModel } from './view-model';
 
 export class ViewModelImpl<
     Payload extends AnyObject = EmptyObject,
     ParentViewModel extends ViewModel<any> = ViewModel<any>,
   >
-  extends AbstractViewModel<Payload, ParentViewModel>
+  extends ViewModelBase<Payload, ParentViewModel>
   implements ViewModel<Payload, ParentViewModel>
 {
   constructor(
     protected rootStore: RootStore,
-    params: AbstractViewModelParams<Payload>,
+    params: ViewModelParams<Payload, ParentViewModel>,
   ) {
     super(params);
   }

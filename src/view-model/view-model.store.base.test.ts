@@ -2,9 +2,9 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { AnyObject, EmptyObject, Maybe } from '../utils/types.js';
 
-import { ViewModelMock } from './view-model.impl.test.js';
+import { ViewModelBaseMock } from './view-model.base.test.js';
 import { ViewModel } from './view-model.js';
-import { ViewModelStoreImpl } from './view-model.store.impl.js';
+import { ViewModelStoreBase } from './view-model.store.base.js';
 import { ViewModelStore } from './view-model.store.js';
 import {
   ViewModelGenerateIdConfig,
@@ -12,7 +12,7 @@ import {
 } from './view-model.store.types.js';
 import { AnyViewModel, ViewModelParams } from './view-model.types.js';
 
-export class ViewModelStoreMock extends ViewModelStoreImpl {
+export class ViewModelStoreBaseMock extends ViewModelStoreBase {
   spies = {
     generateViewModelId: vi.fn(),
     get: vi.fn(),
@@ -52,36 +52,36 @@ export class ViewModelStoreMock extends ViewModelStoreImpl {
   }
 }
 
-describe('ViewModelStoreImpl', () => {
+describe('ViewModelStoreBase', () => {
   it('has clean method', () => {
-    const vmStore = new ViewModelStoreMock();
+    const vmStore = new ViewModelStoreBaseMock();
     expect(vmStore.clean).toBeDefined();
   });
   it('has attach method', () => {
-    const vmStore = new ViewModelStoreMock();
+    const vmStore = new ViewModelStoreBaseMock();
     expect(vmStore.attach).toBeDefined();
   });
   it('has createViewModel method', () => {
-    const vmStore = new ViewModelStoreMock();
+    const vmStore = new ViewModelStoreBaseMock();
     expect(vmStore.createViewModel).toBeDefined();
   });
 
   it('create instance', () => {
-    const vmStore = new ViewModelStoreMock();
+    const vmStore = new ViewModelStoreBaseMock();
     expect(vmStore).toBeDefined();
   });
 
   it('is able to attach view model', async () => {
-    const vmStore = new ViewModelStoreMock();
-    const vm = new ViewModelMock({ id: '1' });
+    const vmStore = new ViewModelStoreBaseMock();
+    const vm = new ViewModelBaseMock({ id: '1' });
     await vmStore.attach(vm);
     expect(vmStore.get('1')).toBe(vm);
     expect(vmStore._instanceAttachedCount.get('1')).toBe(1);
   });
 
   it('is able to detach view model', async () => {
-    const vmStore = new ViewModelStoreMock();
-    const vm = new ViewModelMock({ id: '1' });
+    const vmStore = new ViewModelStoreBaseMock();
+    const vm = new ViewModelBaseMock({ id: '1' });
     await vmStore.attach(vm);
     await vmStore.detach('1');
     expect(vmStore.get('1')).toBe(null);
@@ -89,13 +89,13 @@ describe('ViewModelStoreImpl', () => {
   });
 
   it('is able to get total mounted views count', async () => {
-    const vmStore = new ViewModelStoreMock();
-    await vmStore.attach(new ViewModelMock({ id: '1' }));
-    await vmStore.attach(new ViewModelMock({ id: '1' }));
-    await vmStore.attach(new ViewModelMock({ id: '2' }));
-    await vmStore.attach(new ViewModelMock({ id: '2' }));
-    await vmStore.attach(new ViewModelMock({ id: '3' }));
-    await vmStore.attach(new ViewModelMock({ id: '3' }));
+    const vmStore = new ViewModelStoreBaseMock();
+    await vmStore.attach(new ViewModelBaseMock({ id: '1' }));
+    await vmStore.attach(new ViewModelBaseMock({ id: '1' }));
+    await vmStore.attach(new ViewModelBaseMock({ id: '2' }));
+    await vmStore.attach(new ViewModelBaseMock({ id: '2' }));
+    await vmStore.attach(new ViewModelBaseMock({ id: '3' }));
+    await vmStore.attach(new ViewModelBaseMock({ id: '3' }));
     expect(vmStore.mountedViewsCount).toBe(6);
   });
 
@@ -103,7 +103,7 @@ describe('ViewModelStoreImpl', () => {
     class TestViewModelImpl1<
       Payload extends AnyObject = EmptyObject,
       ParentViewModel extends AnyViewModel | null = null,
-    > extends ViewModelMock<Payload, ParentViewModel> {
+    > extends ViewModelBaseMock<Payload, ParentViewModel> {
       constructor(
         private vmStore: ViewModelStore,
         params?: Partial<ViewModelParams<Payload>>,
@@ -121,7 +121,7 @@ describe('ViewModelStoreImpl', () => {
     class VMParent extends TestViewModelImpl1 {}
     class VMChild extends TestViewModelImpl1<any, VMParent> {}
 
-    const vmStore = new ViewModelStoreMock();
+    const vmStore = new ViewModelStoreBaseMock();
 
     const parentVM = new VMParent(vmStore, { id: 'parent' });
 
@@ -138,9 +138,9 @@ describe('ViewModelStoreImpl', () => {
   });
 
   it('able to get access to view model by id', async () => {
-    const vmStore = new ViewModelStoreMock();
+    const vmStore = new ViewModelStoreBaseMock();
 
-    const vm = new ViewModelMock();
+    const vm = new ViewModelBaseMock();
 
     await vmStore.attach(vm);
 
@@ -148,9 +148,9 @@ describe('ViewModelStoreImpl', () => {
   });
 
   it('able to get access to view model by Class', async () => {
-    const vmStore = new ViewModelStoreMock();
+    const vmStore = new ViewModelStoreBaseMock();
 
-    class MyVM extends ViewModelMock {}
+    class MyVM extends ViewModelBaseMock {}
     const vm = new MyVM();
 
     await vmStore.attach(vm);
@@ -159,9 +159,9 @@ describe('ViewModelStoreImpl', () => {
   });
 
   it('able to get instance id by id (getId method)', async () => {
-    const vmStore = new ViewModelStoreMock();
+    const vmStore = new ViewModelStoreBaseMock();
 
-    class MyVM extends ViewModelMock {}
+    class MyVM extends ViewModelBaseMock {}
     const vm = new MyVM();
 
     await vmStore.attach(vm);
@@ -170,9 +170,9 @@ describe('ViewModelStoreImpl', () => {
   });
 
   it('able to get instance id by Class (getId method)', async () => {
-    const vmStore = new ViewModelStoreMock();
+    const vmStore = new ViewModelStoreBaseMock();
 
-    class MyVM extends ViewModelMock {}
+    class MyVM extends ViewModelBaseMock {}
     const vm = new MyVM();
 
     await vmStore.attach(vm);

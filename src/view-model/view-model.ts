@@ -1,6 +1,5 @@
-import { AnyObject, Class, EmptyObject } from '../utils/types.js';
+import { AnyObject, EmptyObject } from '../utils/types.js';
 
-import { ViewModelImpl } from './view-model.impl.js';
 import { AnyViewModel } from './view-model.types.js';
 
 /**
@@ -26,6 +25,9 @@ export interface ViewModel<
   /**
    * State that determines if ViewModel is mounted together with a component.
    * This state is determined by handling the mount()\unmount() methods.
+   *
+   * This parameter is not working as expected if you are using `useCreateViewModel` hook.
+   * Because if you are using `withViewModel` HOC then the view model is mounted together with a component.
    */
   isMounted: boolean;
 
@@ -76,8 +78,3 @@ export interface ViewModel<
    */
   payloadChanged(payload: Payload): void;
 }
-
-export type ViewModelClass<T extends AnyViewModel = AnyViewModel> = Class<
-  T,
-  ConstructorParameters<typeof ViewModelImpl<T['payload']>>
->;

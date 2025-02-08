@@ -1,14 +1,14 @@
 import { act, render } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 
-import { ViewModelMock } from '../view-model/view-model.impl.test.js';
+import { ViewModelBaseMock } from '../view-model/view-model.base.test.js';
 
 import { withLazyViewModel } from './with-lazy-view-model.js';
 import { ViewModelProps } from './with-view-model.js';
 
 describe('withLazyViewModel', () => {
   test('should has preload static method', async () => {
-    class VM extends ViewModelMock {
+    class VM extends ViewModelBaseMock {
       mount() {
         super.mount();
       }
@@ -26,7 +26,7 @@ describe('withLazyViewModel', () => {
     expect(Component.preload).toBeDefined();
   });
   test('render should call load fn', async () => {
-    class VM extends ViewModelMock {
+    class VM extends ViewModelBaseMock {
       mount() {
         super.mount();
       }

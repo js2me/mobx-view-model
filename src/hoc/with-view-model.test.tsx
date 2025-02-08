@@ -17,8 +17,8 @@ import {
 } from '../index.js';
 import { createCounter } from '../utils/index.js';
 import { EmptyObject } from '../utils/types.js';
-import { ViewModelMock } from '../view-model/view-model.impl.test.js';
-import { ViewModelStoreMock } from '../view-model/view-model.store.impl.test.js';
+import { ViewModelBaseMock } from '../view-model/view-model.base.test.js';
+import { ViewModelStoreBaseMock } from '../view-model/view-model.store.base.test.js';
 
 import { ViewModelProps, withViewModel } from './with-view-model.js';
 
@@ -29,7 +29,7 @@ const createIdGenerator = (prefix?: string) => {
 
 describe('withViewModel', () => {
   test('renders', async () => {
-    class VM extends ViewModelMock {
+    class VM extends ViewModelBaseMock {
       mount() {
         super.mount();
       }
@@ -46,7 +46,7 @@ describe('withViewModel', () => {
   });
 
   test('renders fallback', async () => {
-    class VM extends ViewModelMock {
+    class VM extends ViewModelBaseMock {
       // eslint-disable-next-line sonarjs/no-empty-function
       mount() {}
     }
@@ -69,7 +69,7 @@ describe('withViewModel', () => {
   });
 
   test('renders fallback (times)', async () => {
-    class VM extends ViewModelMock {
+    class VM extends ViewModelBaseMock {
       // eslint-disable-next-line sonarjs/no-empty-function
       mount() {}
     }
@@ -89,7 +89,7 @@ describe('withViewModel', () => {
   });
 
   test('renders fallback before render REAL COMPONENT (times)', async () => {
-    class VM extends ViewModelMock {}
+    class VM extends ViewModelBaseMock {}
     const View = ({ model }: ViewModelProps<VM>) => {
       return <div data-testid={'view'}>{`hello ${model.id}`}</div>;
     };
@@ -103,11 +103,11 @@ describe('withViewModel', () => {
 
     await act(async () => render(<Component />));
 
-    expect(spyFallbackRender).toHaveBeenCalledTimes(1);
+    expect(spyFallbackRender).toHaveBeenCalledTimes(0);
   });
 
   test('renders nesting', () => {
-    const Component1 = withViewModel(ViewModelMock)(({
+    const Component1 = withViewModel(ViewModelBaseMock)(({
       children,
     }: {
       children?: ReactNode;
@@ -119,7 +119,7 @@ describe('withViewModel', () => {
         </div>
       );
     });
-    const Component2 = withViewModel(ViewModelMock)(() => {
+    const Component2 = withViewModel(ViewModelBaseMock)(() => {
       return <div>child</div>;
     });
 
@@ -144,7 +144,7 @@ describe('withViewModel', () => {
   });
 
   test('renders twice', async () => {
-    class VM extends ViewModelMock {}
+    class VM extends ViewModelBaseMock {}
     const View = ({ model }: ViewModelProps<VM>) => {
       return <div>{`hello ${model.id}`}</div>;
     };
@@ -163,7 +163,7 @@ describe('withViewModel', () => {
   });
 
   test('renders with fixed id', () => {
-    class VM extends ViewModelMock {}
+    class VM extends ViewModelBaseMock {}
     const View = ({ model }: ViewModelProps<VM>) => {
       return <div>{`hello ${model.id}`}</div>;
     };
@@ -174,7 +174,7 @@ describe('withViewModel', () => {
   });
 
   test('renders twice with fixed id', async () => {
-    class VM extends ViewModelMock {}
+    class VM extends ViewModelBaseMock {}
     const View = ({ model }: ViewModelProps<VM>) => {
       return <div>{`hello ${model.id}`}</div>;
     };
@@ -190,7 +190,7 @@ describe('withViewModel', () => {
   });
 
   test('View should be only mounted (renders only 1 time)', () => {
-    class VM extends ViewModelMock {}
+    class VM extends ViewModelBaseMock {}
     const View = vi.fn(({ model }: ViewModelProps<VM>) => {
       return <div>{`hello ${model.id}`}</div>;
     });
@@ -203,7 +203,7 @@ describe('withViewModel', () => {
   });
 
   test('withViewModel wrapper should by only mounted (renders 2 times)', () => {
-    class VM extends ViewModelMock {}
+    class VM extends ViewModelBaseMock {}
     const View = vi.fn(({ model }: ViewModelProps<VM>) => {
       return <div>{`hello ${model.id}`}</div>;
     });
@@ -216,11 +216,11 @@ describe('withViewModel', () => {
     })(View);
 
     render(<Component />);
-    expect(useHookSpy).toHaveBeenCalledTimes(2);
+    expect(useHookSpy).toHaveBeenCalledTimes(1);
   });
 
   test('View should be updated when payload is changed', async () => {
-    class VM extends ViewModelMock<{ counter: number }> {}
+    class VM extends ViewModelBaseMock<{ counter: number }> {}
     const View = vi.fn(({ model }: ViewModelProps<VM>) => {
       return <div>{`hello ${model.id}`}</div>;
     });
@@ -256,9 +256,9 @@ describe('withViewModel', () => {
   });
 
   test('View should have actual payload state', async () => {
-    let vm: ViewModelMock<{ counter: number }> | null;
+    let vm: ViewModelBaseMock<{ counter: number }> | null;
 
-    class VM extends ViewModelMock<{ counter: number }> {
+    class VM extends ViewModelBaseMock<{ counter: number }> {
       constructor(...args: any[]) {
         super(...args);
         vm = this;
@@ -301,7 +301,7 @@ describe('withViewModel', () => {
   });
 
   test('access to parent view model x3', async ({ task, expect }) => {
-    class VM1 extends ViewModelMock {
+    class VM1 extends ViewModelBaseMock {
       vm1Value = 'foo';
     }
     const Component1 = withViewModel(VM1)(({
@@ -311,7 +311,7 @@ describe('withViewModel', () => {
       return <div data-testid={`vm-${model.vm1Value}`}>{children}</div>;
     });
 
-    class VM2 extends ViewModelMock<EmptyObject, VM1> {
+    class VM2 extends ViewModelBaseMock<EmptyObject, VM1> {
       vm2Value = 'bar';
     }
     const Component2 = withViewModel(VM2)(({
@@ -327,7 +327,7 @@ describe('withViewModel', () => {
       );
     });
 
-    class VM3 extends ViewModelMock<EmptyObject, VM2> {
+    class VM3 extends ViewModelBaseMock<EmptyObject, VM2> {
       vm3Value = 'baz';
     }
     const Component3 = withViewModel(VM3)(({
@@ -360,7 +360,7 @@ describe('withViewModel', () => {
 
   describe('with ViewModelStore', () => {
     test('renders', async () => {
-      class VM extends ViewModelMock {}
+      class VM extends ViewModelBaseMock {}
       const View = observer(({ model }: ViewModelProps<VM>) => {
         return (
           <div>
@@ -369,7 +369,7 @@ describe('withViewModel', () => {
         );
       });
       const Component = withViewModel(VM, { generateId: () => '1' })(View);
-      const vmStore = new ViewModelStoreMock();
+      const vmStore = new ViewModelStoreBaseMock();
 
       const Wrapper = ({ children }: { children?: ReactNode }) => {
         return (
@@ -391,7 +391,7 @@ describe('withViewModel', () => {
     test('able to get access to view model store', async () => {
       let viewModels: ViewModelStore = null as any;
 
-      class VM extends ViewModelMock {
+      class VM extends ViewModelBaseMock {
         constructor(params: any) {
           super(params);
           viewModels = params.viewModels;
@@ -405,7 +405,7 @@ describe('withViewModel', () => {
         );
       });
       const Component = withViewModel(VM, { generateId: () => '1' })(View);
-      const vmStore = new ViewModelStoreMock();
+      const vmStore = new ViewModelStoreBaseMock();
 
       const Wrapper = ({ children }: { children?: ReactNode }) => {
         return (
@@ -420,7 +420,7 @@ describe('withViewModel', () => {
       );
 
       expect(viewModels).toBeDefined();
-      expect(vmStore.spies.get).toHaveBeenCalledTimes(3);
+      expect(vmStore.spies.get).toHaveBeenCalledTimes(2);
       expect(vmStore._instanceAttachedCount.size).toBe(1);
       expect(vmStore._unmountingViews.size).toBe(0);
       expect(vmStore.mountedViewsCount).toBe(1);
@@ -428,7 +428,7 @@ describe('withViewModel', () => {
     });
 
     test('access to parent view model x3', async ({ task }) => {
-      const vmStore = new ViewModelStoreMock();
+      const vmStore = new ViewModelStoreBaseMock();
 
       const Wrapper = ({ children }: { children?: ReactNode }) => {
         return (
@@ -436,7 +436,7 @@ describe('withViewModel', () => {
         );
       };
 
-      class VM1 extends ViewModelMock {
+      class VM1 extends ViewModelBaseMock {
         vm1Value = 'foo';
       }
       const Component1 = withViewModel(VM1)(({
@@ -446,7 +446,7 @@ describe('withViewModel', () => {
         return <div data-testid={`vm-${model.vm1Value}`}>{children}</div>;
       });
 
-      class VM2 extends ViewModelMock<EmptyObject, VM1> {
+      class VM2 extends ViewModelBaseMock<EmptyObject, VM1> {
         vm2Value = 'bar';
       }
       const Component2 = withViewModel(VM2)(({
@@ -462,7 +462,7 @@ describe('withViewModel', () => {
         );
       });
 
-      class VM3 extends ViewModelMock<EmptyObject, VM2> {
+      class VM3 extends ViewModelBaseMock<EmptyObject, VM2> {
         vm3Value = 'baz';
       }
       const Component3 = withViewModel(VM3)(({
@@ -494,7 +494,7 @@ describe('withViewModel', () => {
       expect(container.firstChild).toMatchFileSnapshot(
         `../../tests/snapshots/hoc/with-view-model/view-model-store/${task.name}.html`,
       );
-      expect(vmStore.spies.get).toHaveBeenCalledTimes(15);
+      expect(vmStore.spies.get).toHaveBeenCalledTimes(12);
       expect(vmStore._instanceAttachedCount.size).toBe(3);
       expect(vmStore._unmountingViews.size).toBe(0);
       expect(vmStore.mountedViewsCount).toBe(3);
@@ -505,7 +505,7 @@ describe('withViewModel', () => {
       task,
       expect,
     }) => {
-      const vmStore = new ViewModelStoreMock();
+      const vmStore = new ViewModelStoreBaseMock();
 
       const Wrapper = ({ children }: { children?: ReactNode }) => {
         return (
@@ -513,7 +513,7 @@ describe('withViewModel', () => {
         );
       };
 
-      class ChildVM extends ViewModelMock<EmptyObject, MiddleVM> {
+      class ChildVM extends ViewModelBaseMock<EmptyObject, MiddleVM> {
         value = 'value-from-child';
       }
       const Child = withViewModel(ChildVM, {
@@ -527,7 +527,7 @@ describe('withViewModel', () => {
         );
       });
 
-      class ParentVM extends ViewModelMock {
+      class ParentVM extends ViewModelBaseMock {
         value = 'value-from-parent';
 
         get child() {
@@ -554,7 +554,7 @@ describe('withViewModel', () => {
         );
       });
 
-      class MiddleVM extends ViewModelMock<EmptyObject, ParentVM> {
+      class MiddleVM extends ViewModelBaseMock<EmptyObject, ParentVM> {
         value = 'value-from-middle';
       }
       const Middle = withViewModel(MiddleVM)(({
@@ -600,7 +600,7 @@ describe('withViewModel', () => {
       task,
       expect,
     }) => {
-      const vmStore = new ViewModelStoreMock();
+      const vmStore = new ViewModelStoreBaseMock();
 
       const Wrapper = ({ children }: { children?: ReactNode }) => {
         return (
@@ -608,7 +608,7 @@ describe('withViewModel', () => {
         );
       };
 
-      class ChildVM extends ViewModelMock<EmptyObject, MiddleVM> {
+      class ChildVM extends ViewModelBaseMock<EmptyObject, MiddleVM> {
         value = 'value-from-child';
       }
       const Child = withViewModel(ChildVM, {
@@ -629,7 +629,7 @@ describe('withViewModel', () => {
         ),
       );
 
-      class ParentVM extends ViewModelMock {
+      class ParentVM extends ViewModelBaseMock {
         value = 'value-from-parent';
 
         get child() {
@@ -660,7 +660,7 @@ describe('withViewModel', () => {
         ),
       );
 
-      class MiddleVM extends ViewModelMock<EmptyObject, ParentVM> {
+      class MiddleVM extends ViewModelBaseMock<EmptyObject, ParentVM> {
         value = 'value-from-middle';
 
         showChild: boolean;
