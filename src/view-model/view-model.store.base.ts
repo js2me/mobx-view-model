@@ -258,6 +258,8 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
   async detach(id: string) {
     const attachedCount = this.instanceAttachedCount.get(id) ?? 0;
 
+    this.viewModelsTempHeap.delete(id);
+
     const model = this.viewModels.get(id);
 
     if (model) {
