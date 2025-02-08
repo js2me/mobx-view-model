@@ -36,6 +36,8 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
   protected viewModelIdsByClasses: Map<Class<VMBase>, string[]>;
   protected instanceAttachedCount: Map<string, number>;
 
+  protected viewModelsTempHeap: Map<string, VMBase>;
+
   /**
    * Views waiting for mount
    */
@@ -51,15 +53,17 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
   constructor(protected config?: ViewModelStoreConfig) {
     this.viewModels = observable.map([], { deep: false });
     this.linkedComponentVMClasses = observable.map([], { deep: false });
-    this.viewModelIdsByClasses = observable.map([], { deep: false });
+    this.viewModelIdsByClasses = observable.map([], { deep: true });
     this.instanceAttachedCount = observable.map([], { deep: false });
     this.mountingViews = observable.set([], { deep: false });
     this.unmountingViews = observable.set([], { deep: false });
     this.vmConfig = mergeVMConfigs(config?.vmConfig);
+    this.viewModelsTempHeap = new Map();
 
     computed(this, 'mountedViewsCount');
     action(this, 'mount');
     action(this, 'unmount');
+    action(this, 'attachVMConstructor');
     action(this, 'attach');
     action(this, 'detach');
     action(this, 'linkComponent');
@@ -183,7 +187,9 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
 
     if (!id) return null;
 
-    return (this.viewModels.get(id) as Maybe<T>) ?? null;
+    const observedVM = this.viewModels.get(id) as Maybe<T>;
+
+    return observedVM ?? (this.viewModelsTempHeap.get(id) as Maybe<T>) ?? null;
   }
 
   getAll<T extends VMBase>(vmLookup: Maybe<ViewModelLookup<T>>): T[] {
@@ -212,6 +218,25 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
     });
   }
 
+  private attachVMConstructor(model: VMBase) {
+    const constructor = (model as any).constructor as Class<any, any>;
+
+    if (this.viewModelIdsByClasses.has(constructor)) {
+      const vmIds = this.viewModelIdsByClasses.get(constructor)!;
+      if (!vmIds.includes(model.id)) {
+        vmIds.push(model.id);
+      }
+    } else {
+      this.viewModelIdsByClasses.set(constructor, [model.id]);
+    }
+  }
+
+  markToBeAttached(model: VMBase) {
+    this.viewModelsTempHeap.set(model.id, model);
+
+    this.attachVMConstructor(model);
+  }
+
   async attach(model: VMBase) {
     const attachedCount = this.instanceAttachedCount.get(model.id) ?? 0;
 
@@ -222,15 +247,12 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
     }
 
     this.viewModels.set(model.id, model);
-    const constructor = (model as any).constructor as Class<any, any>;
 
-    if (this.viewModelIdsByClasses.has(constructor)) {
-      this.viewModelIdsByClasses.get(constructor)!.push(model.id);
-    } else {
-      this.viewModelIdsByClasses.set(constructor, [model.id]);
-    }
+    this.attachVMConstructor(model);
 
     await this.mount(model);
+
+    this.viewModelsTempHeap.delete(model.id);
   }
 
   async detach(id: string) {

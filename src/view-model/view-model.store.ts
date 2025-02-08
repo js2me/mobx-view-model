@@ -49,6 +49,8 @@ export interface ViewModelStore<VMBase extends AnyViewModel = AnyViewModel> {
    */
   getAll<T extends VMBase>(vmLookup: Maybe<ViewModelLookup<T>>): T[];
 
+  markToBeAttached(model: VMBase): void;
+
   /**
    * Attaches a view model to the store.
    * @param model - The view model to attach.

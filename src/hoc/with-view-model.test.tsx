@@ -103,7 +103,7 @@ describe('withViewModel', () => {
 
     await act(async () => render(<Component />));
 
-    expect(spyFallbackRender).toHaveBeenCalledTimes(0);
+    expect(spyFallbackRender).toHaveBeenCalledTimes(1);
   });
 
   test('renders nesting', () => {
@@ -216,7 +216,7 @@ describe('withViewModel', () => {
     })(View);
 
     render(<Component />);
-    expect(useHookSpy).toHaveBeenCalledTimes(1);
+    expect(useHookSpy).toHaveBeenCalledTimes(2);
   });
 
   test('View should be updated when payload is changed', async () => {
@@ -420,7 +420,7 @@ describe('withViewModel', () => {
       );
 
       expect(viewModels).toBeDefined();
-      expect(vmStore.spies.get).toHaveBeenCalledTimes(2);
+      expect(vmStore.spies.get).toHaveBeenCalledTimes(3);
       expect(vmStore._instanceAttachedCount.size).toBe(1);
       expect(vmStore._unmountingViews.size).toBe(0);
       expect(vmStore.mountedViewsCount).toBe(1);
@@ -494,7 +494,7 @@ describe('withViewModel', () => {
       expect(container.firstChild).toMatchFileSnapshot(
         `../../tests/snapshots/hoc/with-view-model/view-model-store/${task.name}.html`,
       );
-      expect(vmStore.spies.get).toHaveBeenCalledTimes(12);
+      expect(vmStore.spies.get).toHaveBeenCalledTimes(15);
       expect(vmStore._instanceAttachedCount.size).toBe(3);
       expect(vmStore._unmountingViews.size).toBe(0);
       expect(vmStore.mountedViewsCount).toBe(3);

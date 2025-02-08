@@ -105,9 +105,7 @@ export const useCreateViewModel = <TViewModel extends AnyViewModel>(
     lastInstance.current = instance;
 
     if (viewModels) {
-      viewModels.attach(instance);
-    } else {
-      instance.mount();
+      viewModels.markToBeAttached(instance);
     }
 
     return instance;
@@ -115,6 +113,7 @@ export const useCreateViewModel = <TViewModel extends AnyViewModel>(
 
   useLayoutEffect(() => {
     if (viewModels) {
+      viewModels.attach(instance);
       return () => {
         viewModels.detach(id);
         lastInstance.current = null;
