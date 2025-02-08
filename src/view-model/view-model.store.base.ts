@@ -297,5 +297,6 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
     this.instanceAttachedCount.clear();
     this.mountingViews.clear();
     this.unmountingViews.clear();
+    this.viewModelsTempHeap.clear();
   }
 }
