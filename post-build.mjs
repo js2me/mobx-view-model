@@ -16,8 +16,7 @@ postBuildScript({
         createTag: true,
         githubRepoLink: 'https://github.com/js2me/mobx-view-model',
         cleanupCommand: 'pnpm clean', 
-        targetPackageJson,
-        otherNames: ['mobx-view-model']
+        targetPackageJson
       })
     }
   }
