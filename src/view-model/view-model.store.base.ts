@@ -66,7 +66,8 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
     action(this, 'attachVMConstructor');
     action(this, 'attach');
     action(this, 'detach');
-    action(this, 'linkComponent');
+    action(this, 'linkComponents');
+    action(this, 'unlinkComponents');
 
     makeObservable(this);
   }
