@@ -1,10 +1,11 @@
-import { useContext, useLayoutEffect, useMemo, useRef } from 'react';
+import { useContext, useMemo, useRef } from 'react';
 import { AnyObject, Class, EmptyObject, Maybe } from 'yummies/utils/types';
 
 import { viewModelsConfig } from '../config/global-config.js';
 import { mergeVMConfigs } from '../config/utils/merge-vm-configs.js';
 import { ActiveViewModelContext } from '../contexts/active-view-context.js';
 import { ViewModelsContext } from '../contexts/view-models-context.js';
+import { useIsomorphicLayoutEffect } from '../lib/hooks/use-isomorphic-layout-effect.js';
 import { generateVMId } from '../utils/create-vm-id-generator.js';
 import { ViewModelCreateConfig } from '../view-model/view-model.store.types.js';
 import {
@@ -111,7 +112,7 @@ export const useCreateViewModel = <TViewModel extends AnyViewModel>(
     return instance;
   }, [instanceFromStore]);
 
-  useLayoutEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     if (viewModels) {
       viewModels.attach(instance);
       return () => {
@@ -127,7 +128,7 @@ export const useCreateViewModel = <TViewModel extends AnyViewModel>(
     }
   }, []);
 
-  useLayoutEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     instance.setPayload(payload);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [payload]);
