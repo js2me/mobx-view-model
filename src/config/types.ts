@@ -2,7 +2,10 @@ import { ComponentType } from 'react';
 import { AnyObject, DeepPartial } from 'yummies/utils/types';
 
 import { ViewModelCreateConfig } from '../view-model/view-model.store.types.js';
-import { AnyViewModel } from '../view-model/view-model.types.js';
+import type {
+  AnyViewModel,
+  PayloadCompareFn,
+} from '../view-model/view-model.types.js';
 
 /**
  * Configuration options for view models.
@@ -20,6 +23,13 @@ export interface ViewModelsConfig {
     unmount: boolean;
     payloadChange: boolean;
   };
+  /**
+   * Comparing payloads.
+   * - `'strict'` - strict equality
+   * - `'shallow'` - shallow equality
+   * - custom payload compare fn
+   */
+  comparePayload: PayloadCompareFn | 'strict' | 'shallow';
   /**
    * Generates an ID for a view model.
    * @param ctx

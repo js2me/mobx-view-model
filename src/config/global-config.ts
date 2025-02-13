@@ -3,6 +3,7 @@ import { ViewModelsConfig } from './types.js';
 const accessSymbol = Symbol();
 
 const defaultViewModelsConfig: ViewModelsConfig = {
+  comparePayload: 'strict',
   startViewTransitions: {
     mount: false,
     payloadChange: false,

@@ -11,11 +11,16 @@ import { startViewTransitionSafety } from 'yummies/html';
 
 import { ViewModelsConfig } from '../config/index.js';
 import { mergeVMConfigs } from '../config/utils/merge-vm-configs.js';
+import { isShallowEqual } from '../utils/is-shallow-equal.js';
 import { AnyObject, EmptyObject, Maybe } from '../utils/types.js';
 
 import { ViewModel } from './view-model.js';
 import { ViewModelStore } from './view-model.store.js';
-import { AnyViewModel, ViewModelParams } from './view-model.types.js';
+import {
+  AnyViewModel,
+  PayloadCompareFn,
+  ViewModelParams,
+} from './view-model.types.js';
 
 declare const process: { env: { NODE_ENV?: string } };
 
@@ -36,6 +41,8 @@ export class ViewModelBase<
 
   protected vmConfig: ViewModelsConfig;
 
+  protected isPayloadEqual: PayloadCompareFn;
+
   constructor(protected params: ViewModelParams<Payload, ParentViewModel>) {
     this.id = params.id;
     this.vmConfig = mergeVMConfigs(params.config);
@@ -53,6 +60,14 @@ export class ViewModelBase<
     action(this, 'setPayload');
 
     makeObservable(this);
+
+    if (this.vmConfig.comparePayload === 'strict') {
+      this.isPayloadEqual = isEqual;
+    } else if (this.vmConfig.comparePayload === 'shallow') {
+      this.isPayloadEqual = isShallowEqual;
+    } else {
+      this.isPayloadEqual = this.vmConfig.comparePayload;
+    }
   }
 
   protected get viewModels(): ViewModelStore {
@@ -138,7 +153,7 @@ export class ViewModelBase<
    * The method is called when the payload changes (referentially due to useLayoutEffect\useEffect) in the react component
    */
   setPayload(payload: Payload) {
-    if (!isEqual(this.payload, payload)) {
+    if (!this.isPayloadEqual(this.payload, payload)) {
       startViewTransitionSafety(
         () => {
           runInAction(() => {

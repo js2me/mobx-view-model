@@ -6,6 +6,8 @@ import { ViewModelStore } from './view-model.store.js';
 
 export type AnyViewModel = ViewModel<any, any>;
 
+export type PayloadCompareFn = (a: AnyObject, b: AnyObject) => boolean;
+
 export interface ViewModelParams<
   Payload extends AnyObject = EmptyObject,
   ParentViewModel extends AnyViewModel | null = null,
