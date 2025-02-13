@@ -154,7 +154,7 @@ export class ViewModelBase<
   }
 
   /**
-   * The method is called when the payload changes (referentially due to useLayoutEffect\useEffect) in the react component
+   * The method is called when the payload changes in the react component
    */
   setPayload(payload: Payload) {
     if (!this.isPayloadEqual?.(this.payload, payload)) {
