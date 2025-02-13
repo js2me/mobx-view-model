@@ -128,10 +128,7 @@ export const useCreateViewModel = <TViewModel extends AnyViewModel>(
     }
   }, []);
 
-  useIsomorphicLayoutEffect(() => {
-    instance.setPayload(payload);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [payload]);
+  instance.setPayload(payload);
 
   return instance;
 };

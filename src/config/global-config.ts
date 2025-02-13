@@ -4,6 +4,7 @@ const accessSymbol = Symbol();
 
 const defaultViewModelsConfig: ViewModelsConfig = {
   comparePayload: 'strict',
+  payloadObservable: 'ref',
   startViewTransitions: {
     mount: false,
     payloadChange: false,

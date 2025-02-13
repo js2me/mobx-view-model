@@ -27,9 +27,16 @@ export interface ViewModelsConfig {
    * Comparing payloads.
    * - `'strict'` - strict equality
    * - `'shallow'` - shallow equality
+   * - false - no comparison
    * - custom payload compare fn
    */
-  comparePayload: PayloadCompareFn | 'strict' | 'shallow';
+  comparePayload: PayloadCompareFn | 'strict' | 'shallow' | false;
+  /**
+   * Indicates whether to use `ref` or `deep` observable for payload.
+   * - `'ref'` - use `ref` observable
+   * - `'deep'` - use `deep` observable
+   */
+  payloadObservable: 'ref' | 'deep';
   /**
    * Generates an ID for a view model.
    * @param ctx
