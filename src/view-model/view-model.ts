@@ -39,10 +39,13 @@ export interface ViewModel<
   readonly parentViewModel: ParentViewModel;
 
   /**
-   * The method that is called when the view model is mounted.
-   * This method is called after the view model is created and the payload is set.
-   * This method is called only once when the view model is mounted.
-   * The method should return a promise that is resolved when the view model is fully mounted.
+   * This method is called when the component is starts mounting in the React tree.
+   * The base implementation assumes that after calling this method, the {isMounted} state
+   * will be true.
+   *
+   * Also, this method can return a Promise for lazy mounting of the view model.
+   *
+   * NOTE: The behavior of the `mount()` method may depend on the implementation of your ViewModelStore.
    */
   mount(): void | Promise<void>;
 
@@ -59,10 +62,13 @@ export interface ViewModel<
   didUnmount(): void;
 
   /**
-   * The method that is called when the view model is unmounted.
-   * This method is called before the view model is fully unmounted.
-   * This method is called only once when the view model is unmounted.
-   * The method can return a promise that is resolved when the view model is fully unmounted.
+   * This method is called when the component is starts unmounting from the React tree.
+   * The base implementation assumes that after calling this method, the {isMounted} state
+   * will be false.
+   *
+   * Also, this method can return a Promise for lazy unmounting of the view model.
+   *
+   * NOTE: The behavior of the `mount()` method may depend on the implementation of your ViewModelStore.
    */
   unmount(): void | Promise<void>;
 

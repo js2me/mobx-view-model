@@ -24,6 +24,20 @@ _MobX ViewModel power for ReactJS_
 ## [`ViewModelBase`](src/view-model/view-model.base.ts), [`ViewModel`](src/view-model/view-model.ts)   
 It is a class that helps to manage state and lifecycle of a component in **React**.  
 
+### Methods and properties of [ViewModel](src/view-model/view-model.ts)  
+- **`id`** - The unique identifier for the view model.  
+- **`payload`** - object that contains the data that is passed from the parent component.  
+- **`isMounted`** - state that determines if [ViewModel](src/view-model/view-model.ts)  is mounted together with a component.  
+- **`parentViewModel`** - parent view model of the current view model. (Works only with [ViewModelStore](src/view-model/view-model.store.ts) and [ViewModelsProvider](src/contexts/view-models-context.ts))  
+- **`mount()`** - this method is called when the component is mounted in the React tree.  
+- **`didMount()`** - this method that is called after the view model is fully mounted.  
+- **`didUnmount()`** - this method that is called after the view model is fully unmounted.  
+- **`unmount()`** - this method is called when the component is starts unmounting from the React tree.  
+- **`setPayload(payload: Payload)`** - this method that sets the payload of the view model.  
+- **`payloadChanged()`** - this method that is called when the payload is changed.  
+
+Any other details are declared [here](src/view-model/view-model.ts), base imlementation contains [here](src/view-model/view-model.base.ts)  
+
 
 ## [`ViewModelStoreBase`](src/view-model/view-model.store.base.ts), [`ViewModelStore`](src/view-model/view-model.store.ts)  
 It is store for managing view models.  
@@ -87,13 +101,21 @@ You can override default global config using import [`viewModelsConfig`](src/con
 ```ts
 import { viewModelsConfig } from "mobx-view-model"
 
+viewModelsConfig.comparePayload = 'strict';
+viewModelsConfig.payloadObservable = 'ref';
 viewModelsConfig.startViewTransitions = {
   mount: false,
   payloadChange: false,
   unmount: false,
 };
-
+// viewModelsConfig.generateId = undefined;
+// viewModelsConfig.factory = undefined;
+// viewModelsConfig.fallbackComponent = undefined;
+// viewModelsConfig.onMount = undefined;
+// viewModelsConfig.onUnmount = undefined;
 ```
+
+Any other details are declared [here](src/config/types.ts)    
 
 
 <br />
