@@ -21,14 +21,14 @@ _MobX ViewModel power for ReactJS_
 
 ## What package has   
 
-## [`ViewModelBase`](src/view-model/view-model.base.ts), [`ViewModel`](src/view-model/view-model.ts)   
+## [`ViewModelBase`](src/view-model/view-model.base.ts#L27), [`ViewModel`](src/view-model/view-model.ts#L9)   
 It is a class that helps to manage state and lifecycle of a component in **React**.  
 
-### Methods and properties of [ViewModel](src/view-model/view-model.ts)  
+### Methods and properties of [ViewModel](src/view-model/view-model.ts#L9)  
 - **`id`** - The unique identifier for the view model.  
 - **`payload`** - object that contains the data that is passed from the parent component.  
-- **`isMounted`** - state that determines if [ViewModel](src/view-model/view-model.ts)  is mounted together with a component.  
-- **`parentViewModel`** - parent view model of the current view model. (Works only with [ViewModelStore](src/view-model/view-model.store.ts) and [ViewModelsProvider](src/contexts/view-models-context.ts))  
+- **`isMounted`** - state that determines if [ViewModel](src/view-model/view-model.ts#L9)  is mounted together with a component.  
+- **`parentViewModel`** - parent view model of the current view model. (Works only with [ViewModelStore](src/view-model/view-model.store.ts#L18) and [ViewModelsProvider](src/contexts/view-models-context.ts))  
 - **`willMount()`** - this method is called when the component is starts mounting in the React tree.  
 - **`mount()`** - this method is called when the component is mounted in the React tree.  
 - **`didMount()`** - this method that is called after the view model is fully mounted.  
@@ -37,18 +37,18 @@ It is a class that helps to manage state and lifecycle of a component in **React
 - **`setPayload(payload: Payload)`** - this method that sets the payload of the view model.  
 - **`payloadChanged()`** - this method that is called when the payload is changed.  
 
-Any other details are declared [here](src/view-model/view-model.ts), base imlementation contains [here](src/view-model/view-model.base.ts)  
+Any other details are declared [here](src/view-model/view-model.ts#L9), base imlementation contains [here](src/view-model/view-model.base.ts#L27)  
 
 
-## [`ViewModelStoreBase`](src/view-model/view-model.store.base.ts), [`ViewModelStore`](src/view-model/view-model.store.ts)  
+## [`ViewModelStoreBase`](src/view-model/view-model.store.base.ts), [`ViewModelStore`](src/view-model/view-model.store.ts#L18)  
 It is store for managing view models.  
 P.S not required entity for targeted usage of this package, but can be helpful for accessing view models from everywhere by view model id or view model class name.   
 
-## [`useCreateViewModel(VM, payload, config)`](src/hooks/use-create-view-model.ts)  
+## [`useCreateViewModel(VM, payload, config)`](src/hooks/use-create-view-model.ts#L9)  
 Creates [`ViewModel`](#viewmodelimpl-viewmodel) instance.  
 Using in [`withViewModel()`](#withviewmodel) HOC.    
 
-## [`useViewModel()`](src/hooks/use-view-model.ts)  
+## [`useViewModel()`](src/hooks/use-view-model.ts#L9)  
 Hook that helps to get access to your view model in **React**.  
   Possible usage:   
     - `useViewModel<YourViewModel>()` - using generic to define type of returning view model instance  
@@ -96,9 +96,9 @@ export const Component = withViewModel(Model, {
 ## [`withLazyViewModel()()`](src/hoc/with-lazy-view-model.tsx)  
 Optional for usage HOC that doing the same thing as `withViewModel`, but fetching `ViewModel` and `View` "lazy"  
 
-## [`ViewModelsConfig`](src/config/types.ts)  
+## [`ViewModelsConfig`](src/config/types.ts#L13)  
 Additional configuration for all view models creating using library.  
-You can override default global config using import [`viewModelsConfig`](src/config/global-config.ts). You should do this before start whole app  
+You can override default global config using import [`viewModelsConfig`](src/config/global-config.ts#L26). You should do this before start whole app  
 ```ts
 import { viewModelsConfig } from "mobx-view-model"
 
@@ -116,7 +116,7 @@ viewModelsConfig.startViewTransitions = {
 // viewModelsConfig.onUnmount = undefined;
 ```
 
-Any other details are declared [here](src/config/types.ts)    
+Any other details are declared [here](src/config/types.ts#L13)    
 
 
 <br />
