@@ -84,6 +84,10 @@ export class ViewModelBase<
     return this.params.viewModels!;
   }
 
+  willMount(): void {
+    /* Empty method to be overridden */
+  }
+
   /**
    * The method is called when the view starts mounting
    */

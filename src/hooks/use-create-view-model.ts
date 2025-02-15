@@ -105,6 +105,8 @@ export const useCreateViewModel = <TViewModel extends AnyViewModel>(
 
     lastInstance.current = instance;
 
+    instance.willMount();
+
     if (viewModels) {
       viewModels.markToBeAttached(instance);
     }

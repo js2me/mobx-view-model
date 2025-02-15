@@ -40,6 +40,12 @@ export interface ViewModel<
 
   /**
    * This method is called when the component is starts mounting in the React tree.
+   * Before mount() method. After create instance of ViewModel.
+   */
+  willMount(): void;
+
+  /**
+   * This method is called when the component is starts mounting in the React tree.
    * The base implementation assumes that after calling this method, the {isMounted} state
    * will be true.
    *
