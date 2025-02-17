@@ -16,7 +16,7 @@ import {
   ViewModelsProvider,
 } from '../index.js';
 import { createCounter } from '../utils/index.js';
-import { EmptyObject } from '../utils/types.js';
+import { AnyObject, EmptyObject } from '../utils/types.js';
 import { ViewModelBaseMock } from '../view-model/view-model.base.test.js';
 import { ViewModelStoreBaseMock } from '../view-model/view-model.store.base.test.js';
 
@@ -25,6 +25,12 @@ import { ViewModelProps, withViewModel } from './with-view-model.js';
 const createIdGenerator = (prefix?: string) => {
   const counter = createCounter();
   return () => (prefix ?? '') + counter().toString();
+};
+
+const createVMStoreWrapper = (vmStore: ViewModelStore) => {
+  return ({ children }: { children?: ReactNode }) => {
+    return <ViewModelsProvider value={vmStore}>{children}</ViewModelsProvider>;
+  };
 };
 
 describe('withViewModel', () => {
@@ -710,6 +716,77 @@ describe('withViewModel', () => {
       await expect(container).toMatchFileSnapshot(
         `../../tests/snapshots/hoc/with-view-model/view-model-store/${task.name}.html`,
       );
+    });
+
+    test('endless rerenders bug', async () => {
+      const vmStore = new ViewModelStoreBaseMock({
+        vmConfig: {
+          comparePayload: false,
+          payloadObservable: 'deep',
+        },
+      });
+
+      let renderParentCount = -1;
+      let renderChildCount = -1;
+      class ParentVM extends ViewModelBaseMock {
+        get payloadParam1() {
+          return {};
+        }
+
+        get payloadParam2() {
+          return {};
+        }
+
+        get payloadParam3() {
+          return 10;
+        }
+
+        get payloadParam4() {
+          return [];
+        }
+      }
+      class ChildVM extends ViewModelBaseMock<{
+        payloadParam1: AnyObject;
+        payloadParam2: AnyObject;
+        payloadParam3: number;
+        payloadParam4: any[];
+      }> {}
+
+      const Child = withViewModel(ChildVM)(({ model }) => {
+        renderChildCount++;
+        return (
+          <div>
+            <label>{JSON.stringify(model.payload.payloadParam1)}</label>
+            <label>{JSON.stringify(model.payload.payloadParam2)}</label>
+            <label>{model.payload.payloadParam3}</label>
+          </div>
+        );
+      });
+
+      const Parent = withViewModel(ParentVM)(({ model }) => {
+        renderParentCount++;
+        return (
+          <div>
+            <Child
+              payload={{
+                payloadParam1: model.payloadParam1,
+                payloadParam2: model.payloadParam2,
+                payloadParam3: model.payloadParam3,
+                payloadParam4: model.payloadParam4,
+              }}
+            />
+          </div>
+        );
+      });
+
+      await act(async () =>
+        render(<Parent />, {
+          wrapper: createVMStoreWrapper(vmStore),
+        }),
+      );
+
+      expect(renderParentCount).toBe(2);
+      expect(renderChildCount).toBe(0);
     });
   });
 });

@@ -6,7 +6,7 @@ import {
   ViewModelStore,
   ViewModelsProvider,
   useCreateViewModel,
-  useViewModel,
+  useViewModel
 } from '../index.js';
 import { ViewModelBaseMock } from '../view-model/view-model.base.test.js';
 import { ViewModelStoreBaseMock } from '../view-model/view-model.store.base.test.js';
