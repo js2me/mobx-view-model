@@ -28,7 +28,9 @@ It is a class that helps to manage state and lifecycle of a component in **React
 - **`id`** - The unique identifier for the view model.  
 - **`payload`** - object that contains the data that is passed from the parent component.  
 - **`isMounted`** - state that determines if [ViewModel](src/view-model/view-model.ts#L9)  is mounted together with a component.  
+- **`isUnmounting`** - state that determines if [ViewModel](src/view-model/view-model.ts#L9)  is unmounting together with a view component.  
 - **`parentViewModel`** - parent view model of the current view model. (Works only with [ViewModelStore](src/view-model/view-model.store.ts#L18) and [ViewModelsProvider](src/contexts/view-models-context.ts))  
+- **`willUnmount()`** - this method is called when the component is starts unmounting in the React tree.  
 - **`willMount()`** - this method is called when the component is starts mounting in the React tree.  
 - **`mount()`** - this method is called when the component is mounted in the React tree.  
 - **`didMount()`** - this method that is called after the view model is fully mounted.  
