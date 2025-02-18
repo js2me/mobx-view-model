@@ -36,6 +36,9 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
   protected viewModelIdsByClasses: Map<Class<VMBase>, string[]>;
   protected instanceAttachedCount: Map<string, number>;
 
+  /**
+   * It is temp heap which is needed to get access to view model instance before all initializations happens
+   */
   protected viewModelsTempHeap: Map<string, VMBase>;
 
   /**
@@ -263,29 +266,35 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
 
     const model = this.viewModels.get(id);
 
-    if (model) {
-      this.instanceAttachedCount.set(model.id, attachedCount - 1);
+    if (!model) {
+      return;
+    }
 
-      if (attachedCount - 1 <= 0) {
-        this.instanceAttachedCount.delete(model.id);
+    const nextInstanceAttachedCount = attachedCount - 1;
 
-        const constructor = (model as any).constructor as Class<any, any>;
+    this.instanceAttachedCount.set(model.id, nextInstanceAttachedCount);
 
-        await runInAction(async () => {
-          this.viewModels.delete(id);
+    if (nextInstanceAttachedCount <= 0) {
+      model.willUnmount();
+      model.isUnmounting = true;
 
-          if (this.viewModelIdsByClasses.has(constructor)) {
-            this.viewModelIdsByClasses.set(
-              constructor,
-              this.viewModelIdsByClasses
-                .get(constructor)!
-                .filter((id) => id !== model.id),
-            );
-          }
+      this.instanceAttachedCount.delete(model.id);
 
-          await this.unmount(model);
-        });
+      const constructor = model.constructor as Class<VMBase, any>;
+
+      this.viewModels.delete(id);
+      if (this.viewModelIdsByClasses.has(constructor)) {
+        this.viewModelIdsByClasses.set(
+          constructor,
+          this.viewModelIdsByClasses
+            .get(constructor)!
+            .filter((id) => id !== model.id),
+        );
       }
+      await this.unmount(model);
+      runInAction(() => {
+        model.isUnmounting = false;
+      });
     }
   }
 

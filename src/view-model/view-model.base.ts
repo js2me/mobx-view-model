@@ -37,6 +37,8 @@ export class ViewModelBase<
 
   isMounted = false;
 
+  isUnmounting = false;
+
   public payload: Payload;
 
   protected vmConfig: ViewModelsConfig;
@@ -51,6 +53,7 @@ export class ViewModelBase<
     this.unmountSignal = this.abortController.signal;
 
     observable.ref(this, 'isMounted');
+    observable.ref(this, 'isUnmounting');
     computed(this, 'parentViewModel');
     if (this.vmConfig.payloadObservable === 'ref') {
       observable.ref(this, 'payload');
@@ -82,6 +85,10 @@ export class ViewModelBase<
     }
 
     return this.params.viewModels!;
+  }
+
+  willUnmount(): void {
+    /* Empty method to be overridden */
   }
 
   willMount(): void {

@@ -32,6 +32,11 @@ export interface ViewModel<
   isMounted: boolean;
 
   /**
+   * State that determines if ViewModel is unmounting together with a view component.
+   */
+  isUnmounting: boolean;
+
+  /**
    * The parent view model of the current view model.
    * Parent view model is the one that is above the current view model in the tree of view models.
    * Parent view model is determined by the getParentViewModel() method.
@@ -66,6 +71,12 @@ export interface ViewModel<
    * This method is called only once when the view model is unmounted.
    */
   didUnmount(): void;
+
+  /**
+   * This method is called when the component is starts unmounting in the React tree.
+   * Before unmount() method.
+   */
+  willUnmount(): void;
 
   /**
    * This method is called when the component is starts unmounting from the React tree.

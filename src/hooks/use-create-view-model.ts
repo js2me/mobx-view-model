@@ -1,3 +1,4 @@
+import { runInAction } from 'mobx';
 import { useContext, useMemo, useRef } from 'react';
 import { AnyObject, Class, EmptyObject, Maybe } from 'yummies/utils/types';
 
@@ -124,8 +125,15 @@ export const useCreateViewModel = <TViewModel extends AnyViewModel>(
     } else {
       instance.mount();
       return () => {
+        runInAction(() => {
+          instance.isUnmounting = true;
+        });
+        instance.willUnmount();
         instance.unmount();
         lastInstance.current = null;
+        runInAction(() => {
+          instance.isUnmounting = false;
+        });
       };
     }
   }, []);
