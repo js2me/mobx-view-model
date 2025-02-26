@@ -9,23 +9,21 @@ import { makeObservable, observable, runInAction } from 'mobx';
 import { observer } from 'mobx-react-lite';
 import { PropsWithChildren, ReactNode, useEffect, useState } from 'react';
 import { describe, expect, test, vi } from 'vitest';
+import { createCounter } from 'yummies/complex';
 
 import {
   ViewModelParams,
   ViewModelStore,
   ViewModelsProvider,
 } from '../index.js';
-import { createCounter } from '../utils/index.js';
 import { AnyObject, EmptyObject } from '../utils/types.js';
 import { ViewModelBaseMock } from '../view-model/view-model.base.test.js';
 import { ViewModelStoreBaseMock } from '../view-model/view-model.store.base.test.js';
 
 import { ViewModelProps, withViewModel } from './with-view-model.js';
 
-const createIdGenerator = (prefix?: string) => {
-  const counter = createCounter();
-  return () => (prefix ?? '') + counter().toString();
-};
+const createIdGenerator = (prefix?: string) =>
+  createCounter((counter) => `${prefix ?? ''}${counter}`);
 
 const createVMStoreWrapper = (vmStore: ViewModelStore) => {
   return ({ children }: { children?: ReactNode }) => {

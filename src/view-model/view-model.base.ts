@@ -7,11 +7,11 @@ import {
   observable,
   runInAction,
 } from 'mobx';
+import { isShallowEqual } from 'yummies/data';
 import { startViewTransitionSafety } from 'yummies/html';
 
 import { ViewModelsConfig } from '../config/index.js';
 import { mergeVMConfigs } from '../config/utils/merge-vm-configs.js';
-import { isShallowEqual } from '../utils/is-shallow-equal.js';
 import { AnyObject, EmptyObject, Maybe } from '../utils/types.js';
 
 import { ViewModel } from './view-model.js';
