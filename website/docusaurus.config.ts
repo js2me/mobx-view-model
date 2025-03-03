@@ -12,15 +12,17 @@ const config: Config = {
   favicon: 'logo.png',
 
   // Set the production url of your site here
-  url: `https://js2me.github.io`,
+  url: `https://${packageJson.author}.github.io`,
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
   baseUrl: `/${packageJson.name}/`,
+  deploymentBranch: 'gh-pages',
 
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
-  organizationName: packageJson.author, // Usually your GitHub org/user name.
+  organizationName: `${packageJson.author}.github.io`, // Usually your GitHub org/user name.
   projectName: packageJson.name, // Usually your repo name.
+  trailingSlash: false,
 
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',
