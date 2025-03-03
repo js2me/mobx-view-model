@@ -14,7 +14,7 @@ postBuildScript({
         publishCommand: 'pnpm publish',
         commitAllCurrentChanges: true,
         createTag: true,
-        githubRepoLink: 'https://github.com/js2me/mobx-view-model',
+        githubRepoLink: packageJson.repository.url.replace('git://', 'https://'),
         cleanupCommand: 'pnpm clean', 
         targetPackageJson,
       })
