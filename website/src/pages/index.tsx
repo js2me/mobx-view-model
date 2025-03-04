@@ -10,9 +10,9 @@ export default function Home(): ReactNode {
     <Layout
       title={`${siteConfig.title}`}
       description={`${siteConfig.tagline}`}>
-      <header className={'hero hero--primary flex-1'}>
+      <header className={'hero hero--primary flex-1 !bg-[transparent] !text-black dark:!text-ifm-secondary'}>
         <div className="container">
-          <Heading as="h1" className="hero__title">
+          <Heading as="h1" className="hero__title !text-ifm-primary">
             {siteConfig.title}
           </Heading>
           <p className="hero__subtitle">{siteConfig.tagline}</p>
