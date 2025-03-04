@@ -32,9 +32,8 @@ const config: Config = {
   // may want to replace "en" with "zh-Hans".
   i18n: {
     defaultLocale: 'en',
-    locales: ['en'],
+    locales: ['en', 'ru']
   },
-
   presets: [
     [
       'classic',
@@ -55,7 +54,6 @@ const config: Config = {
       } satisfies Preset.Options,
     ],
   ],
-
   themeConfig: {
     // Replace with your project's social card
     image: 'img/docusaurus-social-card.jpg',
@@ -72,6 +70,16 @@ const config: Config = {
           activeBasePath: 'getting-started',
         },
         {
+          label: 'API',
+          to: 'api/view-models/overview',
+          activeBasePath: 'api/view-models/overview',
+        },
+        {
+          label: 'React',
+          to: 'react/integration',
+          activeBasePath: 'react/integration',
+        },
+        {
           href: packageJson.repository.url.replace('git://', 'https://'),
           label: 'GitHub',
           position: 'right',
@@ -84,6 +92,7 @@ const config: Config = {
       copyright: `Copyright © ${new Date().getFullYear()} Sergey Volkov. Built with Docusaurus`,
     },
     colorMode: {
+      defaultMode: 'dark',
       respectPrefersColorScheme: true,
     },
     prism: {
