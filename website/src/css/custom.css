@@ -125,8 +125,3 @@ html .footer {
   --color-ifm-danger-contrast-foreground: var(--ifm-color-danger-contrast-foreground);
 }
 
-
-
-.theme-doc-sidebar-menu .menu__link {
-  text-transform: capitalize;
-}
