@@ -49,7 +49,7 @@ export interface ViewModelStore<VMBase extends AnyViewModel = AnyViewModel> {
   markToBeAttached(model: VMBase): void;
 
   /**
-   * [Documentation](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#attachviewmodel)  
+   * [Documentation](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#attachviewmodel)
    * @param model - The view model to attach.
    * @returns A promise that resolves when the operation is complete.
    */
