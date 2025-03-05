@@ -5,21 +5,21 @@ sidebar_label: Overview
 sidebar_position: 1
 slug: /getting-started
 ---
-**mobx-view-model** is a library for integration MVVM pattern with MobX and React.  
+**mobx-view-model** is a library for integration [MVVM](https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93viewmodel) pattern with MobX and React.  
 
 ## Motivation  
 
-The main goal of this library is to make it easier to use the MVVM pattern.  
+The main goal of this library is to make it easier to use the [MVVM](https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93viewmodel) pattern.  
 
 ## Pros and cons  
 
 Pros:  
- - easier separation of business logic from the presentation layer ([React](https://react.dev/)/etc).  
- - more flexibility and easier integration of `React` ecosystem (and possibly not only `React`) with `MobX`  
+ - More convenient separation of business logic from the presentation layer ([React](https://react.dev/)/etc).  
+ - More flexible and seamless integration of the `React` ecosystem with `MobX`.  
 
 Cons:  
- - additional `HOC` `withViewModel()` wrapping the component in an additional component, which in turn wraps the outer component in `observer()`  
- - additional kilobytes in your bundle  
+ - An additional wrapper in the form of the [`withViewModel() HOC`](/react/api/with-view-model), which wraps the component in an extra layer. This wrapper component further encloses the outer component within [`observer()`](https://mobx.js.org/api.html#observer).  
+ - Additional kilobytes for your bundle.  
 
 ## About MVVM  
 
