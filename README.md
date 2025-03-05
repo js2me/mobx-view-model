@@ -22,10 +22,6 @@ _MobX ViewModel power for ReactJS_
 [All documentation here](https://js2me.github.io/mobx-view-model/)   
 
 
-## [`ViewModelStoreBase`](src/view-model/view-model.store.base.ts), [`ViewModelStore`](src/view-model/view-model.store.ts#L18)  
-It is store for managing view models.  
-P.S not required entity for targeted usage of this package, but can be helpful for accessing view models from everywhere by view model id or view model class name.   
-
 ## [`useCreateViewModel(VM, payload, config)`](src/hooks/use-create-view-model.ts#L9)  
 Creates [`ViewModel`](#viewmodelimpl-viewmodel) instance.  
 Using in [`withViewModel()`](#withviewmodel) HOC.    

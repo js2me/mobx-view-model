@@ -11,39 +11,36 @@ import {
 } from './view-model.store.types.js';
 import { AnyViewModel } from './view-model.types.js';
 
-/**
- * Interface representing a store for managing view models.
- * It extends the Disposable interface, allowing for cleanup of resources.
- */
+/** [Documentation](https://js2me.github.io/mobx-view-model/api/view-model-store/interface) */
 export interface ViewModelStore<VMBase extends AnyViewModel = AnyViewModel> {
   /**
-   * Retrieves the ID of a view model based on a given ID or class type.
+   * [Documentation](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#getidvmlookup)
    * @param vmLookup - The ID or class type of the view model. See {@link ViewModelLookup}.
    * @returns The ID of the view model, or null if not found.
    */
   getId<T extends VMBase>(vmLookup: Maybe<ViewModelLookup<T>>): string | null;
 
   /**
-   * The total number of views that are currently mounted.
+   * [Documentation](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#mountedviewscount)
    */
   mountedViewsCount: number;
 
   /**
-   * Checks whether a view model instance exists in the store.
+   * [Documentation](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#hasvmlookup)
    * @param vmLookup - The ID or class type of the view model. See {@link ViewModelLookup}.
    * @returns True if the instance exists, false otherwise.
    */
   has<T extends VMBase>(vmLookup: Maybe<ViewModelLookup<T>>): boolean;
 
   /**
-   * Retrieves a last view model instance from the store. If you node more than one VM use getAll method
+   * [Documentation](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#getvmlookup)
    * @param vmLookup - The ID or class type of the view model. See {@link ViewModelLookup}.
    * @returns The view model instance, or null if not found.
    */
   get<T extends VMBase>(vmLookup: Maybe<ViewModelLookup<T>>): T | null;
 
   /**
-   * Retrieves all view model instances from the store.
+   * [Documentation](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#getallvmlookup)
    * @param vmLookup - The ID or class type of the view model. See {@link ViewModelLookup}.
    * @returns The view model instance, or null if not found.
    */
@@ -52,14 +49,14 @@ export interface ViewModelStore<VMBase extends AnyViewModel = AnyViewModel> {
   markToBeAttached(model: VMBase): void;
 
   /**
-   * Attaches a view model to the store.
+   * [Documentation](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#attachviewmodel)  
    * @param model - The view model to attach.
    * @returns A promise that resolves when the operation is complete.
    */
   attach(model: VMBase): Promise<void>;
 
   /**
-   * Detaches a view model from the store using its ID.
+   * [Documentation](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#detachviewmodelid)
    * @param id - The ID of the view model to detach.
    * @returns A promise that resolves when the operation is complete.
    */
