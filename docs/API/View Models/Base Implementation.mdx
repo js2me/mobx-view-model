@@ -1,0 +1,56 @@
+---
+id: view-model-base-implementation
+title: View Model base implementation
+sidebar_label: Base Implementation
+sidebar_position: 3
+slug: /api/view-models/base-implementation
+---
+
+# `ViewModelBase` class  
+
+This is base implementation of the [`ViewModel` interface](/api/view-models/interface)  
+
+
+## Methods and properties  
+Here is documentation about base implementation methods and properties. If you want to read about `ViewModel` methods and properties go to here  
+
+### `unmountSignal`   
+This is `AbortSignal` which signaled when your [`ViewModel`](/api/view-models/interface) is unmounted. It happens in [`didUnmount()`](/api/view-models/interface#didunmount) method   
+
+
+### `vmConfig`  
+This is view models configuration, you can read here about it    
+
+## Details
+
+### [`mount()`](/api/view-models/interface#mount)  
+
+#### `isMounted`  
+This method sets [`isMounted`](/api/view-models/interface#ismounted) to `true`.   
+If you are overriding this method be sure that you called the [`super.mount()`](/api/view-models/interface#mount), 
+otherwise your view component connected to this ViewModel never been rendered
+because inside [`withViewModel`](/react/api/with-view-model) HOC libary comparing the [`isMounted`](/api/view-models/interface#ismounted) flag with `true` before render the view component  
+
+
+#### `async mount()`  
+This method can be async. This feature is helpful if you want to load some data or do something before view component will been rendered  
+
+```ts
+import { ViewModelBase } from 'mobx-view-model';
+class YourVM extends ViewModelBase {
+  async mount() {
+    await when(() => this.fruits.isLoaded);
+
+    if (this.fruits.data) {
+      super.mount();
+    } else {
+      this.rootStore.router.navigate('/no-fruits');
+    }
+  }
+}
+```
+
+### [setPayload()]  
+Base implementation of this method `strict` comparing current payload and new payload before sets the new  
+This can be overriden using [view models configuration](/api/view-models/view-model-config) or overriding the protected `isPayloadEqual` method    
+

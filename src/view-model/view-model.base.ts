@@ -55,10 +55,23 @@ export class ViewModelBase<
     observable.ref(this, 'isMounted');
     observable.ref(this, 'isUnmounting');
     computed(this, 'parentViewModel');
-    if (this.vmConfig.payloadObservable === 'ref') {
-      observable.ref(this, 'payload');
-    } else {
-      observable.deep(this, 'payload');
+    switch (this.vmConfig.payloadObservable) {
+      case 'deep': {
+        observable.deep(this, 'payload');
+        break;
+      }
+      case 'shallow': {
+        observable.shallow(this, 'payload');
+        break;
+      }
+      case 'struct': {
+        observable.struct(this, 'payload');
+        break;
+      }
+      default: {
+        observable.ref(this, 'payload');
+        break;
+      }
     }
     action.bound(this, 'mount');
     action(this, 'didMount');

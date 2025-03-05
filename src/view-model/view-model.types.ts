@@ -8,6 +8,12 @@ export type AnyViewModel = ViewModel<any, any>;
 
 export type PayloadCompareFn = (a: AnyObject, b: AnyObject) => boolean;
 
+export type ViewModelPayload<TViewModel extends AnyViewModel> =
+  TViewModel extends ViewModel<infer Payload, any> ? Payload : never;
+
+export type ViewModelParent<TViewModel extends AnyViewModel> =
+  TViewModel extends ViewModel<any, infer Parent> ? Parent : never;
+
 export interface ViewModelParams<
   Payload extends AnyObject = EmptyObject,
   ParentViewModel extends AnyViewModel | null = null,

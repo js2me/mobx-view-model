@@ -70,6 +70,25 @@
   --ifm-footer-background-color-1: #131313;
 }
 
+html[data-theme=dark] body {
+  /* --docsearch-text-color: #f5f6f7; */
+  /* --docsearch-container-background: rgba(9, 10, 17, .8); */
+  --docsearch-modal-background: var(--ifm-background-color);
+  --docsearch-modal-shadow: inset 1px 1px 0 0 black;
+  --docsearch-searchbox-background: #090a11;
+  --docsearch-searchbox-focus-background: #000;
+  /* --docsearch-hit-color: #bec3c9; */
+  --docsearch-hit-shadow: none;
+  --docsearch-hit-background: #292929;
+  --docsearch-key-gradient: var(--ifm-background-surface-color);
+  --docsearch-key-shadow: inset 0 0px 0 1px #191919;
+  --docsearch-key-pressed-shadow: none;
+  --docsearch-footer-background: var(--ifm-background-surface-color);
+  --docsearch-footer-shadow: inset 0 1px 0 0 rgb(34, 34, 34);
+  /* --docsearch-logo-color: #fff;
+  --docsearch-muted-color: #7f8497; */
+}
+
 html .footer {
   --ifm-footer-background-color: var(--ifm-footer-background-color-1);
 }

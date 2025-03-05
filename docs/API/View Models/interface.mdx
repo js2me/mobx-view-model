@@ -1,0 +1,72 @@
+---
+id: view-model-interface
+title: View Model interface
+sidebar_label: Interface
+sidebar_position: 2
+slug: /api/view-models/interface
+---
+
+# `ViewModel<Payload, ParentViewModel>` interface  
+
+Interface that helps to integrate part of MVVM pattern into your application.  
+
+## Generics  
+
+### 1. `Payload`  
+Declares the payload data for your `ViewModel`.
+Can be helpful if you need to transfer some data between view models or views   
+
+### 2. `ParentViewModel`   
+Declares the parent `ViewModel` where current `ViewModel` is rendered in hierarchy.  
+Can be helpful if you need to access to parent view model using `parentViewModel`  
+
+## Methods and properties  
+
+### `id`  
+Unique identifier for the view model  
+
+### `payload`  
+Object that contains the data that is passed from the parent component.  
+
+### `isMounted`  
+State that determines if `ViewModel` is mounted together with a component.  
+This state is needed to control rendering the view component connected to your `ViewModel`  
+If this state always be `false` then your view component never been rendered.  
+
+### `isUnmounting`  
+State that determines if `ViewModel` is unmounting together with a view component.  
+
+### `parentViewModel`   
+Parent `ViewModel` of the current `ViewModel`  
+
+:::warning   
+This property works only if you are using [`ViewModelStore`](/api/view-model-store/interface) (integrated in React with using [ViewModelsProvider](/react/api/view-models-provider)) or [`withViewModel` HOC](/react/api/with-view-model)  
+:::
+
+### `willUnmount()`  
+This method is called when the component is starts unmounting in the [React](https://react.dev) tree.  
+
+### `willMount()`  
+this method is called when the component is starts mounting in the [React](https://react.dev) tree.  
+
+### `willUnmount()`  
+This method is called when the component is starts unmounting in the [React](https://react.dev) tree.  
+
+### `mount()`  
+This method is called when the component is mounted in the [React](https://react.dev) tree.  
+
+:::note
+For your own implementation of this interface recommends set `true` to `isMounted` in this method.
+:::
+
+### `didMount()`  
+This method that is called after the view model is fully mounted.  
+
+### `didUnmount()`  
+this method that is called after the view model is fully unmounted.  
+
+### `setPayload(payload: Payload)`  
+This method that sets the payload of the view model.  
+
+### `payloadChanged()`  
+This method that is called when the payload is changed.  

@@ -11,46 +11,25 @@ import type {
  * Configuration options for view models.
  */
 export interface ViewModelsConfig {
-  /**
-   * Indicates whether to enable transitions for the start view.
-   *
-   * !!! This feature is experimental and not all browsers support it yet.
-   *
-   * [MDN Reference](https://developer.mozilla.org/docs/Web/API/DOMException)
-   */
+  /** [Documentation](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#startviewtransitions) */
   startViewTransitions: {
     mount: boolean;
     unmount: boolean;
     payloadChange: boolean;
   };
-  /**
-   * Comparing payloads.
-   * - `'strict'` - strict equality
-   * - `'shallow'` - shallow equality
-   * - false - no comparison
-   * - custom payload compare fn
-   */
+  /** [Documentation](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#comparepayload) */
   comparePayload: PayloadCompareFn | 'strict' | 'shallow' | false;
-  /**
-   * Indicates whether to use `ref` or `deep` observable for payload.
-   * - `'ref'` - use `ref` observable
-   * - `'deep'` - use `deep` observable
-   */
-  payloadObservable: 'ref' | 'deep';
-  /**
-   * Generates an ID for a view model.
-   * @param ctx
-   */
+  /** [Documentation](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#payloadobservable) */
+  payloadObservable: 'ref' | 'deep' | 'shallow' | 'struct';
+  /** [Documentation](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#generateid) */
   generateId?: (ctx: AnyObject) => string;
-  /**
-   * Factory function for creating view models.
-   */
+  /** [Documentation](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#factory) */
   factory?: (config: ViewModelCreateConfig<AnyViewModel>) => AnyViewModel;
-  /**
-   * Fallback component to use when a view model is loading or processing to render.
-   */
+  /** [Documentation](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#fallbackcomponent) */
   fallbackComponent?: ComponentType;
+  /** [Documentation](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#onmount) */
   onMount?: (viewModel: AnyViewModel) => void;
+  /** [Documentation](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#onunmount) */
   onUnmount?: (viewModel: AnyViewModel) => void;
 }
 
