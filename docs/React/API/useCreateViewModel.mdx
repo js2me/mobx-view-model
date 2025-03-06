@@ -6,4 +6,35 @@ sidebar_position: 4
 slug: /react/api/use-create-view-model
 ---
 
-# `useCreateViewModel` hook   
+# `useCreateViewModel(VM, payload, config)` hook  
+Hook which creates the [`ViewModel`](/api/view-models/interface).  
+Using in [`withViewModel()`](/react/api/with-view-model) HOC.  
+
+
+### Usage:  
+
+```tsx
+import { ViewModelBase } from "mobx-view-model";
+import { observer } from "mobx-react-lite";
+import { observable, action } from "mobx";
+
+class VM extends ViewModelBase {
+  @observable
+  accessor value = '';
+
+  @action
+  setValue = (value: string) => {
+    this.value = value;
+  }
+}
+
+export const YourComponent = observer(() => {
+  const model = useCreateViewModel(VM)
+
+  return (
+    <div>
+      <input value={model.value} onChange={e => model.setValue(e.target.value)} />
+    </div>
+  )
+})
+```

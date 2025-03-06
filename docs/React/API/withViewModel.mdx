@@ -7,3 +7,34 @@ slug: /react/api/with-view-model
 ---
 
 # `withViewModel` HOC  
+
+
+
+
+### Usage:  
+
+```tsx
+import { ViewModelBase, ViewModelProps, withViewModel } from "mobx-view-model";
+import { observer } from "mobx-react-lite";
+import { observable, action } from "mobx";
+
+class VM extends ViewModelBase {
+  @observable
+  accessor value = '';
+
+  @action
+  setValue = (value: string) => {
+    this.value = value;
+  }
+}
+
+const ComponentView = observer(({ model }: ViewModelProps<VM>) => {
+  return (
+    <div>
+      <input value={model.value} onChange={e => model.setValue(e.target.value)} />
+    </div>
+  )
+})
+
+export const YourComponent = withViewModel(VM)(ComponentView)
+```

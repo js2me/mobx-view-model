@@ -7,3 +7,18 @@ slug: /react/api/use-view-model
 ---
 
 # `useViewModel` hook   
+
+Hook that helps to get access to your [view model instance](/api/view-models/overview) in **React**.  
+
+## Possible usage
+
+### 1. `useViewModel<YourViewModel>()`  
+Without arguments this hook will try to find the last view model instance in hierarchy.
+It works only with [`withViewModel`](/react/api/with-view-model) HOC  
+
+Use generic type (`YourViewModel`) to define type of returning [view model instance](/api/view-models/overview)  
+
+
+### 2. `useViewModel<YourViewModel>(vmLookup)`  
+Use argument [`vmLookup`](/api/view-model-store/interface#vmlookup-viewmodellookup)
+to define specific identifier of returning view model instance and generic for the same as above usage    

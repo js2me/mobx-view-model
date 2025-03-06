@@ -19,23 +19,11 @@
 _MobX ViewModel power for ReactJS_   
 
 
-[All documentation here](https://js2me.github.io/mobx-view-model/)   
+[**DOCUMENTATION**](https://js2me.github.io/mobx-view-model/)   
 
 
-## [`useCreateViewModel(VM, payload, config)`](src/hooks/use-create-view-model.ts#L9)  
-Creates [`ViewModel`](#viewmodelimpl-viewmodel) instance.  
-Using in [`withViewModel()`](#withviewmodel) HOC.    
 
-## [`useViewModel()`](src/hooks/use-view-model.ts#L9)  
-Hook that helps to get access to your view model in **React**.  
-  Possible usage:   
-    - `useViewModel<YourViewModel>()` - using generic to define type of returning view model instance  
-    - `useViewModel<YourViewModel>(id)` - using `id` to define specific identifier of returning view model instance and generic for the same as above usage    
-
-
-## [`withViewModel()()`](src/hoc/with-view-model.tsx)  
-Required for usage HOC that connects your `ViewModel` class with `View` (**React** Component)  
-
+<!-- 
 #### Usage   
 
 **1.** Simple   
@@ -69,32 +57,4 @@ export const Component = withViewModel(Model, {
 ...
 
 <Component />
-```   
-
-## [`withLazyViewModel()()`](src/hoc/with-lazy-view-model.tsx)  
-Optional for usage HOC that doing the same thing as `withViewModel`, but fetching `ViewModel` and `View` "lazy"  
-
-## [`ViewModelsConfig`](src/config/types.ts#L13)  
-Additional configuration for all view models creating using library.  
-You can override default global config using import [`viewModelsConfig`](src/config/global-config.ts#L26). You should do this before start whole app  
-```ts
-import { viewModelsConfig } from "mobx-view-model"
-
-viewModelsConfig.comparePayload = 'strict';
-viewModelsConfig.payloadObservable = 'ref';
-viewModelsConfig.startViewTransitions = {
-  mount: false,
-  payloadChange: false,
-  unmount: false,
-};
-// viewModelsConfig.generateId = undefined;
-// viewModelsConfig.factory = undefined;
-// viewModelsConfig.fallbackComponent = undefined;
-// viewModelsConfig.onMount = undefined;
-// viewModelsConfig.onUnmount = undefined;
-```
-
-Any other details are declared [here](src/config/types.ts#L13)    
-
-
-<br />
+```    -->

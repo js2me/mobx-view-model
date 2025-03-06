@@ -7,3 +7,20 @@ slug: /react/api/view-models-provider
 ---
 
 # `ViewModelsProvider` Component   
+
+
+### Usage  
+
+```tsx
+import { ViewModelStoreBase, ViewModelsProvider } from "mobx-view-model";
+
+const vmStore = new ViewModelStoreBase();
+
+export const App = () => {
+  return (
+    <ViewModelsProvider value={vmStore}>
+      ...
+    </ViewModelsProvider>
+  )
+}
+```

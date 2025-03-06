@@ -51,3 +51,31 @@ Hook to catch when some view model is mount
 
 ## `onUnmount`  
 Hook to catch when some view model is unmount  
+
+# global configuration object   
+You can override default global config using import `viewModelsConfig`.  
+
+```ts
+import { viewModelsConfig } from "mobx-view-model";
+```
+
+You should do this before start whole app  
+
+# Usage  
+
+```ts
+import { viewModelsConfig } from "mobx-view-model";
+
+viewModelsConfig.comparePayload = 'strict';
+viewModelsConfig.payloadObservable = 'ref';
+viewModelsConfig.startViewTransitions = {
+  mount: false,
+  payloadChange: false,
+  unmount: false,
+};
+// viewModelsConfig.generateId = undefined;
+// viewModelsConfig.factory = undefined;
+// viewModelsConfig.fallbackComponent = undefined;
+// viewModelsConfig.onMount = undefined;
+// viewModelsConfig.onUnmount = undefined;
+```
