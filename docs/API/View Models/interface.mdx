@@ -9,6 +9,8 @@ slug: /api/view-models/interface
 # `ViewModel<Payload, ParentViewModel>` interface  
 
 Interface that helps to integrate part of MVVM pattern into your application.  
+All code examples will be includes the [base implementation](/api/view-models/base-implementation) of this interface  
+
 
 ## Generics  
 
@@ -43,20 +45,53 @@ Parent `ViewModel` of the current `ViewModel`
 This property works only if you are using [`ViewModelStore`](/api/view-model-store/interface) (integrated in React with using [ViewModelsProvider](/react/api/view-models-provider)) or [`withViewModel` HOC](/react/api/with-view-model)  
 :::
 
+Example:   
+```ts
+import { ViewModelBase } from "mobx-view-model";
+
+class ParentVM extends ViewModelBase {
+  foo = 'bar'
+}
+
+class MyVM extends ViewModelBase<{}, ParentVM> { // second generic as type for parent view model
+  get baz() {
+    return this.parentViewModel.foo; // 'bar'
+  }
+}
+```
+
 ### `willUnmount()`  
-This method is called when the component is starts unmounting in the [React](https://react.dev) tree.  
+This method is called when the component is starts unmounting from the [React](https://react.dev) tree.  
+Before [`unmount()`](#unmount) method  
+
+### `unmount()`  
+This method is called when the component is unmounted from the [React](https://react.dev) tree.  
+
+:::note The behavior of the `unmount()` method may depend on the implementation of your [ViewModelStore](/api/view-model-store/interface).  
+The base implementation assumes that after calling this method, the [`isMounted`](#ismounted) state will be `false`.  
+:::
+
+:::tip
+this method can return a Promise for lazy unmounting of the view model.
+:::
 
 ### `willMount()`  
 this method is called when the component is starts mounting in the [React](https://react.dev) tree.  
 
-### `willUnmount()`  
-This method is called when the component is starts unmounting in the [React](https://react.dev) tree.  
-
 ### `mount()`  
 This method is called when the component is mounted in the [React](https://react.dev) tree.  
 
+:::note The behavior of the `mount()` method may depend on the implementation of your ViewModelStore.  
+The base implementation assumes that after calling this method, the [`isMounted`](#ismounted) state will be `true`.  
+:::
+
+:::tip
+this method can return a Promise for lazy unmounting of the view model.
+:::
+
+
 :::note
-For your own implementation of this interface recommends set `true` to `isMounted` in this method.
+For your own implementation of this interface recommends set `true` to [`isMounted`](#ismounted) in this method.
 :::
 
 ### `didMount()`  
