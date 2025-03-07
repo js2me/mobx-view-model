@@ -208,9 +208,3 @@ export class ViewModelBase<
     );
   }
 }
-
-new ViewModelBase({
-  id: '1',
-  payload: {},
-  viewModels: new ViewModelStore(),
-});
