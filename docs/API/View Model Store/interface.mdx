@@ -11,7 +11,7 @@ slug: /api/view-model-store/interface
 Interface represeting a store for managing [`ViewModels`](/api/view-models/interface)  
 
 :::note
-Not required entity for targeted usage of this package, but can be helpful for accessing view models from everywhere by view model id or view model class name.   
+Not required entity for targeted usage of this package, but can be helpful for accessing [ViewModel](/api/view-models/overview)s from everywhere by [ViewModel](/api/view-models/overview) id or [ViewModel](/api/view-models/overview) class name.   
 :::
 
 
@@ -20,7 +20,7 @@ Not required entity for targeted usage of this package, but can be helpful for a
 
 ### `getId(vmLookup)`  
 
-Retrieves the ID of a view model based on a given ID or class type.  
+Retrieves the `id` of a [ViewModel](/api/view-models/interface) based on [vmLookup](/api/other/view-model-lookup).  
 
 ### `mountedViewsCount`  
 
@@ -29,55 +29,46 @@ The total number of views that are currently mounted.
 ### `has(vmLookup)`  
 
 Checks whether a [ViewModel](/api/view-models/interface) instance exists in the store.  
+Requires [vmLookup](/api/other/view-model-lookup).  
 
 ### `get(vmLookup)`  
 
-Retrieves a **last** [ViewModel](/api/view-models/interface) instance from the store.
+Retrieves the **last** [ViewModel](/api/view-models/interface) instance from the store based on [vmLookup](/api/other/view-model-lookup).  
 
 :::tip
-If you node more than one VM use [getAll](#getallvmlookup) method  
+If you node more than one VM use [getAll(vmLookup)](#getallvmlookup) method  
 :::    
 
 ### `getAll(vmLookup)`  
-Retrieves all view model instances from the store.  
+Retrieves all [ViewModel](/api/view-models/overview) instances from the store based on [vmLookup](/api/other/view-model-lookup).  
 
 ### `attach(viewModel)`  
-Attaches a view model to the store.  
+Attaches a [ViewModel](/api/view-models/overview) to the store.  
 
 ### `dettach(viewModelId)`  
-Detaches a view model from the store using its ID.  
+Detaches a [ViewModel](/api/view-models/overview) from the store using its ID.  
 
 ### `isAbleToRenderView(viewModelId)`  
-Determines if a view model is able to render based on its ID.  
+Determines if a [ViewModel](/api/view-models/overview) is able to render based on its ID.  
 
 ### `createViewModel(config)`  
-Creates a new view model instance based on the provided configuration.  
+Creates a new [ViewModel](/api/view-models/overview) instance based on the provided configuration.  
 
 ### `processCreateConfig(config)`  
-Process the configuration for creating a view model.  
-This method is called just before creating a new view model instance.  
-It's useful for initializing the configuration, like linking components to the view model class.  
+Process the configuration for creating a [ViewModel](/api/view-models/overview).  
+This method is called just before creating a new [ViewModel](/api/view-models/overview) instance.  
+It's useful for initializing the configuration, like linking components to the [ViewModel](/api/view-models/overview) class.  
 
 ### `linkComponents()`  
-Link React components with view model class.  
+Link React components with [ViewModel](/api/view-models/overview) class.  
 
 ### `unlinkComponents()`   
-Unlink React components with view model class.  
+Unlink React components with [ViewModel](/api/view-models/overview) class.  
 
 ### `generateViewModelId(config)`   
-Generates a unique ID for a view model based on the provided configuration.  
+Generates a unique ID for a [ViewModel](/api/view-models/overview) based on the provided configuration.  
 
 ### `clean()`  
-Clean up resources associated with the view model store.  
+Clean up resources associated with the [ViewModel](/api/view-models/overview) store.  
 Clean all inner data structures.  
-
-## Other  
-
-### `vmLookup`, `ViewModelLookup`   
-This type is declaration of which data is required for lookup your view model  
-
-It can be:   
-  - [ViewModel id](/api/view-models/interface#id)  
-  - `ViewModel class reference`  
-  - [`React`](https://react.dev) component created with [`withViewModel()`](/react/api/with-view-model) or [`withLazyViewModel()`](/react/api/with-lazy-view-model)  
 

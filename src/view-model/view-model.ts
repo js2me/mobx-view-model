@@ -32,7 +32,7 @@ export interface ViewModel<
   willUnmount(): void;
   /** [Documentation](https://js2me.github.io/mobx-view-model/api/view-models/interface#unmount) */
   unmount(): void | Promise<void>;
-  /** [Documentation](https://js2me.github.io/mobx-view-model/api/view-models/interface#setpayload) */
+  /** [Documentation](https://js2me.github.io/mobx-view-model/api/view-models/interface#setpayloadpayload-payload) */
   setPayload(payload: Payload): void;
   /** [Documentation](https://js2me.github.io/mobx-view-model/api/view-models/interface#payloadchanged) */
   payloadChanged(payload: Payload): void;

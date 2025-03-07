@@ -1,9 +1,10 @@
 import { themes as prismThemes } from 'prism-react-renderer';
 import type { Config } from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
+import { visit } from "unist-util-visit";
 import * as packageJson from "../package.json" assert { type: "json" };
 
-// This runs in Node.js - Don't use client-side code here (browser APIs, JSX...)
+const REPO_URL = `https://github.com/${packageJson.author}/${packageJson.name}/blob/master`;
 
 const config: Config = {
   staticDirectories: ['../assets', '../docs', '../i18n'],
@@ -41,6 +42,15 @@ const config: Config = {
         docs: {
           sidebarPath: './sidebars.ts',
           path: '../docs',
+          remarkPlugins: [
+            () => (tree) => {
+              visit(tree, 'link', node => {
+                if (node.url.startsWith('/src/')) {
+                  node.url = `${REPO_URL}${node.url}`;
+                } 
+              })
+            }
+          ],
           routeBasePath: '/', // Добавьте эту строку
           // Please change this to your repo.
           // Remove this to remove the "edit this page" links.

@@ -20,5 +20,9 @@ Use generic type (`YourViewModel`) to define type of returning [view model insta
 
 
 ### 2. `useViewModel<YourViewModel>(vmLookup)`  
-Use argument [`vmLookup`](/api/view-model-store/interface#vmlookup-viewmodellookup)
-to define specific identifier of returning view model instance and generic for the same as above usage    
+Use argument [`vmLookup`](/api/other/view-model-lookup) to define specific identifier of returning
+[ViewModel](/api/view-models/interface) instance and generic for the same as above usage    
+
+:::note
+This variant requires the usage [`<ViewModelsProvider />`](/react/api/view-models-provider) in your application  
+:::
