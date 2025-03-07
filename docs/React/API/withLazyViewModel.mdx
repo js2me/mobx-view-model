@@ -49,7 +49,7 @@ export const FruitButtonView = observer(({ model }: ViewModelProps<FruitButtonHu
 
 And connect them together with lazy loading this modules using this HOC   
 
-```tsx
+```tsx title="index.ts"
 import { withLazyViewModel } from "mobx-view-model";
 
 export const FruitButton = withLazyViewModel(

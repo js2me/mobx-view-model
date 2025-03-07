@@ -14,6 +14,18 @@
   /* Use a darker color to ensure contrast, ideally we don't need important */
   --ifm-breadcrumb-color-active: var(--ifm-color-primary-darker) !important;
   --ifm-menu-color-active: var(--ifm-color-primary-darker) !important;
+  --code-bg-color: #232323;
+}
+
+html body .theme-code-block > *, html body .theme-code-block {
+  --prism-background-color: var(--code-bg-color) !important;
+  background: var(--code-bg-color) !important;
+}
+.prism-code {
+  background-color: var(--prism-background-color) !important;
+}
+html body .codeBlockTitle_OQJp {
+  border-bottom: 1px solid #5d5d5d;
 }
 
 /*
