@@ -30,7 +30,7 @@ export interface ViewModelCreateConfig<VM extends AnyViewModel>
 }
 
 /**
- * Which types are possible to look up view model instance in view model store
+ * [Documentation](https://js2me.github.io/mobx-view-model/api/other/view-model-lookup)
  */
 export type ViewModelLookup<T extends AnyViewModel> =
   | AnyViewModel['id']

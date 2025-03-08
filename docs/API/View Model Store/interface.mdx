@@ -18,9 +18,28 @@ Not required entity for targeted usage of this package, but can be helpful for a
 ## Method and properties  
 
 
+### `getIds(vmLookup)`  
+
+Retrieves ids [ViewModels](/api/view-models/interface) based on [vmLookup](/api/other/view-model-lookup).  
+
+#### Example  
+
+```ts
+vmStore.getIds(MyVM) // ["id"]
+vmStore.getIds(ViewComponentOfMyVM) // ["id"]
+```
+
+
 ### `getId(vmLookup)`  
 
-Retrieves the `id` of a [ViewModel](/api/view-models/interface) based on [vmLookup](/api/other/view-model-lookup).  
+Retrieves the `id` of the **last** [ViewModel](/api/view-models/interface) based on [vmLookup](/api/other/view-model-lookup).  
+
+#### Example  
+
+```ts
+vmStore.getId(MyVM) // "id"
+vmStore.getId(ViewComponentOfMyVM) // "id"
+```
 
 ### `mountedViewsCount`  
 
@@ -38,6 +57,21 @@ Retrieves the **last** [ViewModel](/api/view-models/interface) instance from the
 :::tip
 If you node more than one VM use [getAll(vmLookup)](#getallvmlookup) method  
 :::    
+
+#### Example
+
+```ts
+import { mobx-view-model } from "mobx-view-model";
+
+class UserSelectVM extends ViewModelBase {
+  selectedUser = {
+    id: '1',
+    name: 'John Doe'
+  }
+}
+
+vmStore.get(UserSelectVM)?.selectedUser.id; // '1'
+```
 
 ### `getAll(vmLookup)`  
 Retrieves all [ViewModel](/api/view-models/overview) instances from the store based on [vmLookup](/api/other/view-model-lookup).  

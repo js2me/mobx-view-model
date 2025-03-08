@@ -14,6 +14,13 @@ import { AnyViewModel } from './view-model.types.js';
 /** [Documentation](https://js2me.github.io/mobx-view-model/api/view-model-store/interface) */
 export interface ViewModelStore<VMBase extends AnyViewModel = AnyViewModel> {
   /**
+   * [Documentation](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#getidsvmlookup)
+   * @param vmLookup - The ID or class type of the view model. See {@link ViewModelLookup}.
+   * @returns The IDs of the view models
+   */
+  getIds<T extends VMBase>(vmLookup: Maybe<ViewModelLookup<T>>): string[];
+
+  /**
    * [Documentation](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#getidvmlookup)
    * @param vmLookup - The ID or class type of the view model. See {@link ViewModelLookup}.
    * @returns The ID of the view model, or null if not found.

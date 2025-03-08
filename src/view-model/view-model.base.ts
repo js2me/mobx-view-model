@@ -92,7 +92,7 @@ export class ViewModelBase<
 
   protected get viewModels(): ViewModelStore {
     if (process.env.NODE_ENV !== 'production' && !this.params.viewModels) {
-      console.warn(
+      console.error(
         'accessing to viewModels is not possible. [viewModels] param is not setted during to creating instance ViewModelBase',
       );
     }

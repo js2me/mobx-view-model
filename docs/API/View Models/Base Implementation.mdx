@@ -16,12 +16,57 @@ This is base implementation of the [`ViewModel`](/api/view-models/interface) int
 ## Methods and properties  
 Here is documentation about base implementation methods and properties. If you want to read about [`ViewModel`](/api/view-models/interface) methods and properties [go to here](/api/view-models/interface)  
 
+### `viewModels`  
+Reference to instance of [`ViewModelStore`](/api/view-model-store/overview).  
+Allows to get access to other [`ViewModels`](/api/view-models/interface).  
+
+#### Example   
+
+```ts
+import { ViewModelBase } from "mobx-view-model";
+
+export class SithCardVM extends ViewModelBase {
+  get power() {
+    return this.viewModels.get(JediCardVM)?.power ?? 0;
+  }
+}
+
+export class StarWarsBattlefieldVM extends ViewModelBase {
+  get jedisCount() {
+    this.viewModels.getAll(JediCardVM).length;
+  }
+
+  get sithsCount() {
+    this.viewModels.getAll(SithCardVM).length;
+  }
+}
+```
+
+
 ### `unmountSignal`   
 This is [`AbortSignal`](https://developer.mozilla.org/ru/docs/Web/API/AbortSignal) which signaled when your [`ViewModel`](/api/view-models/interface) is unmounted. It happens in [`didUnmount()`](/api/view-models/interface#didunmount) method   
 
+#### Example   
+```ts
+import { ViewModelBase } from "mobx-view-model";
+import { autorun } from "mobx"
+
+export class TestVM extends ViewModelBase {
+  willMount() {
+    autorun(
+      () => {
+        console.log("log", this.id, this.isMounted);
+      },
+      {
+        signal: this.unmountSignal
+      }
+    );
+  }
+}
+```
 
 ### `vmConfig`  
-This is view models configuration, you can read here about it    
+This is view models configuration, you can read [here about it](/api/view-models/view-models-config)    
 
 ## Details
 

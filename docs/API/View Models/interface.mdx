@@ -91,19 +91,92 @@ The base implementation assumes that after calling this method, the [`isMounted`
 this method can return a Promise for lazy mounting of the view model.
 :::
 
-
 :::note
 For your own implementation of this interface recommends set `true` to [`isMounted`](#ismounted) in this method.
 :::
 
+#### Examples   
+
+```ts
+import { ViewModelBase } from "mobx-view-model";
+import { runInAction } from "mobx";
+
+class AnimalChooserVM extends ViewModelBase<{ animalId: string }> {
+  async mount() {
+    await fetch(`/animals/${this.payload.animalId}`, { signal: unmountSignal });
+    super.mount();
+  }
+}
+```
+
 ### `didMount()`  
 This method that is called after the view model is fully mounted.  
+
+```ts
+import { ViewModelBase } from "mobx-view-model";
+import { runInAction } from "mobx";
+
+class AnimalChooserVM extends ViewModelBase<{ animalId: string }> {
+  didMount() {
+    this.rootStore.notifications.push({
+      type: 'success',
+      title: "Hooray!",
+      description: "Your animal is successfully loaded!"
+    })
+  }
+}
+```
 
 ### `didUnmount()`  
 this method that is called after the view model is fully unmounted.  
 
 ### `setPayload(payload: Payload)`  
-This method that sets the payload of the view model.  
+This method that sets the payload of the view model.   
+
+
+:::note
+For your own implementation of this interface recommends set `payload` to `this.payload` in this method
+:::
+
+#### Example   
+
+```ts
+import { ViewModelBase } from "mobx-view-model";
+import { runInAction } from "mobx";
+
+class AnimalChooserVM extends ViewModelBase<{ animalId: string }> {
+  @observable
+  accessor choosenAnimalId: string | null = null
+
+  setPayload(payload) {
+    if (this.choosenAnimalId != payload.animalId) {
+      this.choosenAnimalId = payload.animalId;
+      this.payload = payload;
+      this.payloadChanged();
+    }
+  }
+}
+```
 
 ### `payloadChanged()`  
 This method that is called when the payload is changed.  
+
+#### Example   
+
+```ts
+import { ViewModelBase } from "mobx-view-model";
+import { runInAction } from "mobx";
+
+class AnimalChooserVM extends ViewModelBase<{ animalId: string }> {
+  @observable
+  accessor choosenAnimalId: string | null = null
+
+  payloadChanged() {
+    if (this.choosenAnimalId != this.payload.animalId) {
+      runInAction(() => {
+        this.choosenAnimalId = this.payload.animalId;
+      })
+    }
+  }
+}
+```
