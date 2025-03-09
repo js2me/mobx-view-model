@@ -21,7 +21,7 @@ This feature is experimental and not all browsers support it yet.
 ## `comparePayload`  
 Allows you to configure how payload should be compared   
 
-- `'strict'` - strict equality  
+- `'strict'` - **(default)** strict equality  
 - `'shallow'` - shallow equality  
 - `false` - no comparison  
 - `fn` - custom payload compare fn  
@@ -29,18 +29,40 @@ Allows you to configure how payload should be compared
 ## `payloadObservable`  
 Indicates type of observable for `ViewModel` payload.  
 
-- `'ref'` - [MobX ref observable](https://mobx.js.org/api.html#observableref)  
+- `'ref'` - **(default)** [MobX ref observable](https://mobx.js.org/api.html#observableref)  
 - `'deep'` - [MobX deep observable](https://mobx.js.org/api.html#observabledeep)  
-- `'struct'` - [MobX struct observable](https://mobx.js.org/api.html#observablestruct)  
+- `'struct'` - [MobX struct observable](https://mobx.js.org/api.html#observablestruct)   
 - `'shallow'` - [MobX shallow observable](https://mobx.js.org/api.html#observableshallow)  
 
 ## `generateId()`  
 Generates an unique identifier for a [`ViewModel`](/api/view-models/interface).   
 
+Default library implementation is [here](/src/utils/create-vm-id-generator.ts#L16)  
+
+#### Example 
+
+
+```ts
+import { viewModelsConfig } from "mobx-view-model";
+
+viewModelsConfig.generateId = () => crypto.randomUUID();
+```
+
 ## `factory()`  
 Factory function for creating [`ViewModel`](/api/view-models/interface) instances.  
 
 Can be helpful if you want to add some constructor arguments for your own [`ViewModel`](/api/view-models/interface) implementation  
+
+#### Example  
+
+```ts
+import { viewModelsConfig } from "mobx-view-model";
+
+viewModelsConfig.factory = (config) => {
+  const { VM } = config;
+  return new VM(rootStore, config);
+}
+```
 
 ## `fallbackComponent`  
 

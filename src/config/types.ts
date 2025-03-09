@@ -9,6 +9,7 @@ import type {
 
 /**
  * Configuration options for view models.
+ * [Documentation](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config)
  */
 export interface ViewModelsConfig {
   /** [Documentation](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#startviewtransitions) */
@@ -33,6 +34,9 @@ export interface ViewModelsConfig {
   onUnmount?: (viewModel: AnyViewModel) => void;
 }
 
+/**
+ * [Documentation](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config)
+ */
 export type ViewModelsRawConfig = Omit<
   ViewModelsConfig,
   'startViewTransitions'
