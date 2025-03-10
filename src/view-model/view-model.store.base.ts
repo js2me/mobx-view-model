@@ -300,7 +300,9 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
   }
 
   isAbleToRenderView(id: Maybe<string>): boolean {
-    return !!id && this.viewModels.has(id) && !this.mountingViews.has(id);
+    const isViewMounting = this.mountingViews.has(id!);
+    const hasViewModel = this.viewModels.has(id!);
+    return !!id && hasViewModel && !isViewMounting;
   }
 
   clean(): void {
