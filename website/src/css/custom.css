@@ -15,6 +15,12 @@
   --ifm-breadcrumb-color-active: var(--ifm-color-primary-darker) !important;
   --ifm-menu-color-active: var(--ifm-color-primary-darker) !important;
   --code-bg-color: #232323;
+
+
+  --ifm-color-primary: hsl(var(--site-primary-hue-saturation) 45%);
+  --ifm-color-primary-dark: hsl(var(--site-primary-hue-saturation) 41%);
+  --ifm-color-primary-darker: hsl(var(--site-primary-hue-saturation) 38%);
+  --ifm-color-primary-darkest: hsl(var(--site-primary-hue-saturation) 32%);
 }
 
 
@@ -29,21 +35,10 @@ html body div[class*="codeBlockTitle"] {
   border-bottom: 1px solid #5d5d5d;
 }
 
-
-/*
- * This selector will be dynamically replaced by the color generator. Don't put
- * other properties here.
- */
  [data-theme='light'] {
-  --ifm-color-primary: hsl(var(--site-primary-hue-saturation) 45%);
-  --ifm-color-primary-dark: hsl(var(--site-primary-hue-saturation) 41%);
-  --ifm-color-primary-darker: hsl(var(--site-primary-hue-saturation) 38%);
-  --ifm-color-primary-darkest: hsl(var(--site-primary-hue-saturation) 32%);
-
   --ifm-color-primary-light: hsl(var(--site-primary-hue-saturation) 39%);
   --ifm-color-primary-lighter: hsl(var(--site-primary-hue-saturation) 47%);
   --ifm-color-primary-lightest: hsl(var(--site-primary-hue-saturation) 58%);
-
   --ifm-color-secondary: hsl(var(--site-secondary-hue-saturation) 83.53%);
   --ifm-color-secondary-dark: hsl(var(--site-secondary-hue-saturation) 82%);
   --ifm-color-secondary-darker: hsl(var(--site-secondary-hue-saturation) 78%);
@@ -57,16 +52,7 @@ html body div[class*="codeBlockTitle"] {
   --ifm-footer-background-color-1: #2e2e2e;
 }
 
-/*
- * This selector will be dynamically replaced by the color generator. Don't put
- * other properties here.
- */
 [data-theme='dark'] {
-  --ifm-color-primary: hsl(var(--site-primary-hue-saturation) 45%);
-  --ifm-color-primary-dark: hsl(var(--site-primary-hue-saturation) 41%);
-  --ifm-color-primary-darker: hsl(var(--site-primary-hue-saturation) 38%);
-  --ifm-color-primary-darkest: hsl(var(--site-primary-hue-saturation) 32%);
-
   --ifm-color-primary-light: hsl(var(--site-primary-hue-saturation) 54%);
   --ifm-color-primary-lighter: hsl(var(--site-primary-hue-saturation) 62%);
   --ifm-color-primary-lightest: hsl(var(--site-primary-hue-saturation) 73%);
