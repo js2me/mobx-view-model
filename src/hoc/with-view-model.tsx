@@ -17,8 +17,9 @@ import {
   AnyObject,
   Class,
   EmptyObject,
+  Maybe,
 } from '../utils/types.js';
-import { AnyViewModel } from '../view-model/index.js';
+import { AnyViewModel, ViewModelStore } from '../view-model/index.js';
 
 declare const process: { env: { NODE_ENV?: string } };
 
@@ -37,24 +38,34 @@ export type ViewModelInputProps<VM extends AnyViewModel> =
           payload: VM['payload'];
         };
 
-export type ViewModelHocConfig<VM extends AnyViewModel> =
-  UseCreateViewModelConfig<VM> & {
-    /**
-     * Component to render if the view model initialization takes too long
-     */
-    fallback?: ComponentType;
+export interface ViewModelHocConfig<VM extends AnyViewModel>
+  extends Omit<UseCreateViewModelConfig<VM>, 'component' | 'componentProps'> {
+  /**
+   * Component to render if the view model initialization takes too long
+   */
+  fallback?: ComponentType;
 
-    /**
-     * Function to invoke additional React hooks in the resulting component
-     */
-    reactHooks?: (allProps: any, ctx: AnyObject) => void;
+  /**
+   * Function to invoke additional React hooks in the resulting component
+   */
+  reactHook?: (
+    allProps: AnyObject,
+    ctx: AnyObject,
+    viewModels: Maybe<ViewModelStore>,
+  ) => void;
 
-    /**
-     * Function that should return the payload for the VM
-     * by default, it is - (props) => props.payload
-     */
-    getPayload?: (allProps: any) => any;
-  };
+  /**
+   * Function to invoke additional React hooks in the resulting component
+   * @deprecated use `reactHook` (typo fix), will be removed in next major release
+   */
+  reactHooks?: (allProps: any, ctx: AnyObject) => void;
+
+  /**
+   * Function that should return the payload for the VM
+   * by default, it is - (props) => props.payload
+   */
+  getPayload?: (allProps: any) => any;
+}
 
 export type ComponentWithViewModel<
   TViewModel extends AnyViewModel,
@@ -83,15 +94,16 @@ export function withViewModel(
 
   return (Component?: ComponentType<any>) => {
     const ConnectedViewModel = observer((allProps: any) => {
+      const viewModels = useContext(ViewModelsContext);
+
+      config?.reactHook?.(allProps, ctx, viewModels);
+      config?.reactHooks?.(allProps, ctx);
+
       const { payload: rawPayload, ...componentProps } = allProps;
 
       const payload = config?.getPayload
         ? config.getPayload(allProps)
         : rawPayload;
-
-      const viewModels = useContext(ViewModelsContext);
-
-      config?.reactHooks?.(allProps, ctx);
 
       const instance = useCreateViewModel(VM, payload, {
         ...config,

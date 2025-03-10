@@ -8,21 +8,45 @@ slug: /react/api/use-view-model
 
 # `useViewModel` hook   
 
-Hook that helps to get access to your [view model instance](/api/view-models/overview) in **React**.  
+A hook that helps to get access to your [ViewModel](/api/view-models/overview) instance in **React**.  
 
-## Possible usage
+## API Signature
+```tsx
+function useViewModel<VM extends AnyViewModel>(): VM
 
-### 1. `useViewModel<YourViewModel>()`  
-Without arguments this hook will try to find the last view model instance in hierarchy.
-It works only with [`withViewModel`](/react/api/with-view-model) HOC  
+function useViewModel<VM extends AnyViewModel>(vmLookup: ViewModelLookup<VM>): VM
+```
 
-Use generic type (`YourViewModel`) to define type of returning [view model instance](/api/view-models/overview)  
+## Usage 
 
+### 1. Basic Usage  
+Reference to the last created [ViewModel](/api/view-models/overview) instance based on `React` tree  
+Use generic type (`YourVM`) to define type of returning [view model instance](/api/view-models/overview)  
 
-### 2. `useViewModel<YourViewModel>(vmLookup)`  
+```tsx
+import { observer } from "mobx-react-lite";
+
+export const YourComponent = observer(() => {
+  const yourVM = useViewModel<YourVM>();
+});
+```
+
+:::note
+It works only with [`withViewModel()`](/react/api/with-view-model) HOC  
+:::
+
+### 2. Precise search with [ViewModelLookup](/api/other/view-model-lookup)  
 Use argument [`vmLookup`](/api/other/view-model-lookup) to define specific identifier of returning
 [ViewModel](/api/view-models/interface) instance and generic for the same as above usage    
 
 :::note
 This variant requires the usage [`<ViewModelsProvider />`](/react/api/view-models-provider) in your application  
 :::
+
+```tsx
+import { observer } from "mobx-react-lite";
+
+export const YourComponent = observer(() => {
+  const yourVM = useViewModel<YourVM>('view-model-id');
+});
+```

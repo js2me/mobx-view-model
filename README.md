@@ -18,43 +18,82 @@
 
 _MobX ViewModel power for ReactJS_   
 
+Library for integration [MVVM](https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93viewmodel) pattern with [MobX](https://mobx.js.org/README.html) and [React](https://react.dev/).  
 
-[**DOCUMENTATION**](https://js2me.github.io/mobx-view-model/)   
+## Documentation  
+Documentation can be found at [**js2me.github.io/mobx-view-model**](https://js2me.github.io/mobx-view-model/)   
 
 
+## Example   
 
-<!-- 
-#### Usage   
-
-**1.** Simple   
-
+with HOC   
 ```tsx
-import { View } from "./view";
-import { Model } from "./model";
+import { withViewModel, ViewModelBase, ViewModelProps } from "mobx-view-model";
+import { observer } from "mobx-react-lite";
+import { action, observable } from "mobx";
 
-export const Component = withViewModel(Model)(View?)  
+class UserBadgeVM extends ViewModelBase<{ userId: Maybe<string> }> {
+  private userSource = new UserSource({ abortSignal: this.unmountSignal });
 
-...
-
-<Component />
-```   
-
-**2.** Custom factory   
-
-Advanced usage that needed to create your own implementations of `withViewModel` HOC, `ViewModelStore` and `ViewModel`  
-
-```tsx
-import { View } from "./view";
-import { Model } from "./model";
-
-export const Component = withViewModel(Model, {
-  factory: (config) => {
-    // also you can achieve this your view model store implementation
-    return new config.VM(rootStore, config);
+  willMount() {
+    this.userSource.connectWith(() => this.payload.userId)
   }
-})(View?)  
 
-...
+  get user() {
+    return this.userSource.data;
+  }
 
-<Component />
-```    -->
+  get isAdmin() {
+    return this.user?.isAdmin
+  }
+}
+
+const UserBadgeView = observer(({ model }: ViewModelProps<UserBadgeVM>) => (
+  <div className={'size-4 bg-[green]'}>
+    <h3>{model.user?.fullName}</h3>
+    {model.isAdmin && <span>admin</span>}
+  </div>
+))
+
+export const UserBadge = withViewModel(UserBadgeVM)(UserBadgeView);
+
+
+// <UserBadge payload={{ userId: '1' }}>
+```
+
+with hook  
+```tsx
+import { ViewModelBase, ViewModelPayload, useCreateViewModel } from "mobx-view-model";
+import { observer } from "mobx-react-lite";
+import { action, observable } from "mobx";
+
+class UserBadgeVM extends ViewModelBase<{ userId: Maybe<string> }> {
+  private userSource = new UserSource({ abortSignal: this.unmountSignal });
+
+  willMount() {
+    this.userSource.connectWith(() => this.payload.userId)
+  }
+
+  get user() {
+    return this.userSource.data;
+  }
+
+  get isAdmin() {
+    return this.user?.isAdmin
+  }
+}
+
+export const UserBadge = observer(({ userId }: ViewModelPayload<UserBadgeVM>) => {
+  const model = useCreateViewModel(UserBadgeVM, { userId });
+
+  return (
+    <div className={'size-4 bg-[green]'}>
+      <h3>{model.user?.fullName}</h3>
+      {model.isAdmin && <span>admin</span>}
+    </div>
+  )
+})
+
+
+// <UserBadge payload={{ userId: '1' }}>
+```

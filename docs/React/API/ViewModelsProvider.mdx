@@ -8,6 +8,13 @@ slug: /react/api/view-models-provider
 
 # `ViewModelsProvider` Component   
 
+A context provider component that establishes a [ViewModelStore](/api/view-model-store/overview) instance for the React component tree,
+enabling centralized [ViewModel](/api/view-models/overview) management and cross-component access.  
+
+## API Signature
+```tsx
+function ViewModelsProvider(props: { children: ReactNode; value: ViewModelStore }): ReactNode;
+```
 
 ### Usage  
 

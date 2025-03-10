@@ -8,10 +8,39 @@ slug: /react/api/with-view-model
 
 # `withViewModel` HOC  
 
+A Higher-Order Component that connects React components to their [ViewModels](/api/view-models/overview), providing seamless MobX integration.  
 
+## API Signature
+```tsx
+function withViewModel<VM extends AnyViewModel>(
+  ViewModelClass: Constructor<VM>,
+  config?: ViewModelHocConfig<VM>
+): (Component: ComponentType<ComponentProps & ViewModelProps<VM>>) => ComponentWithViewModel
+```
 
+##  Usage  
 
-### Usage:  
+### 1. Basic Usage (Default Configuration)  
+
+```tsx
+export const YourComponent = withViewModel(VMClass)(ViewComponent)
+```
+
+### 2. Custom Configuration   
+```tsx
+export const YourComponent = withViewModel(VMClass, {
+  config: {}, // vmConfig
+  ctx: {}, // internal object as source for all cache inside this HOC
+  factory: (config) => new config.VM(config), // factory method for creating VM instances
+  fallback: () => <div>loading</div>, // fallback component for cases when your VM is mounting\loading
+  generateId, // custom fn for generate id for this VM instances
+  getPayload: (props) => props.payload, // function to getting payload data from props
+  id, // unique id if you need to create 1 instance of your VM
+  reactHook: (allProps, ctx, viewModels) => void 0, // hook for integration inside render HOC component  
+})(ViewComponent)
+```
+
+### Example:  
 
 ```tsx
 import { ViewModelBase, ViewModelProps, withViewModel } from "mobx-view-model";

@@ -14,6 +14,17 @@ Optional for usage HOC that doing the same thing as [`withViewModel`](/react/api
 This HOC is using [react-simple-loadable](https://www.npmjs.com/package/react-simple-loadable) package  
 :::
 
+## API Signature
+```tsx
+function withLazyViewModel<VM extends AnyViewModel>(
+  loadFn: () => Promise<{
+    Model: Constructor<VM>,
+    Component: ComponentType<ComponentProps & ViewModelProps<VM>>
+  }>,
+  config?: ViewModelHocConfig<VM>
+): ComponentWithLazyViewModel
+```
+
 
 ## Usage  
 

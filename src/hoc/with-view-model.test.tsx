@@ -216,7 +216,7 @@ describe('withViewModel', () => {
 
     const Component = withViewModel(VM, {
       generateId: createIdGenerator(),
-      reactHooks: useHookSpy, // the save renders count as withViewModel wrapper
+      reactHook: useHookSpy, // the save renders count as withViewModel wrapper
     })(View);
 
     render(<Component />);
