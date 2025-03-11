@@ -31,7 +31,28 @@ const viewModelStore = new MyViewModelStore() // or new ViewModelStoreBase
 </ViewModelsProviders>
 ```
 
+4. Get access to `ViewModelStore` inside your `ViewModels`   
 
+```ts
+import { ViewModelBase } from "mobx-view-model";
+import { ParentVM } from "../parent-vm";
+import { ChildVM } from "../child-vm";
+import { AppLayoutVM } from "@/app-layout"
+
+export class YourVM extends ViewModelBase {
+  get parentData() {
+    return this.viewModels.get(ParentVM)?.data;
+  }
+
+  get childData() {
+    return this.viewModels.get(ChildVM)?.data;
+  }
+
+  get appLayoutData() {
+    return this.viewModels.get(AppLayoutVM)?.data;
+  }
+}
+```
 
 
 

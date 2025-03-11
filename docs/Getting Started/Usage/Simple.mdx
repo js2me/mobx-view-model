@@ -13,9 +13,9 @@ Steps:
 1. Create your [`ViewModel`](/api/view-models/overview) class using [`ViewModelBase`](/api/view-models/base-implementation) (base implementation of [`ViewModel` package interface](/api/view-models/interface))   
 
 ```tsx
-import { ViewModelProps, ViewModeBase, withViewModel } from 'mobx-view-model';
+import { ViewModelProps, ViewModelBase, withViewModel } from 'mobx-view-model';
 
-export class MyPageVM extends ViewModeBase<{ payloadA: string }> {
+export class MyPageVM extends ViewModelBase<{ payloadA: string }> {
   @observable
   accessor state = '';
 
