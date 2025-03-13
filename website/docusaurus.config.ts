@@ -83,12 +83,12 @@ const config: Config = {
         {
           label: 'API',
           to: 'api/view-models/overview',
-          activeBasePath: 'api/view-models/overview',
+          activeBasePath: 'api',
         },
         {
           label: 'React',
           to: 'react/integration',
-          activeBasePath: 'react/integration',
+          activeBasePath: 'react',
         },
         {
           href: packageJson.repository.url.replace('git://', 'https://'),
