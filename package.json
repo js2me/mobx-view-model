@@ -7,6 +7,7 @@
     "ts:check": "tsc --noEmit",
     "check": "npm run lint:check && npm run ts:check",
     "prebuild": "npm run clean && npm run check",
+    "build:watch": "nodemon --watch src --ext ts --exec \"tsc && node ./post-build.mjs\"",
     "build": "tsc && node ./post-build.mjs",
     "pub": "PUBLISH=true pnpm run build",
     "prepublish": "pnpm test",
@@ -64,6 +65,7 @@
     "js2me-eslint-config": "^1.0.7",
     "js2me-exports-post-build-script": "^2.0.17",
     "jsdom": "^25.0.1",
+    "nodemon": "^3.1.9",
     "rimraf": "^6.0.1",
     "typescript": "^5.7.3",
     "vitest": "^2.1.8"
