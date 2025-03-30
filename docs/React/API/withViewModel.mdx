@@ -67,3 +67,12 @@ const ComponentView = observer(({ model }: ViewModelProps<VM>) => {
 
 export const YourComponent = withViewModel(VM)(ComponentView)
 ```
+
+## Incompatibility with `<Suspense />` and `lazy()`   
+
+The `withViewModel` HOC is not compatible with the React's built-in [`<Suspense />`](https://react.dev/reference/react/Suspense) component and [`lazy()`](https://react.dev/reference/react/lazy) function.  
+
+Using `Suspense` and `lazy` with `withViewModel` HOC can lead to unexpected behavior and bugs due to double/triple calls of `useMemo` or lazy `useState` hooks inside [`useCreateViewModel`](/react/api/use-create-view-model) hook.
+
+To avoid this issue, it is recommended to use [`withLazyViewModel`](/react/api/with-lazy-view-model) HOC instead.
+
