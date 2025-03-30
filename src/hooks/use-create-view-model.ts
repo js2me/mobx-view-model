@@ -1,5 +1,5 @@
 import { runInAction } from 'mobx';
-import { useContext, useMemo, useRef } from 'react';
+import { useContext, useRef, useState } from 'react';
 import { AnyObject, Class, EmptyObject, Maybe } from 'yummies/utils/types';
 
 import { viewModelsConfig } from '../config/global-config.js';
@@ -72,7 +72,7 @@ export const useCreateViewModel = <TViewModel extends AnyViewModel>(
   const instanceFromStore = viewModels ? viewModels.get(id) : null;
   const lastInstance = useRef<TViewModel | null>(null);
 
-  const instance = useMemo((): TViewModel => {
+  const [instance] = useState((): TViewModel => {
     if (instanceFromStore) {
       return instanceFromStore as TViewModel;
     }
@@ -113,13 +113,13 @@ export const useCreateViewModel = <TViewModel extends AnyViewModel>(
     }
 
     return instance;
-  }, [instanceFromStore]);
+  });
 
   useIsomorphicLayoutEffect(() => {
     if (viewModels) {
       viewModels.attach(instance);
       return () => {
-        viewModels.detach(id);
+        viewModels.detach(instance.id);
         lastInstance.current = null;
       };
     } else {
