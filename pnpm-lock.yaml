@@ -27,8 +27,8 @@ importers:
         specifier: ^2.0.4
         version: 2.0.4(react@18.3.1)
       yummies:
-        specifier: ^3.0.33
-        version: 3.0.33
+        specifier: ^3.0.37
+        version: 3.0.37
     devDependencies:
       '@testing-library/react':
         specifier: ^16.1.0
@@ -3291,8 +3291,8 @@ packages:
     resolution: {integrity: sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==}
     engines: {node: '>=10'}
 
-  yummies@3.0.33:
-    resolution: {integrity: sha512-GiPeSZf3uyP7ed1H9LORIOEdNExpR+LLu3+g4NfAHNDxWpv0i5BHF3V1n7JD2v9lu4MvqGydj/m7eZlbwV/sLw==}
+  yummies@3.0.37:
+    resolution: {integrity: sha512-6DkILWjESrSNZZ2Zr6d/G9YnuZdOcH+/+MeBrK6rtT4NGiltnUuS0V/v2ZB2Y8v6FYp4B32yZ7IgbZg2CVxItg==}
 
 snapshots:
 
@@ -6983,7 +6983,7 @@ snapshots:
 
   yocto-queue@0.1.0: {}
 
-  yummies@3.0.33:
+  yummies@3.0.37:
     dependencies:
       '@types/insane': 1.0.0
       '@types/lodash-es': 4.17.12

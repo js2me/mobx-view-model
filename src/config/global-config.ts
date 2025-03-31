@@ -1,8 +1,11 @@
+import { createGlobalConfig } from 'yummies/complex';
+
 import { ViewModelsConfig } from './types.js';
 
-const accessSymbol = Symbol();
-
-const defaultViewModelsConfig: ViewModelsConfig = {
+/**
+ * Global configuration options for view models
+ */
+export const viewModelsConfig = createGlobalConfig<ViewModelsConfig>({
   comparePayload: 'strict',
   payloadObservable: 'ref',
   startViewTransitions: {
@@ -10,17 +13,4 @@ const defaultViewModelsConfig: ViewModelsConfig = {
     payloadChange: false,
     unmount: false,
   },
-};
-
-const _globalThis = globalThis as typeof globalThis & {
-  [accessSymbol]?: ViewModelsConfig;
-};
-
-if (!_globalThis[accessSymbol]) {
-  _globalThis[accessSymbol] = defaultViewModelsConfig;
-}
-
-/**
- * Global configuration options for view models
- */
-export const viewModelsConfig: ViewModelsConfig = _globalThis[accessSymbol];
+});
