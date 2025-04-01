@@ -95,11 +95,11 @@ const YourApp = () => {
 ```
 With this step you can use [`useViewModel()`](/react/api/use-view-model) hook with first argument  
 
-:::note [`isMounted`](/api/view-models/interface#ismounted) state  
-This statement totally based on call [`mount()` method](/api/view-models/interface#mount) which calls inside [`useCreateViewModel()`](/react/api/use-create-view-model) hook.  
+:::note [`isMounted`](/api/view-models/interface#ismounted-boolean) state  
+This statement totally based on call [`mount()` method](/api/view-models/interface#mount-void--promisevoid) which calls inside [`useCreateViewModel()`](/react/api/use-create-view-model) hook.  
 Because of this on the first render `isMounted` will be `false`, because mounting happens inside `useLayoutEffect\useEffect` react hook.  
 :::
 
-:::warning Do not calls [`mount()`](/api/view-models/interface#mount), [`unmount()`](/api/view-models/interface#unmount) manually  
+:::warning Do not calls [`mount()`](/api/view-models/interface#mount-void--promisevoid), [`unmount()`](/api/view-models/interface#unmount-void--promisevoid) manually  
 This methods already calling inside [`ViewModelStore` base implementation](/api/view-model-store/base-implementation) or inside [`useCreateViewModel`](/react/api/use-create-view-model) hook.
 :::

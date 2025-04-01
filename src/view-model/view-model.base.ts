@@ -41,7 +41,7 @@ export class ViewModelBase<
 
   public payload: Payload;
 
-  protected vmConfig: ViewModelsConfig;
+  public vmConfig: ViewModelsConfig;
 
   protected isPayloadEqual?: PayloadCompareFn;
 

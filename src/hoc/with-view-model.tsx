@@ -92,7 +92,13 @@ export function withViewModel(
 
   config.ctx = ctx;
 
-  return (Component?: ComponentType<any>) => {
+  return (OriginalComponent?: ComponentType<any>) => {
+    const Component =
+      (
+        config.config?.processViewComponent ??
+        viewModelsConfig.processViewComponent
+      )?.(OriginalComponent, VM, config) ?? OriginalComponent;
+
     const ConnectedViewModel = observer((allProps: any) => {
       const viewModels = useContext(ViewModelsContext);
 
@@ -105,7 +111,7 @@ export function withViewModel(
         ? config.getPayload(allProps)
         : rawPayload;
 
-      const instance = useCreateViewModel(VM, payload, {
+      const instance = useCreateViewModel<AnyViewModel>(VM, payload, {
         ...config,
         component: ConnectedViewModel,
         componentProps,

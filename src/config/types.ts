@@ -1,6 +1,7 @@
 import { ComponentType } from 'react';
-import { AnyObject, DeepPartial } from 'yummies/utils/types';
+import { AnyObject, Class, DeepPartial, Maybe } from 'yummies/utils/types';
 
+import { ViewModelHocConfig } from '../hoc/with-view-model.js';
 import { ViewModelCreateConfig } from '../view-model/view-model.store.types.js';
 import type {
   AnyViewModel,
@@ -32,6 +33,12 @@ export interface ViewModelsConfig {
   onMount?: (viewModel: AnyViewModel) => void;
   /** [Documentation](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#onunmount) */
   onUnmount?: (viewModel: AnyViewModel) => void;
+  /** [Documentation](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#processviewcomponent) */
+  processViewComponent?: (
+    component: ComponentType<any> | undefined,
+    VM: Class<AnyViewModel>,
+    config: ViewModelHocConfig<any>,
+  ) => Maybe<ComponentType<any>>;
 }
 
 /**

@@ -12,7 +12,7 @@ This object contains all global options for some behaviour of view models instan
 
 ## `startViewTransitions`  
 Indicates whether to enable transitions for the start view.  
-[MDN Reference](https://developer.mozilla.org/docs/Web/API/DOMException)
+[MDN Reference](https://developer.mozilla.org/docs/Web/API/View_Transitions_API)
 
 :::warning  
 This feature is experimental and not all browsers support it yet.  
@@ -65,14 +65,65 @@ viewModelsConfig.factory = (config) => {
 ```
 
 ## `fallbackComponent`  
+A component that will be rendered while the view model is in a loading or processing state.  
+This is useful for showing loading spinners, skeletons, or placeholder content.
 
-Fallback component to use when a view model is loading or processing to render.  
+#### Example
+```tsx
+viewModelsConfig.fallbackComponent = () => (
+  <div className="loading-spinner">
+    Loading...
+  </div>
+);
+```
 
 ## `onMount`  
-Hook to catch when some view model is mount  
+A lifecycle hook that is called when a view model is mounted.  
+Useful for tracking component mounting, initializing external services, or setting up subscriptions.
+
+#### Example
+```tsx
+viewModelsConfig.onMount = (viewModel) => {
+  console.log(`ViewModel ${viewModel.id} mounted`);
+  // Setup analytics tracking
+  analytics.track('component_mounted', { id: viewModel.id });
+};
+```
 
 ## `onUnmount`  
-Hook to catch when some view model is unmount  
+A lifecycle hook that is called when a view model is unmounted.  
+Useful for cleanup operations, removing subscriptions, or tracking component lifecycle.
+
+#### Example
+```tsx
+viewModelsConfig.onUnmount = (viewModel) => {
+  console.log(`ViewModel ${viewModel.id} unmounted`);
+  // Cleanup subscriptions
+  viewModel.dispose();
+};
+```
+
+## `processViewComponent`  
+A higher-order function that processes and transforms the view component before it is rendered.   
+This function enables component composition and modification at the ViewModel level, allowing for:
+- Wrapping components with additional functionality (error boundaries, providers, etc.)
+- Injecting props or context
+- Modifying component behavior
+- Adding global features like logging, analytics, or performance monitoring
+
+#### Example  
+```tsx
+viewModelsConfig.processViewComponent = (Component) => {
+  return (props) => {
+    return (
+      <ErrorBoundary>
+        <Component {...props} />
+      </ErrorBoundary>
+    )
+  }
+}
+```
+
 
 # global configuration object   
 You can override default global config using import `viewModelsConfig`.  
@@ -88,16 +139,23 @@ You should do this before start whole app
 ```ts
 import { viewModelsConfig } from "mobx-view-model";
 
+// Configure payload comparison behavior
 viewModelsConfig.comparePayload = 'strict';
+
+// Set observable type for payload
 viewModelsConfig.payloadObservable = 'ref';
+
+// Disable view transitions
 viewModelsConfig.startViewTransitions = {
   mount: false,
   payloadChange: false,
   unmount: false,
 };
-// viewModelsConfig.generateId = undefined;
-// viewModelsConfig.factory = undefined;
-// viewModelsConfig.fallbackComponent = undefined;
-// viewModelsConfig.onMount = undefined;
-// viewModelsConfig.onUnmount = undefined;
+
+// Optional configurations (uncomment to use)
+// viewModelsConfig.generateId = () => crypto.randomUUID();
+// viewModelsConfig.factory = (config) => new config.VM(rootStore, config);
+// viewModelsConfig.fallbackComponent = () => <LoadingSpinner />;
+// viewModelsConfig.onMount = (vm) => console.log('Mounted:', vm.id);
+// viewModelsConfig.onUnmount = (vm) => console.log('Unmounted:', vm.id);
 ```

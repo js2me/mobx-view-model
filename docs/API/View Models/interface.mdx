@@ -8,8 +8,8 @@ slug: /api/view-models/interface
 
 # `ViewModel` interface  
 
-Interface that helps to integrate part of MVVM pattern into your application.  
-All code examples will be includes the [base implementation](/api/view-models/base-implementation) of this interface  
+Interface that defines the core functionality for implementing the MVVM pattern in your application.  
+All code examples will include the [base implementation](/api/view-models/base-implementation) of this interface.  
 
 [Reference to source code](/src/view-model/view-model.ts)  
 
@@ -21,37 +21,48 @@ interface ViewModel<Payload, ParentViewModel>
 ## Generics  
 
 ### 1. `Payload`  
-Declares the payload data for your `ViewModel`.
-Can be helpful if you need to transfer some data between view models or views   
+Declares the payload data type for your `ViewModel`.
+Used for transferring data between view models or views.  
+Must be an object type or `EmptyObject` for no payload.
 
 ### 2. `ParentViewModel`   
-Declares the parent `ViewModel` where current `ViewModel` is rendered in hierarchy.  
-Can be helpful if you need to access to parent view model using `parentViewModel`  
+Declares the parent `ViewModel` type where current `ViewModel` is rendered in the component hierarchy.  
+Enables access to parent view model through the `parentViewModel` property.  
+Optional, defaults to `null` if not specified.
 
-## Methods and properties  
+## Core Properties  
 
-### `id`  
-Unique identifier for the view model  
+### `id: string`  
+Unique identifier for the view model instance.  
+Used for tracking and managing view model lifecycle.
 
-### `payload`  
-Object that contains the data that is passed from the parent component.  
+### `vmConfig: ViewModelConfig`  
+Configuration object for the view model.  
+See [ViewModelsConfig](/api/view-models/view-models-config) for detailed configuration options.
 
-### `isMounted`  
-State that determines if `ViewModel` is mounted together with a component.  
-This state is needed to control rendering the view component connected to your `ViewModel`  
-If this state always be `false` then your view component never been rendered.  
+### `payload: Payload`  
+Data object passed from the parent component to the view model.  
 
-### `isUnmounting`  
-State that determines if `ViewModel` is unmounting together with a view component.  
+### `isMounted: boolean`  
+Indicates whether the `ViewModel` is currently mounted with its associated component.  
+Controls the rendering of the connected view component:
+- `true`: Component is rendered
+- `false`: Component is not rendered
 
-### `parentViewModel`   
-Parent `ViewModel` of the current `ViewModel`  
+### `isUnmounting: boolean`  
+Indicates whether the `ViewModel` is in the process of unmounting.  
+Used for cleanup and transition states during component unmounting.
+
+### `parentViewModel: ParentViewModel | null`   
+Reference to the parent `ViewModel` in the component hierarchy.  
 
 :::warning   
-This property works only if you are using [`ViewModelStore`](/api/view-model-store/interface) (integrated in React with using [ViewModelsProvider](/react/api/view-models-provider)) or [`withViewModel` HOC](/react/api/with-view-model)  
+This property is only available when using:
+- [`ViewModelStore`](/api/view-model-store/interface) (integrated with [ViewModelsProvider](/react/api/view-models-provider))
+- [`withViewModel` HOC](/react/api/with-view-model)
 :::
 
-Example:   
+#### Example: Parent-Child ViewModel Communication   
 ```ts
 import { ViewModelBase } from "mobx-view-model";
 
@@ -59,102 +70,107 @@ class ParentVM extends ViewModelBase {
   foo = 'bar'
 }
 
-class MyVM extends ViewModelBase<{}, ParentVM> { // second generic as type for parent view model
+class ChildVM extends ViewModelBase<{}, ParentVM> {
   get baz() {
-    return this.parentViewModel.foo; // 'bar'
+    return this.parentViewModel?.foo; // 'bar'
   }
 }
 ```
 
-### `willUnmount()`  
-This method is called when the component is starts unmounting from the [React](https://react.dev) tree.  
-Before [`unmount()`](#unmount) method  
+## Lifecycle Methods
 
-### `unmount()`  
-This method is called when the component is unmounted from the [React](https://react.dev) tree.  
+### `willMount(): void`  
+Called when the component begins mounting in the React tree.  
+Executes before the `mount()` method.
 
-:::note The behavior of the `unmount()` method may depend on the implementation of your [ViewModelStore](/api/view-model-store/interface).  
-The base implementation assumes that after calling this method, the [`isMounted`](#ismounted) state will be `false`.  
+### `mount(): void | Promise<void>`  
+Called when the component is mounted in the React tree.  
+
+:::note 
+The behavior depends on your [ViewModelStore](/api/view-model-store/interface) implementation.  
+Base implementation sets `isMounted` to `true` after this method.
 :::
 
 :::tip
-this method can return a Promise for lazy unmounting of the view model.
+Can return a Promise for asynchronous mounting operations.
 :::
 
-### `willMount()`  
-this method is called when the component is starts mounting in the [React](https://react.dev) tree.  
-
-### `mount()`  
-This method is called when the component is mounted in the [React](https://react.dev) tree.  
-
-:::note The behavior of the `mount()` method may depend on the implementation of your ViewModelStore.  
-The base implementation assumes that after calling this method, the [`isMounted`](#ismounted) state will be `true`.  
-:::
-
-:::tip
-this method can return a Promise for lazy mounting of the view model.
-:::
-
-:::note
-For your own implementation of this interface recommends set `true` to [`isMounted`](#ismounted) in this method.
-:::
-
-#### Examples   
-
+#### Example: Async Mounting
 ```ts
 import { ViewModelBase } from "mobx-view-model";
-import { runInAction } from "mobx";
 
-class AnimalChooserVM extends ViewModelBase<{ animalId: string }> {
+class JediProfileVM extends ViewModelBase<{ jediId: string }> {
   async mount() {
-    await fetch(`/animals/${this.payload.animalId}`, { signal: unmountSignal });
-    super.mount();
+    await this.loadJediData();
+    await super.mount();
+  }
+
+  private async loadJediData() {
+    const response = await fetch(`/api/jedi/${this.payload.jediId}`);
+    this.jediData = await response.json();
   }
 }
 ```
 
-### `didMount()`  
-This method that is called after the view model is fully mounted.  
+### `didMount(): void`  
+Called after the view model is fully mounted and ready for use.  
+Ideal for post-mount initialization and side effects.
 
+#### Example: Post-Mount Actions
 ```ts
 import { ViewModelBase } from "mobx-view-model";
-import { runInAction } from "mobx";
 
-class AnimalChooserVM extends ViewModelBase<{ animalId: string }> {
+class ForceAlertVM extends ViewModelBase<{ message: string }> {
   didMount() {
     this.rootStore.notifications.push({
       type: 'success',
-      title: "Hooray!",
-      description: "Your animal is successfully loaded!"
-    })
+      title: "May the Force be with you!",
+      message: this.payload.message
+    });
   }
 }
 ```
 
-### `didUnmount()`  
-this method that is called after the view model is fully unmounted.  
+### `willUnmount(): void`  
+Called when the component begins unmounting from the React tree.  
+Executes before the `unmount()` method.
 
-### `setPayload(payload: Payload)`  
-This method that sets the payload of the view model.   
+### `unmount(): void | Promise<void>`  
+Called when the component is unmounted from the React tree.  
 
-
-:::note
-For your own implementation of this interface recommends set `payload` to `this.payload` in this method
+:::note 
+Behavior depends on your ViewModelStore implementation.  
+Base implementation sets `isMounted` to `false` after this method.
 :::
 
-#### Example   
+:::tip
+Can return a Promise for asynchronous cleanup operations.
+:::
 
+### `didUnmount(): void`  
+Called after the view model is fully unmounted.  
+Ideal for final cleanup operations.
+
+## Payload Management
+
+### `setPayload(payload: Payload): void`  
+Updates the view model's payload data.  
+
+:::note
+In custom implementations, ensure to update `this.payload` in this method.
+:::
+
+#### Example: Payload Update with Validation
 ```ts
 import { ViewModelBase } from "mobx-view-model";
-import { runInAction } from "mobx";
 
-class AnimalChooserVM extends ViewModelBase<{ animalId: string }> {
+class LightsaberVM extends ViewModelBase<{ jediId: string }> {
   @observable
-  accessor choosenAnimalId: string | null = null
+  accessor currentJediId: string | null = null;
 
-  setPayload(payload) {
-    if (this.choosenAnimalId != payload.animalId) {
-      this.choosenAnimalId = payload.animalId;
+  setPayload(payload: { jediId: string }) {
+    if (this.currentJediId !== payload.jediId) {
+      this.currentJediId = payload.jediId;
       this.payload = payload;
       this.payloadChanged();
     }
@@ -162,25 +178,31 @@ class AnimalChooserVM extends ViewModelBase<{ animalId: string }> {
 }
 ```
 
-### `payloadChanged()`  
-This method that is called when the payload is changed.  
+### `payloadChanged(): void`  
+Called when the payload is updated via `setPayload()`.  
+Use this method to handle payload changes and trigger necessary updates.
 
-#### Example   
-
+#### Example: Handling Payload Changes
 ```ts
 import { ViewModelBase } from "mobx-view-model";
 import { runInAction } from "mobx";
 
-class AnimalChooserVM extends ViewModelBase<{ animalId: string }> {
+class DeathStarVM extends ViewModelBase<{ targetId: string }> {
   @observable
-  accessor choosenAnimalId: string | null = null
+  accessor currentTargetId: string | null = null;
 
   payloadChanged() {
-    if (this.choosenAnimalId != this.payload.animalId) {
+    if (this.currentTargetId !== this.payload.targetId) {
       runInAction(() => {
-        this.choosenAnimalId = this.payload.animalId;
-      })
+        this.currentTargetId = this.payload.targetId;
+        this.initializeWeapon();
+      });
     }
+  }
+
+  private async initializeWeapon() {
+    const response = await fetch(`/api/weapons/${this.currentTargetId}`);
+    this.weaponData = await response.json();
   }
 }
 ```

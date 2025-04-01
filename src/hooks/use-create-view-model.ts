@@ -46,7 +46,7 @@ export const useCreateViewModel = <TViewModel extends AnyViewModel>(
         payload: TViewModel['payload'],
         config?: UseCreateViewModelConfig<TViewModel>,
       ]
-) => {
+): TViewModel => {
   const [payload, config] = args;
 
   const idRef = useRef<string>('');
