@@ -45,7 +45,7 @@
   },
   "dependencies": {
     "lodash-es": "^4.17.21",
-    "react-simple-loadable": "^2.0.4",
+    "react-simple-loadable": "^2.1.0",
     "yummies": "^3.0.37"
   },
   "peerDependencies": {

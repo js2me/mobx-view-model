@@ -24,8 +24,8 @@ importers:
         specifier: ^18.3.1
         version: 18.3.1(react@18.3.1)
       react-simple-loadable:
-        specifier: ^2.0.4
-        version: 2.0.4(react@18.3.1)
+        specifier: ^2.1.0
+        version: 2.1.0(react@18.3.1)
       yummies:
         specifier: ^3.0.37
         version: 3.0.37
@@ -2689,8 +2689,8 @@ packages:
   react-is@17.0.2:
     resolution: {integrity: sha512-w2GsyukL62IJnlaff/nRegPQR94C/XXamvMWmSHRJ4y7Ts/4ocGRmTHvOs8PSE6pB3dWOrD/nueuU5sduBsQ4w==}
 
-  react-simple-loadable@2.0.4:
-    resolution: {integrity: sha512-WWmqZB8yjhKa1CwMA1oKkx9m3LZI13vz3FJki3813TEhnhyMzXcqL5uOLGiBEKAzTQogcDC4xckFLCsYiEJXVw==}
+  react-simple-loadable@2.1.0:
+    resolution: {integrity: sha512-5mF++exqgeAcBB716M1fekT3w/R+qiemKnnLMSEUQbMrarft78xlApI3Vw50xH4sUjzAkxEnzkJWztHBcs0t3g==}
     peerDependencies:
       react: ^18.3.1
 
@@ -6295,7 +6295,7 @@ snapshots:
 
   react-is@17.0.2: {}
 
-  react-simple-loadable@2.0.4(react@18.3.1):
+  react-simple-loadable@2.1.0(react@18.3.1):
     dependencies:
       react: 18.3.1
 
