@@ -7,7 +7,7 @@ import { ViewModelStore } from './view-model.store.js';
 export type AnyViewModel = ViewModel<any, any>;
 
 export type PayloadCompareFn<TPayload extends AnyObject = AnyObject> = (
-  currentPayload: TPayload,
+  currentPayload: TPayload | undefined,
   nextPayload: TPayload,
 ) => boolean;
 

@@ -55,24 +55,7 @@ export class ViewModelBase<
     observable.ref(this, 'isMounted');
     observable.ref(this, 'isUnmounting');
     computed(this, 'parentViewModel');
-    switch (this.vmConfig.payloadObservable) {
-      case 'deep': {
-        observable.deep(this, 'payload');
-        break;
-      }
-      case 'shallow': {
-        observable.shallow(this, 'payload');
-        break;
-      }
-      case 'struct': {
-        observable.struct(this, 'payload');
-        break;
-      }
-      default: {
-        observable.ref(this, 'payload');
-        break;
-      }
-    }
+    observable[this.vmConfig.payloadObservable ?? 'ref'](this, 'payload');
     action.bound(this, 'mount');
     action(this, 'didMount');
     action.bound(this, 'unmount');
@@ -181,7 +164,10 @@ export class ViewModelBase<
    * The method is called when the payload changes in the react component
    */
   setPayload(payload: Payload) {
-    if (!this.isPayloadEqual?.(this.payload, payload)) {
+    if (
+      !this.isPayloadEqual ||
+      this.isPayloadEqual(this.payload, payload) === false
+    ) {
       startViewTransitionSafety(
         () => {
           runInAction(() => {
