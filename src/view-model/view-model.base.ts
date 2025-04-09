@@ -43,7 +43,7 @@ export class ViewModelBase<
 
   public vmConfig: ViewModelsConfig;
 
-  protected isPayloadEqual?: PayloadCompareFn;
+  protected isPayloadEqual?: PayloadCompareFn<Payload>;
 
   constructor(protected params: ViewModelParams<Payload, ParentViewModel>) {
     this.id = params.id;
