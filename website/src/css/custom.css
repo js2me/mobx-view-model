@@ -24,6 +24,10 @@
 }
 
 
+[data-theme="dark"] iframe {
+  filter: invert(0.9);
+}
+
 html body .theme-code-block > *, html body .theme-code-block {
   --prism-background-color: var(--code-bg-color) !important;
   background: var(--code-bg-color) !important;
