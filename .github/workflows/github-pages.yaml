@@ -25,7 +25,7 @@ jobs:
           cache: 'pnpm'
 
       - name: Install dependencies
-        run: cd website && pnpm install
+        run: pnpm install && cd website && pnpm install
       - name: Build website
         run: pnpm website:build
 
