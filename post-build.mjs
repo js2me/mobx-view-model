@@ -8,7 +8,7 @@ postBuildScript({
   updateVersion: process.env.PUBLISH_VERSION,
   onDone: (versionsDiff, { $ }, packageJson, { targetPackageJson}) => {
     if (process.env.PUBLISH) {
-      $`pnpm test`;
+      $(`pnpm test`);
 
       publishScript({
         nextVersion: versionsDiff?.next ?? packageJson.version,
