@@ -1,4 +1,4 @@
-import { reaction } from 'mobx';
+import { makeObservable, reaction } from 'mobx';
 import { describe, expect, it, vi } from 'vitest';
 
 import { AnyObject, EmptyObject } from '../utils/types.js';
@@ -24,6 +24,7 @@ export class ViewModelBaseMock<
       id: params?.id ?? '1',
       payload: params?.payload as Payload,
     });
+    makeObservable(this);
   }
 
   didMount(): void {

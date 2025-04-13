@@ -164,10 +164,7 @@ export class ViewModelBase<
    * The method is called when the payload changes in the react component
    */
   setPayload(payload: Payload) {
-    if (
-      !this.isPayloadEqual ||
-      this.isPayloadEqual(this.payload, payload) === false
-    ) {
+    if (!this.isPayloadEqual?.(this.payload, payload)) {
       startViewTransitionSafety(
         () => {
           runInAction(() => {

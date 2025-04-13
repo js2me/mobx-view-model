@@ -16,7 +16,7 @@ export interface ViewModel<
   /** [Documentation](https://js2me.github.io/mobx-view-model/api/view-models/interface#vmconfig-viewmodelconfig) */
   readonly vmConfig: ViewModelsConfig;
   /** [Documentation](https://js2me.github.io/mobx-view-model/api/view-models/interface#payload-payload) */
-  payload: Payload;
+  readonly payload: Payload;
   /** [Documentation](https://js2me.github.io/mobx-view-model/api/view-models/interface#ismounted-boolean) */
   isMounted: boolean;
   /** [Documentation](https://js2me.github.io/mobx-view-model/api/view-models/interface#isunmounting-boolean) */

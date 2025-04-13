@@ -1,3 +1,4 @@
+/* eslint-disable sonarjs/label-has-associated-control */
 import {
   act,
   fireEvent,
@@ -14,7 +15,8 @@ import {
   useEffect,
   useState,
 } from 'react';
-import { describe, expect, test, vi } from 'vitest';
+import { describe, expect, it, test, vi } from 'vitest';
+import { sleep } from 'yummies/async';
 import { createCounter } from 'yummies/complex';
 
 import {
@@ -23,7 +25,7 @@ import {
   ViewModelsProvider,
   ViewModelsRawConfig,
 } from '../index.js';
-import { AnyObject, EmptyObject } from '../utils/types.js';
+import { AnyObject, EmptyObject, Maybe } from '../utils/types.js';
 import { ViewModelBaseMock } from '../view-model/view-model.base.test.js';
 import { ViewModelStoreBaseMock } from '../view-model/view-model.store.base.test.js';
 
@@ -572,6 +574,87 @@ describe('withViewModel', () => {
         renderPayloadInView: true,
       });
     });
+
+    test('getting update for payload from parent view model (shallow equal)', async () => {
+      const setPayloadSpy = vi.fn();
+      class ChildVM extends ViewModelBaseMock<any, any> {
+        setPayload(payload: any): void {
+          setPayloadSpy(payload);
+          super.setPayload(payload);
+        }
+      }
+
+      const ChildView = withViewModel(ChildVM, {
+        config: {
+          comparePayload: 'shallow',
+        },
+      })(
+        observer(({ model }: ViewModelProps<ChildVM>) => {
+          return (
+            <div>
+              1{model.payload?.selectedCompIds?.join(',')}
+              {`${model.payload?.techreviewId}`}
+            </div>
+          );
+        }),
+      );
+      class ParentVM extends ViewModelBaseMock {
+        @observable.ref
+        private comp_ids: Maybe<string[]> = null;
+
+        get techreviewId() {
+          return '1';
+        }
+
+        get selectedCompIds() {
+          return this.comp_ids || [];
+        }
+
+        mount(): void {
+          super.mount();
+
+          runInAction(() => {
+            this.comp_ids = ['1', '2', '3'];
+          });
+        }
+      }
+
+      const ParentView = withViewModel(ParentVM, {
+        config: {
+          comparePayload: 'shallow',
+        },
+      })(
+        observer(({ model }: ViewModelProps<ParentVM>) => {
+          return (
+            <div>
+              <ChildView
+                payload={{
+                  techreviewId: model.techreviewId,
+                  displayOnlySelectedCompIds: true,
+                  selectedCompIds: model.selectedCompIds,
+                }}
+              />
+            </div>
+          );
+        }),
+      );
+
+      const App = () => {
+        return (
+          <>
+            <ParentView />
+          </>
+        );
+      };
+
+      const app = <App />;
+      const screen = await act(() => render(app));
+      screen.rerender(app);
+
+      await sleep(200);
+
+      expect(setPayloadSpy).toHaveBeenCalledTimes(2);
+    });
   });
 
   test('access to parent view model x3', async ({ task, expect }) => {
@@ -627,7 +710,7 @@ describe('withViewModel', () => {
       ),
     );
 
-    expect(container.firstChild).toMatchFileSnapshot(
+    await expect(container.firstChild).toMatchFileSnapshot(
       `../../tests/snapshots/hoc/with-view-model/${task.name}.html`,
     );
   });
@@ -765,7 +848,7 @@ describe('withViewModel', () => {
         ),
       );
 
-      expect(container.firstChild).toMatchFileSnapshot(
+      await expect(container.firstChild).toMatchFileSnapshot(
         `../../tests/snapshots/hoc/with-view-model/view-model-store/${task.name}.html`,
       );
       expect(vmStore.spies.get).toHaveBeenCalledTimes(15);
@@ -865,7 +948,7 @@ describe('withViewModel', () => {
         await screen.findByTestId('child');
       });
 
-      expect(container).toMatchFileSnapshot(
+      await expect(container).toMatchFileSnapshot(
         `../../tests/snapshots/hoc/with-view-model/view-model-store/${task.name}.html`,
       );
     });
@@ -1056,5 +1139,179 @@ describe('withViewModel', () => {
       expect(renderParentCount).toBe(2);
       expect(renderChildCount).toBe(0);
     });
+  });
+
+  it('circullar dependendcy between parent and child using access to shallow compare payload of the child in parent vm', async ({
+    task,
+  }) => {
+    class ChildVM extends ViewModelBaseMock<{
+      fruitId: Maybe<string>;
+      teabugIds: Maybe<string[]>;
+      showTeabugs: boolean;
+    }> {
+      @observable
+      error: string = '';
+
+      payloadChangeCounter = 0;
+      maxPaylodChangeCount = 50;
+
+      setPayload(payload: {
+        fruitId: Maybe<string>;
+        teabugIds: Maybe<string[]>;
+        showTeabugs: boolean;
+      }): void {
+        console.info('set payload', payload);
+        this.payloadChangeCounter++;
+        if (this.payloadChangeCounter > this.maxPaylodChangeCount) {
+          act(() => {
+            this.error = `set payload too many times (${this.maxPaylodChangeCount}+)`;
+          });
+          return;
+        }
+        act(() => {
+          super.setPayload(payload);
+        });
+      }
+    }
+
+    const ChildView = observer(
+      ({
+        model,
+        getFruitObject,
+        getTeabugObject,
+      }: ViewModelProps<ChildVM> & {
+        getFruitObject: (fruitId: string) => { label: string };
+        getTeabugObject: (teabugId: string) => { label: string };
+      }) => {
+        return (
+          <div
+            data-test-id={'child'}
+            style={{
+              border: `1px solid ${model.error ? 'red' : 'green'}`,
+              padding: 10,
+            }}
+          >
+            {model.error ? (
+              <div>error: {model.error}</div>
+            ) : (
+              <>
+                <div>id: {model.id}</div>
+                {!!model.payload.fruitId && (
+                  <div>
+                    fruit from parent{' '}
+                    {getFruitObject(model.payload.fruitId).label}
+                  </div>
+                )}
+                {model.payload.showTeabugs &&
+                  !!model.payload.teabugIds?.length && (
+                    <div>
+                      <label>teabugs from parent:</label>
+                      <div>
+                        {model.payload.teabugIds
+                          .map((id) => getTeabugObject(id).label)
+                          .join(',')}
+                      </div>
+                    </div>
+                  )}
+              </>
+            )}
+          </div>
+        );
+      },
+    );
+
+    const Child = withViewModel(ChildVM, {
+      config: { comparePayload: 'shallow' },
+    })(ChildView);
+
+    class ParentVM extends ViewModelBaseMock {
+      @observable.ref
+      fruitId: Maybe<string> = undefined;
+
+      @observable.ref
+      teabugIds: Maybe<string[]> = [];
+
+      get childVM() {
+        return this.viewModels.get(ChildVM);
+      }
+
+      get childHasFruit() {
+        return !!this.childVM?.payload.fruitId;
+      }
+
+      mount(): void {
+        super.mount();
+
+        makeObservable(this);
+
+        act(() => {
+          runInAction(() => {
+            this.fruitId = '1';
+          });
+        });
+
+        act(() => {
+          runInAction(() => {
+            this.teabugIds = ['1', '2', '3'];
+          });
+        });
+      }
+    }
+
+    const ParentView = observer(({ model }: ViewModelProps<ParentVM>) => {
+      return (
+        <div>
+          <div>id: {model.id}</div>
+          <div>{model.fruitId}</div>
+          <div>{model.teabugIds?.join(',')}</div>
+          {model.childHasFruit && <div>child has fruit</div>}
+          <Child
+            getFruitObject={(fruitId) => ({ label: fruitId })}
+            getTeabugObject={(teabugId) => ({ label: teabugId })}
+            payload={{
+              fruitId: model.fruitId,
+              teabugIds: model.teabugIds,
+              showTeabugs: true,
+            }}
+          />
+        </div>
+      );
+    });
+
+    const Parent = withViewModel(ParentVM, {
+      config: { comparePayload: 'strict' },
+    })(ParentView);
+
+    const TestPage = () => {
+      return (
+        <div>
+          TestPage
+          <Parent />
+        </div>
+      );
+    };
+
+    let i = 0;
+
+    const vmStore = new ViewModelStoreBaseMock({
+      vmConfig: {
+        comparePayload: 'shallow',
+        generateId: () => {
+          console.info('dsafdsafds?');
+
+          return `${i++}`;
+        },
+      },
+    });
+
+    const { container } = await act(async () =>
+      render(<TestPage />, {
+        wrapper: createVMStoreWrapper(vmStore),
+      }),
+    );
+
+    await expect(container.firstChild).toMatchFileSnapshot(
+      `../../tests/snapshots/hoc/with-view-model/${task.name}.html`,
+    );
   });
 });

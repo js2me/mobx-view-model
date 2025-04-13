@@ -16,7 +16,8 @@ export const mergeVMConfigs = (...configs: Maybe<ViewModelsRawConfig>[]) => {
       return;
     }
 
-    const { startViewTransitions, comparePayload } = config;
+    const { startViewTransitions, comparePayload, ...otherConfigUpdates } =
+      config;
 
     if (startViewTransitions) {
       const startViewTransitonsUpdate: Partial<
@@ -32,9 +33,12 @@ export const mergeVMConfigs = (...configs: Maybe<ViewModelsRawConfig>[]) => {
 
       Object.assign(result.startViewTransitions, startViewTransitonsUpdate);
     }
+
     if (comparePayload != null) {
       result.comparePayload = comparePayload;
     }
+
+    Object.assign(result, otherConfigUpdates);
   });
 
   return result;
