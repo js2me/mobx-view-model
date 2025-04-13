@@ -7,7 +7,7 @@ import * as packageJson from "../package.json" assert { type: "json" };
 const REPO_URL = `https://github.com/${packageJson.author}/${packageJson.name}/blob/master`;
 
 const config: Config = {
-  staticDirectories: ['../assets', '../docs', '../i18n'],
+  staticDirectories: ['../assets', '../docs', '../i18n', './static'],
   title: packageJson.name,
   tagline: packageJson.description,
   favicon: 'logo.png',
