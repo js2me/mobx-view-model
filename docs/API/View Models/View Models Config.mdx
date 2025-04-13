@@ -21,10 +21,17 @@ This feature is experimental and not all browsers support it yet.
 ## `comparePayload`  
 Allows you to configure how payload should be compared   
 
-- `'strict'` - **(default)** strict equality  
+- `'strict'` - **(default)** strict equality ([lodash isEqual](https://lodash.com/docs/4.17.15#isEqual))  
 - `'shallow'` - shallow equality  
-- `false` - no comparison  
-- `fn` - custom payload compare fn  
+- `false` - **(recommended)** no comparison  
+- `fn` - custom payload compare fn (e.g. [MobX comparer functions](https://mobx.js.org/computeds.html#built-in-comparers))  
+
+## `payloadComputed`  
+Allows you to configure `computed` statement of the payload  
+- `'struct'` - [`computed.struct` from MobX](https://mobx.js.org/computeds.html#computed-struct)  
+- `true` - [`computed` from MobX](https://mobx.js.org/computeds.html)  
+- `fn` - [custom equality function](https://mobx.js.org/computeds.html#equals) for [`computed` from MobX](https://mobx.js.org/computeds.html)  
+- `false` - **(default)** do not wrap `payload` into `computed` MobX utility  
 
 ## `payloadObservable`  
 Indicates type of observable for `ViewModel` payload.  
@@ -33,6 +40,7 @@ Indicates type of observable for `ViewModel` payload.
 - `'deep'` - [MobX deep observable](https://mobx.js.org/api.html#observabledeep)  
 - `'struct'` - [MobX struct observable](https://mobx.js.org/api.html#observablestruct)   
 - `'shallow'` - [MobX shallow observable](https://mobx.js.org/api.html#observableshallow)  
+- `false` - **(recommended)** no observer  
 
 ## `generateId()`  
 Generates an unique identifier for a [`ViewModel`](/api/view-models/interface).   

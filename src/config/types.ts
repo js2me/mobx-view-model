@@ -22,7 +22,9 @@ export interface ViewModelsConfig {
   /** [Documentation](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#comparepayload) */
   comparePayload: PayloadCompareFn | 'strict' | 'shallow' | false;
   /** [Documentation](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#payloadobservable) */
-  payloadObservable?: 'ref' | 'deep' | 'shallow' | 'struct';
+  payloadObservable?: 'ref' | 'deep' | 'shallow' | 'struct' | false;
+  /** [Documentation](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#payloadcomputed) */
+  payloadComputed?: 'struct' | boolean | ((a: any, b: any) => boolean);
   /** [Documentation](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#generateid) */
   generateId?: (ctx: AnyObject) => string;
   /** [Documentation](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#factory) */

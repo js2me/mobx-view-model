@@ -39,7 +39,7 @@ export class ViewModelBase<
 
   isUnmounting = false;
 
-  public payload: Payload;
+  private _payload: Payload;
 
   public vmConfig: ViewModelsConfig;
 
@@ -48,14 +48,29 @@ export class ViewModelBase<
   constructor(protected params: ViewModelParams<Payload, ParentViewModel>) {
     this.id = params.id;
     this.vmConfig = mergeVMConfigs(params.config);
-    this.payload = params.payload;
+    this._payload = params.payload;
     this.abortController = new AbortController();
     this.unmountSignal = this.abortController.signal;
 
     observable.ref(this, 'isMounted');
     observable.ref(this, 'isUnmounting');
     computed(this, 'parentViewModel');
-    observable[this.vmConfig.payloadObservable ?? 'ref'](this, 'payload');
+    if (this.vmConfig.payloadObservable !== false) {
+      observable[this.vmConfig.payloadObservable ?? 'ref'](this, '_payload');
+    }
+    if (this.vmConfig.payloadComputed) {
+      if (this.vmConfig.payloadComputed === 'struct') {
+        computed.struct(this, 'payload');
+      } else {
+        computed({
+          equals:
+            this.vmConfig.payloadComputed === true
+              ? undefined
+              : this.vmConfig.payloadComputed,
+        })(this, 'payload');
+      }
+    }
+
     action.bound(this, 'mount');
     action(this, 'didMount');
     action.bound(this, 'unmount');
@@ -71,6 +86,10 @@ export class ViewModelBase<
     } else if (typeof this.vmConfig.comparePayload === 'function') {
       this.isPayloadEqual = this.vmConfig.comparePayload;
     }
+  }
+
+  get payload() {
+    return this._payload;
   }
 
   protected get viewModels(): ViewModelStore {
@@ -164,11 +183,11 @@ export class ViewModelBase<
    * The method is called when the payload changes in the react component
    */
   setPayload(payload: Payload) {
-    if (!this.isPayloadEqual?.(this.payload, payload)) {
+    if (!this.isPayloadEqual?.(this._payload, payload)) {
       startViewTransitionSafety(
         () => {
           runInAction(() => {
-            this.payload = payload;
+            this._payload = payload;
             this.payloadChanged(payload);
           });
         },
