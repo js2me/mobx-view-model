@@ -22,6 +22,7 @@ import { createCounter } from 'yummies/complex';
 import {
   ViewModelParams,
   ViewModelStore,
+  ViewModelsConfig,
   ViewModelsProvider,
   ViewModelsRawConfig,
 } from '../index.js';
@@ -1141,177 +1142,925 @@ describe('withViewModel', () => {
     });
   });
 
-  it('circullar dependendcy between parent and child using access to shallow compare payload of the child in parent vm', async ({
-    task,
-  }) => {
-    class ChildVM extends ViewModelBaseMock<{
-      fruitId: Maybe<string>;
-      teabugIds: Maybe<string[]>;
-      showTeabugs: boolean;
-    }> {
-      @observable
-      error: string = '';
+  describe('circular vm payload dependency using access to child payload from parent vm with using vm store', () => {
+    const createTest = async ({ vmConfig, isRecursion }: TestCase) => {
+      const caseNameTitle = `${isRecursion ? 'bad' : 'ok'} scenario`;
+      const caseNameSegments: string[] = [];
 
-      payloadChangeCounter = 0;
-      maxPaylodChangeCount = 50;
-
-      setPayload(payload: {
-        fruitId: Maybe<string>;
-        teabugIds: Maybe<string[]>;
-        showTeabugs: boolean;
-      }): void {
-        console.info('set payload', payload);
-        this.payloadChangeCounter++;
-        if (this.payloadChangeCounter > this.maxPaylodChangeCount) {
-          act(() => {
-            this.error = `set payload too many times (${this.maxPaylodChangeCount}+)`;
-          });
-          return;
-        }
-        act(() => {
-          super.setPayload(payload);
-        });
+      if (vmConfig.comparePayload != null) {
+        caseNameSegments.push(`comparePayload: ${vmConfig.comparePayload}`);
       }
-    }
 
-    const ChildView = observer(
-      ({
-        model,
-        getFruitObject,
-        getTeabugObject,
-      }: ViewModelProps<ChildVM> & {
-        getFruitObject: (fruitId: string) => { label: string };
-        getTeabugObject: (teabugId: string) => { label: string };
-      }) => {
-        return (
-          <div
-            data-test-id={'child'}
-            style={{
-              border: `1px solid ${model.error ? 'red' : 'green'}`,
-              padding: 10,
-            }}
-          >
-            {model.error ? (
-              <div>error: {model.error}</div>
-            ) : (
-              <>
-                <div>id: {model.id}</div>
-                {!!model.payload.fruitId && (
-                  <div>
-                    fruit from parent{' '}
-                    {getFruitObject(model.payload.fruitId).label}
+      if (vmConfig.payloadObservable != null) {
+        caseNameSegments.push(
+          `payloadObservable: ${vmConfig.payloadObservable}`,
+        );
+      }
+
+      if (vmConfig.payloadComputed != null) {
+        caseNameSegments.push(`payloadComputed: ${vmConfig.payloadComputed}`);
+      }
+
+      const caseName = `${caseNameTitle} (${caseNameSegments.join(', ')})`;
+
+      it(caseName, async () => {
+        vi.useFakeTimers();
+
+        class ChildVM extends ViewModelBaseMock<{
+          fruitId: Maybe<string>;
+          teabugIds: Maybe<string[]>;
+          showTeabugs: boolean;
+        }> {
+          @observable
+          error: string = '';
+
+          @observable
+          payloadChangeCounter = 0;
+          maxPaylodChangeCount = 50;
+
+          @observable
+          timeExpected = false;
+
+          setPayload(payload: {
+            fruitId: Maybe<string>;
+            teabugIds: Maybe<string[]>;
+            showTeabugs: boolean;
+          }): void {
+            this.payloadChangeCounter++;
+            if (this.payloadChangeCounter > this.maxPaylodChangeCount) {
+              this.error = `set payload too many times (${this.maxPaylodChangeCount}+)`;
+              return;
+            }
+            super.setPayload(payload);
+          }
+
+          async mount() {
+            super.mount();
+
+            await sleep(200);
+            runInAction(() => {
+              this.timeExpected = true;
+            });
+          }
+        }
+
+        const ChildView = observer(
+          ({
+            model,
+            getFruitObject,
+            getTeabugObject,
+          }: ViewModelProps<ChildVM> & {
+            getFruitObject: (fruitId: string) => { label: string };
+            getTeabugObject: (teabugId: string) => { label: string };
+          }) => {
+            return (
+              <div
+                data-testid={'child'}
+                style={{
+                  border: `1px solid ${model.error ? 'red' : 'green'}`,
+                  color: model.error ? 'red' : 'green',
+                  padding: 10,
+                }}
+              >
+                {model.timeExpected && (
+                  <div data-testid={'time-expected'}>
+                    {`async time expected (payload change count: ${model.payloadChangeCounter})`}
                   </div>
                 )}
-                {model.payload.showTeabugs &&
-                  !!model.payload.teabugIds?.length && (
-                    <div>
-                      <label>teabugs from parent:</label>
+                {model.error ? (
+                  <div>error: {model.error}</div>
+                ) : (
+                  <>
+                    <div>id: {model.id}</div>
+                    {!!model.payload.fruitId && (
                       <div>
-                        {model.payload.teabugIds
-                          .map((id) => getTeabugObject(id).label)
-                          .join(',')}
+                        fruit from parent{' '}
+                        {getFruitObject(model.payload.fruitId).label}
                       </div>
-                    </div>
-                  )}
-              </>
-            )}
-          </div>
+                    )}
+                    {model.payload.showTeabugs &&
+                      !!model.payload.teabugIds?.length && (
+                        <div>
+                          <label>teabugs from parent:</label>
+                          <div>
+                            {model.payload.teabugIds
+                              .map((id) => getTeabugObject(id).label)
+                              .join(',')}
+                          </div>
+                        </div>
+                      )}
+                  </>
+                )}
+              </div>
+            );
+          },
         );
-      },
-    );
 
-    const Child = withViewModel(ChildVM, {
-      config: { comparePayload: 'shallow' },
-    })(ChildView);
+        const Child = withViewModel(ChildVM)(ChildView);
 
-    class ParentVM extends ViewModelBaseMock {
-      @observable.ref
-      fruitId: Maybe<string> = undefined;
+        class ParentVM extends ViewModelBaseMock {
+          @observable.ref
+          fruitId: Maybe<string> = undefined;
 
-      @observable.ref
-      teabugIds: Maybe<string[]> = [];
+          @observable.ref
+          teabugIds: Maybe<string[]> = [];
 
-      get childVM() {
-        return this.viewModels.get(ChildVM);
-      }
+          get childVM() {
+            return this.viewModels.get(ChildVM);
+          }
 
-      get childHasFruit() {
-        return !!this.childVM?.payload.fruitId;
-      }
+          get childHasFruit() {
+            return !!this.childVM?.payload.fruitId;
+          }
 
-      mount(): void {
-        super.mount();
+          mount(): void {
+            super.mount();
 
-        makeObservable(this);
+            makeObservable(this);
+            runInAction(() => {
+              this.fruitId = '1';
+            });
 
-        act(() => {
-          runInAction(() => {
-            this.fruitId = '1';
-          });
+            runInAction(() => {
+              this.teabugIds = ['1', '2', '3'];
+            });
+          }
+        }
+
+        const ParentView = observer(({ model }: ViewModelProps<ParentVM>) => {
+          return (
+            <div>
+              <div>id: {model.id}</div>
+              <div>{model.fruitId}</div>
+              <div>{model.teabugIds?.join(',')}</div>
+              {model.childHasFruit && <div>child has fruit</div>}
+              <Child
+                getFruitObject={(fruitId) => ({ label: fruitId })}
+                getTeabugObject={(teabugId) => ({ label: teabugId })}
+                payload={{
+                  fruitId: model.fruitId,
+                  teabugIds: model.teabugIds,
+                  showTeabugs: true,
+                }}
+              />
+            </div>
+          );
         });
 
-        act(() => {
-          runInAction(() => {
-            this.teabugIds = ['1', '2', '3'];
-          });
+        const Parent = withViewModel(ParentVM)(ParentView);
+
+        const TestPage = () => {
+          return (
+            <div>
+              TestPage
+              <Parent />
+            </div>
+          );
+        };
+
+        let i = 0;
+
+        const vmStore = new ViewModelStoreBaseMock({
+          vmConfig: {
+            ...vmConfig,
+            generateId: () => {
+              return `${i++}`;
+            },
+          },
         });
-      }
-    }
 
-    const ParentView = observer(({ model }: ViewModelProps<ParentVM>) => {
-      return (
-        <div>
-          <div>id: {model.id}</div>
-          <div>{model.fruitId}</div>
-          <div>{model.teabugIds?.join(',')}</div>
-          {model.childHasFruit && <div>child has fruit</div>}
-          <Child
-            getFruitObject={(fruitId) => ({ label: fruitId })}
-            getTeabugObject={(teabugId) => ({ label: teabugId })}
-            payload={{
-              fruitId: model.fruitId,
-              teabugIds: model.teabugIds,
-              showTeabugs: true,
-            }}
-          />
-        </div>
-      );
-    });
+        const { findByTestId } = render(<TestPage />, {
+          wrapper: createVMStoreWrapper(vmStore),
+        });
 
-    const Parent = withViewModel(ParentVM, {
-      config: { comparePayload: 'strict' },
-    })(ParentView);
+        await vi.runAllTimersAsync();
 
-    const TestPage = () => {
-      return (
-        <div>
-          TestPage
-          <Parent />
-        </div>
-      );
+        vi.useRealTimers();
+
+        // await screen.findByTestId('error-message', {}, { timeout: 3000 });
+        // expect(errorMessage).toContain(/too many times/i);
+
+        const childElement = await findByTestId('child');
+
+        if (isRecursion) {
+          expect(childElement.style.color).toBe('red');
+        } else {
+          expect(childElement.style.color).toBe('green');
+        }
+      });
     };
 
-    let i = 0;
+    type TestCase = {
+      vmConfig: Partial<ViewModelsConfig>;
+      isRecursion: boolean;
+    };
 
-    const vmStore = new ViewModelStoreBaseMock({
-      vmConfig: {
-        comparePayload: 'shallow',
-        generateId: () => {
-          console.info('dsafdsafds?');
-
-          return `${i++}`;
-        },
+    const testCases: TestCase[] = [
+      {
+        vmConfig: {},
+        isRecursion: false,
       },
-    });
+      {
+        vmConfig: {
+          payloadComputed: false,
+        },
+        isRecursion: false,
+      },
+      {
+        vmConfig: {
+          payloadComputed: true,
+        },
+        isRecursion: false,
+      },
+      {
+        vmConfig: {
+          payloadComputed: 'struct',
+        },
+        isRecursion: false,
+      },
+      {
+        vmConfig: {
+          comparePayload: false,
+        },
+        isRecursion: true,
+      },
+      {
+        vmConfig: {
+          comparePayload: 'shallow',
+        },
+        isRecursion: false,
+      },
+      {
+        vmConfig: {
+          comparePayload: 'strict',
+        },
+        isRecursion: false,
+      },
+      {
+        vmConfig: {
+          payloadObservable: false,
+        },
+        isRecursion: false,
+      },
+      {
+        vmConfig: {
+          payloadObservable: false,
+          comparePayload: false,
+        },
+        isRecursion: false,
+      },
+      {
+        vmConfig: {
+          payloadObservable: false,
+          comparePayload: 'shallow',
+        },
+        isRecursion: false,
+      },
+      {
+        vmConfig: {
+          payloadObservable: false,
+          comparePayload: 'strict',
+        },
+        isRecursion: false,
+      },
+      {
+        vmConfig: {
+          payloadObservable: 'ref',
+        },
+        isRecursion: false,
+      },
+      {
+        vmConfig: {
+          payloadObservable: 'ref',
+          comparePayload: false,
+        },
+        isRecursion: true,
+      },
+      {
+        vmConfig: {
+          payloadObservable: 'ref',
+          comparePayload: 'shallow',
+        },
+        isRecursion: false,
+      },
+      {
+        vmConfig: {
+          payloadObservable: 'ref',
+          comparePayload: 'strict',
+        },
+        isRecursion: false,
+      },
+      {
+        vmConfig: {
+          payloadObservable: 'shallow',
+        },
+        isRecursion: false,
+      },
+      {
+        vmConfig: {
+          payloadObservable: 'shallow',
+          comparePayload: false,
+        },
+        isRecursion: true,
+      },
+      {
+        vmConfig: {
+          payloadObservable: 'shallow',
+          comparePayload: 'shallow',
+        },
+        isRecursion: false,
+      },
+      {
+        vmConfig: {
+          payloadObservable: 'shallow',
+          comparePayload: 'strict',
+        },
+        isRecursion: false,
+      },
+      {
+        vmConfig: {
+          payloadObservable: 'struct',
+        },
+        isRecursion: false,
+      },
+      {
+        vmConfig: {
+          payloadObservable: 'struct',
+          comparePayload: false,
+        },
+        isRecursion: false,
+      },
+      {
+        vmConfig: {
+          payloadObservable: 'struct',
+          comparePayload: 'shallow',
+        },
+        isRecursion: false,
+      },
+      {
+        vmConfig: {
+          payloadObservable: 'struct',
+          comparePayload: 'strict',
+        },
+        isRecursion: false,
+      },
+      {
+        vmConfig: {
+          payloadObservable: 'deep',
+        },
+        isRecursion: false,
+      },
+      {
+        vmConfig: {
+          payloadObservable: 'deep',
+          comparePayload: false,
+        },
+        isRecursion: true,
+      },
+      {
+        vmConfig: {
+          payloadObservable: 'deep',
+          comparePayload: 'shallow',
+        },
+        isRecursion: true,
+      },
+      {
+        vmConfig: {
+          payloadObservable: 'deep',
+          comparePayload: 'strict',
+        },
+        isRecursion: false,
+      },
+      {
+        vmConfig: {
+          payloadComputed: false,
+          comparePayload: false,
+        },
+        isRecursion: true,
+      },
+      {
+        vmConfig: {
+          payloadComputed: false,
+          comparePayload: 'shallow',
+        },
+        isRecursion: false,
+      },
+      {
+        vmConfig: {
+          payloadComputed: false,
+          comparePayload: 'strict',
+        },
+        isRecursion: false,
+      },
+      {
+        vmConfig: {
+          payloadComputed: false,
+          payloadObservable: false,
+        },
+        isRecursion: false,
+      },
+      {
+        vmConfig: {
+          payloadComputed: false,
+          payloadObservable: false,
+          comparePayload: false,
+        },
+        isRecursion: false,
+      },
+      {
+        vmConfig: {
+          payloadComputed: false,
+          payloadObservable: false,
+          comparePayload: 'shallow',
+        },
+        isRecursion: false,
+      },
+      {
+        vmConfig: {
+          payloadComputed: false,
+          payloadObservable: false,
+          comparePayload: 'strict',
+        },
+        isRecursion: false,
+      },
+      {
+        vmConfig: {
+          payloadComputed: false,
+          payloadObservable: 'ref',
+        },
+        isRecursion: false,
+      },
+      {
+        vmConfig: {
+          payloadComputed: false,
+          payloadObservable: 'ref',
+          comparePayload: false,
+        },
+        isRecursion: true,
+      },
+      {
+        vmConfig: {
+          payloadComputed: false,
+          payloadObservable: 'ref',
+          comparePayload: 'shallow',
+        },
+        isRecursion: false,
+      },
+      {
+        vmConfig: {
+          payloadComputed: false,
+          payloadObservable: 'ref',
+          comparePayload: 'strict',
+        },
+        isRecursion: false,
+      },
+      {
+        vmConfig: {
+          payloadComputed: false,
+          payloadObservable: 'shallow',
+        },
+        isRecursion: false,
+      },
+      {
+        vmConfig: {
+          payloadComputed: false,
+          payloadObservable: 'shallow',
+          comparePayload: false,
+        },
+        isRecursion: true,
+      },
+      {
+        vmConfig: {
+          payloadComputed: false,
+          payloadObservable: 'shallow',
+          comparePayload: 'shallow',
+        },
+        isRecursion: false,
+      },
+      {
+        vmConfig: {
+          payloadComputed: false,
+          payloadObservable: 'shallow',
+          comparePayload: 'strict',
+        },
+        isRecursion: false,
+      },
+      {
+        vmConfig: {
+          payloadComputed: false,
+          payloadObservable: 'struct',
+        },
+        isRecursion: false,
+      },
+      {
+        vmConfig: {
+          payloadComputed: false,
+          payloadObservable: 'struct',
+          comparePayload: false,
+        },
+        isRecursion: false,
+      },
+      {
+        vmConfig: {
+          payloadComputed: false,
+          payloadObservable: 'struct',
+          comparePayload: 'shallow',
+        },
+        isRecursion: false,
+      },
+      {
+        vmConfig: {
+          payloadComputed: false,
+          payloadObservable: 'struct',
+          comparePayload: 'strict',
+        },
+        isRecursion: false,
+      },
+      {
+        vmConfig: {
+          payloadComputed: false,
+          payloadObservable: 'deep',
+        },
+        isRecursion: false,
+      },
+      {
+        vmConfig: {
+          payloadComputed: false,
+          payloadObservable: 'deep',
+          comparePayload: false,
+        },
+        isRecursion: true,
+      },
+      {
+        vmConfig: {
+          payloadComputed: false,
+          payloadObservable: 'deep',
+          comparePayload: 'shallow',
+        },
+        isRecursion: true,
+      },
+      {
+        vmConfig: {
+          payloadComputed: false,
+          payloadObservable: 'deep',
+          comparePayload: 'strict',
+        },
+        isRecursion: false,
+      },
+      {
+        vmConfig: {
+          payloadComputed: true,
+          comparePayload: false,
+        },
+        isRecursion: true,
+      },
+      {
+        vmConfig: {
+          payloadComputed: true,
+          comparePayload: 'shallow',
+        },
+        isRecursion: false,
+      },
+      {
+        vmConfig: {
+          payloadComputed: true,
+          comparePayload: 'strict',
+        },
+        isRecursion: false,
+      },
+      {
+        vmConfig: {
+          payloadComputed: true,
+          payloadObservable: false,
+        },
+        isRecursion: false,
+      },
+      {
+        vmConfig: {
+          payloadComputed: true,
+          payloadObservable: false,
+          comparePayload: false,
+        },
+        isRecursion: false,
+      },
+      {
+        vmConfig: {
+          payloadComputed: true,
+          payloadObservable: false,
+          comparePayload: 'shallow',
+        },
+        isRecursion: false,
+      },
+      {
+        vmConfig: {
+          payloadComputed: true,
+          payloadObservable: false,
+          comparePayload: 'strict',
+        },
+        isRecursion: false,
+      },
+      {
+        vmConfig: {
+          payloadComputed: true,
+          payloadObservable: 'ref',
+        },
+        isRecursion: false,
+      },
+      {
+        vmConfig: {
+          payloadComputed: true,
+          payloadObservable: 'ref',
+          comparePayload: false,
+        },
+        isRecursion: true,
+      },
+      {
+        vmConfig: {
+          payloadComputed: true,
+          payloadObservable: 'ref',
+          comparePayload: 'shallow',
+        },
+        isRecursion: false,
+      },
+      {
+        vmConfig: {
+          payloadComputed: true,
+          payloadObservable: 'ref',
+          comparePayload: 'strict',
+        },
+        isRecursion: false,
+      },
+      {
+        vmConfig: {
+          payloadComputed: true,
+          payloadObservable: 'shallow',
+        },
+        isRecursion: false,
+      },
+      {
+        vmConfig: {
+          payloadComputed: true,
+          payloadObservable: 'shallow',
+          comparePayload: false,
+        },
+        isRecursion: true,
+      },
+      {
+        vmConfig: {
+          payloadComputed: true,
+          payloadObservable: 'shallow',
+          comparePayload: 'shallow',
+        },
+        isRecursion: false,
+      },
+      {
+        vmConfig: {
+          payloadComputed: true,
+          payloadObservable: 'shallow',
+          comparePayload: 'strict',
+        },
+        isRecursion: false,
+      },
+      {
+        vmConfig: {
+          payloadComputed: true,
+          payloadObservable: 'struct',
+        },
+        isRecursion: false,
+      },
+      {
+        vmConfig: {
+          payloadComputed: true,
+          payloadObservable: 'struct',
+          comparePayload: false,
+        },
+        isRecursion: false,
+      },
+      {
+        vmConfig: {
+          payloadComputed: true,
+          payloadObservable: 'struct',
+          comparePayload: 'shallow',
+        },
+        isRecursion: false,
+      },
+      {
+        vmConfig: {
+          payloadComputed: true,
+          payloadObservable: 'struct',
+          comparePayload: 'strict',
+        },
+        isRecursion: false,
+      },
+      {
+        vmConfig: {
+          payloadComputed: true,
+          payloadObservable: 'deep',
+        },
+        isRecursion: false,
+      },
+      {
+        vmConfig: {
+          payloadComputed: true,
+          payloadObservable: 'deep',
+          comparePayload: false,
+        },
+        isRecursion: true,
+      },
+      {
+        vmConfig: {
+          payloadComputed: true,
+          payloadObservable: 'deep',
+          comparePayload: 'shallow',
+        },
+        isRecursion: true,
+      },
+      {
+        vmConfig: {
+          payloadComputed: true,
+          payloadObservable: 'deep',
+          comparePayload: 'strict',
+        },
+        isRecursion: false,
+      },
+      {
+        vmConfig: {
+          payloadComputed: 'struct',
+          comparePayload: false,
+        },
+        isRecursion: false,
+      },
+      {
+        vmConfig: {
+          payloadComputed: 'struct',
+          comparePayload: 'shallow',
+        },
+        isRecursion: false,
+      },
+      {
+        vmConfig: {
+          payloadComputed: 'struct',
+          comparePayload: 'strict',
+        },
+        isRecursion: false,
+      },
+      {
+        vmConfig: {
+          payloadComputed: 'struct',
+          payloadObservable: false,
+        },
+        isRecursion: false,
+      },
+      {
+        vmConfig: {
+          payloadComputed: 'struct',
+          payloadObservable: false,
+          comparePayload: false,
+        },
+        isRecursion: false,
+      },
+      {
+        vmConfig: {
+          payloadComputed: 'struct',
+          payloadObservable: false,
+          comparePayload: 'shallow',
+        },
+        isRecursion: false,
+      },
+      {
+        vmConfig: {
+          payloadComputed: 'struct',
+          payloadObservable: false,
+          comparePayload: 'strict',
+        },
+        isRecursion: false,
+      },
+      {
+        vmConfig: {
+          payloadComputed: 'struct',
+          payloadObservable: 'ref',
+        },
+        isRecursion: false,
+      },
+      {
+        vmConfig: {
+          payloadComputed: 'struct',
+          payloadObservable: 'ref',
+          comparePayload: false,
+        },
+        isRecursion: false,
+      },
+      {
+        vmConfig: {
+          payloadComputed: 'struct',
+          payloadObservable: 'ref',
+          comparePayload: 'shallow',
+        },
+        isRecursion: false,
+      },
+      {
+        vmConfig: {
+          payloadComputed: 'struct',
+          payloadObservable: 'ref',
+          comparePayload: 'strict',
+        },
+        isRecursion: false,
+      },
+      {
+        vmConfig: {
+          payloadComputed: 'struct',
+          payloadObservable: 'shallow',
+        },
+        isRecursion: false,
+      },
+      {
+        vmConfig: {
+          payloadComputed: 'struct',
+          payloadObservable: 'shallow',
+          comparePayload: false,
+        },
+        isRecursion: false,
+      },
+      {
+        vmConfig: {
+          payloadComputed: 'struct',
+          payloadObservable: 'shallow',
+          comparePayload: 'shallow',
+        },
+        isRecursion: false,
+      },
+      {
+        vmConfig: {
+          payloadComputed: 'struct',
+          payloadObservable: 'shallow',
+          comparePayload: 'strict',
+        },
+        isRecursion: false,
+      },
+      {
+        vmConfig: {
+          payloadComputed: 'struct',
+          payloadObservable: 'struct',
+        },
+        isRecursion: false,
+      },
+      {
+        vmConfig: {
+          payloadComputed: 'struct',
+          payloadObservable: 'struct',
+          comparePayload: false,
+        },
+        isRecursion: false,
+      },
+      {
+        vmConfig: {
+          payloadComputed: 'struct',
+          payloadObservable: 'struct',
+          comparePayload: 'shallow',
+        },
+        isRecursion: false,
+      },
+      {
+        vmConfig: {
+          payloadComputed: 'struct',
+          payloadObservable: 'struct',
+          comparePayload: 'strict',
+        },
+        isRecursion: false,
+      },
+      {
+        vmConfig: {
+          payloadComputed: 'struct',
+          payloadObservable: 'deep',
+        },
+        isRecursion: false,
+      },
+      {
+        vmConfig: {
+          payloadComputed: 'struct',
+          payloadObservable: 'deep',
+          comparePayload: false,
+        },
+        isRecursion: false,
+      },
+      {
+        vmConfig: {
+          payloadComputed: 'struct',
+          payloadObservable: 'deep',
+          comparePayload: 'shallow',
+        },
+        isRecursion: false,
+      },
+      {
+        vmConfig: {
+          payloadComputed: 'struct',
+          payloadObservable: 'deep',
+          comparePayload: 'strict',
+        },
+        isRecursion: false,
+      },
+    ];
 
-    const { container } = await act(async () =>
-      render(<TestPage />, {
-        wrapper: createVMStoreWrapper(vmStore),
-      }),
-    );
-
-    await expect(container.firstChild).toMatchFileSnapshot(
-      `../../tests/snapshots/hoc/with-view-model/${task.name}.html`,
-    );
+    testCases.forEach(createTest);
   });
 });

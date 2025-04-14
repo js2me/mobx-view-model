@@ -20,7 +20,7 @@ export interface ViewModelsConfig {
     payloadChange: boolean;
   };
   /** [Documentation](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#comparepayload) */
-  comparePayload: PayloadCompareFn | 'strict' | 'shallow' | false;
+  comparePayload?: PayloadCompareFn | 'strict' | 'shallow' | false;
   /** [Documentation](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#payloadobservable) */
   payloadObservable?: 'ref' | 'deep' | 'shallow' | 'struct' | false;
   /** [Documentation](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#payloadcomputed) */
