@@ -9,6 +9,8 @@ postBuildScript({
   onDone: (versionsDiff, { $ }, packageJson, { targetPackageJson}) => {
     if (process.env.PUBLISH) {
       $(`pnpm test`);
+      // remove all test compiled files. TODO: find a better to ignore test files
+      $('rm dist/**/*.test.*');
 
       publishScript({
         nextVersion: versionsDiff?.next ?? packageJson.version,
