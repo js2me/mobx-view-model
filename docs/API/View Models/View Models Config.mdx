@@ -5,6 +5,8 @@ sidebar_label: View Models Config
 sidebar_position: 4
 slug: /api/view-models/view-models-config
 ---
+import CodeBlock from '@theme/CodeBlock';
+import { circularVmPayloadDependencyTestCases } from '@site/../src/hoc/with-view-model.test.fixture.ts';
 
 # `ViewModelsConfig` configuration object   
 This object contains all global options for some behaviour of view models instances  
@@ -167,3 +169,16 @@ viewModelsConfig.startViewTransitions = {
 // viewModelsConfig.onMount = (vm) => console.log('Mounted:', vm.id);
 // viewModelsConfig.onUnmount = (vm) => console.log('Unmounted:', vm.id);
 ```
+
+## Possible causes of infinite rerenders due to payload access  
+
+The flexible configuration of the payload reactivity and update behavior can lead to infinite rerenders inside the View component.  
+This happens when the payload is changing every time the component is rerendered.  
+
+The following ViewModel configurations can cause this problem:  
+
+{circularVmPayloadDependencyTestCases.filter(it => it.isRecursion).map(it => (
+  <>
+    <CodeBlock language="ts">{JSON.stringify(it.vmConfig, null, 2)}</CodeBlock>
+  </>
+))}

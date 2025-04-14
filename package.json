@@ -16,8 +16,8 @@
     "test": "vitest run --config vitest.config.ts",
     "test:watch": "vitest watch --config vitest.config.ts",
     "test:coverage": "vitest run --config vitest.config.ts --coverage",
-    "website": "cd website && pnpm start",
-    "website:build": "pnpm test:coverage && rm -rf website/static/unit-tests-coverage && mkdir -p website/static/unit-tests-coverage && cp -r coverage/* website/static/unit-tests-coverage/ && cd website && pnpm build",
+    "website": "pnpm build && cd website && pnpm start",
+    "website:build": "pnpm build && pnpm test:coverage && rm -rf website/static/unit-tests-coverage && mkdir -p website/static/unit-tests-coverage && cp -r coverage/* website/static/unit-tests-coverage/ && cd website && pnpm build",
     "website:serve": "cd website && pnpm serve",
     "dev": "pnpm test:watch"
   },

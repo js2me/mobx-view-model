@@ -14,6 +14,15 @@ module.exports = {
   overrides: [
     {
       files: [
+        "*.fixture.ts",
+        "*.fixture.tsx"
+      ],
+      rules: {
+        'sonarjs/no-empty-test-file': 'off'
+      }
+    },
+    {
+      files: [
         "*.test.ts",
         "*.test.tsx"
       ],
