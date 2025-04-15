@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { isEqual } from 'lodash-es';
 import {
   action,
+  comparer,
   computed,
   makeObservable,
   observable,
@@ -80,7 +80,7 @@ export class ViewModelBase<
     makeObservable(this);
 
     if (this.vmConfig.comparePayload === 'strict') {
-      this.isPayloadEqual = isEqual;
+      this.isPayloadEqual = comparer.structural;
     } else if (this.vmConfig.comparePayload === 'shallow') {
       this.isPayloadEqual = isShallowEqual;
     } else if (typeof this.vmConfig.comparePayload === 'function') {

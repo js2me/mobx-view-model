@@ -23,7 +23,7 @@ This feature is experimental and not all browsers support it yet.
 ## `comparePayload`  
 Allows you to configure how payload should be compared   
 
-- `'strict'` - _**(default)**_ strict equality ([lodash isEqual](https://lodash.com/docs/4.17.15#isEqual))  
+- `'strict'` - _**(default)**_ strict equality ([`comparer.structural` from MobX](https://mobx.js.org/computeds.html#built-in-comparers))  
 - `'shallow'` - shallow equality  
 - `false` - **(recommended)** no comparison  
 - `fn` - custom payload compare fn (e.g. [MobX comparer functions](https://mobx.js.org/computeds.html#built-in-comparers))  
