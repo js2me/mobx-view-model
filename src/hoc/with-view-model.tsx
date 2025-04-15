@@ -55,12 +55,6 @@ export interface ViewModelHocConfig<VM extends AnyViewModel>
   ) => void;
 
   /**
-   * Function to invoke additional React hooks in the resulting component
-   * @deprecated use `reactHook` (typo fix), will be removed in next major release
-   */
-  reactHooks?: (allProps: any, ctx: AnyObject) => void;
-
-  /**
    * Function that should return the payload for the VM
    * by default, it is - (props) => props.payload
    */
@@ -103,7 +97,6 @@ export function withViewModel(
       const viewModels = useContext(ViewModelsContext);
 
       config?.reactHook?.(allProps, ctx, viewModels);
-      config?.reactHooks?.(allProps, ctx);
 
       const { payload: rawPayload, ...componentProps } = allProps;
 
