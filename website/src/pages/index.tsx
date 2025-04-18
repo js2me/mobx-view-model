@@ -5,7 +5,26 @@ import Layout from '@theme/Layout';
 import Heading from '@theme/Heading';
 import Logo from '@theme/Logo';
 import CodeBlock from '@theme/CodeBlock';
-import exampleCodeBlock from "./example";
+
+const exampleCodeBlock = `
+import { observable, action } from "mobx";
+import { ViewModelBase } from "mobx-view-model";
+
+export class ComponentVM extends ViewModelBase {
+  @observable
+  accessor search = '';
+
+  @action
+  setSearch(search: string) {
+    this.search = search;
+  }
+
+  mount() {
+    super.mount();
+    fetchData();
+  }
+}
+`
 
 export default function Home(): ReactNode {
   const {siteConfig} = useDocusaurusContext();

@@ -5,3 +5,6 @@ install:
 reinstall:
 	make clean
 	make install
+	cd website
+	make reinstall
+	cd ..
