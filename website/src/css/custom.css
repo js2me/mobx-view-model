@@ -28,15 +28,29 @@
   filter: invert(0.9);
 }
 
-html body .theme-code-block > *, html body .theme-code-block {
+/* html body .theme-code-block > *, html body .theme-code-block {
   --prism-background-color: var(--code-bg-color) !important;
   background: var(--code-bg-color) !important;
 }
 .prism-code {
   background-color: var(--prism-background-color) !important;
-}
-html body div[class*="codeBlockTitle"] {
+} */
+/* html body div[class*="codeBlockTitle"] {
   border-bottom: 1px solid #5d5d5d;
+} */
+
+
+.code-block-no-bg {
+  background: transparent !important;
+}
+
+*:has(>.code-block-no-bg), .code-block-no-bg {
+  --prism-background-color: transparent !important;
+}
+
+*:has(>.code-block-no-bg) .prism-code {
+  --ifm-pre-background: transparent !important;
+  background-color: transparent !important;
 }
 
  [data-theme='light'] {

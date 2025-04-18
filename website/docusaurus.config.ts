@@ -139,8 +139,8 @@ const config: Config = {
       respectPrefersColorScheme: true,
     },
     prism: {
-      theme: prismThemes.vsDark,
-      darkTheme: prismThemes.vsDark,
+      theme: prismThemes.oneLight,
+      darkTheme: prismThemes.palenight,
     },
   } satisfies Preset.ThemeConfig,
   plugins: [
