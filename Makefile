@@ -8,3 +8,9 @@ reinstall:
 	cd website && \
 	make reinstall && \
 	cd ..
+doc:
+	cd docs && \
+	rm -rf node_modules && \
+	rm -rf .vitepress/cache && \
+	pnpm i && \
+	pnpm dev
