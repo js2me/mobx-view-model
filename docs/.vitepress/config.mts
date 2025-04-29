@@ -176,7 +176,7 @@ export default defineConfig({
 
     footer: {
       message: `Released under the ${license} License.`,
-      copyright: `Copyright © 2025-PRESENT ${author}`,
+      copyright: `Copyright © 2024-PRESENT ${author}`,
     },
 
     socialLinks: [
