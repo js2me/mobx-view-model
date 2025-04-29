@@ -1,14 +1,12 @@
----
-title: Getting started
----
+# Getting started  
 
-# Getting started
+The `mobx-view-model` source code is written on TypeScript and compiled into NodeNext target.   
+
+## Requirements  
+
+- [`MobX`](https://mobx.js.org) **6+**  
 
 ## Installation
-
-::: warning
-{packageJson.name} currently is WIP project. This is not production ready.  
-:::
 
 ::: code-group
 
@@ -26,73 +24,48 @@ pnpm add {packageJson.name}
 
 :::
 
+## Writing first ViewModels
+
+```ts
+import { observable } from 'mobx';
+import { ViewModelBase } from 'mobx-view-model';
+
+class PetCardVM extends ViewModelBase {
+  @observable
+  accessor petName: string = '';
+
+  @action.bound
+  setPetName(petName: string) {
+    this.petName = petName;
+  }
+}
+```
+
 ## Integration with React
 
 ```tsx
-import { Route } from "mobx-route";
-import { RouteView, Link } from "mobx-route/react";
-
-const route = new Route('/foo/bar/:baz');
-
-...
-<RouteView route={route} view={() => <div>Hello!</div>} />
-...
-<Link route={route} params={{ baz: 1 }} />
-```
-
-## Writing first routes
-
-```ts
-import { Route, RouteGroup } from 'mobx-route';
-
-const feed = new Route('/');
-const users = new Route('/users');
-const userDetails = users.extend('/:userId');
-
-export const routes = {
-  feed,
-  users,
-  userDetails,
-  memes: new RouteGroup({
-    list: new Route('/memes', { index: true }),
-    details: new Route('/memes/:memeId'),
-  })
-}
-```
-
-## Attach routes to views in React  
-
-```tsx
 import { observer } from "mobx-react-lite";
-import { routes } from '@/shared/config/routing';
-import { RouteView, Link } from 'mobx-route/react';
+import { withViewModel, ViewModelProps } from "mobx-view-model";
+import { PetCardVM } from "./model";
 
-const AllUsersPage = () => {
-  return (
-    <div>
-      <Link route={routes.userDetails} params={{ userId: 1 }}>
-        Open user with id 1
-      </Link>
-    </div>
-  );
-};
-
-const UserDetailsPage = observer(() => {
-  const { params } = routes.userDetails.data!;
+const PetCardView = observer(({ model }: ViewModelProps<PetCardVM>) => {
 
   return (
-    <div>
-      {`User id: ${params.userId}`}
-    </div>
+    <div className="p-10 flex flex-col gap-3">
+      <span>{`Pet name: ${model.petName}`}</span>
+      <input
+        placeholer="name"
+        value={model.petName}
+        onChange={e => {
+          model.setPetName(e.target.value);
+        }}
+      />
+    </div> 
   )
 })
 
-export const App = () => {
-  return (
-    <div>
-      <RouteView route={routes.userDetails} view={AllUsersPage} />
-      <RouteView route={routes.users} view={UserDetailsPage} />
-    </div>
-  )
-}
+export const PetCard = withViewModel(PetCardVM)(PetCardView)
+
+...
+<PetCard />
 ```

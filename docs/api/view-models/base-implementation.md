@@ -1,0 +1,104 @@
+---
+id: view-model-base-implementation
+title: View Model base implementation
+sidebar_label: Base Implementation
+sidebar_position: 3
+slug: /api/view-models/base-implementation
+---
+
+# `ViewModelBase` class  
+
+This is base implementation of the [`ViewModel`](/api/view-models/interface) interface  
+
+[Reference to source code](/src/view-model/view-model.base.ts)  
+
+
+## Methods and properties  
+Here is documentation about **base implementation** methods and properties.  
+If you need to read about [`ViewModel`](/api/view-models/interface) interface methods and properties [go to here](/api/view-models/interface)  
+
+### `viewModels`  
+Reference to instance of [`ViewModelStore`](/api/view-model-store/overview).  
+Allows to get access to other [`ViewModels`](/api/view-models/interface).  
+
+#### Example   
+
+```ts
+import { ViewModelBase } from "mobx-view-model";
+
+export class SithCardVM extends ViewModelBase {
+  get power() {
+    return this.viewModels.get(JediCardVM)?.power ?? 0;
+  }
+}
+
+export class StarWarsBattlefieldVM extends ViewModelBase {
+  get jedisCount() {
+    this.viewModels.getAll(JediCardVM).length;
+  }
+
+  get sithsCount() {
+    this.viewModels.getAll(SithCardVM).length;
+  }
+}
+```
+
+
+### `unmountSignal`   
+This is [`AbortSignal`](https://developer.mozilla.org/ru/docs/Web/API/AbortSignal) which signaled when your [`ViewModel`](/api/view-models/interface) is unmounted. It happens in [`didUnmount()`](/api/view-models/interface#didunmount-void) method   
+
+#### Example   
+```ts
+import { ViewModelBase } from "mobx-view-model";
+import { autorun } from "mobx"
+
+export class TestVM extends ViewModelBase {
+  willMount() {
+    autorun(
+      () => {
+        console.log("log", this.id, this.isMounted);
+      },
+      {
+        signal: this.unmountSignal
+      }
+    );
+  }
+}
+```
+
+### `vmConfig`  
+This is view models configuration, any details you can [read here](/api/view-models/view-models-config)    
+
+## Details
+
+### [`mount()`](/api/view-models/interface#mount-void-promise-void)  
+
+#### `isMounted`  
+This method sets [`isMounted`](/api/view-models/interface#ismounted-boolean) to `true`.   
+If you are overriding this method be sure that you called the [`super.mount()`](/api/view-models/interface#mount-void-promise-void), 
+otherwise your view component connected to this ViewModel never been rendered
+because inside [`withViewModel`](/react/api/with-view-model) HOC libary comparing the [`isMounted`](/api/view-models/interface#ismounted-boolean) flag with `true` before render the view component  
+
+
+#### `async mount()`  
+This method can be async. This feature is helpful if you want to load some data or do something before view component will been rendered  
+
+```ts
+import { ViewModelBase } from 'mobx-view-model';
+class YourVM extends ViewModelBase {
+  async mount() {
+    await when(() => this.fruits.isLoaded);
+
+    if (this.fruits.data) {
+      super.mount();
+    } else {
+      this.rootStore.router.navigate('/no-fruits');
+    }
+  }
+}
+```
+
+### [`setPayload()`](/api/view-models/interface#setpayload-payload-payload-void)  
+Base implementation of this method `strict` comparing current payload and new payload before sets the new  
+This can be overriden using [view models configuration](/api/view-models/view-models-config) or overriding the protected `isPayloadEqual` method    
+

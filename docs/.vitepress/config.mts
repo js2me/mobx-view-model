@@ -25,7 +25,7 @@ export default defineConfig({
     },
     nav: [
       { text: 'Home', link: '/' },
-      { text: 'Introduction', link: '/introduction/getting-started' },
+      { text: 'Introduction', link: '/introduction/overview' },
       {
         text: `v${version}`,
         items: [
@@ -43,34 +43,135 @@ export default defineConfig({
     sidebar: [
       {
         text: 'Introduction',
+        link: '/introduction/overview',
         items: [
+          { text: 'Overview', link: '/introduction/overview' },
           { text: 'Getting started', link: '/introduction/getting-started' },
+          { text: 'Decorators', link: '/introduction/decorators' },
+          {
+            text: 'Usage',
+            link: '/introduction/usage/simple',
+            items: [
+              {
+                text: 'Simple usage',
+                link: '/introduction/usage/simple',
+              },
+              {
+                text: 'With View Model Store',
+                link: '/introduction/usage/with-view-model-store',
+              },
+              {
+                text: 'Detailed configuration',
+                link: '/introduction/usage/detailed-configuration',
+              }
+            ]
+          },
         ],
       },
       {
         text: 'Core API',
+        link: '/api/view-models/overview',
         items: [
-          { text: 'Route', link: '/core/Route' },
-          { text: 'Router', link: '/core/Router' },
-          { text: 'RouteGroup', link: '/core/RouteGroup' },
-          { text: 'VirtualRoute', link: '/core/VirtualRoute' },
-          { text: 'routeConfig', link: '/core/routeConfig' },
+          {
+            text: 'View Models',
+            link: '/api/view-models/overview',
+            items: [
+              {
+                text: "Overview",
+                link: '/api/view-models/overview',
+              },
+              {
+                text: "Interface",
+                link: '/api/view-models/interface',
+              },
+              {
+                text: "Base Implementation",
+                link: '/api/view-models/base-implementation',
+              },
+              {
+                text: "View Models Config",
+                link: '/api/view-models/view-models-config',
+              },
+            ]
+          },  
+          {
+            text: 'View Model Store',
+            link: '/api/view-model-store/overview',
+            items: [
+              {
+                text: "Overview",
+                link: '/api/view-model-store/overview',
+              },
+              {
+                text: "Interface",
+                link: '/api/view-model-store/interface',
+              },
+              {
+                text: "Base Implementation",
+                link: '/api/view-model-store/base-implementation',
+              },
+            ]
+          },  
+          {
+            text: 'Other',
+            link: '/api/other/view-model-lookup',
+            items: [
+              {
+                text: "ViewModelLookup",
+                link: '/api/other/view-model-lookup',
+              },
+            ]
+          },
         ],
       },
       {
         text: 'React',
+        link: '/react/integration',
         items: [
-          { text: 'Link', link: '/react/Link' },
-          { text: 'RouteView', link: '/react/RouteView' },
-          { text: 'RouteGroupView', link: '/react/RouteGroupView' },
+          {
+            text: 'Integration',
+            link: '/react/integration',
+          },
+          {
+            text: 'SSR',
+            link: '/react/ssr',
+          },
+          {
+            text: 'API',
+            link: '/react/api/with-view-model',
+            items: [
+              {
+                text: 'withViewModel',
+                link: '/react/api/with-view-model',
+              },
+              {
+                text: 'ViewModelsProvider',
+                link: '/react/api/view-models-provider',
+              },
+              {
+                text: 'useViewModel',
+                link: '/react/api/use-view-model',
+              },
+              {
+                text: 'useCreateViewModel',
+                link: '/react/api/use-create-view-model',
+              },
+              {
+                text: 'withLazyViewModel',
+                link: '/react/api/with-lazy-view-model',
+              }
+            ]
+          }
         ],
       },
       {
-        text: 'view-model',
+        text: 'Other',
+        link: '/other/project-examples',
         items: [
-          { text: 'RouteViewModel', link: '/view-model/RouteViewModel' },
+          { text: 'Project examples', link: '/other/project-examples' },
+          { text: 'Dependent packages', link: '/other/dependent-packages' },
         ],
-      },
+      }
     ],
 
     footer: {

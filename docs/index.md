@@ -10,7 +10,7 @@ hero:
   actions:
     - theme: brand
       text: Get Started
-      link: /introduction/getting-started.md
+      link: /introduction/overview.md
     - theme: alt
       text: View on GitHub
       link: https://github.com/{packageJson.author}/{packageJson.name}
