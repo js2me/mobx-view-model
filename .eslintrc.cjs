@@ -38,16 +38,6 @@ module.exports = {
       parserOptions: {
         project: 'tsconfig.test.json',
       },
-    },
-    {
-      files: [
-        'website/**/*'
-      ],
-      rules: {
-        '@typescript-eslint/no-var-requires': 'off',
-        'import/no-unresolved': 'off',
-        'unicorn/prefer-module': 'off'
-      }
     }
   ]
 };
