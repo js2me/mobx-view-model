@@ -2,3 +2,4 @@ node_modules
 dist
 coverage
 unit-tests-coverage
+docs/.vitepress/cache

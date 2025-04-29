@@ -106,13 +106,13 @@
 
 :root {
   --vp-home-hero-name-color: transparent;
-  --vp-home-hero-name-background: -webkit-linear-gradient(120deg, #ff0000 15%, #ffa970);
-  --vp-home-hero-image-background-image: linear-gradient(-45deg, #ff542f 50%, #ffbbcf 50%);
+  --vp-home-hero-name-background: -webkit-linear-gradient(120deg, #3ba235 5%, #ff6a07);
+  --vp-home-hero-image-background-image: linear-gradient(-45deg, #752c1c 50%, #238832 50%);
   --vp-home-hero-image-filter: blur(44px);
 }
 
 html.dark {
-  --vp-home-hero-image-background-image: linear-gradient(-45deg, #ff510b 50%, #ff6591 50%);
+  --vp-home-hero-image-background-image: linear-gradient(-45deg, #9e321a 50%, #128223 50%);
 }
 
 @media (min-width: 640px) {
@@ -152,40 +152,4 @@ html.dark {
 
 .DocSearch {
   --docsearch-primary-color: var(--vp-c-brand-1) !important;
-}
-
-@keyframes logoBgGradientAnimate {
-  0% {
-      background-position: 0% 0%;
-      transform: scale(1) translate(-50%, -50%);
-  }
-  50% {
-      background-position: 300% 300%;
-      transform: scale(1.4) translate(-35%, -35%);
-  }
-  100% {
-      background-position: 0% 0%;
-      transform: scale(1) translate(-50%, -50%);
-  }
-}
-
-.image-container > .image-bg {
-  background-size: 200% 200%;
-  animation: logoBgGradientAnimate 7s linear infinite;
-}
-
-@keyframes logoAnimate {
-  0% {
-      transform: scale(1) translate(-50%, -50%);
-  }
-  50% {
-      transform: scale(1.05) translate(-48%, -48%);
-  }
-  100% {
-      transform: scale(1) translate(-50%, -50%);
-  }
-}
-
-.image-container > .image-src {
-  animation: logoAnimate 10s linear infinite;
 }

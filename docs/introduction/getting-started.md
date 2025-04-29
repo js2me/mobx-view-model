@@ -7,21 +7,21 @@ title: Getting started
 ## Installation
 
 ::: warning
-mobx-route currently is WIP project. This is not production ready.  
+{packageJson.name} currently is WIP project. This is not production ready.  
 :::
 
 ::: code-group
 
 ```bash [npm]
-npm install mobx-route
+npm install {packageJson.name}
 ```
 
 ```bash [yarn]
-yarn add mobx-route
+yarn add {packageJson.name}
 ```
 
 ```bash [pnpm]
-pnpm add mobx-route
+pnpm add {packageJson.name}
 ```
 
 :::
@@ -43,7 +43,7 @@ const route = new Route('/foo/bar/:baz');
 ## Writing first routes
 
 ```ts
-import { Route } from 'mobx-route';
+import { Route, RouteGroup } from 'mobx-route';
 
 const feed = new Route('/');
 const users = new Route('/users');
@@ -53,6 +53,10 @@ export const routes = {
   feed,
   users,
   userDetails,
+  memes: new RouteGroup({
+    list: new Route('/memes', { index: true }),
+    details: new Route('/memes/:memeId'),
+  })
 }
 ```
 

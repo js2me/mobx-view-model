@@ -5,7 +5,6 @@ layout: home
 hero:
   name: '{packageJson.name}'
   text: '{packageJson.description}'
-  tagline: with MobX power charged
   image:
     src: /logo.png
   actions:
@@ -25,14 +24,5 @@ features:
     details: Out-of-box TypeScript support
   - title: Dynamic
     icon: 🌪️
-    details: Create and destroy routes on a fly
-  - title: Clean URLs
-    icon: 📜
-    details: Route definitions without inline string paths
-  - title: Isomorphic
-    icon: 🌐
-    details: Passing your own history and location instances
-  - title: Flexible
-    icon: 💪🏻
-    details: Live without path-based routing
+    details: Create and destroy view models on a fly
 ---
