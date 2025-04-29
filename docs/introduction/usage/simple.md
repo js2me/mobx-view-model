@@ -67,5 +67,5 @@ const MyPageView = observer(
 
 
 If you need access to the all other view models then you need to add [ViewModelStore](/api/view-model-store/overview).  
-This guide you can found [on the next page](/getting-started/usage/with-view-model-store)  
+This guide you can found [on the next page](/introduction/usage/with-view-model-store)  
 
