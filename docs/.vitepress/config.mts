@@ -16,8 +16,10 @@ export default defineConfig({
   transformHead: ({ pageData, head }) => {
 
     head.push(['meta', { property: 'og:title', content: pageData.title }]);
-    head.push(['meta', { property: 'og:description', content: pageData.description }]);
-    head.push(['meta', { property: 'og:image', content: `/${packageName}/logo.png` }]);
+    if (pageData.description) {
+      head.push(['meta', { property: 'og:description', content: pageData.description }]);   
+    }
+    head.push(['meta', { property: 'og:image', content: `https://${author}.github.io/${packageName}/logo.png` }]);
 
     return head
   },
