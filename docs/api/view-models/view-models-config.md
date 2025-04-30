@@ -124,8 +124,15 @@ viewModelsConfig.processViewComponent = (Component) => {
 }
 ```
 
+## `wrapViewsInObserver`  
 
-# global configuration object   
+Wrap View components into [`observer()` MobX HOC](https://mobx.js.org/api.html#observer)  
+
+::: tip
+It works only for [`withViewModel` HOCs](/react/api/with-view-model)  
+:::
+
+## global configuration object   
 You can override default global config using import `viewModelsConfig`.  
 
 ```ts
@@ -134,7 +141,7 @@ import { viewModelsConfig } from "mobx-view-model";
 
 You should do this before start whole app  
 
-# Usage  
+## Usage  
 
 ```ts
 import { viewModelsConfig } from "mobx-view-model";

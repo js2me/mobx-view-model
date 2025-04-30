@@ -87,11 +87,21 @@ export function withViewModel(
   config.ctx = ctx;
 
   return (OriginalComponent?: ComponentType<any>) => {
-    const Component =
+    let Component =
       (
         config.config?.processViewComponent ??
         viewModelsConfig.processViewComponent
       )?.(OriginalComponent, VM, config) ?? OriginalComponent;
+
+    if (
+      Component &&
+      (config.config?.wrapViewsInObserver ??
+        viewModelsConfig.wrapViewsInObserver)
+    ) {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      Component = observer(Component);
+    }
 
     const ConnectedViewModel = observer((allProps: any) => {
       const viewModels = useContext(ViewModelsContext);

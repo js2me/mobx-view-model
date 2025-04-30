@@ -2,8 +2,8 @@ import { ComponentType } from 'react';
 
 import { ViewModelsRawConfig } from '../config/index.js';
 import {
-  ComponentWithLazyViewModel,
-  ComponentWithViewModel,
+    ComponentWithLazyViewModel,
+    ComponentWithViewModel,
 } from '../hoc/index.js';
 import { AnyObject, Class, Maybe } from '../utils/types.js';
 
@@ -30,7 +30,7 @@ export interface ViewModelCreateConfig<VM extends AnyViewModel>
 }
 
 /**
- * [Documentation](https://js2me.github.io/mobx-view-model/api/other/view-model-lookup)
+ * [**Documentation**](https://js2me.github.io/mobx-view-model/api/other/view-model-lookup)
  */
 export type ViewModelLookup<T extends AnyViewModel> =
   | AnyViewModel['id']

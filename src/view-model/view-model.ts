@@ -12,32 +12,32 @@ export interface ViewModel<
   Payload extends AnyObject = EmptyObject,
   ParentViewModel extends AnyViewModel | null = null,
 > {
-  /** [Documentation](https://js2me.github.io/mobx-view-model/api/view-models/interface#id-string) */
+  /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/interface#id-string) */
   readonly id: string;
-  /** [Documentation](https://js2me.github.io/mobx-view-model/api/view-models/interface#vmconfig-viewmodelconfig) */
+  /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/interface#vmconfig-viewmodelconfig) */
   readonly vmConfig: ViewModelsConfig;
-  /** [Documentation](https://js2me.github.io/mobx-view-model/api/view-models/interface#payload-payload) */
+  /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/interface#payload-payload) */
   readonly payload: Payload;
-  /** [Documentation](https://js2me.github.io/mobx-view-model/api/view-models/interface#ismounted-boolean) */
+  /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/interface#ismounted-boolean) */
   isMounted: boolean;
-  /** [Documentation](https://js2me.github.io/mobx-view-model/api/view-models/interface#isunmounting-boolean) */
+  /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/interface#isunmounting-boolean) */
   isUnmounting: boolean;
-  /** [Documentation](https://js2me.github.io/mobx-view-model/api/view-models/interface#parentviewmodel-parentviewmodel-null) */
+  /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/interface#parentviewmodel-parentviewmodel-null) */
   readonly parentViewModel: ParentViewModel;
-  /** [Documentation](https://js2me.github.io/mobx-view-model/api/view-models/interface#willmount-void) */
+  /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/interface#willmount-void) */
   willMount(): void;
-  /** [Documentation](https://js2me.github.io/mobx-view-model/api/view-models/interface#mount-void-promise-void) */
+  /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/interface#mount-void-promise-void) */
   mount(): void | Promise<void>;
-  /** [Documentation](https://js2me.github.io/mobx-view-model/api/view-models/interface#didmount-void) */
+  /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/interface#didmount-void) */
   didMount(): void;
-  /** [Documentation](https://js2me.github.io/mobx-view-model/api/view-models/interface#didunmount-void) */
+  /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/interface#didunmount-void) */
   didUnmount(): void;
-  /** [Documentation](https://js2me.github.io/mobx-view-model/api/view-models/interface#willunmount-void) */
+  /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/interface#willunmount-void) */
   willUnmount(): void;
-  /** [Documentation](https://js2me.github.io/mobx-view-model/api/view-models/interface#unmount-void-promise-void) */
+  /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/interface#unmount-void-promise-void) */
   unmount(): void | Promise<void>;
-  /** [Documentation](https://js2me.github.io/mobx-view-model/api/view-models/interface#setpayload-payload-payload-void) */
+  /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/interface#setpayload-payload-payload-void) */
   setPayload(payload: Payload): void;
-  /** [Documentation](https://js2me.github.io/mobx-view-model/api/view-models/interface#payloadchanged-void) */
+  /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/interface#payloadchanged-void) */
   payloadChanged(payload: Payload): void;
 }
