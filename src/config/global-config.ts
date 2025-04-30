@@ -13,4 +13,12 @@ export const viewModelsConfig = createGlobalConfig<ViewModelsConfig>({
     payloadChange: false,
     unmount: false,
   },
+  observable: {
+    viewModels: {
+      useDecorators: true,
+    },
+    viewModelStores: {
+      useDecorators: true,
+    },
+  },
 });

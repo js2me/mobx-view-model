@@ -16,8 +16,12 @@ export const mergeVMConfigs = (...configs: Maybe<ViewModelsRawConfig>[]) => {
       return;
     }
 
-    const { startViewTransitions, comparePayload, ...otherConfigUpdates } =
-      config;
+    const {
+      startViewTransitions,
+      comparePayload,
+      observable,
+      ...otherConfigUpdates
+    } = config;
 
     if (startViewTransitions) {
       const startViewTransitonsUpdate: Partial<
@@ -32,6 +36,15 @@ export const mergeVMConfigs = (...configs: Maybe<ViewModelsRawConfig>[]) => {
           : startViewTransitions;
 
       Object.assign(result.startViewTransitions, startViewTransitonsUpdate);
+    }
+    if (observable?.viewModels) {
+      Object.assign(result.observable.viewModels, observable.viewModels || {});
+    }
+    if (observable?.viewModelStores) {
+      Object.assign(
+        result.observable.viewModelStores,
+        observable.viewModelStores || {},
+      );
     }
 
     if (comparePayload != null) {

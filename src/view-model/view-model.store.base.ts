@@ -1,12 +1,7 @@
-import {
-  action,
-  computed,
-  makeObservable,
-  observable,
-  runInAction,
-} from 'mobx';
+import { action, computed, observable, runInAction } from 'mobx';
 
 import { ViewModelsConfig } from '../config/index.js';
+import { applyObservable } from '../config/utils/apply-observable.js';
 import { mergeVMConfigs } from '../config/utils/merge-vm-configs.js';
 import {
   ComponentWithLazyViewModel,
@@ -63,18 +58,20 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
     this.vmConfig = mergeVMConfigs(config?.vmConfig);
     this.viewModelsTempHeap = new Map();
 
-    computed(this, 'mountedViewsCount');
-    action(this, 'mount');
-    action(this, 'unmount');
-    action(this, 'attachVMConstructor');
-    action(this, 'attach');
-    action(this, 'detach');
-    action(this, 'linkComponents');
-    action(this, 'unlinkComponents');
-
-    if (!this.vmConfig.disableMakeObservableInViewModelStores) {
-      makeObservable(this);
-    }
+    applyObservable(
+      this,
+      [
+        ['mountedViewsCount', computed],
+        ['mount', action],
+        ['unmount', action],
+        ['attachVMConstructor', action],
+        ['attach', action],
+        ['detach', action],
+        ['linkComponents', action],
+        ['unlinkComponents', action],
+      ],
+      this.vmConfig.observable.viewModelStores,
+    );
   }
 
   get mountedViewsCount() {

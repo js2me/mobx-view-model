@@ -8,6 +8,30 @@ import type {
   PayloadCompareFn,
 } from '../view-model/view-model.types.js';
 
+import { ObservableAnnotationsArray } from './utils/apply-observable.js';
+
+export interface ViewModelObservableConfig {
+  /**
+   * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config.html#disablewrapping)
+   */
+  disableWrapping?: boolean;
+  /**
+   * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config.html#usedecorators)
+   */
+  useDecorators: boolean;
+  /**
+   * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config.html#makeautoobservable)
+   */
+  makeAutoObservable?: boolean | AnyObject;
+  /**
+   * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config.html#custom-context-annotationsarray)
+   */
+  custom?: (
+    context: AnyObject,
+    annotationsArray: ObservableAnnotationsArray,
+  ) => void;
+}
+
 /**
  * Configuration options for view models.
  * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config)
@@ -43,10 +67,11 @@ export interface ViewModelsConfig {
   ) => Maybe<ComponentType<any>>;
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#wrapviewsinobserver) */
   wrapViewsInObserver?: boolean;
-  /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#disablemakeobservableinviewmodels) */
-  disableMakeObservableInViewModels?: boolean;
-  /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#disablemakeobservableinviewmodelstores) */
-  disableMakeObservableInViewModelStores?: boolean;
+  /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#observable) */
+  observable: {
+    viewModels: ViewModelObservableConfig;
+    viewModelStores: ViewModelObservableConfig;
+  };
 }
 
 /**
@@ -54,9 +79,10 @@ export interface ViewModelsConfig {
  */
 export type ViewModelsRawConfig = Omit<
   ViewModelsConfig,
-  'startViewTransitions'
+  'startViewTransitions' | 'observable'
 > & {
   startViewTransitions?:
     | DeepPartial<ViewModelsConfig['startViewTransitions']>
     | boolean;
+  observable?: DeepPartial<ViewModelsConfig['observable']>;
 };

@@ -132,15 +132,77 @@ Wrap View components into [`observer()` MobX HOC](https://mobx.js.org/api.html#o
 It works only for [`withViewModel` HOCs](/react/api/with-view-model)  
 :::
 
-## `disableMakeObservableInViewModels`  
+## `observable`  
 
-Disable wrapping `ViewModelBase` class instance into [`makeObservable()` MobX function](https://mobx.js.org/observable-state.html#makeobservable)  
-Helpful if you want to use `makeAutoObservable` or creating non decorator way `ViewModels`  
+This is huge configuration object for all base implementations `mobx-view-model` entities like `ViewModelBase` or `ViewModelStoreBase`.   
+You can modify default behaviour of the wrapping into [`makeObservable()` MobX functions](https://mobx.js.org/observable-state.html#makeobservable).   
 
-## `disableMakeObservableInViewModelStores`  
+Properties of the nested observable configs:  
+### - `disableWrapping`  
+This is removes `makeObservable(this, annotations)`/`makeObservable(this)` calls  
+### - `useDecorators`  
+This is change style of marking `MobX` annotations from "decorators style" to "non decorators style".   
+Very helpful if you want to write code with "non decorators style".   
 
-Disable wrapping `ViewModelStoreBase` class instance into [`makeObservable()` MobX function](https://mobx.js.org/observable-state.html#makeobservable)  
-Helpful if you want to use `makeAutoObservable` or creating non decorator way `ViewModelStores`  
+**default value is `true`**  
+
+Example:   
+```ts
+import { observable, action } from "mobx";
+import {
+  viewModelsConfig,
+  ViewModelBase,
+  ViewModelParams
+} from "mobx-view-model";
+
+viewModelsConfig.observable.viewModels.useDecorators = false;
+
+class YourViewModel extends ViewModelBase  {
+  constructor(params: ViewModelParams) {
+    super(params);
+
+    makeObservable(this, {
+      fruitName: observable,
+      setFruitName: action.bound,
+    })
+  }
+
+  fruitName: string = '';
+
+  setFruitName(fruitName: string) {
+    this.fruitName = fruitName;
+  }
+}
+```
+
+Another example with "decorators style":  
+```ts
+import { observable, action } from "mobx";
+import {
+  viewModelsConfig,
+  ViewModelBase,
+  ViewModelParams
+} from "mobx-view-model";
+
+viewModelsConfig.observable.viewModels.useDecorators = true;
+
+class YourViewModel extends ViewModelBase  {
+  @observable
+  fruitName: string = '';
+
+  @action.bound
+  setFruitName(fruitName: string) {
+    this.fruitName = fruitName;
+  }
+}
+```
+
+### - `makeAutoObservable`   
+It can be helpful if your want wrap your entities into [`makeAutoObservable`](https://mobx.js.org/observable-state.html#makeautoobservable)  
+
+### - `custom(context, annotationsArray)`  
+Custom function for wrapping your entity   
+
 
 ## global configuration object   
 You can override default global config using import `viewModelsConfig`.  

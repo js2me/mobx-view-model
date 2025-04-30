@@ -1,16 +1,13 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import {
-  action,
-  comparer,
-  computed,
-  makeObservable,
-  observable,
-  runInAction,
-} from 'mobx';
+import { action, comparer, computed, observable, runInAction } from 'mobx';
 import { isShallowEqual } from 'yummies/data';
 import { startViewTransitionSafety } from 'yummies/html';
 
 import { ViewModelsConfig } from '../config/index.js';
+import {
+  applyObservable,
+  ObservableAnnotationsArray,
+} from '../config/utils/apply-observable.js';
 import { mergeVMConfigs } from '../config/utils/merge-vm-configs.js';
 import { AnyObject, EmptyObject, Maybe } from '../utils/types.js';
 
@@ -52,35 +49,6 @@ export class ViewModelBase<
     this.abortController = new AbortController();
     this.unmountSignal = this.abortController.signal;
 
-    observable.ref(this, 'isMounted');
-    observable.ref(this, 'isUnmounting');
-    computed(this, 'parentViewModel');
-    if (this.vmConfig.payloadObservable !== false) {
-      observable[this.vmConfig.payloadObservable ?? 'ref'](this, '_payload');
-    }
-    if (this.vmConfig.payloadComputed) {
-      if (this.vmConfig.payloadComputed === 'struct') {
-        computed.struct(this, 'payload');
-      } else {
-        computed({
-          equals:
-            this.vmConfig.payloadComputed === true
-              ? undefined
-              : this.vmConfig.payloadComputed,
-        })(this, 'payload');
-      }
-    }
-
-    action.bound(this, 'mount');
-    action(this, 'didMount');
-    action.bound(this, 'unmount');
-    action(this, 'didUnmount');
-    action(this, 'setPayload');
-
-    if (!this.vmConfig.disableMakeObservableInViewModels) {
-      makeObservable(this);
-    }
-
     if (this.vmConfig.comparePayload === 'strict') {
       this.isPayloadEqual = comparer.structural;
     } else if (this.vmConfig.comparePayload === 'shallow') {
@@ -88,6 +56,42 @@ export class ViewModelBase<
     } else if (typeof this.vmConfig.comparePayload === 'function') {
       this.isPayloadEqual = this.vmConfig.comparePayload;
     }
+
+    const annotations: ObservableAnnotationsArray = [
+      ['isMounted', observable.ref],
+      ['isUnmounting', observable.ref],
+      ['parentViewModel', computed],
+      ['mount', action.bound],
+      ['didMount', action],
+      ['unmount', action.bound],
+      ['didUnmount', action],
+      ['setPayload', action],
+    ];
+
+    if (this.vmConfig.payloadObservable !== false) {
+      annotations.push([
+        '_payload',
+        observable[this.vmConfig.payloadObservable ?? 'ref'],
+      ]);
+    }
+
+    if (this.vmConfig.payloadComputed) {
+      if (this.vmConfig.payloadComputed === 'struct') {
+        annotations.push(['payload', computed.struct]);
+      } else {
+        annotations.push([
+          'payload',
+          computed({
+            equals:
+              this.vmConfig.payloadComputed === true
+                ? undefined
+                : this.vmConfig.payloadComputed,
+          }),
+        ]);
+      }
+    }
+
+    applyObservable(this, annotations, this.vmConfig.observable.viewModels);
   }
 
   get payload() {
