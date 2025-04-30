@@ -13,6 +13,14 @@ const { version, name: packageName, author, license } = JSON.parse(
 export default defineConfig({
   title: packageName.replace(/-/g, ' '),
   description: `${packageName.replace(/-/g, ' ')} documentation`,
+  transformHead: ({ pageData, head }) => {
+
+    head.push(['meta', { property: 'og:title', content: pageData.title }]);
+    head.push(['meta', { property: 'og:description', content: pageData.description }]);
+    head.push(['meta', { property: 'og:image', content: `/${packageName}/logo.png` }]);
+
+    return head
+  },
   base: `/${packageName}/`,
   lastUpdated: true,
   head: [
