@@ -159,6 +159,10 @@ export default defineConfig({
               {
                 text: 'withLazyViewModel',
                 link: '/react/api/with-lazy-view-model',
+              },
+              {
+                text: 'OnlyViewModel',
+                link: '/react/api/only-view-model',
               }
             ]
           }
