@@ -5,28 +5,38 @@ All next documentation contains code with accessor decorators which works using 
 
 Base implementations of [`ViewModelStore`](/api/view-model-store/interface) and [`ViewModel`](/api/view-models/interface) are using `makeObservable(this)` in class constructor.   
 
-<!-- 
+
 ## No decorators way   
 
-Firstly you
+You need to disable "decorators style" of wrapping base entities into `MobX` functions like `makeObservable`.  
+To achieve this you need to configure [global `viewModelsConfig`](/api/view-models/view-models-config):  
 
 ```ts
-import { ViewModelBase, ViewModelParams } from "mobx-view-model";
-import { makeObservable, computed } from "mobx";
+import { viewModelsConfig } from "mobx-view-model";
 
-class YourVM extends ViewModelBase {
+viewModelsConfig.observable.viewModels.useDecorators = false;
+```
+
+Example of usage:
+```ts
+import { observable, action } from "mobx";
+import { ViewModelBase, ViewModelParams } from "mobx-view-model";
+
+class YourViewModel extends ViewModelBase  {
   constructor(params: ViewModelParams) {
     super(params);
 
     makeObservable(this, {
-      monsters: computed
-    });
+      fruitName: observable,
+      setFruitName: action.bound,
+    })
   }
 
-  get monsters() {
-    return 100;
+  fruitName: string = '';
+
+  setFruitName(fruitName: string) {
+    this.fruitName = fruitName;
   }
 }
-
 ```
- -->
+
