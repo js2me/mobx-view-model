@@ -1,13 +1,13 @@
 import {
-    ComponentWithLazyViewModel,
-    ComponentWithViewModel,
+  ComponentWithLazyViewModel,
+  ComponentWithViewModel,
 } from '../hoc/index.js';
 import { Class, Maybe } from '../utils/types.js';
 
 import {
-    ViewModelCreateConfig,
-    ViewModelGenerateIdConfig,
-    ViewModelLookup,
+  ViewModelCreateConfig,
+  ViewModelGenerateIdConfig,
+  ViewModelLookup,
 } from './view-model.store.types.js';
 import { AnyViewModel } from './view-model.types.js';
 

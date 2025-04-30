@@ -2,8 +2,8 @@ import { ComponentType } from 'react';
 
 import { ViewModelsRawConfig } from '../config/index.js';
 import {
-    ComponentWithLazyViewModel,
-    ComponentWithViewModel,
+  ComponentWithLazyViewModel,
+  ComponentWithViewModel,
 } from '../hoc/index.js';
 import { AnyObject, Class, Maybe } from '../utils/types.js';
 
