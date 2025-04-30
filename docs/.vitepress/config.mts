@@ -14,7 +14,6 @@ export default defineConfig({
   title: packageName.replace(/-/g, ' '),
   description: `${packageName.replace(/-/g, ' ')} documentation`,
   transformHead: ({ pageData, head }) => {
-
     head.push(['meta', { property: 'og:site_name', content: packageName }]);
     head.push(['meta', { property: 'og:title', content: pageData.title }]);
     if (pageData.description) {
