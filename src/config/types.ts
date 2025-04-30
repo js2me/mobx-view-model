@@ -43,6 +43,10 @@ export interface ViewModelsConfig {
   ) => Maybe<ComponentType<any>>;
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#wrapviewsinobserver) */
   wrapViewsInObserver?: boolean;
+  /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#disablemakeobservableinviewmodels) */
+  disableMakeObservableInViewModels?: boolean;
+  /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#disablemakeobservableinviewmodelstores) */
+  disableMakeObservableInViewModelStores?: boolean;
 }
 
 /**

@@ -77,7 +77,9 @@ export class ViewModelBase<
     action(this, 'didUnmount');
     action(this, 'setPayload');
 
-    makeObservable(this);
+    if (!this.vmConfig.disableMakeObservableInViewModels) {
+      makeObservable(this);
+    }
 
     if (this.vmConfig.comparePayload === 'strict') {
       this.isPayloadEqual = comparer.structural;

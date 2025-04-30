@@ -5,5 +5,28 @@ All next documentation contains code with accessor decorators which works using 
 
 Base implementations of [`ViewModelStore`](/api/view-model-store/interface) and [`ViewModel`](/api/view-models/interface) are using `makeObservable(this)` in class constructor.   
 
+<!-- 
+## No decorators way   
 
+Firstly you
 
+```ts
+import { ViewModelBase, ViewModelParams } from "mobx-view-model";
+import { makeObservable, computed } from "mobx";
+
+class YourVM extends ViewModelBase {
+  constructor(params: ViewModelParams) {
+    super(params);
+
+    makeObservable(this, {
+      monsters: computed
+    });
+  }
+
+  get monsters() {
+    return 100;
+  }
+}
+
+```
+ -->

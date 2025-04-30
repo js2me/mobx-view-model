@@ -132,6 +132,16 @@ Wrap View components into [`observer()` MobX HOC](https://mobx.js.org/api.html#o
 It works only for [`withViewModel` HOCs](/react/api/with-view-model)  
 :::
 
+## `disableMakeObservableInViewModels`  
+
+Disable wrapping `ViewModelBase` class instance into [`makeObservable()` MobX function](https://mobx.js.org/observable-state.html#makeobservable)  
+Helpful if you want to use `makeAutoObservable` or creating non decorator way `ViewModels`  
+
+## `disableMakeObservableInViewModelStores`  
+
+Disable wrapping `ViewModelStoreBase` class instance into [`makeObservable()` MobX function](https://mobx.js.org/observable-state.html#makeobservable)  
+Helpful if you want to use `makeAutoObservable` or creating non decorator way `ViewModelStores`  
+
 ## global configuration object   
 You can override default global config using import `viewModelsConfig`.  
 

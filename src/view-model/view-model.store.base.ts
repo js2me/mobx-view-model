@@ -72,7 +72,9 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
     action(this, 'linkComponents');
     action(this, 'unlinkComponents');
 
-    makeObservable(this);
+    if (!this.vmConfig.disableMakeObservableInViewModelStores) {
+      makeObservable(this);
+    }
   }
 
   get mountedViewsCount() {
