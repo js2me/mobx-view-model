@@ -32,9 +32,9 @@ export class ViewModelBase<
 
   id: string;
 
-  isMounted = false;
+  private _isMounted = false;
 
-  isUnmounting = false;
+  private _isUnmounting = false;
 
   private _payload: Payload;
 
@@ -58,13 +58,16 @@ export class ViewModelBase<
     }
 
     const annotations: ObservableAnnotationsArray = [
-      ['isMounted', observable.ref],
-      ['isUnmounting', observable.ref],
+      ['_isMounted', observable.ref],
+      ['_isUnmounting', observable.ref],
+      ['isMounted', computed],
+      ['isUnmounting', computed],
       ['parentViewModel', computed],
       ['mount', action.bound],
       ['didMount', action],
       ['unmount', action.bound],
       ['didUnmount', action],
+      ['willUnmount', action],
       ['setPayload', action],
     ];
 
@@ -108,8 +111,16 @@ export class ViewModelBase<
     return this.params.viewModels!;
   }
 
+  get isMounted() {
+    return this._isMounted;
+  }
+
+  get isUnmounting() {
+    return this._isUnmounting;
+  }
+
   willUnmount(): void {
-    /* Empty method to be overridden */
+    this._isUnmounting = true;
   }
 
   willMount(): void {
@@ -124,7 +135,7 @@ export class ViewModelBase<
     startViewTransitionSafety(
       () => {
         runInAction(() => {
-          this.isMounted = true;
+          this._isMounted = true;
         });
       },
       {
@@ -150,7 +161,7 @@ export class ViewModelBase<
     startViewTransitionSafety(
       () => {
         runInAction(() => {
-          this.isMounted = false;
+          this._isMounted = false;
         });
       },
       {
@@ -166,6 +177,10 @@ export class ViewModelBase<
    */
   didUnmount() {
     this.abortController.abort();
+
+    runInAction(() => {
+      this._isUnmounting = false;
+    });
   }
 
   /**

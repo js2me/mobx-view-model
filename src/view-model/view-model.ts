@@ -19,9 +19,9 @@ export interface ViewModel<
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/interface#payload-payload) */
   readonly payload: Payload;
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/interface#ismounted-boolean) */
-  isMounted: boolean;
+  readonly isMounted: boolean;
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/interface#isunmounting-boolean) */
-  isUnmounting: boolean;
+  readonly isUnmounting: boolean;
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/interface#parentviewmodel-parentviewmodel-null) */
   readonly parentViewModel: ParentViewModel;
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/interface#willmount-void) */

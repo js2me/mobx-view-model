@@ -276,7 +276,6 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
 
     if (nextInstanceAttachedCount <= 0) {
       model.willUnmount();
-      model.isUnmounting = true;
 
       this.instanceAttachedCount.delete(model.id);
 
@@ -292,9 +291,6 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
         );
       }
       await this.unmount(model);
-      runInAction(() => {
-        model.isUnmounting = false;
-      });
     }
   }
 

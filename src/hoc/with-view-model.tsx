@@ -122,7 +122,7 @@ export function withViewModel(
 
       const isRenderAllowedByStore =
         !viewModels || viewModels.isAbleToRenderView(instance.id);
-      const isRenderAllowedLocally = !!instance?.isMounted;
+      const isRenderAllowedLocally = !!instance.isMounted;
       const isRenderAllowed = isRenderAllowedByStore && isRenderAllowedLocally;
 
       if (isRenderAllowed) {
