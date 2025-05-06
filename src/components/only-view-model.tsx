@@ -1,6 +1,6 @@
 import { observer } from 'mobx-react-lite';
 import { ReactNode } from 'react';
-import { Class, EmptyObject } from 'yummies/utils/types';
+import { AllPropertiesOptional, Class } from 'yummies/utils/types';
 
 import {
   useCreateViewModel,
@@ -11,7 +11,7 @@ import { AnyViewModel } from '../view-model/index.js';
 export type OnlyViewModelProps<TViewModel extends AnyViewModel> = {
   model: Class<TViewModel>;
   children?: ReactNode | ((model: TViewModel) => ReactNode);
-} & (TViewModel['payload'] extends EmptyObject
+} & (AllPropertiesOptional<TViewModel['payload']> extends true
   ? {
       payload?: TViewModel['payload'];
       config?: UseCreateViewModelConfig<TViewModel>;

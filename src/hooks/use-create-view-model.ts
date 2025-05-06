@@ -1,5 +1,10 @@
 import { useContext, useRef, useState } from 'react';
-import { AnyObject, Class, EmptyObject, Maybe } from 'yummies/utils/types';
+import {
+  AnyObject,
+  Class,
+  AllPropertiesOptional,
+  Maybe,
+} from 'yummies/utils/types';
 
 import { viewModelsConfig } from '../config/global-config.js';
 import { mergeVMConfigs } from '../config/utils/merge-vm-configs.js';
@@ -36,7 +41,7 @@ export interface UseCreateViewModelConfig<TViewModel extends AnyViewModel>
 
 export const useCreateViewModel = <TViewModel extends AnyViewModel>(
   VM: Class<TViewModel>,
-  ...args: TViewModel['payload'] extends EmptyObject
+  ...args: AllPropertiesOptional<TViewModel['payload']> extends true
     ? [
         payload?: TViewModel['payload'],
         config?: UseCreateViewModelConfig<TViewModel>,
@@ -85,7 +90,7 @@ export const useCreateViewModel = <TViewModel extends AnyViewModel>(
       config: config?.config,
       id,
       parentViewModelId: parentViewModel?.id,
-      payload,
+      payload: payload ?? {},
       VM,
       viewModels,
       parentViewModel,
@@ -131,7 +136,7 @@ export const useCreateViewModel = <TViewModel extends AnyViewModel>(
     }
   }, []);
 
-  instance.setPayload(payload);
+  instance.setPayload(payload ?? {});
 
   return instance;
 };
