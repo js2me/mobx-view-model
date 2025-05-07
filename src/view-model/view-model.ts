@@ -5,9 +5,9 @@ import { AnyViewModel } from './view-model.types.js';
 
 /**
  * The main interface for all view models.
- * View model is a class that helps to manage state and lifecycle of a component.
+ *
+ * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/interface)
  */
-
 export interface ViewModel<
   Payload extends AnyObject = EmptyObject,
   ParentViewModel extends AnyViewModel | null = null,
