@@ -41,3 +41,9 @@ export interface ViewModel<
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/interface#payloadchanged-void) */
   payloadChanged(payload: Payload): void;
 }
+
+export interface ViewModelSimple<Payload extends AnyObject = EmptyObject> {
+  mount?(): void;
+  unmount?(): void;
+  setPayload?(payload: Payload): void;
+}
