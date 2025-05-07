@@ -197,9 +197,6 @@ class YourViewModel extends ViewModelBase  {
 }
 ```
 
-### - `makeAutoObservable`   
-It can be helpful if your want wrap your entities into [`makeAutoObservable`](https://mobx.js.org/observable-state.html#makeautoobservable)  
-
 ### - `custom(context, annotationsArray)`  
 Custom function for wrapping your entity   
 

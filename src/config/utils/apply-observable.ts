@@ -1,4 +1,4 @@
-import { makeAutoObservable, makeObservable } from 'mobx';
+import { makeObservable } from 'mobx';
 import { AnyObject } from 'yummies/utils/types';
 
 import { ViewModelObservableConfig } from '../index.js';
@@ -16,15 +16,7 @@ export const applyObservable = (
   if (observableConfig.disableWrapping) {
     return;
   }
-  if (observableConfig.makeAutoObservable) {
-    const annotations = Object.fromEntries(annotationsArray);
-
-    if (observableConfig.makeAutoObservable !== true) {
-      Object.assign(annotations, observableConfig.makeAutoObservable);
-    }
-
-    makeAutoObservable(context, annotations);
-  } else if (observableConfig.useDecorators) {
+  if (observableConfig.useDecorators) {
     annotationsArray.forEach(([field, annotation]) => {
       annotation(context, field);
     });

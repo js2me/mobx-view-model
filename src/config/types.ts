@@ -20,10 +20,6 @@ export interface ViewModelObservableConfig {
    */
   useDecorators: boolean;
   /**
-   * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config.html#makeautoobservable)
-   */
-  makeAutoObservable?: boolean | AnyObject;
-  /**
    * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config.html#custom-context-annotationsarray)
    */
   custom?: (
