@@ -45,7 +45,21 @@ const useCreateViewModelSimple = (
   VM: Class<ViewModelSimple>,
   payload?: any,
 ) => {
-  const [instance] = useState(() => new VM());
+  const viewModels = useContext(ViewModelsContext);
+  const lastInstance = useRef<ViewModelSimple | null>(null);
+
+  const [instance] = useState(() => {
+    if (lastInstance.current) {
+      return lastInstance.current;
+    }
+
+    const instance = new VM();
+    viewModels?.markToBeAttached(instance);
+    if (viewModels) {
+      instance.linkStore?.(viewModels);
+    }
+    return instance;
+  });
 
   if ('setPayload' in instance) {
     useLayoutEffect(() => {
@@ -54,10 +68,19 @@ const useCreateViewModelSimple = (
   }
 
   useIsomorphicLayoutEffect(() => {
-    instance.mount?.();
-    return () => {
-      instance.unmount?.();
-    };
+    if (viewModels) {
+      viewModels.attach(instance);
+      return () => {
+        viewModels.detach(instance.id);
+        lastInstance.current = null;
+      };
+    } else {
+      instance.mount?.();
+      return () => {
+        instance.unmount?.();
+        lastInstance.current = null;
+      };
+    }
   }, []);
 
   return instance;
@@ -156,9 +179,7 @@ export function useCreateViewModel(VM: Class<any>, ...args: any[]) {
 
     instance.willMount();
 
-    if (viewModels) {
-      viewModels.markToBeAttached(instance);
-    }
+    viewModels?.markToBeAttached(instance);
 
     return instance;
   });

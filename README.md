@@ -20,13 +20,10 @@ _MobX ViewModel power for ReactJS_
 
 Library for integration [MVVM](https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93viewmodel) pattern with [MobX](https://mobx.js.org/README.html) and [React](https://react.dev/).  
 
-## Documentation  
-Documentation can be found at [**js2me.github.io/mobx-view-model**](https://js2me.github.io/mobx-view-model/)   
+## Documentation is [here](https://js2me.github.io/mobx-view-model/)  
 
 
-## Example   
-
-with HOC   
+_with HOC_   
 ```tsx
 import { withViewModel, ViewModelBase, ViewModelProps } from "mobx-view-model";
 import { observer } from "mobx-react-lite";
@@ -61,7 +58,7 @@ export const UserBadge = withViewModel(UserBadgeVM)(UserBadgeView);
 // <UserBadge payload={{ userId: '1' }}>
 ```
 
-with hook  
+_with hook_  
 ```tsx
 import { ViewModelBase, ViewModelPayload, useCreateViewModel } from "mobx-view-model";
 import { observer } from "mobx-react-lite";

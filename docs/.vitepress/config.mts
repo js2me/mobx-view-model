@@ -99,6 +99,10 @@ export default defineConfig({
                 link: '/api/view-models/base-implementation',
               },
               {
+                text: "ViewModelSimple",
+                link: '/api/view-models/view-model-simple',
+              },
+              {
                 text: "View Models Config",
                 link: '/api/view-models/view-models-config',
               },

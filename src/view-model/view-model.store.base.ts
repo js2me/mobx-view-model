@@ -18,17 +18,24 @@ import {
   ViewModelLookup,
   ViewModelStoreConfig,
 } from './view-model.store.types.js';
-import { AnyViewModel, ViewModelParams } from './view-model.types.js';
+import {
+  AnyViewModel,
+  AnyViewModelSimple,
+  ViewModelParams,
+} from './view-model.types.js';
 
 export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
   implements ViewModelStore<VMBase>
 {
-  protected viewModels: Map<string, VMBase>;
+  protected viewModels: Map<string, VMBase | AnyViewModelSimple>;
   protected linkedComponentVMClasses: Map<
     ComponentWithViewModel<VMBase, any>,
     Class<VMBase>
   >;
-  protected viewModelIdsByClasses: Map<Class<VMBase>, string[]>;
+  protected viewModelIdsByClasses: Map<
+    Class<VMBase> | Class<AnyViewModelSimple>,
+    string[]
+  >;
   protected instanceAttachedCount: Map<string, number>;
 
   /**
@@ -145,7 +152,9 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
     });
   }
 
-  getIds<T extends VMBase>(vmLookup: Maybe<ViewModelLookup<T>>): string[] {
+  getIds<T extends VMBase | AnyViewModelSimple>(
+    vmLookup: Maybe<ViewModelLookup<T>>,
+  ): string[] {
     if (!vmLookup) return [];
 
     if (typeof vmLookup === 'string') {
@@ -161,7 +170,9 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
     return viewModelIds;
   }
 
-  getId<T extends VMBase>(vmLookup: Maybe<ViewModelLookup<T>>): string | null {
+  getId<T extends VMBase | AnyViewModelSimple>(
+    vmLookup: Maybe<ViewModelLookup<T>>,
+  ): string | null {
     const viewModelIds = this.getIds(vmLookup);
 
     if (viewModelIds.length === 0) return null;
@@ -175,7 +186,9 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
     return viewModelIds.at(-1)!;
   }
 
-  has<T extends VMBase>(vmLookup: Maybe<ViewModelLookup<T>>): boolean {
+  has<T extends VMBase | AnyViewModelSimple>(
+    vmLookup: Maybe<ViewModelLookup<T>>,
+  ): boolean {
     const id = this.getId(vmLookup);
 
     if (!id) return false;
@@ -183,7 +196,9 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
     return this.viewModels.has(id);
   }
 
-  get<T extends VMBase>(vmLookup: Maybe<ViewModelLookup<T>>): T | null {
+  get<T extends VMBase | AnyViewModelSimple>(
+    vmLookup: Maybe<ViewModelLookup<T>>,
+  ): T | null {
     // helps to users of this method to better observe changes in view models
     this.viewModels.keys();
 
@@ -196,33 +211,35 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
     return observedVM ?? (this.viewModelsTempHeap.get(id) as Maybe<T>) ?? null;
   }
 
-  getAll<T extends VMBase>(vmLookup: Maybe<ViewModelLookup<T>>): T[] {
+  getAll<T extends VMBase | AnyViewModelSimple>(
+    vmLookup: Maybe<ViewModelLookup<T>>,
+  ): T[] {
     const viewModelIds = this.getIds(vmLookup);
 
     return viewModelIds.map((id) => this.viewModels.get(id) as T);
   }
 
-  async mount(model: VMBase) {
+  async mount(model: VMBase | AnyViewModelSimple) {
     this.mountingViews.add(model.id);
 
-    await model.mount();
+    await model.mount?.();
 
     runInAction(() => {
       this.mountingViews.delete(model.id);
     });
   }
 
-  async unmount(model: VMBase) {
+  async unmount(model: VMBase | AnyViewModelSimple) {
     this.unmountingViews.add(model.id);
 
-    await model.unmount();
+    await model.unmount?.();
 
     runInAction(() => {
       this.unmountingViews.delete(model.id);
     });
   }
 
-  private attachVMConstructor(model: VMBase) {
+  protected attachVMConstructor(model: VMBase | AnyViewModelSimple) {
     const constructor = (model as any).constructor as Class<any, any>;
 
     if (this.viewModelIdsByClasses.has(constructor)) {
@@ -235,13 +252,15 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
     }
   }
 
-  markToBeAttached(model: VMBase) {
+  markToBeAttached(model: VMBase | AnyViewModelSimple) {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-expect-error
     this.viewModelsTempHeap.set(model.id, model);
 
     this.attachVMConstructor(model);
   }
 
-  async attach(model: VMBase) {
+  async attach(model: VMBase | AnyViewModelSimple) {
     const attachedCount = this.instanceAttachedCount.get(model.id) ?? 0;
 
     this.instanceAttachedCount.set(model.id, attachedCount + 1);
@@ -275,7 +294,9 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
     this.instanceAttachedCount.set(model.id, nextInstanceAttachedCount);
 
     if (nextInstanceAttachedCount <= 0) {
-      model.willUnmount();
+      if ('willUnmount' in model) {
+        model.willUnmount();
+      }
 
       this.instanceAttachedCount.delete(model.id);
 

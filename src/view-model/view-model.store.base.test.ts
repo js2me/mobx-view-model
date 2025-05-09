@@ -10,7 +10,11 @@ import {
   ViewModelGenerateIdConfig,
   ViewModelLookup,
 } from './view-model.store.types.js';
-import { AnyViewModel, ViewModelParams } from './view-model.types.js';
+import {
+  AnyViewModel,
+  AnyViewModelSimple,
+  ViewModelParams,
+} from './view-model.types.js';
 
 export class ViewModelStoreBaseMock extends ViewModelStoreBase {
   spies = {
@@ -45,7 +49,9 @@ export class ViewModelStoreBaseMock extends ViewModelStoreBase {
     return result;
   }
 
-  get<T extends AnyViewModel>(vmLookup: Maybe<ViewModelLookup<T>>): T | null {
+  get<T extends AnyViewModel | AnyViewModelSimple>(
+    vmLookup: Maybe<ViewModelLookup<T>>,
+  ): T | null {
     const result = super.get<T>(vmLookup);
     this.spies.get.mockReturnValue(result)(vmLookup);
     return result;

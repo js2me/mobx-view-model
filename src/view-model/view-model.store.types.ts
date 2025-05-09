@@ -7,7 +7,11 @@ import {
 } from '../hoc/index.js';
 import { AnyObject, Class, Maybe } from '../utils/types.js';
 
-import { AnyViewModel, ViewModelParams } from './view-model.types.js';
+import {
+  AnyViewModel,
+  AnyViewModelSimple,
+  ViewModelParams,
+} from './view-model.types.js';
 
 export interface ViewModelStoreConfig {
   vmConfig?: ViewModelsRawConfig;
@@ -32,8 +36,8 @@ export interface ViewModelCreateConfig<VM extends AnyViewModel>
 /**
  * [**Documentation**](https://js2me.github.io/mobx-view-model/api/other/view-model-lookup)
  */
-export type ViewModelLookup<T extends AnyViewModel> =
+export type ViewModelLookup<T extends AnyViewModel | AnyViewModelSimple> =
   | AnyViewModel['id']
   | Class<T>
-  | ComponentWithViewModel<T, any>
-  | ComponentWithLazyViewModel<T, any>;
+  | ComponentWithViewModel<AnyViewModel & T, any>
+  | ComponentWithLazyViewModel<AnyViewModel & T, any>;

@@ -4,14 +4,18 @@ import {
   ActiveViewModelContext,
   ViewModelsContext,
 } from '../contexts/index.js';
-import { AnyViewModel, ViewModelLookup } from '../view-model/index.js';
+import {
+  AnyViewModel,
+  AnyViewModelSimple,
+  ViewModelLookup,
+} from '../view-model/index.js';
 
-export const useViewModel = <T extends AnyViewModel>(
+export const useViewModel = <T extends AnyViewModel | AnyViewModelSimple>(
   vmLookup?: ViewModelLookup<T>,
 ): T => {
   const viewModels = useContext(ViewModelsContext);
   const activeViewModel = useContext(ActiveViewModelContext);
-  const model = viewModels?.get<T>(vmLookup);
+  const model = viewModels?.get(vmLookup);
 
   if (vmLookup == null || !viewModels) {
     if (process.env.NODE_ENV !== 'production' && !viewModels) {
