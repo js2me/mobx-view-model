@@ -1,6 +1,6 @@
 # With base implementation
 
-Another simplest usage is to work with [base implementation](/api/view-models-base-implementation) of the [`ViewModel` interface](/api/view-models/interface)  
+Another simplest usage is to work with [base implementation](/api/view-models/base-implementation) of the [`ViewModel` interface](/api/view-models/interface)  
 
 Steps:  
 
