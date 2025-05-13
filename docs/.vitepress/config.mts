@@ -67,6 +67,10 @@ export default defineConfig({
                 link: '/introduction/usage/simple',
               },
               {
+                text: 'With base implementation',
+                link: '/introduction/usage/with-base-implementation',
+              },
+              {
                 text: 'With View Model Store',
                 link: '/introduction/usage/with-view-model-store',
               },

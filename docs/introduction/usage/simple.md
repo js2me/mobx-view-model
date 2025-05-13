@@ -1,71 +1,48 @@
-# Simple usage
+# Simple usage  
 
-This way is needed as simplest scenario to create view models based on this package.  
+The most simplest way to make integration with this library is to use [`ViewModelSimple` interface](/api/view-models/view-model-simple)  
 
 Steps:  
 
-1. Create your [`ViewModel`](/api/view-models/overview) class using [`ViewModelBase`](/api/view-models/base-implementation) (base implementation of [`ViewModel` package interface](/api/view-models/interface))   
+1. Implement [`ViewModelSimple` interface](/api/view-models/view-model-simple)  
 
 ```tsx
-import {
-  ViewModelProps,
-  ViewModelBase,
-  withViewModel
-} from 'mobx-view-model';
+import { ViewModelSimple } from 'mobx-view-model';
+import { makeAutoObservable } from 'mobx';
 
-export class MyPageVM extends ViewModelBase<{ payloadA: string }> {
-  @observable
-  accessor state = '';
+export class MyPageVM implements ViewModelSimple {
+  state = '';
 
-  mount() {
-    super.mount();
+  constructor() {
+    makeAutoObservable(this);
   }
 
-  didMount() {
-    console.info('did mount');
-  }
-
-  unmount() {
-    super.unmount();
+  setState = (state: string) => {
+    this.state = state
   }
 }
 ```
 
-2. Create view component using [HOC `withViewModel()`](/react/api/with-view-model)  
-
-```tsx
-import { observer } from 'mobx-react-lite';
-import { withViewModel } from 'mobx-view-model';
-
-const MyPageView = observer(({ model }: ViewModelProps<MyPageVM>) => {
-  return <div>{model.state}</div>;
-});
-
-export const MyPage = withViewModel(MyPageVM)(MyPageView);
-```
-
-or you can use [`useCreateViewModel()` hook](/react/api/use-create-view-model)  
+2. Create instance of your ViewModel using [`useCreateViewModel()` hook](/react/api/use-create-view-model)  
 
 ```tsx
 import { observer } from 'mobx-react-lite';
 import { ViewModelPayload, useCreateViewModel } from 'mobx-view-model';
 
-const MyPageView = observer(
-  ({ payload }: { payload: ViewModelPayload<MyPageVM> }) => {
-    const model = useCreateViewModel(MyPageVM, payload);
+const MyPageView = observer(() => {
+  const model = useCreateViewModel(MyPageVM);
 
-    return <div>{model.state}</div>;
-  },
-);
+  return <div>{model.state}</div>;
+});
 ```
 
 3. Use it  
 
 ```tsx
-<MyPage payload={{ payloadA: '1' }} />
+<MyPage />
 ```
 
 
-If you need access to the all other view models then you need to add [ViewModelStore](/api/view-model-store/overview).  
-This guide you can found [on the next page](/introduction/usage/with-view-model-store)  
+If you need access more lifecycle methods or full [ViewModel interface](/api/view-models/interface)   
+This guide you can found [on the next page](/introduction/usage/with-base-implementation)  
 
