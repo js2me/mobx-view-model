@@ -68,6 +68,11 @@ export type ComponentWithViewModel<
   props: Omit<TComponentOriginProps, 'model'> & ViewModelInputProps<TViewModel>,
 ) => ReactNode;
 
+/**
+ * Creates new instance of ViewModel
+ *
+ * [**Documentation**](https://js2me.github.io/mobx-view-model/react/api/with-view-model.html)
+ */
 export function withViewModel<TViewModel extends AnyViewModel>(
   model: Class<TViewModel>,
   config?: ViewModelHocConfig<TViewModel>,
