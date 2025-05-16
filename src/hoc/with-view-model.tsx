@@ -75,6 +75,11 @@ export function withViewModel<TViewModel extends AnyViewModel>(
   Component?: ComponentType<TComponentOriginProps & ViewModelProps<TViewModel>>,
 ) => ComponentWithViewModel<TViewModel, TComponentOriginProps>;
 
+/**
+ * Creates new instance of ViewModel
+ *
+ * [**Documentation**](https://js2me.github.io/mobx-view-model/react/api/with-view-model.html)
+ */
 export function withViewModel(
   VM: Class<any>,
   config: ViewModelHocConfig<any> = {},

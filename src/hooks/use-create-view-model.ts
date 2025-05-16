@@ -108,6 +108,11 @@ export function useCreateViewModel<TViewModelSimple extends ViewModelSimple>(
     : []
 ): TViewModelSimple;
 
+/**
+ * Creates new instance of ViewModel
+ *
+ * [**Documentation**](https://js2me.github.io/mobx-view-model/react/api/use-create-view-model.html)
+ */
 export function useCreateViewModel(VM: Class<any>, ...args: any[]) {
   const [payload, config] = args;
 

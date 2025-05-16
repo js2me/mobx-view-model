@@ -24,6 +24,11 @@ export type ComponentWithLazyViewModel<
   TView extends ComponentType<any>,
 > = ComponentWithViewModel<TViewModel, ComponentProps<TView>> & LoadableMixin;
 
+/**
+ * Lazy creates new instance of ViewModel
+ *
+ * [**Documentation**](https://js2me.github.io/mobx-view-model/react/api/with-lazy-view-model.html)
+ */
 export function withLazyViewModel<
   TViewModel extends AnyViewModel,
   TView extends ComponentType<any>,

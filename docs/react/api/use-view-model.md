@@ -1,6 +1,10 @@
 # `useViewModel` hook   
 
-A hook that helps to get access to your [ViewModel](/api/view-models/overview) instance in **React**.  
+A hook that provides access to an **already created** [ViewModel](/api/view-models/overview) instance within a **React** component.  
+
+::: tip IF you need to **create** instance of [ViewModel](/api/view-models/overview)   
+Please use hook [`useCreateViewModel`](/react/api/use-create-view-model) or HOC [`withViewModel`](/react/api/with-view-model)  
+:::
 
 ## API Signature
 ```tsx

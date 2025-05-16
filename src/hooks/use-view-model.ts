@@ -10,6 +10,11 @@ import {
   ViewModelLookup,
 } from '../view-model/index.js';
 
+/**
+ * Get access to **already created** instance of ViewModel
+ *
+ * [**Documentation**](https://js2me.github.io/mobx-view-model/react/api/use-view-model.html)
+ */
 export const useViewModel = <T extends AnyViewModel | AnyViewModelSimple>(
   vmLookup?: ViewModelLookup<T>,
 ): T => {
