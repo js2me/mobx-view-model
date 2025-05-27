@@ -39,5 +39,6 @@ export interface ViewModelCreateConfig<VM extends AnyViewModel>
 export type ViewModelLookup<T extends AnyViewModel | AnyViewModelSimple> =
   | AnyViewModel['id']
   | Class<T>
-  | ComponentWithViewModel<AnyViewModel & T, any>
-  | ComponentWithLazyViewModel<AnyViewModel & T, any>;
+  | (T extends AnyViewModel
+      ? ComponentWithViewModel<T, any> | ComponentWithLazyViewModel<T, any>
+      : Class<T>);
