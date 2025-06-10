@@ -156,62 +156,58 @@ export function useCreateViewModel(VM: Class<any>, ...args: any[]) {
   const id = idRef.current;
 
   const instanceFromStore = viewModels ? viewModels.get(id) : null;
-  const lastInstance = useRef<AnyViewModel | null>(null);
+  const instanceRef = useRef<AnyViewModel | null>(null);
 
-  const [instance] = useState((): AnyViewModel => {
+  if (!instanceRef.current) {
     if (instanceFromStore) {
-      return instanceFromStore as AnyViewModel;
+      instanceRef.current = instanceFromStore as AnyViewModel;
+    } else {
+      const configCreate: ViewModelCreateConfig<any> = {
+        ...config,
+        config: config?.config,
+        id,
+        parentViewModelId: parentViewModel?.id,
+        payload: payload ?? {},
+        VM,
+        viewModels,
+        parentViewModel,
+        ctx,
+      };
+
+      viewModels?.processCreateConfig(configCreate);
+
+      const instance: AnyViewModel =
+        config?.factory?.(configCreate) ??
+        viewModels?.createViewModel<any>(configCreate) ??
+        viewModelsConfig.factory?.(configCreate) ??
+        new VM({
+          ...configCreate,
+          config: mergeVMConfigs(configCreate.config),
+        } satisfies ViewModelParams<any>);
+
+      instanceRef.current = instance;
+
+      instance.willMount();
+
+      viewModels?.markToBeAttached(instance);
     }
+  }
 
-    if (lastInstance.current) {
-      return lastInstance.current;
-    }
-
-    const configCreate: ViewModelCreateConfig<any> = {
-      ...config,
-      config: config?.config,
-      id,
-      parentViewModelId: parentViewModel?.id,
-      payload: payload ?? {},
-      VM,
-      viewModels,
-      parentViewModel,
-      ctx,
-    };
-
-    viewModels?.processCreateConfig(configCreate);
-
-    const instance: AnyViewModel =
-      config?.factory?.(configCreate) ??
-      viewModels?.createViewModel<any>(configCreate) ??
-      viewModelsConfig.factory?.(configCreate) ??
-      new VM({
-        ...configCreate,
-        config: mergeVMConfigs(configCreate.config),
-      } satisfies ViewModelParams<any>);
-
-    lastInstance.current = instance;
-
-    instance.willMount();
-
-    viewModels?.markToBeAttached(instance);
-
-    return instance;
-  });
+  const instance = instanceRef.current;
 
   useIsomorphicLayoutEffect(() => {
     if (viewModels) {
       viewModels.attach(instance);
       return () => {
         viewModels.detach(instance.id);
-        lastInstance.current = null;
+        instanceRef.current = null;
       };
     } else {
       instance.mount();
       return () => {
         instance.willUnmount();
         instance.unmount();
-        lastInstance.current = null;
+        instanceRef.current = null;
       };
     }
   }, []);
