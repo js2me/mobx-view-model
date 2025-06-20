@@ -44,14 +44,14 @@
     "url": "git://github.com/js2me/mobx-view-model"
   },
   "dependencies": {
-    "react-simple-loadable": "^2.1.0",
+    "react-simple-loadable": "^2.2.0",
     "yummies": "^4.0.0"
   },
   "peerDependencies": {
     "mobx": "^6.12.4",
     "mobx-react-lite": "^4.0.7",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react": "^18.0.0 || ^19.0.0",
+    "react-dom": "^18.0.0 || ^19.0.0"
   },
   "devDependencies": {
     "@testing-library/react": "^16.3.0",

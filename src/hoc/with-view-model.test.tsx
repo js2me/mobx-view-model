@@ -14,6 +14,7 @@ import {
   ReactNode,
   useEffect,
   useState,
+  version,
 } from 'react';
 import { describe, expect, it, test, vi } from 'vitest';
 import { sleep } from 'yummies/async';
@@ -43,6 +44,11 @@ const createVMStoreWrapper = (vmStore: ViewModelStore) => {
     return <ViewModelsProvider value={vmStore}>{children}</ViewModelsProvider>;
   };
 };
+
+function getBasedReactVersion<T>(values: { 18: T; 19: T }): T {
+  const reactMajorVersion = +version.split('.')[0] as 19;
+  return values[reactMajorVersion] ?? values[18];
+}
 
 describe('withViewModel', () => {
   test('renders', async () => {
@@ -384,7 +390,10 @@ describe('withViewModel', () => {
     test('View should have actual payload state (default isPayloadEqual + observer view wrap() + render payload in view)', async () => {
       await createTestPayloadChanges({
         expectedCounterInPayload: 3,
-        expectedRerendersCountInVMComponentView: 4,
+        expectedRerendersCountInVMComponentView: getBasedReactVersion({
+          18: 4,
+          19: 7,
+        }),
         wrapViewInObserver: true,
         renderPayloadInView: true,
       });
@@ -411,7 +420,10 @@ describe('withViewModel', () => {
       await createTestPayloadChanges({
         config: { comparePayload: 'strict' },
         expectedCounterInPayload: 3,
-        expectedRerendersCountInVMComponentView: 4,
+        expectedRerendersCountInVMComponentView: getBasedReactVersion({
+          18: 4,
+          19: 7,
+        }),
         wrapViewInObserver: true,
         renderPayloadInView: true,
       });
@@ -438,7 +450,10 @@ describe('withViewModel', () => {
       await createTestPayloadChanges({
         config: { comparePayload: 'shallow' },
         expectedCounterInPayload: 3,
-        expectedRerendersCountInVMComponentView: 4,
+        expectedRerendersCountInVMComponentView: getBasedReactVersion({
+          18: 4,
+          19: 7,
+        }),
         wrapViewInObserver: true,
         renderPayloadInView: true,
       });
@@ -465,7 +480,10 @@ describe('withViewModel', () => {
       await createTestPayloadChanges({
         config: { comparePayload: false },
         expectedCounterInPayload: 3,
-        expectedRerendersCountInVMComponentView: 7,
+        expectedRerendersCountInVMComponentView: getBasedReactVersion({
+          18: 7,
+          19: 13,
+        }),
         wrapViewInObserver: true,
         renderPayloadInView: true,
       });
@@ -492,7 +510,10 @@ describe('withViewModel', () => {
       await createTestPayloadChanges({
         config: { comparePayload: comparer.shallow },
         expectedCounterInPayload: 3,
-        expectedRerendersCountInVMComponentView: 4,
+        expectedRerendersCountInVMComponentView: getBasedReactVersion({
+          18: 4,
+          19: 7,
+        }),
         wrapViewInObserver: true,
         renderPayloadInView: true,
       });
@@ -519,7 +540,10 @@ describe('withViewModel', () => {
       await createTestPayloadChanges({
         config: { comparePayload: comparer.structural },
         expectedCounterInPayload: 3,
-        expectedRerendersCountInVMComponentView: 4,
+        expectedRerendersCountInVMComponentView: getBasedReactVersion({
+          18: 4,
+          19: 7,
+        }),
         wrapViewInObserver: true,
         renderPayloadInView: true,
       });
@@ -546,7 +570,10 @@ describe('withViewModel', () => {
       await createTestPayloadChanges({
         config: { comparePayload: comparer.identity },
         expectedCounterInPayload: 3,
-        expectedRerendersCountInVMComponentView: 7,
+        expectedRerendersCountInVMComponentView: getBasedReactVersion({
+          18: 7,
+          19: 13,
+        }),
         wrapViewInObserver: true,
         renderPayloadInView: true,
       });
@@ -573,7 +600,10 @@ describe('withViewModel', () => {
       await createTestPayloadChanges({
         config: { comparePayload: comparer.default },
         expectedCounterInPayload: 3,
-        expectedRerendersCountInVMComponentView: 7,
+        expectedRerendersCountInVMComponentView: getBasedReactVersion({
+          18: 7,
+          19: 13,
+        }),
         wrapViewInObserver: true,
         renderPayloadInView: true,
       });
