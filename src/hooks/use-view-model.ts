@@ -1,4 +1,4 @@
-import { useContext } from 'react';
+import { useContext, useRef } from 'react';
 
 import {
   ActiveViewModelContext,
@@ -21,6 +21,7 @@ export const useViewModel = <T extends AnyViewModel | AnyViewModelSimple>(
   const viewModels = useContext(ViewModelsContext);
   const activeViewModel = useContext(ActiveViewModelContext);
   const model = viewModels?.get(vmLookup);
+  const lastModelRef = useRef<any>();
 
   if (vmLookup == null || !viewModels) {
     if (process.env.NODE_ENV !== 'production' && !viewModels) {
@@ -40,6 +41,10 @@ export const useViewModel = <T extends AnyViewModel | AnyViewModelSimple>(
       throw new Error('active view model not found');
     }
 
+    if (process.env.NODE_ENV !== 'production') {
+      lastModelRef.current = activeViewModel;
+    }
+
     return activeViewModel as unknown as T;
   }
 
@@ -54,7 +59,15 @@ export const useViewModel = <T extends AnyViewModel | AnyViewModelSimple>(
       displayName = vmLookup['displayName'];
     }
 
-    throw new Error(`View model not found for ${displayName}`);
+    if (process.env.NODE_ENV !== 'production' && lastModelRef.current) {
+      return lastModelRef.current;
+    } else {
+      throw new Error(`View model not found for ${displayName}`);
+    }
+  }
+
+  if (process.env.NODE_ENV !== 'production') {
+    lastModelRef.current = activeViewModel;
   }
 
   return model;
