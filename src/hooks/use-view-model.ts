@@ -1,3 +1,4 @@
+/* eslint-disable unicorn/no-negated-condition */
 import { useContext, useRef } from 'react';
 
 import {
@@ -21,7 +22,15 @@ export const useViewModel = <T extends AnyViewModel | AnyViewModelSimple>(
   const viewModels = useContext(ViewModelsContext);
   const activeViewModel = useContext(ActiveViewModelContext);
   const model = viewModels?.get(vmLookup);
-  const lastModelRef = useRef<any>();
+
+  // This ref is needed only for development
+  // support better HMR in vite
+  let devModeModelRef = undefined as unknown as React.MutableRefObject<any>;
+
+  if (process.env.NODE_ENV !== 'production') {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    devModeModelRef = useRef<any>();
+  }
 
   if (vmLookup == null || !viewModels) {
     if (process.env.NODE_ENV !== 'production' && !viewModels) {
@@ -42,7 +51,7 @@ export const useViewModel = <T extends AnyViewModel | AnyViewModelSimple>(
     }
 
     if (process.env.NODE_ENV !== 'production') {
-      lastModelRef.current = activeViewModel;
+      devModeModelRef.current = activeViewModel;
     }
 
     return activeViewModel as unknown as T;
@@ -59,15 +68,19 @@ export const useViewModel = <T extends AnyViewModel | AnyViewModelSimple>(
       displayName = vmLookup['displayName'];
     }
 
-    if (process.env.NODE_ENV !== 'production' && lastModelRef.current) {
-      return lastModelRef.current;
+    if (process.env.NODE_ENV !== 'production') {
+      if (devModeModelRef.current) {
+        return devModeModelRef.current;
+      } else {
+        throw new Error(`View model not found for ${displayName}`);
+      }
     } else {
       throw new Error(`View model not found for ${displayName}`);
     }
   }
 
   if (process.env.NODE_ENV !== 'production') {
-    lastModelRef.current = activeViewModel;
+    devModeModelRef.current = activeViewModel;
   }
 
   return model;
