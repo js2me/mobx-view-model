@@ -123,6 +123,9 @@ export class ViewModelBase<
     this._isUnmounting = true;
   }
 
+  /**
+   * Empty method to be overridden
+   */
   willMount(): void {
     /* Empty method to be overridden */
   }
