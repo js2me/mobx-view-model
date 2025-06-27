@@ -35,19 +35,20 @@ export const useViewModel = <T extends AnyViewModel | AnyViewModelSimple>(
   if (vmLookup == null || !viewModels) {
     if (process.env.NODE_ENV !== 'production' && !viewModels) {
       console.warn(
-        'unable to get access to view model by id or class name withouting using ViewModelsStore. Last active view model will be returned',
+        'Unable to get access to view model by id or class name withouting using ViewModelStore. Last active view model will be returned',
       );
     }
 
     if (!activeViewModel) {
       if (process.env.NODE_ENV !== 'production') {
         console.error(
-          'Active ViewModel not found.' +
-            'This happens because vm lookup for hook "useViewModel" is not provided and hook trying to lookup active view model using ActiveViewModelContext which works only with using "withViewModel" HOC.' +
-            'Please provide vm lookup (first argument for "useViewModel" hook) or use "withViewModel" HOC',
+          'Active ViewModel not found.\n' +
+            'This happens because "vmLookup" for hook "useViewModel" is not provided and hook trying to lookup active view model using ActiveViewModelContext which works only with using "withViewModel" HOC.\n' +
+            'Please provide "vmLookup" (first argument for "useViewModel" hook) or use "withViewModel" HOC.\n' +
+            'See docs: https://js2me.github.io/mobx-view-model/react/api/use-view-model.html',
         );
       }
-      throw new Error('active view model not found');
+      throw new Error('Active view model not found');
     }
 
     if (process.env.NODE_ENV !== 'production') {
@@ -72,10 +73,18 @@ export const useViewModel = <T extends AnyViewModel | AnyViewModelSimple>(
       if (devModeModelRef.current) {
         return devModeModelRef.current;
       } else {
-        throw new Error(`View model not found for ${displayName}`);
+        throw new Error(
+          `View model not found for ${displayName}.\n` +
+            'This happens because your "vmLookup" provided for hook "useViewModel" is not found in "ViewModelStore".\n' +
+            'See docs: https://js2me.github.io/mobx-view-model/react/api/use-view-model.html',
+        );
       }
     } else {
-      throw new Error(`View model not found for ${displayName}`);
+      throw new Error(
+        `View model not found for ${displayName}.\n` +
+          'This happens because your "vmLookup" provided for hook "useViewModel" is not found in "ViewModelStore".\n' +
+          'See docs: https://js2me.github.io/mobx-view-model/react/api/use-view-model.html',
+      );
     }
   }
 
