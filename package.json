@@ -1,6 +1,6 @@
 {
   "name": "mobx-view-model",
-  "version": "6.9.7",
+  "version": "6.9.8",
   "scripts": {
     "clean": "rimraf dist",
     "lint:check": "eslint . --fix",
