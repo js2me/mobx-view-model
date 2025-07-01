@@ -202,7 +202,7 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
     vmLookup: Maybe<ViewModelLookup<T>>,
   ): T | null {
     // helps to users of this method to better observe changes in view models
-    this.viewModels.keys();
+    // this.viewModels.keys();
 
     const id = this.getId(vmLookup);
 
