@@ -19,7 +19,11 @@ import {
   EmptyObject,
   Maybe,
 } from '../utils/types.js';
-import { AnyViewModel, ViewModelStore } from '../view-model/index.js';
+import {
+  AnyViewModel,
+  ViewModel,
+  ViewModelStore,
+} from '../view-model/index.js';
 
 declare const process: { env: { NODE_ENV?: string } };
 
@@ -28,15 +32,17 @@ export type ViewModelProps<VM extends AnyViewModel> = {
 };
 
 export type ViewModelInputProps<VM extends AnyViewModel> =
-  VM['payload'] extends EmptyObject
-    ? AnyObject
-    : AllPropertiesOptional<VM['payload']> extends true
-      ? {
-          payload?: VM['payload'];
-        }
-      : {
-          payload: VM['payload'];
-        };
+  VM extends ViewModel<infer TPayload, any>
+    ? TPayload extends EmptyObject
+      ? AnyObject
+      : AllPropertiesOptional<TPayload> extends true
+        ? {
+            payload?: TPayload;
+          }
+        : {
+            payload: TPayload;
+          }
+    : AnyObject;
 
 export interface ViewModelHocConfig<VM extends AnyViewModel>
   extends Omit<UseCreateViewModelConfig<VM>, 'component' | 'componentProps'> {
