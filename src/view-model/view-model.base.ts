@@ -42,10 +42,17 @@ export class ViewModelBase<
 
   protected isPayloadEqual?: PayloadCompareFn<Payload>;
 
-  constructor(protected params: ViewModelParams<Payload, ParentViewModel>) {
-    this.id = params.id;
-    this.vmConfig = mergeVMConfigs(params.config);
-    this._payload = params.payload;
+  /**
+   * @deprecated use `vmParams`. This property will be removed in next major release
+   * Reason: this word is very useful for users, so `vmParams` is more library-targered naming
+   */
+  protected params: ViewModelParams<Payload, ParentViewModel>;
+
+  constructor(protected vmParams: ViewModelParams<Payload, ParentViewModel>) {
+    this.params = vmParams;
+    this.id = vmParams.id;
+    this.vmConfig = mergeVMConfigs(vmParams.config);
+    this._payload = vmParams.payload;
     this.abortController = new AbortController();
     this.unmountSignal = this.abortController.signal;
 
@@ -102,13 +109,13 @@ export class ViewModelBase<
   }
 
   protected get viewModels(): ViewModelStore {
-    if (process.env.NODE_ENV !== 'production' && !this.params.viewModels) {
+    if (process.env.NODE_ENV !== 'production' && !this.vmParams.viewModels) {
       console.error(
         'accessing to viewModels is not possible. [viewModels] param is not setted during to creating instance ViewModelBase',
       );
     }
 
-    return this.params.viewModels!;
+    return this.vmParams.viewModels!;
   }
 
   get isMounted() {
@@ -200,7 +207,7 @@ export class ViewModelBase<
    * For this property to work, the getParentViewModel method is required
    */
   get parentViewModel() {
-    return this.getParentViewModel(this.params.parentViewModelId);
+    return this.getParentViewModel(this.vmParams.parentViewModelId);
   }
 
   /**
@@ -229,7 +236,7 @@ export class ViewModelBase<
     parentViewModelId: Maybe<string>,
   ): ParentViewModel {
     return (
-      this.params.parentViewModel ??
+      this.vmParams.parentViewModel ??
       (this.viewModels?.get(parentViewModelId) as unknown as ParentViewModel)
     );
   }
