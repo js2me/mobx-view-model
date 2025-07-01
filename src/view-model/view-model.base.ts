@@ -3,12 +3,12 @@ import { action, comparer, computed, observable, runInAction } from 'mobx';
 import { isShallowEqual } from 'yummies/data';
 import { startViewTransitionSafety } from 'yummies/html';
 
-import { ViewModelsConfig } from '../config/index.js';
 import {
+  ViewModelsConfig,
   applyObservable,
   ObservableAnnotationsArray,
-} from '../config/utils/apply-observable.js';
-import { mergeVMConfigs } from '../config/utils/merge-vm-configs.js';
+  mergeVMConfigs,
+} from '../config/index.js';
 import { AnyObject, EmptyObject, Maybe } from '../utils/types.js';
 
 import { ViewModel } from './view-model.js';

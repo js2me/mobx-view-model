@@ -8,7 +8,7 @@ import {
 } from 'yummies/utils/types';
 
 import { viewModelsConfig } from '../config/global-config.js';
-import { mergeVMConfigs } from '../config/utils/merge-vm-configs.js';
+import { mergeVMConfigs } from '../config/index.js';
 import { ActiveViewModelContext } from '../contexts/active-view-context.js';
 import { ViewModelsContext } from '../contexts/view-models-context.js';
 import { useIsomorphicLayoutEffect } from '../lib/hooks/use-isomorphic-layout-effect.js';

@@ -1,8 +1,10 @@
 import { action, computed, observable, runInAction } from 'mobx';
 
-import { ViewModelsConfig } from '../config/index.js';
-import { applyObservable } from '../config/utils/apply-observable.js';
-import { mergeVMConfigs } from '../config/utils/merge-vm-configs.js';
+import {
+  ViewModelsConfig,
+  mergeVMConfigs,
+  applyObservable,
+} from '../config/index.js';
 import {
   ComponentWithLazyViewModel,
   ComponentWithViewModel,
