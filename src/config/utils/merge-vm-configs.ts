@@ -3,6 +3,9 @@ import { Maybe } from 'yummies/utils/types';
 import { viewModelsConfig } from '../global-config.js';
 import { ViewModelsConfig, ViewModelsRawConfig } from '../types.js';
 
+/**
+ * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config)
+ */
 export const mergeVMConfigs = (...configs: Maybe<ViewModelsRawConfig>[]) => {
   const result: ViewModelsConfig = {
     ...viewModelsConfig,

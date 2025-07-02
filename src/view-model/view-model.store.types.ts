@@ -14,6 +14,9 @@ import {
 } from './view-model.types.js';
 
 export interface ViewModelStoreConfig {
+  /**
+   * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config)
+   */
   vmConfig?: ViewModelsRawConfig;
 }
 

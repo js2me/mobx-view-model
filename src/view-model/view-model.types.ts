@@ -38,6 +38,7 @@ export interface ViewModelParams<
   /**
    * Additional configuration for the view model
    * See {@link ViewModelsConfig}
+   * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config)
    */
   config?: ViewModelsRawConfig;
 }
