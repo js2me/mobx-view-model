@@ -1,0 +1,51 @@
+name: Deploy docs to Pages
+
+on:
+  workflow_run:
+    workflows: ["Version or Publish"]
+    types: [completed]
+
+permissions: read-all
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout tree
+        uses: actions/checkout@v4
+
+      - name: Set-up Node.js
+        uses: actions/setup-node@v4
+        with:
+          check-latest: true
+          node-version-file: .nvmrc
+
+      - run: corepack enable
+
+      - run: pnpm docs:install
+
+      - run: pnpm docs:build
+
+      - name: Set-up Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs/.vitepress/dist
+
+      - name: Deploy odoc to GitHub Pages
+        uses: actions/deploy-pages@v4
+        id: deployment

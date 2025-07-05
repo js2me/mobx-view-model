@@ -2,6 +2,7 @@
   "name": "mobx-view-model",
   "version": "6.10.1",
   "scripts": {
+    "prepare": "pnpm dev:install-hooks",
     "clean": "rimraf dist",
     "lint:check": "eslint . --fix",
     "ts:check": "tsc --noEmit",
@@ -17,9 +18,11 @@
     "test:watch": "vitest watch --config vitest.config.ts",
     "test:coverage": "vitest run --config vitest.config.ts --coverage",
     "docs": "pnpm build && cd docs && pnpm dev",
-    "docs:build": "pnpm build && cd docs && pnpm build",
+    "docs:install": "cd docs && pnpm i",
+    "docs:build": "cd docs && pnpm build",
     "docs:serve": "cd docs && pnpm preview",
-    "dev": "pnpm test:watch"
+    "dev": "pnpm test:watch",
+    "dev:install-hooks": "if [ -z \"$CI\" ]; then lefthook install; fi"
   },
   "keywords": [
     "mobx",
@@ -59,10 +62,12 @@
     "@types/react": "^18.3.20",
     "@vitejs/plugin-react-swc": "^3.9.0",
     "@vitest/coverage-istanbul": "^3.1.2",
+    "commitfmt": "^1.0.4",
     "eslint": "^8.57.1",
     "js2me-eslint-config": "^1.0.7",
     "js2me-exports-post-build-script": "^2.0.18",
     "jsdom": "^26.1.0",
+    "lefthook": "^1.11.16",
     "nodemon": "^3.1.9",
     "rimraf": "^6.0.1",
     "typescript": "^5.8.3",
