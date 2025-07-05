@@ -8,12 +8,12 @@ This HOC is using [react-simple-loadable](https://www.npmjs.com/package/react-si
 
 ## API Signature
 ```tsx
-function withLazyViewModel<VM extends AnyViewModel>(
+function withLazyViewModel<TViewModel extends AnyViewModel>(
   loadFn: () => Promise<{
-    Model: Constructor<VM>,
-    Component: ComponentType<ComponentProps & ViewModelProps<VM>>
+    Model: Class<TViewModel> | Promised<Class<TViewModel>>,
+    Component: TView | Promised<TView>
   }>,
-  config?: ViewModelHocConfig<VM>
+  config?: ViewModelHocConfig<TViewModel>
 ): ComponentWithLazyViewModel
 ```
 
@@ -41,7 +41,9 @@ import { ViewModelProps } from "mobx-view-model";
 import { observer } from "mobx-react-lite";
 import { FruitButtonHugeVM } from "./model";
 
-export const FruitButtonView = observer(({ model }: ViewModelProps<FruitButtonHugeVM>) => {
+export const FruitButtonView = observer(({
+  model
+}: ViewModelProps<FruitButtonHugeVM>) => {
   return (
     <div>
       <button onClick={model.handleButtonClick}>click me</button>
@@ -55,17 +57,27 @@ And connect them together with lazy loading this modules using this HOC
 ```tsx title="index.ts"
 import { withLazyViewModel } from "mobx-view-model";
 
-export const FruitButton = withLazyViewModel(
-  async () => {
-    const [{ FruitButtonHugeVM }, { FruitButtonView }] = await Promise.all([
-      import("./model"),
-      import("./view"),
-    ])
-    
-    return {
-      Model: FruitButtonHugeVM,
-      View: FruitButtonView,
-    }
-  },
-)
+export const FruitButton = withLazyViewModel(() => {
+  return {
+    Model: import("./model").then(m => m.FruitButtonHugeVM),
+    View: import("./view").then(m => m.FruitButtonView),
+  }
+})
 ```
+
+Also you can use `"default"` exports if you need   
+
+```tsx
+... // model.ts
+export default class MyVM extends ViewModelBase {}
+... // view.tsx
+export default function MyView() { return <div>1</div> }
+... // index.ts
+export const MyComponent = withLazyeViewModel(() =>{
+  return {
+    Model: import("./model"),
+    View: import("./view"),
+  }
+})
+```
+

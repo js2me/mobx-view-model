@@ -21,11 +21,11 @@ importers:
         specifier: ^18.0.0 || ^19.0.0
         version: 19.1.0(react@19.1.0)
       react-simple-loadable:
-        specifier: ^2.3.7
-        version: 2.3.7(react@19.1.0)
+        specifier: ^2.3.8
+        version: 2.3.8(react@19.1.0)
       yummies:
-        specifier: ^4.0.0
-        version: 4.0.0
+        specifier: ^4.2.6
+        version: 4.2.6
     devDependencies:
       '@changesets/changelog-github':
         specifier: ^0.5.1
@@ -1870,6 +1870,9 @@ packages:
     resolution: {integrity: sha512-cYY9mypksY8NRqgDB1XD1RiJL338v/551niynFTGkZOO2LHuB2OmOYxDIe/ttN9AHwrqdum1360G3ald0W9kCg==}
     engines: {node: '>=8'}
 
+  class-variance-authority@0.7.1:
+    resolution: {integrity: sha512-Ka+9Trutv7G8M6WT6SeiRWz792K5qEqIGEGzXKhAE6xOWAY6pPH8U+9IY3oCMv6kqTmLsv7Xh/2w2RigkePMsg==}
+
   clean-regexp@1.0.0:
     resolution: {integrity: sha512-GfisEZEJvzKrmGWkvfhgzcz/BllN1USeqD2V6tg14OAOgaCD2Z/PUEuxnAZ/nPvmaHRG7a8y77p1T/IRQ4D1Hw==}
     engines: {node: '>=4'}
@@ -3511,8 +3514,8 @@ packages:
   react-is@17.0.2:
     resolution: {integrity: sha512-w2GsyukL62IJnlaff/nRegPQR94C/XXamvMWmSHRJ4y7Ts/4ocGRmTHvOs8PSE6pB3dWOrD/nueuU5sduBsQ4w==}
 
-  react-simple-loadable@2.3.7:
-    resolution: {integrity: sha512-dgq94uJY0IrRO6PhdpOZCtklWEbNJTRoRM2FDZ0mAW5zHIjwbBAREMfZge3EzTE6xet9wMROm9V+BCfKckrk2g==}
+  react-simple-loadable@2.3.8:
+    resolution: {integrity: sha512-wx8Bs8x8hckMzbvNLfrS2/xAvWtYjy9+/0rWoIBAtb+oLgW/SAutYzQitiCG11p53Deh9I17a0vG2//GjhdhDg==}
     peerDependencies:
       react: ^18.0.0 || ^19.0.0
 
@@ -4327,8 +4330,8 @@ packages:
     resolution: {integrity: sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==}
     engines: {node: '>=10'}
 
-  yummies@4.0.0:
-    resolution: {integrity: sha512-JpjliqOySAE6lanYPzB0bY5CTyCtQjBdIVA/TR21UnYpkfxxr85soB7JRZnwZ8ZH69UqHOtuikdxt/uujoZ3xw==}
+  yummies@4.2.6:
+    resolution: {integrity: sha512-cx4Z2zs55t69mD8LR2/3IIrch01XT3QWazicJnTzw0zSJtFgcanMFhdwrkg+hkLQftHfBKiBXuOP18O1Ix4Ftw==}
 
 snapshots:
 
@@ -6405,6 +6408,10 @@ snapshots:
 
   ci-info@4.2.0: {}
 
+  class-variance-authority@0.7.1:
+    dependencies:
+      clsx: 2.1.1
+
   clean-regexp@1.0.0:
     dependencies:
       escape-string-regexp: 1.0.5
@@ -8250,7 +8257,7 @@ snapshots:
 
   react-is@17.0.2: {}
 
-  react-simple-loadable@2.3.7(react@19.1.0):
+  react-simple-loadable@2.3.8(react@19.1.0):
     dependencies:
       react: 19.1.0
 
@@ -9187,9 +9194,10 @@ snapshots:
 
   yocto-queue@0.1.0: {}
 
-  yummies@4.0.0:
+  yummies@4.2.6:
     dependencies:
       '@types/insane': 1.0.0
+      class-variance-authority: 0.7.1
       clsx: 2.1.1
       dayjs: 1.11.13
       insane: 2.6.2

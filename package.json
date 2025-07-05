@@ -48,8 +48,8 @@
     "url": "git://github.com/js2me/mobx-view-model"
   },
   "dependencies": {
-    "react-simple-loadable": "^2.3.7",
-    "yummies": "^4.0.0"
+    "react-simple-loadable": "^2.3.8",
+    "yummies": "^4.2.6"
   },
   "peerDependencies": {
     "mobx": "^6.12.4",

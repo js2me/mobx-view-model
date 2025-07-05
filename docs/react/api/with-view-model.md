@@ -5,7 +5,7 @@ A Higher-Order Component that connects React components to their [ViewModels](/a
 ## API Signature
 ```tsx
 function withViewModel<VM extends AnyViewModel>(
-  ViewModelClass: Constructor<VM>,
+  ViewModelClass: Class<VM>,
   config?: ViewModelHocConfig<VM>
 ):
   (Component: ComponentType<ComponentProps & ViewModelProps<VM>>) =>

@@ -5,7 +5,7 @@ Using in [`withViewModel()`](/react/api/with-view-model) HOC.
 ## API Signature
 ```tsx
 function useCreateViewModel<VM extends AnyViewModel>(
-  ViewModelClass: Constructor<VM>,
+  ViewModelClass: Class<VM>,
   payload?: ViewModelPayload<VM>,
   config?: UseCreateViewModelConfig<VM>
 ): VM;
