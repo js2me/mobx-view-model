@@ -1,5 +1,11 @@
 # mobx-tanstack-query
 
+## 6.12.2
+
+### Patch Changes
+
+- [`994f059`](https://github.com/js2me/mobx-view-model/commit/994f059ced2d7f660fe925b86fe26a29f0a903c0) Thanks [@js2me](https://github.com/js2me)! - fix withViewModel overload typings
+
 ## 6.12.1
 
 ### Patch Changes
