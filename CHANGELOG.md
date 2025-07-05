@@ -1,5 +1,11 @@
 # mobx-tanstack-query
 
+## 6.12.1
+
+### Patch Changes
+
+- [`8a01e1c`](https://github.com/js2me/mobx-view-model/commit/8a01e1c0164d730d927de1110b502f5a852bd1c2) Thanks [@js2me](https://github.com/js2me)! - fix withViewModel overload with model and component only
+
 ## 6.12.0
 
 ### Minor Changes
