@@ -96,6 +96,14 @@ export function withViewModel<
   config?: ViewModelHocConfig<TViewModel>,
 ): ComponentWithViewModel<TViewModel, TComponentOriginProps>;
 
+export function withViewModel<
+  TViewModel extends AnyViewModel,
+  TComponentOriginProps extends AnyObject = ViewModelProps<TViewModel>,
+>(
+  model: Class<TViewModel>,
+  component: ComponentType<TComponentOriginProps & ViewModelProps<TViewModel>>,
+): ComponentWithViewModel<TViewModel, TComponentOriginProps>;
+
 /**
  * Creates new instance of ViewModel
  *
