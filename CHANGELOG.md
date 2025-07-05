@@ -1,5 +1,11 @@
 # mobx-tanstack-query
 
+## 6.11.1
+
+### Patch Changes
+
+- [`efc6ebe`](https://github.com/js2me/mobx-view-model/commit/efc6ebe6cdaef0107291ed5b4dbdc03410e22286) Thanks [@js2me](https://github.com/js2me)! - ci: fix gh releases
+
 ## 6.11.0
 
 ### Minor Changes
