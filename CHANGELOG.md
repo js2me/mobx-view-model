@@ -1,5 +1,17 @@
 # mobx-tanstack-query
 
+## 6.11.3
+
+### Patch Changes
+
+- [`6fab326`](https://github.com/js2me/mobx-view-model/commit/6fab326bfa6266823d903780e9c87101ae829f36) Thanks [@js2me](https://github.com/js2me)! - fix `wrapViewsInObserver` option check on already wrapped components
+
+- [`6fab326`](https://github.com/js2me/mobx-view-model/commit/6fab326bfa6266823d903780e9c87101ae829f36) Thanks [@js2me](https://github.com/js2me)! - Add Recipes documentation (How to wrap all view components in observer() HOC)
+
+- [`6fab326`](https://github.com/js2me/mobx-view-model/commit/6fab326bfa6266823d903780e9c87101ae829f36) Thanks [@js2me](https://github.com/js2me)! - Update documentation for `ViewModelsConfig`. Added more examples
+
+- [`6fab326`](https://github.com/js2me/mobx-view-model/commit/6fab326bfa6266823d903780e9c87101ae829f36) Thanks [@js2me](https://github.com/js2me)! - rename `config` to `vmConfig` in `ViewModelParams` (add deprecation). This was needed for more identical naming in all places in package
+
 ## 6.11.2
 
 ### Patch Changes
