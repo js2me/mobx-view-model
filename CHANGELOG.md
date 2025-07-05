@@ -1,5 +1,13 @@
 # mobx-tanstack-query
 
+## 6.12.0
+
+### Minor Changes
+
+- [`5b8ef2c`](https://github.com/js2me/mobx-view-model/commit/5b8ef2caa6f3064ea5f8a46472bfc3c7e040f604) Thanks [@js2me](https://github.com/js2me)! - new overload for withLazyViewModel HOC for better DX (+ add docs for this)
+
+- [`9ef99e9`](https://github.com/js2me/mobx-view-model/commit/9ef99e9fc6e644c3b80bfcfcad16ab97ff20163e) Thanks [@js2me](https://github.com/js2me)! - Added overload for `HOC` `withViewModel` - `withViewModel(VMClass, ViewComponent, config)` for better DX
+
 ## 6.11.3
 
 ### Patch Changes
