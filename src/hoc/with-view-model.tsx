@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-use-before-define */
 /* eslint-disable sonarjs/no-nested-functions */
 import { observer } from 'mobx-react-lite';
 import { ComponentType, ReactNode, useContext } from 'react';
@@ -86,15 +87,32 @@ export function withViewModel<TViewModel extends AnyViewModel>(
   Component?: ComponentType<TComponentOriginProps & ViewModelProps<TViewModel>>,
 ) => ComponentWithViewModel<TViewModel, TComponentOriginProps>;
 
+export function withViewModel<
+  TViewModel extends AnyViewModel,
+  TComponentOriginProps extends AnyObject = ViewModelProps<TViewModel>,
+>(
+  model: Class<TViewModel>,
+  component: ComponentType<TComponentOriginProps & ViewModelProps<TViewModel>>,
+  config?: ViewModelHocConfig<TViewModel>,
+): ComponentWithViewModel<TViewModel, TComponentOriginProps>;
+
 /**
  * Creates new instance of ViewModel
  *
  * [**Documentation**](https://js2me.github.io/mobx-view-model/react/api/with-view-model.html)
  */
-export function withViewModel(
-  VM: Class<any>,
-  config: ViewModelHocConfig<any> = {},
-) {
+export function withViewModel(...args: any[]): any {
+  const VM: Class<any> = args[0];
+  let config: ViewModelHocConfig<any>;
+  let PredefinedComponent: Maybe<ComponentType<any>>;
+
+  if (typeof args[1] === 'function') {
+    config = args[2] ?? {};
+    PredefinedComponent = args[1];
+  } else {
+    config = args[1] ?? {};
+  }
+
   const ctx: AnyObject = config.ctx ?? {};
 
   ctx.VM = VM;
@@ -102,72 +120,82 @@ export function withViewModel(
 
   config.ctx = ctx;
 
-  return (OriginalComponent?: ComponentType<any>) => {
-    let Component =
-      (
-        config.config?.processViewComponent ??
-        config.vmConfig?.processViewComponent ??
-        viewModelsConfig.processViewComponent
-      )?.(OriginalComponent, VM, config) ?? OriginalComponent;
+  if (PredefinedComponent) {
+    return withViewModelWrapper(VM, config, PredefinedComponent);
+  }
 
-    if (
-      Component &&
-      (config.config?.wrapViewsInObserver ??
-        config.vmConfig?.wrapViewsInObserver ??
-        viewModelsConfig.wrapViewsInObserver) &&
-      (Component as any).$$typeof !== Symbol.for('react.memo')
-    ) {
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      Component = observer(Component);
-    }
+  return (Component: any) => withViewModelWrapper(VM, config, Component);
+}
 
-    const ConnectedViewModel = observer((allProps: any) => {
-      const viewModels = useContext(ViewModelsContext);
+const withViewModelWrapper = (
+  VM: Class<any>,
+  config: ViewModelHocConfig<any>,
+  OriginalComponent?: ComponentType<any>,
+) => {
+  let Component =
+    (
+      config.config?.processViewComponent ??
+      config.vmConfig?.processViewComponent ??
+      viewModelsConfig.processViewComponent
+    )?.(OriginalComponent, VM, config) ?? OriginalComponent;
 
-      config?.reactHook?.(allProps, ctx, viewModels);
+  if (
+    Component &&
+    (config.config?.wrapViewsInObserver ??
+      config.vmConfig?.wrapViewsInObserver ??
+      viewModelsConfig.wrapViewsInObserver) &&
+    (Component as any).$$typeof !== Symbol.for('react.memo')
+  ) {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    Component = observer(Component);
+  }
 
-      const { payload: rawPayload, ...componentProps } = allProps;
+  const ConnectedViewModel = observer((allProps: any) => {
+    const viewModels = useContext(ViewModelsContext);
 
-      const payload = config?.getPayload
-        ? config.getPayload(allProps)
-        : rawPayload;
+    config?.reactHook?.(allProps, config.ctx!, viewModels);
 
-      const instance = useCreateViewModel<AnyViewModel>(VM, payload, {
-        ...config,
-        component: ConnectedViewModel,
-        componentProps,
-      });
+    const { payload: rawPayload, ...componentProps } = allProps;
 
-      const isRenderAllowedByStore =
-        !viewModels || viewModels.isAbleToRenderView(instance.id);
-      const isRenderAllowedLocally = !!instance.isMounted;
-      const isRenderAllowed = isRenderAllowedByStore && isRenderAllowedLocally;
+    const payload = config?.getPayload
+      ? config.getPayload(allProps)
+      : rawPayload;
 
-      if (isRenderAllowed) {
-        return (
-          <ActiveViewModelContext.Provider value={instance}>
-            {Component && (
-              <Component {...(componentProps as any)} model={instance} />
-            )}
-          </ActiveViewModelContext.Provider>
-        );
-      }
-
-      const FallbackComponent =
-        config?.fallback ?? viewModelsConfig.fallbackComponent;
-
-      return FallbackComponent ? (
-        <FallbackComponent {...allProps} payload={payload} />
-      ) : null;
+    const instance = useCreateViewModel<AnyViewModel>(VM, payload, {
+      ...config,
+      component: ConnectedViewModel,
+      componentProps,
     });
 
-    if (process.env.NODE_ENV !== 'production') {
-      Object.assign(ConnectedViewModel, {
-        displayName: `ConnectedViewModel(${VM.name}->Component)`,
-      });
+    const isRenderAllowedByStore =
+      !viewModels || viewModels.isAbleToRenderView(instance.id);
+    const isRenderAllowedLocally = !!instance.isMounted;
+    const isRenderAllowed = isRenderAllowedByStore && isRenderAllowedLocally;
+
+    if (isRenderAllowed) {
+      return (
+        <ActiveViewModelContext.Provider value={instance}>
+          {Component && (
+            <Component {...(componentProps as any)} model={instance} />
+          )}
+        </ActiveViewModelContext.Provider>
+      );
     }
 
-    return ConnectedViewModel;
-  };
-}
+    const FallbackComponent =
+      config?.fallback ?? viewModelsConfig.fallbackComponent;
+
+    return FallbackComponent ? (
+      <FallbackComponent {...allProps} payload={payload} />
+    ) : null;
+  });
+
+  if (process.env.NODE_ENV !== 'production') {
+    Object.assign(ConnectedViewModel, {
+      displayName: `ConnectedViewModel(${VM.name}->Component)`,
+    });
+  }
+
+  return ConnectedViewModel;
+};
