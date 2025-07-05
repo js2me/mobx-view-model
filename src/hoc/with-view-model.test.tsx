@@ -280,13 +280,13 @@ describe('withViewModel', () => {
     });
 
     const createTestPayloadChanges = async ({
-      config,
+      vmConfig,
       wrapViewInObserver,
       renderPayloadInView,
       expectedCounterInPayload,
       expectedRerendersCountInVMComponentView,
     }: {
-      config?: ViewModelsRawConfig;
+      vmConfig?: ViewModelsRawConfig;
       wrapViewInObserver?: boolean;
       renderPayloadInView?: boolean;
       expectedCounterInPayload: number;
@@ -320,7 +320,7 @@ describe('withViewModel', () => {
 
       const Component = withViewModel(VM, {
         generateId: createIdGenerator(),
-        config,
+        vmConfig,
       })(VMConnectedComponentView);
 
       const SuperContainer = () => {
@@ -401,7 +401,7 @@ describe('withViewModel', () => {
 
     test('View should have actual payload state (comparePayload: strict)', async () => {
       await createTestPayloadChanges({
-        config: { comparePayload: 'strict' },
+        vmConfig: { comparePayload: 'strict' },
         expectedCounterInPayload: 3,
         expectedRerendersCountInVMComponentView: 7,
       });
@@ -409,7 +409,7 @@ describe('withViewModel', () => {
 
     test('View should have actual payload state (comparePayload: strict + observer view wrap())', async () => {
       await createTestPayloadChanges({
-        config: { comparePayload: 'strict' },
+        vmConfig: { comparePayload: 'strict' },
         expectedCounterInPayload: 3,
         expectedRerendersCountInVMComponentView: 1,
         wrapViewInObserver: true,
@@ -418,7 +418,7 @@ describe('withViewModel', () => {
 
     test('View should have actual payload state (comparePayload: strict + observer view wrap() + render payload in view)', async () => {
       await createTestPayloadChanges({
-        config: { comparePayload: 'strict' },
+        vmConfig: { comparePayload: 'strict' },
         expectedCounterInPayload: 3,
         expectedRerendersCountInVMComponentView: getBasedReactVersion({
           18: 4,
@@ -431,7 +431,7 @@ describe('withViewModel', () => {
 
     test('View should have actual payload state (comparePayload: shallow)', async () => {
       await createTestPayloadChanges({
-        config: { comparePayload: 'shallow' },
+        vmConfig: { comparePayload: 'shallow' },
         expectedCounterInPayload: 3,
         expectedRerendersCountInVMComponentView: 7,
       });
@@ -439,7 +439,7 @@ describe('withViewModel', () => {
 
     test('View should have actual payload state (comparePayload: shallow + observer view wrap())', async () => {
       await createTestPayloadChanges({
-        config: { comparePayload: 'shallow' },
+        vmConfig: { comparePayload: 'shallow' },
         expectedCounterInPayload: 3,
         expectedRerendersCountInVMComponentView: 1,
         wrapViewInObserver: true,
@@ -448,7 +448,7 @@ describe('withViewModel', () => {
 
     test('View should have actual payload state (comparePayload: shallow + observer view wrap() + render payload in view)', async () => {
       await createTestPayloadChanges({
-        config: { comparePayload: 'shallow' },
+        vmConfig: { comparePayload: 'shallow' },
         expectedCounterInPayload: 3,
         expectedRerendersCountInVMComponentView: getBasedReactVersion({
           18: 4,
@@ -461,7 +461,7 @@ describe('withViewModel', () => {
 
     test('View should have actual payload state (comparePayload: false)', async () => {
       await createTestPayloadChanges({
-        config: { comparePayload: false },
+        vmConfig: { comparePayload: false },
         expectedCounterInPayload: 3,
         expectedRerendersCountInVMComponentView: 7,
       });
@@ -469,7 +469,7 @@ describe('withViewModel', () => {
 
     test('View should have actual payload state (comparePayload: false + observer view wrap())', async () => {
       await createTestPayloadChanges({
-        config: { comparePayload: false },
+        vmConfig: { comparePayload: false },
         expectedCounterInPayload: 3,
         expectedRerendersCountInVMComponentView: 1,
         wrapViewInObserver: true,
@@ -478,7 +478,7 @@ describe('withViewModel', () => {
 
     test('View should have actual payload state (comparePayload: false + observer view wrap() + render payload in view)', async () => {
       await createTestPayloadChanges({
-        config: { comparePayload: false },
+        vmConfig: { comparePayload: false },
         expectedCounterInPayload: 3,
         expectedRerendersCountInVMComponentView: getBasedReactVersion({
           18: 7,
@@ -491,7 +491,7 @@ describe('withViewModel', () => {
 
     test('View should have actual payload state (comparePayload: comparer.shallow)', async () => {
       await createTestPayloadChanges({
-        config: { comparePayload: comparer.shallow },
+        vmConfig: { comparePayload: comparer.shallow },
         expectedCounterInPayload: 3,
         expectedRerendersCountInVMComponentView: 7,
       });
@@ -499,7 +499,7 @@ describe('withViewModel', () => {
 
     test('View should have actual payload state (comparePayload: comparer.shallow + observer view wrap())', async () => {
       await createTestPayloadChanges({
-        config: { comparePayload: comparer.shallow },
+        vmConfig: { comparePayload: comparer.shallow },
         expectedCounterInPayload: 3,
         expectedRerendersCountInVMComponentView: 1,
         wrapViewInObserver: true,
@@ -508,7 +508,7 @@ describe('withViewModel', () => {
 
     test('View should have actual payload state (comparePayload: comparer.shallow + observer view wrap() + render payload in view)', async () => {
       await createTestPayloadChanges({
-        config: { comparePayload: comparer.shallow },
+        vmConfig: { comparePayload: comparer.shallow },
         expectedCounterInPayload: 3,
         expectedRerendersCountInVMComponentView: getBasedReactVersion({
           18: 4,
@@ -521,7 +521,7 @@ describe('withViewModel', () => {
 
     test('View should have actual payload state (comparePayload: comparer.structural)', async () => {
       await createTestPayloadChanges({
-        config: { comparePayload: comparer.structural },
+        vmConfig: { comparePayload: comparer.structural },
         expectedCounterInPayload: 3,
         expectedRerendersCountInVMComponentView: 7,
       });
@@ -529,7 +529,7 @@ describe('withViewModel', () => {
 
     test('View should have actual payload state (comparePayload: comparer.structural + observer view wrap())', async () => {
       await createTestPayloadChanges({
-        config: { comparePayload: comparer.structural },
+        vmConfig: { comparePayload: comparer.structural },
         expectedCounterInPayload: 3,
         expectedRerendersCountInVMComponentView: 1,
         wrapViewInObserver: true,
@@ -538,7 +538,7 @@ describe('withViewModel', () => {
 
     test('View should have actual payload state (comparePayload: comparer.structural + observer view wrap() + render payload in view)', async () => {
       await createTestPayloadChanges({
-        config: { comparePayload: comparer.structural },
+        vmConfig: { comparePayload: comparer.structural },
         expectedCounterInPayload: 3,
         expectedRerendersCountInVMComponentView: getBasedReactVersion({
           18: 4,
@@ -551,7 +551,7 @@ describe('withViewModel', () => {
 
     test('View should have actual payload state (comparePayload: comparer.identity)', async () => {
       await createTestPayloadChanges({
-        config: { comparePayload: comparer.identity },
+        vmConfig: { comparePayload: comparer.identity },
         expectedCounterInPayload: 3,
         expectedRerendersCountInVMComponentView: 7,
       });
@@ -559,7 +559,7 @@ describe('withViewModel', () => {
 
     test('View should have actual payload state (comparePayload: comparer.identity + observer view wrap())', async () => {
       await createTestPayloadChanges({
-        config: { comparePayload: comparer.identity },
+        vmConfig: { comparePayload: comparer.identity },
         expectedCounterInPayload: 3,
         expectedRerendersCountInVMComponentView: 1,
         wrapViewInObserver: true,
@@ -568,7 +568,7 @@ describe('withViewModel', () => {
 
     test('View should have actual payload state (comparePayload: comparer.identity + observer view wrap() + render payload in view)', async () => {
       await createTestPayloadChanges({
-        config: { comparePayload: comparer.identity },
+        vmConfig: { comparePayload: comparer.identity },
         expectedCounterInPayload: 3,
         expectedRerendersCountInVMComponentView: getBasedReactVersion({
           18: 7,
@@ -581,7 +581,7 @@ describe('withViewModel', () => {
 
     test('View should have actual payload state (comparePayload: comparer.default)', async () => {
       await createTestPayloadChanges({
-        config: { comparePayload: comparer.default },
+        vmConfig: { comparePayload: comparer.default },
         expectedCounterInPayload: 3,
         expectedRerendersCountInVMComponentView: 7,
       });
@@ -589,7 +589,7 @@ describe('withViewModel', () => {
 
     test('View should have actual payload state (comparePayload: comparer.default + observer view wrap())', async () => {
       await createTestPayloadChanges({
-        config: { comparePayload: comparer.default },
+        vmConfig: { comparePayload: comparer.default },
         expectedCounterInPayload: 3,
         expectedRerendersCountInVMComponentView: 1,
         wrapViewInObserver: true,
@@ -598,7 +598,7 @@ describe('withViewModel', () => {
 
     test('View should have actual payload state (comparePayload: comparer.default + observer view wrap() + render payload in view)', async () => {
       await createTestPayloadChanges({
-        config: { comparePayload: comparer.default },
+        vmConfig: { comparePayload: comparer.default },
         expectedCounterInPayload: 3,
         expectedRerendersCountInVMComponentView: getBasedReactVersion({
           18: 7,
@@ -619,7 +619,7 @@ describe('withViewModel', () => {
       }
 
       const ChildView = withViewModel(ChildVM, {
-        config: {
+        vmConfig: {
           comparePayload: 'shallow',
         },
       })(
@@ -654,7 +654,7 @@ describe('withViewModel', () => {
       }
 
       const ParentView = withViewModel(ParentVM, {
-        config: {
+        vmConfig: {
           comparePayload: 'shallow',
         },
       })(

@@ -1,5 +1,32 @@
 # `ViewModelsConfig` configuration object   
-This object contains all global options for some behaviour of view models instances  
+This configration contains all options for some behaviour of [`ViewModel`](/api/view-models/overview) instances.  
+
+The package provides a **global object** with this configuration, but you can also change it for each [`ViewModel`](/api/view-models/overview) and [`ViewModelStore`](/api/view-model-store/overview) separately using the `vmConfig` field.
+
+```ts
+import {
+  viewModelsConfig,
+  withViewModel,
+  ViewModelStoreBase
+} from "mobx-view-model";
+
+viewModelsConfig.comparePayload = false;
+
+import { withViewModel } from "mobx-view-model";
+
+viewViewModel(VM, {
+  vmConfig: {
+    comparePayload: false
+  }
+})()
+
+new ViewModelStoreBase({
+  vmConfig: {
+    comparePayload: false
+  }
+})
+```
+
 
 
 ## `startViewTransitions`  
@@ -123,19 +150,28 @@ viewModelsConfig.processViewComponent = (Component) => {
   }
 }
 ```
+::: tip It works only for [`withViewModel` HOCs](/react/api/with-view-model)  
+:::
 
 ## `wrapViewsInObserver`  
 
-Wrap View components into [`observer()` MobX HOC](https://mobx.js.org/api.html#observer)  
+Wrap View components in [`observer()` MobX HOC](https://mobx.js.org/api.html#observer)  
 
-::: tip
-It works only for [`withViewModel` HOCs](/react/api/with-view-model)  
+Example:    
+
+```tsx
+import { viewModelsConfig } from "mobx-view-model";
+
+viewModelsConfig.wrapViewsInObserver = true;
+```
+
+::: tip It works only for [`withViewModel` HOCs](/react/api/with-view-model)  
 :::
 
 ## `observable`  
 
 This is huge configuration object for all base implementations `mobx-view-model` entities like `ViewModelBase` or `ViewModelStoreBase`.   
-You can modify default behaviour of the wrapping into [`makeObservable()` MobX functions](https://mobx.js.org/observable-state.html#makeobservable).   
+You can modify default behaviour of the wrapping in [`makeObservable()` MobX functions](https://mobx.js.org/observable-state.html#makeobservable).   
 
 Properties of the nested observable configs:  
 ### - `disableWrapping`  

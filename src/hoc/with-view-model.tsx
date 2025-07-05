@@ -106,13 +106,16 @@ export function withViewModel(
     let Component =
       (
         config.config?.processViewComponent ??
+        config.vmConfig?.processViewComponent ??
         viewModelsConfig.processViewComponent
       )?.(OriginalComponent, VM, config) ?? OriginalComponent;
 
     if (
       Component &&
       (config.config?.wrapViewsInObserver ??
-        viewModelsConfig.wrapViewsInObserver)
+        config.vmConfig?.wrapViewsInObserver ??
+        viewModelsConfig.wrapViewsInObserver) &&
+      (Component as any).$$typeof !== Symbol.for('react.memo')
     ) {
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore

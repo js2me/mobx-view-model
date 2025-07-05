@@ -102,10 +102,13 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
 
   createViewModel<VM extends VMBase>(config: ViewModelCreateConfig<VM>): VM {
     const VMConstructor = config.VM as unknown as typeof ViewModelBase;
-    const vmConfig = mergeVMConfigs(this.vmConfig, config.config);
+    const vmConfig = mergeVMConfigs(
+      this.vmConfig,
+      config.config ?? config.vmConfig,
+    );
     const vmParams: ViewModelParams<any, any> & ViewModelCreateConfig<VM> = {
       ...config,
-      config: mergeVMConfigs(this.vmConfig, config.config),
+      vmConfig: mergeVMConfigs(this.vmConfig, config.config ?? config.vmConfig),
     };
 
     if (vmConfig.factory) {

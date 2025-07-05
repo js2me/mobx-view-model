@@ -23,7 +23,7 @@ import {
 export interface UseCreateViewModelConfig<TViewModel extends AnyViewModel>
   extends Pick<
     ViewModelCreateConfig<TViewModel>,
-    'config' | 'ctx' | 'component' | 'componentProps'
+    'vmConfig' | 'config' | 'ctx' | 'component' | 'componentProps'
   > {
   /**
    * Unique identifier for the view
@@ -124,7 +124,10 @@ export function useCreateViewModel<TViewModelSimple extends ViewModelSimple>(
  * [**Documentation**](https://js2me.github.io/mobx-view-model/react/api/use-create-view-model.html)
  */
 export function useCreateViewModel(VM: Class<any>, ...args: any[]) {
-  const [payload, config] = args;
+  const [payload, config] = args as unknown as [
+    any,
+    Maybe<UseCreateViewModelConfig<AnyViewModel>>,
+  ];
 
   if (
     !('willMount' in VM.prototype) &&
@@ -164,7 +167,7 @@ export function useCreateViewModel(VM: Class<any>, ...args: any[]) {
     } else {
       const configCreate: ViewModelCreateConfig<any> = {
         ...config,
-        config: config?.config,
+        vmConfig: config?.config ?? config?.vmConfig,
         id,
         parentViewModelId: parentViewModel?.id,
         payload: payload ?? {},
@@ -182,7 +185,9 @@ export function useCreateViewModel(VM: Class<any>, ...args: any[]) {
         viewModelsConfig.factory?.(configCreate) ??
         new VM({
           ...configCreate,
-          config: mergeVMConfigs(configCreate.config),
+          vmConfig: mergeVMConfigs(
+            configCreate.config ?? configCreate.vmConfig,
+          ),
         } satisfies ViewModelParams<any>);
 
       instanceRef.current = instance;

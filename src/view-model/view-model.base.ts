@@ -51,7 +51,7 @@ export class ViewModelBase<
   constructor(protected vmParams: ViewModelParams<Payload, ParentViewModel>) {
     this.params = vmParams;
     this.id = vmParams.id;
-    this.vmConfig = mergeVMConfigs(vmParams.config);
+    this.vmConfig = mergeVMConfigs(vmParams.config ?? vmParams.vmConfig);
     this._payload = vmParams.payload;
     this.abortController = new AbortController();
     this.unmountSignal = this.abortController.signal;
