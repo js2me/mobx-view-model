@@ -76,7 +76,21 @@ export type ComponentWithViewModel<
 ) => ReactNode;
 
 /**
- * Creates new instance of ViewModel
+ * A Higher-Order Component that connects React components to their ViewModels, providing seamless MobX integration.
+ *
+ * [**Documentation**](https://js2me.github.io/mobx-view-model/react/api/with-view-model.html)
+ */
+export function withViewModel<
+  TViewModel extends AnyViewModel,
+  TComponentOriginProps extends AnyObject = ViewModelProps<TViewModel>,
+>(
+  model: Class<TViewModel>,
+  component: ComponentType<TComponentOriginProps & ViewModelProps<TViewModel>>,
+  config?: ViewModelHocConfig<TViewModel>,
+): ComponentWithViewModel<TViewModel, TComponentOriginProps>;
+
+/**
+ * A Higher-Order Component that connects React components to their ViewModels, providing seamless MobX integration.
  *
  * [**Documentation**](https://js2me.github.io/mobx-view-model/react/api/with-view-model.html)
  */
@@ -86,23 +100,6 @@ export function withViewModel<TViewModel extends AnyViewModel>(
 ): <TComponentOriginProps extends AnyObject = ViewModelProps<TViewModel>>(
   Component?: ComponentType<TComponentOriginProps & ViewModelProps<TViewModel>>,
 ) => ComponentWithViewModel<TViewModel, TComponentOriginProps>;
-
-export function withViewModel<
-  TViewModel extends AnyViewModel,
-  TComponentOriginProps extends AnyObject = ViewModelProps<TViewModel>,
->(
-  model: Class<TViewModel>,
-  component: ComponentType<TComponentOriginProps & ViewModelProps<TViewModel>>,
-  config?: ViewModelHocConfig<TViewModel>,
-): ComponentWithViewModel<TViewModel, TComponentOriginProps>;
-
-export function withViewModel<
-  TViewModel extends AnyViewModel,
-  TComponentOriginProps extends AnyObject = ViewModelProps<TViewModel>,
->(
-  model: Class<TViewModel>,
-  component: ComponentType<TComponentOriginProps & ViewModelProps<TViewModel>>,
-): ComponentWithViewModel<TViewModel, TComponentOriginProps>;
 
 /**
  * Creates new instance of ViewModel
