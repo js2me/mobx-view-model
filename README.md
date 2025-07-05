@@ -94,3 +94,7 @@ export const UserBadge = observer(({ userId }: ViewModelPayload<UserBadgeVM>) =>
 
 // <UserBadge payload={{ userId: '1' }}>
 ```
+
+## Contribution Guide    
+
+Want to contribute ? [Follow this guide](https://github.com/js2me/mobx-tanstack-query/blob/master/CONTRIBUTING.md)  
