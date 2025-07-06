@@ -1,9 +1,9 @@
 import { ComponentProps, ComponentType } from 'react';
+import { loadable, LoadableMixin, LoadableConfig } from 'react-simple-loadable';
 import { PackedAsyncModule, unpackAsyncModule } from 'yummies/imports';
 
 import { viewModelsConfig } from '../config/global-config.js';
-import { loadable, LoadableMixin } from '../lib/react-simple-loadable.js';
-import { Class, MaybePromise } from '../utils/types.js';
+import { Class, Maybe, MaybePromise } from '../utils/types.js';
 import { AnyViewModel } from '../view-model/index.js';
 
 import {
@@ -25,6 +25,10 @@ export type ComponentWithLazyViewModel<
   TView extends ComponentType<any>,
 > = ComponentWithViewModel<TViewModel, ComponentProps<TView>> & LoadableMixin;
 
+export interface LazyViewModelHocConfig<TViewModel extends AnyViewModel>
+  extends ViewModelHocConfig<TViewModel>,
+    Pick<LoadableConfig, 'loading' | 'preload' | 'throwOnError'> {}
+
 /**
  * Lazy creates new instance of ViewModel
  *
@@ -35,9 +39,18 @@ export function withLazyViewModel<
   TView extends ComponentType<any>,
 >(
   loadFunction: () => MaybePromise<LazyViewAndModel<TViewModel, TView>>,
-  config?: ViewModelHocConfig<any>,
+  configOrFallbackComponent?:
+    | LazyViewModelHocConfig<NoInfer<TViewModel>>
+    | LoadableConfig['loading'],
 ): ComponentWithLazyViewModel<TViewModel, TView> {
-  const patchedConfig: ViewModelHocConfig<any> = {
+  const config: Maybe<LazyViewModelHocConfig<NoInfer<TViewModel>>> =
+    typeof configOrFallbackComponent === 'function'
+      ? {
+          fallback: configOrFallbackComponent,
+        }
+      : configOrFallbackComponent;
+
+  const patchedConfig: LazyViewModelHocConfig<NoInfer<TViewModel>> = {
     ...config,
     ctx: {
       ...config?.ctx,
@@ -48,15 +61,22 @@ export function withLazyViewModel<
   const fallbackComponent =
     patchedConfig?.fallback ?? viewModelsConfig.fallbackComponent;
 
-  const lazyVM = loadable(async () => {
-    const { Model: ModelOrAsync, View: ViewOrAsync } = await loadFunction();
-    const [Model, View] = await Promise.all([
-      unpackAsyncModule(ModelOrAsync),
-      unpackAsyncModule(ViewOrAsync),
-    ]);
+  const lazyVM = loadable(
+    async () => {
+      const { Model: ModelOrAsync, View: ViewOrAsync } = await loadFunction();
+      const [Model, View] = await Promise.all([
+        unpackAsyncModule(ModelOrAsync),
+        unpackAsyncModule(ViewOrAsync),
+      ]);
 
-    return withViewModel(Model, patchedConfig)(View);
-  }, fallbackComponent) as ComponentWithLazyViewModel<TViewModel, TView>;
+      return withViewModel(Model, patchedConfig)(View);
+    },
+    {
+      loading: patchedConfig?.loading ?? fallbackComponent,
+      preload: patchedConfig?.preload,
+      throwOnError: patchedConfig?.throwOnError,
+    },
+  ) as ComponentWithLazyViewModel<TViewModel, TView>;
 
   patchedConfig.ctx!.externalComponent = lazyVM;
 
