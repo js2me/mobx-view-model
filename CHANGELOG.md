@@ -1,5 +1,11 @@
 # mobx-tanstack-query
 
+## 6.13.0
+
+### Minor Changes
+
+- [`69b796f`](https://github.com/js2me/mobx-view-model/commit/69b796f091ca63c11b2653d0421109e52f0ce699) Thanks [@js2me](https://github.com/js2me)! - `withLazyViewModel` HOC lazy load parameters + better overload for second arg
+
 ## 6.12.2
 
 ### Patch Changes
