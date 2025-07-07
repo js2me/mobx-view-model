@@ -8,36 +8,11 @@ This way can be helpful when:
 
 Follow the steps:   
 
-1. Make your own ViewModelStore implementation   
-
-```ts file="view-model.store.impl.ts"
-import {
-  ViewModelParams,
-  ViewModelStoreBase,
-  ViewModel,
-  ViewModelCreateConfig,
-} from 'mobx-view-model';
-
-export class ViewModelStoreImpl extends ViewModelStoreBase {
-  constructor(protected rootStore: RootStore) {
-    super();
-  }
-
-  createViewModel<VM extends ViewModel<any, ViewModel<any, any>>>(
-    config: ViewModelCreateConfig<VM>,
-  ): VM {
-    const VM = config.VM;
-    // here is you sending rootStore as
-    // first argument into VM (your view model implementation)
-    return new VM(this.rootStore, config);
-  }
-}
-```
-
-2. Make your own `ViewModel` implementation with sharing `RootStore`   
+1. Make your own `ViewModel` implementation with accepting `RootStore` as `constructor` parameter   
 
 ```ts
 // view-model.ts
+// interface for your view model
 import { ViewModel as ViewModelBase } from 'mobx-view-model';
 
 export interface ViewModel<
@@ -46,7 +21,9 @@ export interface ViewModel<
 > extends ViewModelBase<Payload, ParentViewModel> {}
 ```
 
-```ts
+```ts{15}
+// view-model.impl.ts
+// implementation for your interface
 import { ViewModelBase, ViewModelParams } from 'mobx-view-model';
 
 import { ViewModel } from './view-model';
@@ -65,25 +42,56 @@ export class ViewModelImpl<
     super(params);
   }
 
+  // example of your custom methods
+  // and properties
   get queryParams() {
     return this.rootStore.router.queryParams.data;
-  }
-
-  protected getParentViewModel(
-    parentViewModelId: Maybe<string>,
-  ): ParentViewModel | null {
-    return this.rootStore.viewModels.get<ParentViewModel>(parentViewModelId);
   }
 }
 
 ```
 
+
+1. Make your own `ViewModelStore` implementation with accepting `RootStore` as `constructor` parameter and overriding `createViewModel` method for transfer `rootStore`   
+
+```ts{8,11,22,23,24}
+// view-model.store.impl.ts
+import {
+  ViewModelParams,
+  ViewModelStoreBase,
+  ViewModel,
+  ViewModelCreateConfig,
+} from 'mobx-view-model';
+import { ViewModelImpl } from "./view-model.impl.ts"
+
+export class ViewModelStoreImpl extends ViewModelStoreBase {
+  constructor(protected rootStore: RootStore) {
+    super();
+  }
+
+  createViewModel<VM extends ViewModel<any, ViewModel<any, any>>>(
+    config: ViewModelCreateConfig<VM>,
+  ): VM {
+    const VM = config.VM;
+
+    // here is you sending rootStore as
+    // first argument into VM (your view model implementation)
+    if (ViewModelImpl.isPrototypeOf(VM)) {
+      return new VM(this.rootStore, config);
+    }
+
+    // otherwise it will be default behaviour
+    // of this method
+    return super.createViewModel(config);
+  }
+}
+```
+
 3. Add `ViewModelStore` into your `RootStore`   
 
-```ts
+```ts{8}
 import { ViewModelStore } from 'mobx-view-model';
 import { ViewModelStoreImpl } from '@/shared/lib/mobx';
-
 
 export class RootStoreImpl implements RootStore {
   viewModels: ViewModelStore;
@@ -94,10 +102,9 @@ export class RootStoreImpl implements RootStore {
 }
 ```  
 
-
 4. Create `View` with `ViewModel`   
 
-```tsx
+```tsx{2,4,10}
 import { ViewModelProps, withViewModel } from 'mobx-view-model';
 import { ViewModelImpl } from '@/shared/lib/mobx';
 

@@ -84,6 +84,24 @@ Determines if a [ViewModel](/api/view-models/overview) is able to render based o
 ### `createViewModel(config)`  
 Creates a new [ViewModel](/api/view-models/overview) instance based on the provided configuration.  
 
+Example:   
+```ts
+import {
+  ViewModelStoreBase,
+  ViewModel,
+  ViewModelCreateConfig,
+} from 'mobx-view-model';
+
+export class ViewModelStoreImpl extends ViewModelStoreBase {
+  createViewModel<VM extends ViewModel<any, ViewModel<any, any>>>(
+    config: ViewModelCreateConfig<VM>,
+  ): VM {
+    const VM = config.VM;
+    return new VM(config);
+  }
+}
+```
+
 ### `processCreateConfig(config)`  
 Process the configuration for creating a [ViewModel](/api/view-models/overview).  
 This method is called just before creating a new [ViewModel](/api/view-models/overview) instance.  

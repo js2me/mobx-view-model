@@ -108,7 +108,7 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
     );
     const vmParams: ViewModelParams<any, any> & ViewModelCreateConfig<VM> = {
       ...config,
-      vmConfig: mergeVMConfigs(this.vmConfig, config.config ?? config.vmConfig),
+      vmConfig,
     };
 
     if (vmConfig.factory) {
