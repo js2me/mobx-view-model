@@ -41,7 +41,7 @@ const MyPageView = observer(({ model }: ViewModelProps<MyPageVM>) => {
   return <div>{model.state}</div>;
 });
 
-export const MyPage = withViewModel(MyPageVM)(MyPageView);
+export const MyPage = withViewModel(MyPageVM, MyPageView);
 ```
 
 or you can use [`useCreateViewModel()` hook](/react/api/use-create-view-model)  

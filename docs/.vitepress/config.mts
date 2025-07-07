@@ -190,6 +190,7 @@ export default defineConfig({
         text: 'Recipes',
         items: [
           { text: 'Wrap in observer() all view components', link: '/recipes/observer-wrap-all-view-components' },
+          { text: 'Integration with RootStore', link: '/recipes/integration-with-root-store' },
         ]
       },
       {

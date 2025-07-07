@@ -1,16 +1,12 @@
-# Detailed configuration
+# Integration with `RootStore`   
 
-This way can be helpful when: 
- - if you need to override default factory method of creating view model instances in [ViewModelStore](/api/view-model-store/interface).  
- - if you need to inject root store into [ViewModelStore](/api/view-model-store/interface).  
- - if you need more control of the mounting\unmounting [ViewModels](/api/view-models/overview).  
-
+This recipe may be helpful if you need to get access to your `RootStore` inside your `ViewModel` implementations   
 
 Follow the steps:   
 
-1. Make your own `ViewModel` implementation and interface with some customizations:  
+1. Make your own `ViewModel` implementation with accepting `RootStore` as `constructor` parameter   
 
-```ts{9,10}
+```ts
 // view-model.ts
 // interface for your view model
 import { ViewModel as ViewModelBase } from 'mobx-view-model';
@@ -18,18 +14,16 @@ import { ViewModel as ViewModelBase } from 'mobx-view-model';
 export interface ViewModel<
   Payload extends AnyObject = EmptyObject,
   ParentViewModel extends ViewModel<any> = ViewModel<any, any>,
-> extends ViewModelBase<Payload, ParentViewModel> {
-  trackName: string;
-  getTrackTime(): Date;
-}
+> extends ViewModelBase<Payload, ParentViewModel> {}
 ```
 
-```ts{5,12,14,16,17,18}
+```ts{6,16}
 // view-model.impl.ts
 // implementation for your interface
 import { ViewModelBase, ViewModelParams } from 'mobx-view-model';
 
 import { ViewModel } from './view-model';
+import { RootStore } from "@/shared/store";
 
 export class ViewModelImpl<
     Payload extends AnyObject = EmptyObject,
@@ -38,19 +32,26 @@ export class ViewModelImpl<
   extends ViewModelBase<Payload, ParentViewModel>
   implements ViewModel<Payload, ParentViewModel>
 {
-  trackName = new Date().toISOString()
+  constructor(
+    protected rootStore: RootStore,
+    params: ViewModelParams<Payload, ParentViewModel>,
+  ) {
+    super(params);
+  }
 
-  getTrackTime() {
-    return new Date();
+  // example of your custom methods
+  // and properties
+  get queryParams() {
+    return this.rootStore.router.queryParams.data;
   }
 }
 
 ```
 
 
-1. Make your own `ViewModelStore` implementation   
+1. Make your own `ViewModelStore` implementation with accepting `RootStore` as `constructor` parameter and overriding `createViewModel` method for transfer `rootStore`   
 
-```ts{8,19,20,21}
+```ts{8,9,12,23,24,25}
 // view-model.store.impl.ts
 import {
   ViewModelParams,
@@ -59,8 +60,13 @@ import {
   ViewModelCreateConfig,
 } from 'mobx-view-model';
 import { ViewModelImpl } from "./view-model.impl.ts"
+import { RootStore } from "@/shared/store";
 
 export class ViewModelStoreImpl extends ViewModelStoreBase {
+  constructor(protected rootStore: RootStore) {
+    super();
+  }
+
   createViewModel<VM extends ViewModel<any, ViewModel<any, any>>>(
     config: ViewModelCreateConfig<VM>,
   ): VM {
@@ -69,9 +75,7 @@ export class ViewModelStoreImpl extends ViewModelStoreBase {
     // here is you sending rootStore as
     // first argument into VM (your view model implementation)
     if (ViewModelImpl.isPrototypeOf(VM)) {
-      const instance = super.createViewModel(config) as unknown as ViewModelImpl;
-      console.log(intance.getTrackTime());
-      return instance;
+      return new VM(this.rootStore, config);
     }
 
     // otherwise it will be default behaviour
@@ -81,7 +85,22 @@ export class ViewModelStoreImpl extends ViewModelStoreBase {
 }
 ```
 
-3. Create `View` with `ViewModel`   
+3. Add `ViewModelStore` into your `RootStore`   
+
+```ts{8}
+import { ViewModelStore } from 'mobx-view-model';
+import { ViewModelStoreImpl } from '@/shared/lib/mobx';
+
+export class RootStoreImpl implements RootStore {
+  viewModels: ViewModelStore;
+
+  constructor() {
+    this.viewModels = new ViewModelStoreImpl(this);
+  }
+}
+```  
+
+4. Create `View` with `ViewModel`   
 
 ```tsx{2,4,10}
 import { ViewModelProps, withViewModel } from 'mobx-view-model';
@@ -93,7 +112,7 @@ export class MyPageVM extends ViewModelImpl {
 
   async mount() {
     // this.isMounted = false;
-    console.log(this.trackName)
+    await this.rootStore.beerApi.takeBeer();
     super.mount(); // this.isMounted = true
   }
 
@@ -110,7 +129,5 @@ const MyPageView = observer(({ model }: ViewModelProps<MyPageVM>) => {
   return <div>{model.state}</div>;
 });
 
-export const MyPage = withViewModel(MyPageVM)(MyPageView);
+export const MyPage = withViewModel(MyPageVM, MyPageView);
 ```
-
-Also you may be helpful to read [**this recipe about integration with `RootStore`**](/recipes/integration-with-root-store)   
