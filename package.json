@@ -1,6 +1,6 @@
 {
   "name": "mobx-view-model",
-  "version": "6.13.0",
+  "version": "6.13.1",
   "scripts": {
     "prepare": "pnpm dev:install-hooks",
     "clean": "rimraf dist",
