@@ -34,7 +34,7 @@ postBuildScript({
       });
 
       if (process.env.CI) {
-        if (publishOutput.publishedGitTag) {
+        if (publishOutput?.publishedGitTag) {
           const { whatChangesText } = getInfoFromChangelog(
             nextVersion,
             path.resolve(targetPackageJson.locationDir, '../CHANGELOG.md'),
