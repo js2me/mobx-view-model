@@ -53,6 +53,7 @@ const UserBadgeView = observer(({ model }: ViewModelProps<UserBadgeVM>) => (
 ))
 
 export const UserBadge = withViewModel(UserBadgeVM)(UserBadgeView);
+// export const UserBadge = withViewModel(UserBadgeVM, UserBadgeView);
 
 
 // <UserBadge payload={{ userId: '1' }}>
