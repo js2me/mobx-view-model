@@ -30,7 +30,7 @@ export interface LazyViewModelHocConfig<TViewModel extends AnyViewModel>
     Pick<LoadableConfig, 'loading' | 'preload' | 'throwOnError'> {}
 
 /**
- * Lazy creates new instance of ViewModel
+ * A Higher-Order Component that **LAZY** connects React components to their ViewModels, providing seamless MobX integration.
  *
  * [**Documentation**](https://js2me.github.io/mobx-view-model/react/api/with-lazy-view-model.html)
  */
