@@ -1,4 +1,4 @@
-# mobx-tanstack-query
+# mobx-view-model
 
 ## 6.13.1
 
