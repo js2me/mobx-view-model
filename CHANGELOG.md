@@ -1,5 +1,15 @@
 # mobx-view-model
 
+## 6.14.0
+
+### Minor Changes
+
+- [`912a1a1`](https://github.com/js2me/mobx-view-model/commit/912a1a1bbdd67de5af5ade27d43dc0ff93aa3823) Thanks [@js2me](https://github.com/js2me)! - Added default implementation of `factory` property in `viewModelsConfig` global config object
+
+### Patch Changes
+
+- [`912a1a1`](https://github.com/js2me/mobx-view-model/commit/912a1a1bbdd67de5af5ade27d43dc0ff93aa3823) Thanks [@js2me](https://github.com/js2me)! - update documentation for all view models, add more links to source code
+
 ## 6.13.1
 
 ### Patch Changes
