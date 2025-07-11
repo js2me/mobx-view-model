@@ -8,8 +8,8 @@ It can be:
   - `ViewModel class reference`  
   - [`React`](https://react.dev) component created with [`withViewModel()`](/react/api/with-view-model) or [`withLazyViewModel()`](/react/api/with-lazy-view-model)  
 
-[Reference to source code type](/src/view-model/view-model.store.types.ts#L35)  
-[Reference to source code with internal usage of this value](/src/view-model/view-model.store.base.ts#L149)  
+[Reference to source code type](/src/view-model/view-model.store.types.ts#L42)  
+[Reference to source code with internal usage of this value](/src/view-model/view-model.store.base.ts#L220)  
 
 # Example   
 

@@ -1,6 +1,7 @@
 import { createGlobalConfig } from 'yummies/complex';
 
 import { ViewModelsConfig } from './types.js';
+import { mergeVMConfigs } from './utils/merge-vm-configs.js';
 
 /**
  * Global configuration options for view models
@@ -20,5 +21,12 @@ export const viewModelsConfig = createGlobalConfig<ViewModelsConfig>({
     viewModelStores: {
       useDecorators: true,
     },
+  },
+  factory: (config) => {
+    const VM = config.VM;
+    return new VM({
+      ...config,
+      vmConfig: mergeVMConfigs(config.config ?? config.vmConfig),
+    });
   },
 });

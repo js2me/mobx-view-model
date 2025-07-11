@@ -6,10 +6,11 @@ title: View Model Store interface
 
 Interface represeting a store for managing [`ViewModels`](/api/view-models/interface)  
 
-::: tip
-Not required entity for targeted usage of this package, but can be helpful for accessing [ViewModel](/api/view-models/overview)s from everywhere by [ViewModel](/api/view-models/overview) id or [ViewModel](/api/view-models/overview) class name.   
+::: tip OPTIONAL USE
+This is not required for targeted usage of this package, but can be helpful for accessing [ViewModels](/api/view-models/overview) from everywhere by [ViewModelLookup](api/other/view-model-lookup)  
 :::
 
+[Reference to source code](/src/view-model/view-model.store.ts)  
 
 ## Method and properties  
 

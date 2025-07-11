@@ -4,7 +4,7 @@ import {
 } from '../hoc/index.js';
 import { Class, Maybe } from '../utils/types.js';
 
-import { ViewModelSimple } from './view-model.js';
+import { ViewModelSimple } from './view-model-simple.js';
 import {
   ViewModelCreateConfig,
   ViewModelGenerateIdConfig,

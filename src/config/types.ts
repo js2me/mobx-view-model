@@ -28,6 +28,12 @@ export interface ViewModelObservableConfig {
   ) => void;
 }
 
+export type GenerateViewModelIdFn = (ctx: AnyObject) => string;
+
+export type CreateViewModelFactoryFn<
+  TViewModel extends AnyViewModel = AnyViewModel,
+> = (config: ViewModelCreateConfig<TViewModel>) => TViewModel;
+
 /**
  * Configuration options for view models.
  * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config)
@@ -46,9 +52,9 @@ export interface ViewModelsConfig {
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#payloadcomputed) */
   payloadComputed?: 'struct' | boolean | ((a: any, b: any) => boolean);
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#generateid) */
-  generateId?: (ctx: AnyObject) => string;
+  generateId?: GenerateViewModelIdFn;
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#factory) */
-  factory?: (config: ViewModelCreateConfig<AnyViewModel>) => AnyViewModel;
+  factory: CreateViewModelFactoryFn<AnyViewModel>;
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#fallbackcomponent) */
   fallbackComponent?: ComponentType;
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#onmount) */
@@ -75,10 +81,11 @@ export interface ViewModelsConfig {
  */
 export type ViewModelsRawConfig = Omit<
   ViewModelsConfig,
-  'startViewTransitions' | 'observable'
+  'startViewTransitions' | 'observable' | 'factory'
 > & {
   startViewTransitions?:
     | DeepPartial<ViewModelsConfig['startViewTransitions']>
     | boolean;
   observable?: DeepPartial<ViewModelsConfig['observable']>;
+  factory?: ViewModelsConfig['factory'];
 };

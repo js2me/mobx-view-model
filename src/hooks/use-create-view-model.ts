@@ -1,24 +1,19 @@
 /* eslint-disable react-hooks/rules-of-hooks */
 import { useContext, useLayoutEffect, useRef, useState } from 'react';
-import {
-  AnyObject,
-  Class,
-  AllPropertiesOptional,
-  Maybe,
-} from 'yummies/utils/types';
+import { Class, AllPropertiesOptional, Maybe } from 'yummies/utils/types';
 
 import { viewModelsConfig } from '../config/global-config.js';
-import { mergeVMConfigs } from '../config/index.js';
+import {
+  CreateViewModelFactoryFn,
+  GenerateViewModelIdFn,
+} from '../config/index.js';
 import { ActiveViewModelContext } from '../contexts/active-view-context.js';
 import { ViewModelsContext } from '../contexts/view-models-context.js';
 import { useIsomorphicLayoutEffect } from '../lib/hooks/use-isomorphic-layout-effect.js';
 import { generateVMId } from '../utils/create-vm-id-generator.js';
-import { ViewModelSimple } from '../view-model/view-model.js';
+import { ViewModelSimple } from '../view-model/view-model-simple.js';
 import { ViewModelCreateConfig } from '../view-model/view-model.store.types.js';
-import {
-  AnyViewModel,
-  ViewModelParams,
-} from '../view-model/view-model.types.js';
+import { AnyViewModel } from '../view-model/view-model.types.js';
 
 export interface UseCreateViewModelConfig<TViewModel extends AnyViewModel>
   extends Pick<
@@ -33,12 +28,12 @@ export interface UseCreateViewModelConfig<TViewModel extends AnyViewModel>
   /**
    * Function to generate an identifier for the view model
    */
-  generateId?: (ctx: AnyObject) => string;
+  generateId?: GenerateViewModelIdFn;
 
   /**
    * Function to create an instance of the VM class
    */
-  factory?: (config: ViewModelCreateConfig<TViewModel>) => TViewModel;
+  factory?: CreateViewModelFactoryFn<TViewModel>;
 }
 
 const useCreateViewModelSimple = (
@@ -55,8 +50,9 @@ const useCreateViewModelSimple = (
 
     const instance = new VM();
     viewModels?.markToBeAttached(instance);
-    if (viewModels) {
-      instance.linkStore?.(viewModels);
+
+    if (viewModels && instance.linkStore) {
+      instance.linkStore(viewModels);
     }
     return instance;
   });
@@ -182,13 +178,7 @@ export function useCreateViewModel(VM: Class<any>, ...args: any[]) {
       const instance: AnyViewModel =
         config?.factory?.(configCreate) ??
         viewModels?.createViewModel<any>(configCreate) ??
-        viewModelsConfig.factory?.(configCreate) ??
-        new VM({
-          ...configCreate,
-          vmConfig: mergeVMConfigs(
-            configCreate.config ?? configCreate.vmConfig,
-          ),
-        } satisfies ViewModelParams<any>);
+        viewModelsConfig.factory(configCreate);
 
       instanceRef.current = instance;
 

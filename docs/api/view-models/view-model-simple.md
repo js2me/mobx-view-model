@@ -1,6 +1,8 @@
-# ViewModelSimple  
+# `ViewModelSimple`  
 
 `ViewModelSimple` is a minimalistic implementation of the [ViewModel interface](/api/view-models/interface), designed for lightweight state management with **MobX**. It simplifies reactive state initialization using `makeAutoObservable` while enforcing a consistent instance lifecycle in React applications.  
+
+[Reference to source code](/src/view-model/view-model-simple.ts)  
 
 ## When to Use  
 Use `ViewModelSimple` when:   
@@ -43,7 +45,7 @@ export class FruitViewModel implements ViewModelSimple {
 
 ### Instance creation  
 
-**Recommend** (but not required) to create instances using the [`useCreateViewModel`](/react/api/use-create-view-model) hook. This ensures proper lifecycle management and reactivity:   
+Create instances using the [`useCreateViewModel`](/react/api/use-create-view-model) hook. This ensures proper lifecycle management and reactivity:   
 
 ```tsx
 import { observer } from "mobx-react-lite";

@@ -1,7 +1,8 @@
 import { ViewModelsRawConfig } from '../config/index.js';
 import { AnyObject, EmptyObject, Maybe } from '../utils/types.js';
 
-import { ViewModel, ViewModelSimple } from './view-model.js';
+import { ViewModelSimple } from './view-model-simple.js';
+import { ViewModel } from './view-model.js';
 import { ViewModelStore } from './view-model.store.js';
 
 export type AnyViewModel = ViewModel<any, any>;

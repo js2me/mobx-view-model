@@ -133,10 +133,12 @@ html.dark {
 
 :root {
   --vp-custom-block-tip-border: transparent;
-  --vp-custom-block-tip-text: var(--vp-c-text-1);
-  --vp-custom-block-tip-bg: var(--vp-c-brand-soft);
-  --vp-custom-block-tip-code-bg: var(--vp-c-brand-soft);
+    --vp-custom-block-tip-bg: #dbebfdc2;
 }
+
+ html.dark {
+  --vp-custom-block-tip-bg: #273646c2;
+ }
 
 .i-logos\:mobx-icon {
   background: url(/mobx.svg) no-repeat;
@@ -152,4 +154,11 @@ html.dark {
 
 .DocSearch {
   --docsearch-primary-color: var(--vp-c-brand-1) !important;
+}
+
+.custom-block > .custom-block-title:first-child:last-child {
+    margin-top: -8px;
+}
+p:has(>em:first-child:last-child) + div[class*=language-] {
+    margin-top: -10px;
 }

@@ -1,7 +1,6 @@
 import { ViewModelsConfig } from '../config/types.js';
 import { AnyObject, EmptyObject } from '../utils/types.js';
 
-import { ViewModelStore } from './view-model.store.js';
 import { AnyViewModel } from './view-model.types.js';
 
 /**
@@ -41,17 +40,4 @@ export interface ViewModel<
   setPayload(payload: Payload): void;
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/interface#payloadchanged-void) */
   payloadChanged(payload: Payload): void;
-}
-
-/**
- * Interface for creating simple view models
- *
- * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-model-simple.html)
- */
-export interface ViewModelSimple<Payload extends AnyObject = EmptyObject> {
-  readonly id: string;
-  mount?(): void;
-  unmount?(): void;
-  setPayload?(payload: Payload): void;
-  linkStore?(viewModels: ViewModelStore): void;
 }

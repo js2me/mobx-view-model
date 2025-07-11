@@ -27,7 +27,25 @@ new ViewModelStoreBase({
 })
 ```
 
+[Reference to source code](/src/config/global-config.ts#L9)  
 
+## Recommendations  
+
+These are the recommended settings for the global configuration `viewModelsConfig`,
+which contain the most optimal values.
+
+```ts
+import { loadableDefaultConfig } from '@one-web/uikit-7';
+import { viewModelsConfig, ViewModelStoreBase } from 'mobx-view-model';
+
+viewModelsConfig.comparePayload = false;
+viewModelsConfig.payloadComputed = 'struct';
+viewModelsConfig.payloadObservable = 'ref';
+viewModelsConfig.wrapViewsInObserver = true;
+
+viewModelsConfig.observable.viewModels.useDecorators = true; //false
+viewModelsConfig.observable.viewModelStores.useDecorators = true; // false
+```
 
 ## `startViewTransitions`  
 Indicates whether to enable transitions for the start view.  
@@ -64,12 +82,13 @@ Indicates type of observable for `ViewModel` payload.
 ## `generateId()`  
 Generates an unique identifier for a [`ViewModel`](/api/view-models/interface).   
 
-Default library implementation is [here](/src/utils/create-vm-id-generator.ts#L16)  
+::: tip This property has default implementation [here](/src/utils/create-vm-id-generator.ts#L16)
+:::
 
 #### Example 
 
-
-```ts
+_Using `crypto.randomUUID()` to generate view model ids_
+```ts{3}
 import { viewModelsConfig } from "mobx-view-model";
 
 viewModelsConfig.generateId = () => crypto.randomUUID();
@@ -80,10 +99,16 @@ Factory function for creating [`ViewModel`](/api/view-models/interface) instance
 
 Can be helpful if you want to add some constructor arguments for your own [`ViewModel`](/api/view-models/interface) implementation  
 
+
+::: tip This property has default implementation [here](/src/config/global-config.ts#L25) 
+:::
+
 #### Example  
 
-```ts
+_Passing `RootStore` as first constructor parameter_
+```ts{2,6}
 import { viewModelsConfig } from "mobx-view-model";
+import { rootStore } from "@/shared/store";
 
 viewModelsConfig.factory = (config) => {
   const { VM } = config;
@@ -150,7 +175,7 @@ viewModelsConfig.processViewComponent = (Component) => {
   }
 }
 ```
-::: tip It works only for [`withViewModel` HOCs](/react/api/with-view-model)  
+::: warning It works only for [`withViewModel` HOCs](/react/api/with-view-model)  
 :::
 
 ## `wrapViewsInObserver`  
@@ -165,7 +190,7 @@ import { viewModelsConfig } from "mobx-view-model";
 viewModelsConfig.wrapViewsInObserver = true;
 ```
 
-::: tip It works only for [`withViewModel` HOCs](/react/api/with-view-model)  
+::: warning It works only for [`withViewModel` HOCs](/react/api/with-view-model)  
 :::
 
 ## `observable`  
@@ -180,7 +205,8 @@ This is removes `makeObservable(this, annotations)`/`makeObservable(this)` calls
 This is change style of marking `MobX` annotations from "decorators style" to "non decorators style".   
 Very helpful if you want to write code with "non decorators style".   
 
-**default value is `true`**  
+::: tip This property has default value - `true` 
+:::
 
 Example:   
 ```ts
