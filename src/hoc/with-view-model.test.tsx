@@ -811,7 +811,7 @@ describe('withViewModel', () => {
       );
 
       expect(viewModels).toBeDefined();
-      expect(vmStore.spies.get).toHaveBeenCalledTimes(3);
+      expect(vmStore.spies.get).toHaveBeenCalledTimes(1);
       expect(vmStore._instanceAttachedCount.size).toBe(1);
       expect(vmStore._unmountingViews.size).toBe(0);
       expect(vmStore.mountedViewsCount).toBe(1);
@@ -885,7 +885,7 @@ describe('withViewModel', () => {
       await expect(container.firstChild).toMatchFileSnapshot(
         `../../tests/snapshots/hoc/with-view-model/view-model-store/${task.name}.html`,
       );
-      expect(vmStore.spies.get).toHaveBeenCalledTimes(15);
+      expect(vmStore.spies.get).toHaveBeenCalledTimes(3);
       expect(vmStore._instanceAttachedCount.size).toBe(3);
       expect(vmStore._unmountingViews.size).toBe(0);
       expect(vmStore.mountedViewsCount).toBe(3);

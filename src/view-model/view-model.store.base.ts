@@ -257,10 +257,30 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
     }
   }
 
+  protected dettachVMConstructor(model: VMBase | AnyViewModelSimple) {
+    const constructor = (model as any).constructor as Class<any, any>;
+
+    if (this.viewModelIdsByClasses.has(constructor)) {
+      const vmIds = this.viewModelIdsByClasses
+        .get(constructor)!
+        .filter((it) => it !== model.id);
+
+      if (vmIds.length > 0) {
+        this.viewModelIdsByClasses.set(constructor, vmIds);
+      } else {
+        this.viewModelIdsByClasses.delete(constructor);
+      }
+    }
+  }
+
   markToBeAttached(model: VMBase | AnyViewModelSimple) {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-expect-error
     this.viewModelsTempHeap.set(model.id, model);
+
+    if ('linkStore' in model) {
+      model.linkStore!(this as any);
+    }
 
     this.attachVMConstructor(model);
   }
@@ -304,18 +324,9 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
       }
 
       this.instanceAttachedCount.delete(model.id);
-
-      const constructor = model.constructor as Class<VMBase, any>;
-
       this.viewModels.delete(id);
-      if (this.viewModelIdsByClasses.has(constructor)) {
-        this.viewModelIdsByClasses.set(
-          constructor,
-          this.viewModelIdsByClasses
-            .get(constructor)!
-            .filter((id) => id !== model.id),
-        );
-      }
+      this.dettachVMConstructor(model);
+
       await this.unmount(model);
     }
   }

@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/rules-of-hooks */
-import { useContext, useLayoutEffect, useRef, useState } from 'react';
+import { useContext, useLayoutEffect } from 'react';
 import { Class, AllPropertiesOptional, Maybe } from 'yummies/utils/types';
 
 import { viewModelsConfig } from '../config/global-config.js';
@@ -10,6 +10,7 @@ import {
 import { ActiveViewModelContext } from '../contexts/active-view-context.js';
 import { ViewModelsContext } from '../contexts/view-models-context.js';
 import { useIsomorphicLayoutEffect } from '../lib/hooks/use-isomorphic-layout-effect.js';
+import { useValue } from '../lib/hooks/use-value.js';
 import { generateVMId } from '../utils/create-vm-id-generator.js';
 import { ViewModelSimple } from '../view-model/view-model-simple.js';
 import { ViewModelCreateConfig } from '../view-model/view-model.store.types.js';
@@ -41,19 +42,11 @@ const useCreateViewModelSimple = (
   payload?: any,
 ) => {
   const viewModels = useContext(ViewModelsContext);
-  const lastInstance = useRef<ViewModelSimple | null>(null);
-
-  const [instance] = useState(() => {
-    if (lastInstance.current) {
-      return lastInstance.current;
-    }
-
+  const instance = useValue(() => {
     const instance = new VM();
+
     viewModels?.markToBeAttached(instance);
 
-    if (viewModels && instance.linkStore) {
-      instance.linkStore(viewModels);
-    }
     return instance;
   });
 
@@ -68,16 +61,14 @@ const useCreateViewModelSimple = (
       viewModels.attach(instance);
       return () => {
         viewModels.detach(instance.id);
-        lastInstance.current = null;
       };
     } else {
       instance.mount?.();
       return () => {
         instance.unmount?.();
-        lastInstance.current = null;
       };
     }
-  }, []);
+  }, [instance]);
 
   return instance;
 };
@@ -134,14 +125,13 @@ export function useCreateViewModel(VM: Class<any>, ...args: any[]) {
     return useCreateViewModelSimple(VM, payload);
   }
 
-  const idRef = useRef<string>('');
   const viewModels = useContext(ViewModelsContext);
   const parentViewModel = useContext(ActiveViewModelContext) || null;
 
   const ctx = config?.ctx ?? {};
 
-  if (!idRef.current) {
-    idRef.current =
+  const instance = useValue(() => {
+    const id =
       viewModels?.generateViewModelId({
         ...config,
         ctx,
@@ -150,16 +140,11 @@ export function useCreateViewModel(VM: Class<any>, ...args: any[]) {
       }) ??
       config?.id ??
       generateVMId(ctx);
-  }
 
-  const id = idRef.current;
+    const instanceFromStore = viewModels ? viewModels.get(id) : null;
 
-  const instanceFromStore = viewModels ? viewModels.get(id) : null;
-  const instanceRef = useRef<AnyViewModel | null>(null);
-
-  if (!instanceRef.current) {
     if (instanceFromStore) {
-      instanceRef.current = instanceFromStore as AnyViewModel;
+      return instanceFromStore as AnyViewModel;
     } else {
       const configCreate: ViewModelCreateConfig<any> = {
         ...config,
@@ -180,32 +165,28 @@ export function useCreateViewModel(VM: Class<any>, ...args: any[]) {
         viewModels?.createViewModel<any>(configCreate) ??
         viewModelsConfig.factory(configCreate);
 
-      instanceRef.current = instance;
-
       instance.willMount();
 
       viewModels?.markToBeAttached(instance);
-    }
-  }
 
-  const instance = instanceRef.current;
+      return instance;
+    }
+  });
 
   useIsomorphicLayoutEffect(() => {
     if (viewModels) {
       viewModels.attach(instance);
       return () => {
         viewModels.detach(instance.id);
-        instanceRef.current = null;
       };
     } else {
       instance.mount();
       return () => {
         instance.willUnmount();
         instance.unmount();
-        instanceRef.current = null;
       };
     }
-  }, []);
+  }, [instance]);
 
   instance.setPayload(payload ?? {});
 
