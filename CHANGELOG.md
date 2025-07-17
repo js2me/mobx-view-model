@@ -1,5 +1,13 @@
 # mobx-view-model
 
+## 6.14.1
+
+### Patch Changes
+
+- [`98465f4`](https://github.com/js2me/mobx-view-model/commit/98465f4415447e03a59e20e4c7d6a82fb1599a3e) Thanks [@js2me](https://github.com/js2me)! - try to improve `HMR` with using `useMemo` hook inside `useCreateViewModel`
+
+- [`98465f4`](https://github.com/js2me/mobx-view-model/commit/98465f4415447e03a59e20e4c7d6a82fb1599a3e) Thanks [@js2me](https://github.com/js2me)! - added unit tests for `ViewModelSimple` and its connection with `ViewModelStore`
+
 ## 6.14.0
 
 ### Minor Changes
