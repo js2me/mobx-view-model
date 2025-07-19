@@ -199,7 +199,7 @@ export default defineConfig({
         items: [
           { text: 'Project examples', link: '/other/project-examples' },
           { text: 'Dependent packages', link: '/other/dependent-packages' },
-          // { text: 'Vite plugin for better HMR', link: '/other/dependent-packages' },
+          { text: 'Vite plugin', link: '/other/vite-plugin' },
         ],
       }
     ],
