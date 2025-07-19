@@ -1,5 +1,11 @@
 # mobx-view-model
 
+## 6.14.2
+
+### Patch Changes
+
+- [`5371f9b`](https://github.com/js2me/mobx-view-model/commit/5371f9be9f86ac127bc13d667cf204a9a91b2223) Thanks [@js2me](https://github.com/js2me)! - added documentation about view plugin (`mobx-view-model-vite-plugin`)
+
 ## 6.14.1
 
 ### Patch Changes
