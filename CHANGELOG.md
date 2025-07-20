@@ -1,5 +1,11 @@
 # mobx-view-model
 
+## 6.14.3
+
+### Patch Changes
+
+- [`7175147`](https://github.com/js2me/mobx-view-model/commit/7175147e74a4722b99bd1f8a25346b224a8794b2) Thanks [@js2me](https://github.com/js2me)! - added changelog link to docs
+
 ## 6.14.2
 
 ### Patch Changes
