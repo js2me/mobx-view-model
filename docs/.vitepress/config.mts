@@ -36,14 +36,15 @@ export default defineConfig({
     nav: [
       { text: 'Home', link: '/' },
       { text: 'Introduction', link: '/introduction/overview' },
+      { text: 'Changelog', link: `https://github.com/${author}/${packageName}/releases` },
       {
-        text: `v${version}`,
+        text: `${version}`,
         items: [
           {
             items: [
               {
-                text: `v${version}`,
-                link: `https://github.com/${author}/${packageName}/releases/tag/v${version}`,
+                text: `${version}`,
+                link: `https://github.com/${author}/${packageName}/releases/tag/${version}`,
               },
             ],
           },
