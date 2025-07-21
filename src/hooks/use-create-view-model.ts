@@ -11,7 +11,7 @@ import { ActiveViewModelContext } from '../contexts/active-view-context.js';
 import { ViewModelsContext } from '../contexts/view-models-context.js';
 import { useIsomorphicLayoutEffect } from '../lib/hooks/use-isomorphic-layout-effect.js';
 import { useValue } from '../lib/hooks/use-value.js';
-import { generateVMId } from '../utils/create-vm-id-generator.js';
+import { generateVmId } from '../utils/generate-vm-id.js';
 import { ViewModelSimple } from '../view-model/view-model-simple.js';
 import { ViewModelCreateConfig } from '../view-model/view-model.store.types.js';
 import { AnyViewModel } from '../view-model/view-model.types.js';
@@ -139,7 +139,7 @@ export function useCreateViewModel(VM: Class<any>, ...args: any[]) {
         parentViewModelId: parentViewModel?.id,
       }) ??
       config?.id ??
-      generateVMId(ctx);
+      generateVmId(ctx);
 
     const instanceFromStore = viewModels ? viewModels.get(id) : null;
 

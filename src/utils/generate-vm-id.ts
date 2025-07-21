@@ -6,7 +6,7 @@ declare const process: { env: { NODE_ENV?: string } };
 
 const staticCounter = createCounter((counter) => counter.toString(16));
 
-export const generateVMId = (ctx: AnyObject) => {
+export const generateVmId = (ctx: AnyObject) => {
   if (!ctx.generateId) {
     const staticId = staticCounter();
     const counter = createCounter((counter) =>
@@ -20,6 +20,12 @@ export const generateVMId = (ctx: AnyObject) => {
   if (process.env.NODE_ENV === 'production') {
     return ctx.generateId();
   } else {
-    return `${ctx.VM?.name}_${ctx.generateId()}`;
+    const viewModelName = ctx.VM?.name ?? '';
+
+    if (viewModelName) {
+      return `${viewModelName}_${ctx.generateId()}`;
+    } else {
+      return ctx.generateId();
+    }
   }
 };

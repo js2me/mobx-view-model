@@ -82,7 +82,7 @@ Indicates type of observable for `ViewModel` payload.
 ## `generateId()`  
 Generates an unique identifier for a [`ViewModel`](/api/view-models/interface).   
 
-::: tip This property has default implementation [here](/src/utils/create-vm-id-generator.ts#L16)
+::: tip This property has default implementation [here](/src/utils/generate-vm-id.ts#L16)
 :::
 
 #### Example 

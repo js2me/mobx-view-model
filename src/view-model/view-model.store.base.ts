@@ -9,7 +9,7 @@ import {
   ComponentWithLazyViewModel,
   ComponentWithViewModel,
 } from '../hoc/index.js';
-import { generateVMId } from '../utils/index.js';
+import { generateVmId } from '../utils/index.js';
 import { Class, Maybe } from '../utils/types.js';
 
 import { ViewModelBase } from './view-model.base.js';
@@ -126,7 +126,7 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
     } else if (this.vmConfig.generateId) {
       return this.vmConfig.generateId(config);
     } else {
-      return generateVMId(config.ctx);
+      return generateVmId(config.ctx);
     }
   }
 

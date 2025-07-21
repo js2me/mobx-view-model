@@ -1,1 +1,1 @@
-export * from './create-vm-id-generator.js';
+export * from './generate-vm-id.js';
