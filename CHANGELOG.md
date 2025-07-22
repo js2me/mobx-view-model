@@ -1,5 +1,15 @@
 # mobx-view-model
 
+## 6.15.0
+
+### Minor Changes
+
+- [`794bc05`](https://github.com/js2me/mobx-view-model/commit/794bc053149664575a2f572d11ac5c02e021bbf2) Thanks [@js2me](https://github.com/js2me)! - pass previous version (second argument) of the payload in `payloadChanged` method for `ViewModelBase` and `ViewModel` interface
+
+### Patch Changes
+
+- [`6c542aa`](https://github.com/js2me/mobx-view-model/commit/6c542aa081561b7d3e995b43eeeadffbfaecb74b) Thanks [@js2me](https://github.com/js2me)! - rename `generateVMId` -> `generateVmId` internal vm id generator function
+
 ## 6.14.3
 
 ### Patch Changes
