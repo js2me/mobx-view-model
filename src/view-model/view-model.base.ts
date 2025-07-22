@@ -198,7 +198,7 @@ export class ViewModelBase<
    *
    * The state - "was changed" is determined inside the setPayload method
    */
-  payloadChanged(payload: Payload) {
+  payloadChanged(payload: Payload, prevPayload: Payload) {
     /* Empty method to be overridden */
   }
 
@@ -218,8 +218,8 @@ export class ViewModelBase<
       startViewTransitionSafety(
         () => {
           runInAction(() => {
+            this.payloadChanged(payload, this._payload);
             this._payload = payload;
-            this.payloadChanged(payload);
           });
         },
         {

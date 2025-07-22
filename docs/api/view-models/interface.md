@@ -174,7 +174,7 @@ class LightsaberVM extends ViewModelBase<{ jediId: string }> {
 }
 ```
 
-### `payloadChanged(): void`  
+### `payloadChanged(payload: Payload, prevPayload: Payload): void`  
 Called when the payload is updated via [`setPayload()`](/api/view-models/interface#setpayload-payload-payload-void).  
 Use this method to handle payload changes and trigger necessary updates.
 
@@ -187,10 +187,10 @@ class DeathStarVM extends ViewModelBase<{ targetId: string }> {
   @observable
   accessor currentTargetId: string | null = null;
 
-  payloadChanged() {
-    if (this.currentTargetId !== this.payload.targetId) {
+  payloadChanged(payload, prevPayload) {
+    if (this.currentTargetId !== payload.targetId) {
       runInAction(() => {
-        this.currentTargetId = this.payload.targetId;
+        this.currentTargetId = payload.targetId;
         this.initializeWeapon();
       });
     }
