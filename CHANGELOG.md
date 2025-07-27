@@ -1,5 +1,11 @@
 # mobx-view-model
 
+## 6.15.1
+
+### Patch Changes
+
+- [`be77b8f`](https://github.com/js2me/mobx-view-model/commit/be77b8f98dcbae1fe16afb7162c4da8832dbad2e) Thanks [@js2me](https://github.com/js2me)! - better documentation for `useViewModel` React hook
+
 ## 6.15.0
 
 ### Minor Changes
