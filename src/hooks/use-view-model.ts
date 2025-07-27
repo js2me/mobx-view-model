@@ -43,12 +43,14 @@ export const useViewModel = <T extends AnyViewModel | AnyViewModelSimple>(
       if (process.env.NODE_ENV !== 'production') {
         console.error(
           'Active ViewModel not found.\n' +
-            'This happens because "vmLookup" for hook "useViewModel" is not provided and hook trying to lookup active view model using ActiveViewModelContext which works only with using "withViewModel" HOC.\n' +
+            'This happened because "vmLookup" for hook "useViewModel" is not provided and hook trying to lookup active view model using ActiveViewModelContext which works only with using "withViewModel" HOC.\n' +
             'Please provide "vmLookup" (first argument for "useViewModel" hook) or use "withViewModel" HOC.\n' +
-            'See docs: https://js2me.github.io/mobx-view-model/react/api/use-view-model.html',
+            'More info: https://js2me.github.io/mobx-view-model/react/errors/1',
         );
       }
-      throw new Error('Active view model not found');
+      throw new Error(
+        'Minified error #1: https://js2me.github.io/mobx-view-model/react/errors/1',
+      );
     }
 
     if (process.env.NODE_ENV !== 'production') {
@@ -75,15 +77,13 @@ export const useViewModel = <T extends AnyViewModel | AnyViewModelSimple>(
       } else {
         throw new Error(
           `View model not found for ${displayName}.\n` +
-            'This happens because your "vmLookup" provided for hook "useViewModel" is not found in "ViewModelStore".\n' +
-            'See docs: https://js2me.github.io/mobx-view-model/react/api/use-view-model.html',
+            'This happened because your "vmLookup" provided for hook "useViewModel" is not found in "ViewModelStore".\n' +
+            'More info: https://js2me.github.io/mobx-view-model/react/errors/2',
         );
       }
     } else {
       throw new Error(
-        `View model not found for ${displayName}.\n` +
-          'This happens because your "vmLookup" provided for hook "useViewModel" is not found in "ViewModelStore".\n' +
-          'See docs: https://js2me.github.io/mobx-view-model/react/api/use-view-model.html',
+        'Minified error #2: https://js2me.github.io/mobx-view-model/react/errors/2',
       );
     }
   }

@@ -184,6 +184,19 @@ export default defineConfig({
                 link: '/react/api/only-view-model',
               }
             ]
+          },
+          {
+            text: 'Errors',
+            items: [
+              {
+                text: '#1: Active ViewModel not found',
+                link: '/react/errors/1',
+              },
+              {
+                text: '#2: ViewModel not found',
+                link: '/react/errors/2',
+              }
+            ]
           }
         ],
       },
