@@ -1,5 +1,13 @@
 # mobx-view-model
 
+## 6.15.2
+
+### Patch Changes
+
+- [`9a74d83`](https://github.com/js2me/mobx-view-model/commit/9a74d8389c9d246efbf7e05e7b0e54b1117f2a2b) Thanks [@js2me](https://github.com/js2me)! - rename ComponentWithLazyViewModel -> VMLazyComponent
+
+- [`9a74d83`](https://github.com/js2me/mobx-view-model/commit/9a74d8389c9d246efbf7e05e7b0e54b1117f2a2b) Thanks [@js2me](https://github.com/js2me)! - rename type ComponentWithViewModel -> VMComponent
+
 ## 6.15.1
 
 ### Patch Changes
