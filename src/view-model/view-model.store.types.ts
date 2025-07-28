@@ -1,10 +1,7 @@
 import { ComponentType } from 'react';
 
 import { ViewModelsRawConfig } from '../config/index.js';
-import {
-  ComponentWithLazyViewModel,
-  ComponentWithViewModel,
-} from '../hoc/index.js';
+import { VMLazyComponent, VMComponent } from '../hoc/index.js';
 import { AnyObject, Class, Maybe } from '../utils/types.js';
 
 import {
@@ -32,7 +29,7 @@ export interface ViewModelCreateConfig<VM extends AnyViewModel>
   extends ViewModelParams<VM['payload'], VM['parentViewModel']> {
   VM: Class<VM>;
   fallback?: ComponentType;
-  component?: ComponentWithViewModel<AnyViewModel, any>;
+  component?: VMComponent<AnyViewModel, any>;
   componentProps?: AnyObject;
 }
 
@@ -43,5 +40,5 @@ export type ViewModelLookup<T extends AnyViewModel | AnyViewModelSimple> =
   | AnyViewModel['id']
   | Class<T>
   | (T extends AnyViewModel
-      ? ComponentWithViewModel<T, any> | ComponentWithLazyViewModel<T, any>
+      ? VMComponent<T, any> | VMLazyComponent<T, any>
       : Class<T>);

@@ -1,7 +1,4 @@
-import {
-  ComponentWithLazyViewModel,
-  ComponentWithViewModel,
-} from '../hoc/index.js';
+import { VMLazyComponent, VMComponent } from '../hoc/index.js';
 import { Class, Maybe } from '../utils/types.js';
 
 import { ViewModelSimple } from './view-model-simple.js';
@@ -112,8 +109,7 @@ export interface ViewModelStore<VMBase extends AnyViewModel = AnyViewModel> {
   linkComponents(
     VM: Class<VMBase>,
     ...components: Maybe<
-      | ComponentWithViewModel<VMBase, any>
-      | ComponentWithLazyViewModel<VMBase, any>
+      VMComponent<VMBase, any> | VMLazyComponent<VMBase, any>
     >[]
   ): void;
 
@@ -123,8 +119,7 @@ export interface ViewModelStore<VMBase extends AnyViewModel = AnyViewModel> {
    */
   unlinkComponents(
     ...components: Maybe<
-      | ComponentWithViewModel<VMBase, any>
-      | ComponentWithLazyViewModel<VMBase, any>
+      VMComponent<VMBase, any> | VMLazyComponent<VMBase, any>
     >[]
   ): void;
 

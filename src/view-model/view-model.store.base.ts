@@ -5,10 +5,7 @@ import {
   mergeVMConfigs,
   applyObservable,
 } from '../config/index.js';
-import {
-  ComponentWithLazyViewModel,
-  ComponentWithViewModel,
-} from '../hoc/index.js';
+import { VMLazyComponent, VMComponent } from '../hoc/index.js';
 import { generateVmId } from '../utils/index.js';
 import { Class, Maybe } from '../utils/types.js';
 
@@ -31,7 +28,7 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
 {
   protected viewModels: Map<string, VMBase | AnyViewModelSimple>;
   protected linkedComponentVMClasses: Map<
-    ComponentWithViewModel<VMBase, any>,
+    VMComponent<VMBase, any>,
     Class<VMBase>
   >;
   protected viewModelIdsByClasses: Map<
@@ -133,8 +130,7 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
   linkComponents(
     VM: Class<VMBase>,
     ...components: Maybe<
-      | ComponentWithViewModel<VMBase, any>
-      | ComponentWithLazyViewModel<VMBase, any>
+      VMComponent<VMBase, any> | VMLazyComponent<VMBase, any>
     >[]
   ): void {
     components.forEach((component) => {
@@ -146,8 +142,7 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
 
   unlinkComponents(
     ...components: Maybe<
-      | ComponentWithViewModel<VMBase, any>
-      | ComponentWithLazyViewModel<VMBase, any>
+      VMComponent<VMBase, any> | VMLazyComponent<VMBase, any>
     >[]
   ): void {
     components.forEach((component) => {

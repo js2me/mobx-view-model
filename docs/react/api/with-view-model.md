@@ -9,7 +9,7 @@ function withViewModel<VM extends AnyViewModel>(
   config?: ViewModelHocConfig<VM>
 ):
   (Component: ComponentType<ComponentProps & ViewModelProps<VM>>) =>
-    ComponentWithViewModel
+    VMComponent
 
 function withViewModel<
   TViewModel extends AnyViewModel,
@@ -18,7 +18,7 @@ function withViewModel<
   model: Class<TViewModel>,
   component: ComponentType<TCompProps & ViewModelProps<TViewModel>>,
   config?: ViewModelHocConfig<TViewModel>,
-): ComponentWithViewModel<TViewModel, TCompProps>;
+): VMComponent<TViewModel, TCompProps>;
 ```
 
 ##  Usage  

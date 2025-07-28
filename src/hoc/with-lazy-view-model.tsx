@@ -7,7 +7,7 @@ import { Class, Maybe, MaybePromise } from '../utils/types.js';
 import { AnyViewModel } from '../view-model/index.js';
 
 import {
-  ComponentWithViewModel,
+  VMComponent,
   ViewModelHocConfig,
   withViewModel,
 } from './with-view-model.js';
@@ -20,10 +20,18 @@ export interface LazyViewAndModel<
   View?: TView | PackedAsyncModule<TView>;
 }
 
+export type VMLazyComponent<
+  TViewModel extends AnyViewModel,
+  TView extends ComponentType<any>,
+> = VMComponent<TViewModel, ComponentProps<TView>> & LoadableMixin;
+
+/**
+ * @deprecated use `VMLazyComponent` instead. Will be removed in next major release
+ */
 export type ComponentWithLazyViewModel<
   TViewModel extends AnyViewModel,
   TView extends ComponentType<any>,
-> = ComponentWithViewModel<TViewModel, ComponentProps<TView>> & LoadableMixin;
+> = VMLazyComponent<TViewModel, ComponentProps<TView>> & LoadableMixin;
 
 export interface LazyViewModelHocConfig<TViewModel extends AnyViewModel>
   extends ViewModelHocConfig<TViewModel>,
@@ -42,7 +50,7 @@ export function withLazyViewModel<
   configOrFallbackComponent?:
     | LazyViewModelHocConfig<NoInfer<TViewModel>>
     | LoadableConfig['loading'],
-): ComponentWithLazyViewModel<TViewModel, TView> {
+): VMLazyComponent<TViewModel, TView> {
   const config: Maybe<LazyViewModelHocConfig<NoInfer<TViewModel>>> =
     typeof configOrFallbackComponent === 'function'
       ? {
@@ -76,7 +84,7 @@ export function withLazyViewModel<
       preload: patchedConfig?.preload,
       throwOnError: patchedConfig?.throwOnError,
     },
-  ) as ComponentWithLazyViewModel<TViewModel, TView>;
+  ) as VMLazyComponent<TViewModel, TView>;
 
   patchedConfig.ctx!.externalComponent = lazyVM;
 

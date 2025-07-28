@@ -68,12 +68,23 @@ export interface ViewModelHocConfig<VM extends AnyViewModel>
   getPayload?: (allProps: any) => any;
 }
 
+export type VMComponentProps<
+  TViewModel extends AnyViewModel,
+  TComponentOriginProps extends AnyObject,
+> = Omit<TComponentOriginProps, 'model'> & ViewModelInputProps<TViewModel>;
+
+export type VMComponent<
+  TViewModel extends AnyViewModel,
+  TComponentOriginProps extends AnyObject = ViewModelProps<TViewModel>,
+> = (props: VMComponentProps<TViewModel, TComponentOriginProps>) => ReactNode;
+
+/**
+ * @deprecated use `VMComponent` type. Will be removed in next major release.
+ */
 export type ComponentWithViewModel<
   TViewModel extends AnyViewModel,
   TComponentOriginProps extends AnyObject = ViewModelProps<TViewModel>,
-> = (
-  props: Omit<TComponentOriginProps, 'model'> & ViewModelInputProps<TViewModel>,
-) => ReactNode;
+> = VMComponent<TViewModel, TComponentOriginProps>;
 
 /**
  * A Higher-Order Component that connects React components to their ViewModels, providing seamless MobX integration.
@@ -87,7 +98,7 @@ export function withViewModel<
   model: Class<TViewModel>,
   component: ComponentType<TComponentOriginProps & ViewModelProps<TViewModel>>,
   config?: ViewModelHocConfig<TViewModel>,
-): ComponentWithViewModel<TViewModel, TComponentOriginProps>;
+): VMComponent<TViewModel, TComponentOriginProps>;
 
 /**
  * A Higher-Order Component that connects React components to their ViewModels, providing seamless MobX integration.
@@ -99,7 +110,7 @@ export function withViewModel<TViewModel extends AnyViewModel>(
   config?: ViewModelHocConfig<TViewModel>,
 ): <TComponentOriginProps extends AnyObject = ViewModelProps<TViewModel>>(
   Component?: ComponentType<TComponentOriginProps & ViewModelProps<TViewModel>>,
-) => ComponentWithViewModel<TViewModel, TComponentOriginProps>;
+) => VMComponent<TViewModel, TComponentOriginProps>;
 
 /**
  * Creates new instance of ViewModel

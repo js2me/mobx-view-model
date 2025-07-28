@@ -14,7 +14,7 @@ function withLazyViewModel<TViewModel extends AnyViewModel>(
     Component: TView | Promised<TView>
   }>,
   config?: ViewModelHocConfig<TViewModel>
-): ComponentWithLazyViewModel
+): VMLazyComponent
 ```
 
 
