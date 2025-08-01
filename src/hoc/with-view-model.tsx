@@ -80,6 +80,29 @@ export interface ViewModelHocConfig<VM extends AnyViewModel>
   getPayload?: (allProps: any) => any;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export interface ViewModelSimpleHocConfig<VM extends AnyViewModelSimple> {
+  /**
+   * Component to render if the view model initialization takes too long
+   */
+  fallback?: ComponentType;
+
+  /**
+   * Function to invoke additional React hooks in the resulting component
+   */
+  reactHook?: (
+    allProps: AnyObject,
+    ctx: AnyObject,
+    viewModels: Maybe<ViewModelStore>,
+  ) => void;
+
+  /**
+   * Function that should return the payload for the VM
+   * by default, it is - (props) => props.payload
+   */
+  getPayload?: (allProps: any) => any;
+}
+
 export type VMComponentProps<
   TViewModel extends AnyViewModel | AnyViewModelSimple,
   TComponentOriginProps extends AnyObject,
@@ -131,7 +154,7 @@ export function withViewModel<TViewModel extends AnyViewModel>(
  */
 export function withViewModel<TViewModel extends AnyViewModelSimple>(
   model: Class<TViewModel>,
-  config?: EmptyObject,
+  config?: ViewModelSimpleHocConfig<TViewModel>,
 ): <TComponentOriginProps extends AnyObject = ViewModelProps<TViewModel>>(
   Component?: ComponentType<TComponentOriginProps & ViewModelProps<TViewModel>>,
 ) => VMComponent<TViewModel, TComponentOriginProps>;
@@ -147,7 +170,7 @@ export function withViewModel<
 >(
   model: Class<TViewModel>,
   component: ComponentType<TComponentOriginProps & ViewModelProps<TViewModel>>,
-  config?: EmptyObject,
+  config?: ViewModelSimpleHocConfig<TViewModel>,
 ): VMComponent<TViewModel, TComponentOriginProps>;
 
 /**
