@@ -22,6 +22,7 @@ import { createCounter } from 'yummies/complex';
 
 import {
   ViewModelParams,
+  ViewModelSimple,
   ViewModelStore,
   ViewModelsProvider,
   ViewModelsRawConfig,
@@ -1384,5 +1385,33 @@ describe('withViewModel', () => {
     };
 
     circularVmPayloadDependencyTestCases.forEach(createTest);
+  });
+
+  describe('ViewModelSimple', () => {
+    test('renders (1 overload)', async () => {
+      class VM implements ViewModelSimple {
+        id: string = '1234';
+      }
+      const View = ({ model }: ViewModelProps<VM>) => {
+        return <div data-testid={'view'}>{`hello ${model.id}`}</div>;
+      };
+      const Component = withViewModel(VM)(View);
+
+      await act(async () => render(<Component />));
+      expect(screen.getByText('hello 1234')).toBeDefined();
+    });
+
+    test('renders (1 overload)', async () => {
+      class VM implements ViewModelSimple {
+        id: string = '1234';
+      }
+      const View = ({ model }: ViewModelProps<VM>) => {
+        return <div data-testid={'view'}>{`hello ${model.id}`}</div>;
+      };
+      const Component = withViewModel(VM, View);
+
+      await act(async () => render(<Component />));
+      expect(screen.getByText('hello 1234')).toBeDefined();
+    });
   });
 });

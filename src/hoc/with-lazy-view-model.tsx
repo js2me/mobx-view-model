@@ -4,16 +4,17 @@ import { PackedAsyncModule, unpackAsyncModule } from 'yummies/imports';
 
 import { viewModelsConfig } from '../config/global-config.js';
 import { Class, Maybe, MaybePromise } from '../utils/types.js';
-import { AnyViewModel } from '../view-model/index.js';
+import { AnyViewModel, AnyViewModelSimple } from '../view-model/index.js';
 
 import {
   VMComponent,
   ViewModelHocConfig,
+  ViewModelSimpleHocConfig,
   withViewModel,
 } from './with-view-model.js';
 
 export interface LazyViewAndModel<
-  TViewModel extends AnyViewModel,
+  TViewModel extends AnyViewModel | AnyViewModelSimple,
   TView extends ComponentType<any>,
 > {
   Model: Class<TViewModel> | PackedAsyncModule<Class<TViewModel>>;
@@ -21,7 +22,7 @@ export interface LazyViewAndModel<
 }
 
 export type VMLazyComponent<
-  TViewModel extends AnyViewModel,
+  TViewModel extends AnyViewModel | AnyViewModelSimple,
   TView extends ComponentType<any>,
 > = VMComponent<TViewModel, ComponentProps<TView>> & LoadableMixin;
 
@@ -29,12 +30,17 @@ export type VMLazyComponent<
  * @deprecated use `VMLazyComponent` instead. Will be removed in next major release
  */
 export type ComponentWithLazyViewModel<
-  TViewModel extends AnyViewModel,
+  TViewModel extends AnyViewModel | AnyViewModelSimple,
   TView extends ComponentType<any>,
 > = VMLazyComponent<TViewModel, ComponentProps<TView>> & LoadableMixin;
 
 export interface LazyViewModelHocConfig<TViewModel extends AnyViewModel>
   extends ViewModelHocConfig<TViewModel>,
+    Pick<LoadableConfig, 'loading' | 'preload' | 'throwOnError'> {}
+
+export interface LazyViewModelSimpleHocConfig<
+  TViewModel extends AnyViewModelSimple,
+> extends ViewModelSimpleHocConfig<TViewModel>,
     Pick<LoadableConfig, 'loading' | 'preload' | 'throwOnError'> {}
 
 /**
@@ -50,17 +56,52 @@ export function withLazyViewModel<
   configOrFallbackComponent?:
     | LazyViewModelHocConfig<NoInfer<TViewModel>>
     | LoadableConfig['loading'],
+): VMLazyComponent<TViewModel, TView>;
+
+/**
+ * A Higher-Order Component that **LAZY** connects React components to their ViewModels, providing seamless MobX integration.
+ *
+ * [**Documentation**](https://js2me.github.io/mobx-view-model/react/api/with-lazy-view-model.html)
+ */
+export function withLazyViewModel<
+  TViewModel extends AnyViewModelSimple,
+  TView extends ComponentType<any>,
+>(
+  loadFunction: () => MaybePromise<LazyViewAndModel<TViewModel, TView>>,
+  configOrFallbackComponent?:
+    | LazyViewModelSimpleHocConfig<NoInfer<TViewModel>>
+    | LoadableConfig['loading'],
+): VMLazyComponent<TViewModel, TView>;
+
+/**
+ * A Higher-Order Component that **LAZY** connects React components to their ViewModels, providing seamless MobX integration.
+ *
+ * [**Documentation**](https://js2me.github.io/mobx-view-model/react/api/with-lazy-view-model.html)
+ */
+export function withLazyViewModel<
+  TViewModel extends AnyViewModel | AnyViewModelSimple,
+  TView extends ComponentType<any>,
+>(
+  loadFunction: () => MaybePromise<LazyViewAndModel<TViewModel, TView>>,
+  configOrFallbackComponent?:
+    | LazyViewModelSimpleHocConfig<any>
+    | LazyViewModelHocConfig<any>
+    | LoadableConfig['loading'],
 ): VMLazyComponent<TViewModel, TView> {
-  const config: Maybe<LazyViewModelHocConfig<NoInfer<TViewModel>>> =
+  const config: Maybe<
+    LazyViewModelHocConfig<any> | LazyViewModelSimpleHocConfig<any>
+  > =
     typeof configOrFallbackComponent === 'function'
       ? {
           fallback: configOrFallbackComponent,
         }
       : configOrFallbackComponent;
 
-  const patchedConfig: LazyViewModelHocConfig<NoInfer<TViewModel>> = {
+  const patchedConfig: LazyViewModelHocConfig<any> = {
     ...config,
     ctx: {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-expect-error
       ...config?.ctx,
       externalComponent: null,
     },
