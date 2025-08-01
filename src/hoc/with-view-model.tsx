@@ -249,7 +249,7 @@ const withViewModelWrapper = (
     Component = observer(Component);
   }
 
-  const reactHoook = config?.reactHook;
+  const reactHook = config?.reactHook;
   const getPayload = config?.getPayload;
   const FallbackComponent =
     config?.fallback ?? viewModelsConfig.fallbackComponent;
@@ -257,7 +257,7 @@ const withViewModelWrapper = (
   const ConnectedViewModel = observer((allProps: any) => {
     const viewModels = useContext(ViewModelsContext);
 
-    reactHoook?.(allProps, config.ctx!, viewModels);
+    reactHook?.(allProps, config.ctx!, viewModels);
 
     const { payload: rawPayload, ...componentProps } = allProps;
 
@@ -271,15 +271,15 @@ const withViewModelWrapper = (
 
     const isRenderAllowedByStore =
       !viewModels || viewModels.isAbleToRenderView(model.id);
-    const isRenderAllowedLocally = !('isMounted' in model) || !!model.isMounted;
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    const isRenderAllowedLocally = model.isMounted !== false;
     const isRenderAllowed = isRenderAllowedByStore && isRenderAllowedLocally;
 
     if (isRenderAllowed) {
       return (
         <ActiveViewModelContext.Provider value={model}>
-          {Component && (
-            <Component {...(componentProps as any)} model={model} />
-          )}
+          {Component && <Component {...componentProps} model={model} />}
         </ActiveViewModelContext.Provider>
       );
     }
@@ -290,9 +290,7 @@ const withViewModelWrapper = (
   });
 
   if (process.env.NODE_ENV !== 'production') {
-    Object.assign(ConnectedViewModel, {
-      displayName: `ConnectedViewModel(${VM.name}->Component)`,
-    });
+    ConnectedViewModel.displayName = `ConnectedViewModel(${VM.name}->Component)`;
   }
 
   return ConnectedViewModel;
