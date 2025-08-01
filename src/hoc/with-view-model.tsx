@@ -193,7 +193,7 @@ export function withViewModel(...args: any[]): any {
   let config: ViewModelHocConfig<any>;
   let PredefinedComponent: Maybe<ComponentType<any>>;
 
-  if (typeof args[1] === 'function' || '$$typeof' in args[1]) {
+  if (typeof args[1] === 'function' || (args[1] && '$$typeof' in args[1])) {
     config = args[2] ?? {};
     PredefinedComponent = args[1];
   } else {
