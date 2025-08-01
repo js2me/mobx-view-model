@@ -1,5 +1,13 @@
 # mobx-view-model
 
+## 6.16.0
+
+### Minor Changes
+
+- [`b6d6884`](https://github.com/js2me/mobx-view-model/commit/b6d688408acc37656521f1aa0e0365eb6e709015) Thanks [@js2me](https://github.com/js2me)! - partial support `ViewModelSimple` for `withViewModel` HOC
+
+- [`b8e408d`](https://github.com/js2me/mobx-view-model/commit/b8e408db4a6da64cac5e69d7069d1690d1d4e02d) Thanks [@js2me](https://github.com/js2me)! - support `ViewModelSimple` for `withLazyViewModel` HOC
+
 ## 6.15.2
 
 ### Patch Changes
