@@ -1,5 +1,13 @@
 # mobx-view-model
 
+## 6.16.1
+
+### Patch Changes
+
+- [`4793d23`](https://github.com/js2me/mobx-view-model/commit/4793d234fd1e9f2eaf97012f441041b87a8071cb) Thanks [@js2me](https://github.com/js2me)! - fixed bug with predefined function in `withViewModel` HOC
+
+- [`4793d23`](https://github.com/js2me/mobx-view-model/commit/4793d234fd1e9f2eaf97012f441041b87a8071cb) Thanks [@js2me](https://github.com/js2me)! - typings for `ViewModelSimple` and `withViewModel` HOC
+
 ## 6.16.0
 
 ### Minor Changes
