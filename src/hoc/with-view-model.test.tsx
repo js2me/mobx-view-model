@@ -1401,17 +1401,56 @@ describe('withViewModel', () => {
       expect(screen.getByText('hello 1234')).toBeDefined();
     });
 
-    test('renders (1 overload)', async () => {
+    test('renders (1 overload) inline function', async () => {
       class VM implements ViewModelSimple {
         id: string = '1234';
+        foo = 'bar';
       }
-      const View = ({ model }: ViewModelProps<VM>) => {
-        return <div data-testid={'view'}>{`hello ${model.id}`}</div>;
-      };
-      const Component = withViewModel(VM, View);
+
+      const Component = withViewModel(VM, ({ model }) => {
+        return (
+          <div data-testid={'view'}>{`hello ${model.id} ${model.foo}`}</div>
+        );
+      });
 
       await act(async () => render(<Component />));
-      expect(screen.getByText('hello 1234')).toBeDefined();
+      expect(screen.getByText('hello 1234 bar')).toBeDefined();
+    });
+
+    test('renders (1 overload) outer function declaration', async () => {
+      class VM implements ViewModelSimple {
+        id: string = '1234';
+        foo = 'bar';
+      }
+
+      const VMView = ({ model }: ViewModelProps<VM>) => {
+        return (
+          <div data-testid={'view'}>{`hello ${model.id} ${model.foo}`}</div>
+        );
+      };
+
+      const Component = withViewModel(VM, VMView);
+
+      await act(async () => render(<Component />));
+      expect(screen.getByText('hello 1234 bar')).toBeDefined();
+    });
+
+    test('renders (1 overload) outer function declaration + observer wrap()', async () => {
+      class VM implements ViewModelSimple {
+        id: string = '1234';
+        foo = 'bar';
+      }
+
+      const VMView = observer(({ model }: ViewModelProps<VM>) => {
+        return (
+          <div data-testid={'view'}>{`hello ${model.id} ${model.foo}`}</div>
+        );
+      });
+
+      const Component = withViewModel(VM, VMView);
+
+      await act(async () => render(<Component />));
+      expect(screen.getByText('hello 1234 bar')).toBeDefined();
     });
   });
 });

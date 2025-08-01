@@ -1,9 +1,8 @@
 /* eslint-disable @typescript-eslint/no-use-before-define */
 /* eslint-disable sonarjs/no-nested-functions */
 import { observer } from 'mobx-react-lite';
-import { ComponentType, ReactNode, useContext } from 'react';
+import { ComponentClass, ComponentType, ReactNode, useContext } from 'react';
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { viewModelsConfig } from '../config/global-config.js';
 import {
   ActiveViewModelContext,
@@ -27,6 +26,13 @@ import {
   ViewModelSimple,
   ViewModelStore,
 } from '../view-model/index.js';
+
+// eslint-disable-next-line @typescript-eslint/ban-types
+type FixedComponentType<P extends AnyObject = {}> =
+  /**
+   * Fixes typings loss with use `withViewModel` with inline function component
+   */
+  ((props: P) => ReactNode) | ComponentClass<P>;
 
 declare const process: { env: { NODE_ENV?: string } };
 
@@ -156,7 +162,9 @@ export function withViewModel<TViewModel extends AnyViewModelSimple>(
   model: Class<TViewModel>,
   config?: ViewModelSimpleHocConfig<TViewModel>,
 ): <TComponentOriginProps extends AnyObject = ViewModelProps<TViewModel>>(
-  Component?: ComponentType<TComponentOriginProps & ViewModelProps<TViewModel>>,
+  Component?: FixedComponentType<
+    TComponentOriginProps & ViewModelProps<TViewModel>
+  >,
 ) => VMComponent<TViewModel, TComponentOriginProps>;
 
 /**
@@ -169,7 +177,9 @@ export function withViewModel<
   TComponentOriginProps extends AnyObject = ViewModelProps<TViewModel>,
 >(
   model: Class<TViewModel>,
-  component: ComponentType<TComponentOriginProps & ViewModelProps<TViewModel>>,
+  component: FixedComponentType<
+    TComponentOriginProps & ViewModelProps<TViewModel>
+  >,
   config?: ViewModelSimpleHocConfig<TViewModel>,
 ): VMComponent<TViewModel, TComponentOriginProps>;
 
@@ -183,7 +193,7 @@ export function withViewModel(...args: any[]): any {
   let config: ViewModelHocConfig<any>;
   let PredefinedComponent: Maybe<ComponentType<any>>;
 
-  if (typeof args[1] === 'function') {
+  if (typeof args[1] === 'function' || '$$typeof' in args[1]) {
     config = args[2] ?? {};
     PredefinedComponent = args[1];
   } else {
