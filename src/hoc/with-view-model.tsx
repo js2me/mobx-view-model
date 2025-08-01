@@ -22,17 +22,19 @@ import {
 } from '../utils/types.js';
 import {
   AnyViewModel,
+  AnyViewModelSimple,
   ViewModel,
+  ViewModelSimple,
   ViewModelStore,
 } from '../view-model/index.js';
 
 declare const process: { env: { NODE_ENV?: string } };
 
-export type ViewModelProps<VM extends AnyViewModel> = {
+export type ViewModelProps<VM extends AnyViewModel | AnyViewModelSimple> = {
   model: VM;
 };
 
-export type ViewModelInputProps<VM extends AnyViewModel> =
+export type ViewModelInputProps<VM extends AnyViewModel | AnyViewModelSimple> =
   VM extends ViewModel<infer TPayload, any>
     ? TPayload extends EmptyObject
       ? AnyObject
@@ -43,7 +45,17 @@ export type ViewModelInputProps<VM extends AnyViewModel> =
         : {
             payload: TPayload;
           }
-    : AnyObject;
+    : VM extends ViewModelSimple<infer TPayload>
+      ? TPayload extends EmptyObject
+        ? AnyObject
+        : AllPropertiesOptional<TPayload> extends true
+          ? {
+              payload?: TPayload;
+            }
+          : {
+              payload: TPayload;
+            }
+      : AnyObject;
 
 export interface ViewModelHocConfig<VM extends AnyViewModel>
   extends Omit<UseCreateViewModelConfig<VM>, 'component' | 'componentProps'> {
@@ -69,12 +81,12 @@ export interface ViewModelHocConfig<VM extends AnyViewModel>
 }
 
 export type VMComponentProps<
-  TViewModel extends AnyViewModel,
+  TViewModel extends AnyViewModel | AnyViewModelSimple,
   TComponentOriginProps extends AnyObject,
 > = Omit<TComponentOriginProps, 'model'> & ViewModelInputProps<TViewModel>;
 
 export type VMComponent<
-  TViewModel extends AnyViewModel,
+  TViewModel extends AnyViewModel | AnyViewModelSimple,
   TComponentOriginProps extends AnyObject = ViewModelProps<TViewModel>,
 > = (props: VMComponentProps<TViewModel, TComponentOriginProps>) => ReactNode;
 
@@ -111,6 +123,32 @@ export function withViewModel<TViewModel extends AnyViewModel>(
 ): <TComponentOriginProps extends AnyObject = ViewModelProps<TViewModel>>(
   Component?: ComponentType<TComponentOriginProps & ViewModelProps<TViewModel>>,
 ) => VMComponent<TViewModel, TComponentOriginProps>;
+
+/**
+ * A Higher-Order Component that connects React components to their ViewModels, providing seamless MobX integration.
+ *
+ * [**Documentation**](https://js2me.github.io/mobx-view-model/react/api/with-view-model.html)
+ */
+export function withViewModel<TViewModel extends AnyViewModelSimple>(
+  model: Class<TViewModel>,
+  config?: EmptyObject,
+): <TComponentOriginProps extends AnyObject = ViewModelProps<TViewModel>>(
+  Component?: ComponentType<TComponentOriginProps & ViewModelProps<TViewModel>>,
+) => VMComponent<TViewModel, TComponentOriginProps>;
+
+/**
+ * A Higher-Order Component that connects React components to their ViewModels, providing seamless MobX integration.
+ *
+ * [**Documentation**](https://js2me.github.io/mobx-view-model/react/api/with-view-model.html)
+ */
+export function withViewModel<
+  TViewModel extends AnyViewModelSimple,
+  TComponentOriginProps extends AnyObject = ViewModelProps<TViewModel>,
+>(
+  model: Class<TViewModel>,
+  component: ComponentType<TComponentOriginProps & ViewModelProps<TViewModel>>,
+  config?: EmptyObject,
+): VMComponent<TViewModel, TComponentOriginProps>;
 
 /**
  * Creates new instance of ViewModel
@@ -178,15 +216,16 @@ const withViewModelWrapper = (
       ? config.getPayload(allProps)
       : rawPayload;
 
-    const instance = useCreateViewModel<AnyViewModel>(VM, payload, {
+    const instance = useCreateViewModel(VM, payload, {
       ...config,
       component: ConnectedViewModel,
       componentProps,
-    });
+    }) as unknown as AnyViewModel | AnyViewModelSimple;
 
     const isRenderAllowedByStore =
       !viewModels || viewModels.isAbleToRenderView(instance.id);
-    const isRenderAllowedLocally = !!instance.isMounted;
+    const isRenderAllowedLocally =
+      !('isMounted' in instance) || !!instance.isMounted;
     const isRenderAllowed = isRenderAllowedByStore && isRenderAllowedLocally;
 
     if (isRenderAllowed) {
