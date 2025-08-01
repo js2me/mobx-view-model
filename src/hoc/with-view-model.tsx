@@ -188,30 +188,35 @@ export function withViewModel<
  *
  * [**Documentation**](https://js2me.github.io/mobx-view-model/react/api/with-view-model.html)
  */
-export function withViewModel(...args: any[]): any {
-  const VM: Class<any> = args[0];
-  let config: ViewModelHocConfig<any>;
-  let PredefinedComponent: Maybe<ComponentType<any>>;
-
-  if (typeof args[1] === 'function' || (args[1] && '$$typeof' in args[1])) {
-    config = args[2] ?? {};
-    PredefinedComponent = args[1];
+export function withViewModel(VM: Class<any>, arg1?: any, arg2?: any): any {
+  if (typeof arg1 === 'function' || (arg1 && arg1.$$typeof !== undefined)) {
+    const config = arg2 ?? {};
+    return withViewModelWrapper(
+      VM,
+      {
+        ...config,
+        ctx: {
+          VM,
+          generateId: config.generateId,
+          ...config.ctx,
+        },
+      },
+      arg1,
+    );
   } else {
-    config = args[1] ?? {};
+    const config = arg1 ?? {};
+    const finalConfig = {
+      ...config,
+      ctx: {
+        VM,
+        generateId: config.generateId,
+        ...config.ctx,
+      },
+    };
+
+    return (Component: ComponentType<any>) =>
+      withViewModelWrapper(VM, finalConfig, Component);
   }
-
-  const ctx: AnyObject = config.ctx ?? {};
-
-  ctx.VM = VM;
-  ctx.generateId = config?.generateId;
-
-  config.ctx = ctx;
-
-  if (PredefinedComponent) {
-    return withViewModelWrapper(VM, config, PredefinedComponent);
-  }
-
-  return (Component: any) => withViewModelWrapper(VM, config, Component);
 }
 
 const withViewModelWrapper = (
