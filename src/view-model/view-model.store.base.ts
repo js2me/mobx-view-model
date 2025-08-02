@@ -121,7 +121,7 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
     if (config.id) {
       return config.id;
     } else if (this.vmConfig.generateId) {
-      return this.vmConfig.generateId(config);
+      return this.vmConfig.generateId(config.ctx);
     } else {
       return generateVmId(config.ctx);
     }
