@@ -188,9 +188,16 @@ export function withViewModel<
  *
  * [**Documentation**](https://js2me.github.io/mobx-view-model/react/api/with-view-model.html)
  */
-export function withViewModel(VM: Class<any>, arg1?: any, arg2?: any): any {
-  if (typeof arg1 === 'function' || (arg1 && arg1.$$typeof !== undefined)) {
-    const config = arg2 ?? {};
+export function withViewModel(
+  VM: Class<any>,
+  configOrComponent?: any,
+  configOrNothing?: any,
+): any {
+  if (
+    typeof configOrComponent === 'function' ||
+    (configOrComponent && configOrComponent.$$typeof !== undefined)
+  ) {
+    const config = configOrNothing ?? {};
     return withViewModelWrapper(
       VM,
       {
@@ -201,10 +208,10 @@ export function withViewModel(VM: Class<any>, arg1?: any, arg2?: any): any {
           ...config.ctx,
         },
       },
-      arg1,
+      configOrComponent,
     );
   } else {
-    const config = arg1 ?? {};
+    const config = configOrComponent ?? {};
     const finalConfig = {
       ...config,
       ctx: {
@@ -249,10 +256,10 @@ const withViewModelWrapper = (
     Component = observer(Component);
   }
 
-  const reactHook = config?.reactHook;
-  const getPayload = config?.getPayload;
+  const reactHook = config.reactHook;
+  const getPayload = config.getPayload;
   const FallbackComponent =
-    config?.fallback ?? viewModelsConfig.fallbackComponent;
+    config.fallback ?? viewModelsConfig.fallbackComponent;
 
   const ConnectedViewModel = observer((allProps: any) => {
     const viewModels = useContext(ViewModelsContext);
