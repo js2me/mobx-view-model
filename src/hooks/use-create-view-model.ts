@@ -15,7 +15,10 @@ import { useValue } from '../lib/hooks/use-value.js';
 import { generateVmId } from '../utils/generate-vm-id.js';
 import { ViewModelSimple } from '../view-model/view-model-simple.js';
 import { ViewModelCreateConfig } from '../view-model/view-model.store.types.js';
-import { AnyViewModel } from '../view-model/view-model.types.js';
+import {
+  AnyViewModel,
+  AnyViewModelSimple,
+} from '../view-model/view-model.types.js';
 
 export interface UseCreateViewModelConfig<TViewModel extends AnyViewModel>
   extends Pick<
@@ -90,19 +93,10 @@ export function useCreateViewModel(
 }
 
 const useCreateViewModelBase = (
-  VM: Class<any>,
+  VM: Class<AnyViewModel>,
   payload?: any,
   config?: Maybe<UseCreateViewModelConfig<AnyViewModel>>,
 ) => {
-  if (
-    !('willMount' in VM.prototype) &&
-    !('payloadChanged' in VM.prototype) &&
-    !('willUnmount' in VM.prototype)
-  ) {
-    // scenario for ViewModelSimple
-    return useCreateViewModelSimple(VM, payload);
-  }
-
   const viewModels = useContext(ViewModelsContext);
   const parentViewModel = useContext(ActiveViewModelContext) || null;
 
@@ -172,7 +166,7 @@ const useCreateViewModelBase = (
 };
 
 const useCreateViewModelSimple = (
-  VM: Class<ViewModelSimple>,
+  VM: Class<AnyViewModelSimple>,
   payload?: any,
 ) => {
   const viewModels = useContext(ViewModelsContext);
