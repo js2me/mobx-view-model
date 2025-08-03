@@ -143,14 +143,14 @@ describe('useCreateViewModel', () => {
 
     test('should call "linkStore"', async () => {
       const vmStore = new ViewModelStoreBaseMock();
-      const linkStoreSpy = vi.fn();
+      const attachViewModelStoreSpy = vi.fn();
 
       class SimpleFoo implements ViewModelSimple {
         id = 'foo';
         bar = 'bar';
 
-        linkStore(viewModels: ViewModelStore): void {
-          linkStoreSpy(viewModels);
+        attachViewModelStore(viewModels: ViewModelStore): void {
+          attachViewModelStoreSpy(viewModels);
         }
       }
 
@@ -172,7 +172,7 @@ describe('useCreateViewModel', () => {
         render(<App />, { wrapper: createVMStoreWrapper(vmStore) }),
       );
 
-      expect(linkStoreSpy).toHaveBeenCalledTimes(1);
+      expect(attachViewModelStoreSpy).toHaveBeenCalledTimes(1);
     });
 
     test('should call "mount()"', async () => {

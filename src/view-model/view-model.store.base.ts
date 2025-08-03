@@ -275,6 +275,8 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
 
     if ('linkStore' in model) {
       model.linkStore!(this as any);
+    } else if ('attachViewModelStore' in model) {
+      model.attachViewModelStore!(this as any);
     }
 
     this.attachVMConstructor(model);
