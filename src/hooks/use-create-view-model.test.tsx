@@ -141,7 +141,7 @@ describe('useCreateViewModel', () => {
       );
     });
 
-    test('should call "linkStore"', async () => {
+    test('should call "attachViewModelStore"', async () => {
       const vmStore = new ViewModelStoreBaseMock();
       const attachViewModelStoreSpy = vi.fn();
 
