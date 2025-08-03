@@ -311,14 +311,14 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
 
     const nextInstanceAttachedCount = attachedCount - 1;
 
-    this.instanceAttachedCount.set(model.id, nextInstanceAttachedCount);
+    this.instanceAttachedCount.set(id, nextInstanceAttachedCount);
 
     if (nextInstanceAttachedCount <= 0) {
       if ('willUnmount' in model) {
         model.willUnmount();
       }
 
-      this.instanceAttachedCount.delete(model.id);
+      this.instanceAttachedCount.delete(id);
       this.viewModels.delete(id);
       this.dettachVMConstructor(model);
 
