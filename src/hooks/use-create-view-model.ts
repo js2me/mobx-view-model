@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-use-before-define */
 /* eslint-disable react-hooks/rules-of-hooks */
 import { useContext, useLayoutEffect } from 'react';
 import { Class, AllPropertiesOptional, Maybe } from 'yummies/utils/types';
@@ -37,42 +38,6 @@ export interface UseCreateViewModelConfig<TViewModel extends AnyViewModel>
   factory?: CreateViewModelFactoryFn<TViewModel>;
 }
 
-const useCreateViewModelSimple = (
-  VM: Class<ViewModelSimple>,
-  payload?: any,
-) => {
-  const viewModels = useContext(ViewModelsContext);
-  const instance = useValue(() => {
-    const instance = new VM();
-
-    viewModels?.markToBeAttached(instance);
-
-    return instance;
-  });
-
-  if ('setPayload' in instance) {
-    useLayoutEffect(() => {
-      instance.setPayload!(payload);
-    }, [payload]);
-  }
-
-  useIsomorphicLayoutEffect(() => {
-    if (viewModels) {
-      viewModels.attach(instance);
-      return () => {
-        viewModels.detach(instance.id);
-      };
-    } else {
-      instance.mount?.();
-      return () => {
-        instance.unmount?.();
-      };
-    }
-  }, [instance]);
-
-  return instance;
-};
-
 /**
  * Creates new instance of ViewModel
  *
@@ -110,12 +75,25 @@ export function useCreateViewModel<TViewModelSimple extends ViewModelSimple>(
  *
  * [**Documentation**](https://js2me.github.io/mobx-view-model/react/api/use-create-view-model.html)
  */
-export function useCreateViewModel(VM: Class<any>, ...args: any[]) {
-  const [payload, config] = args as unknown as [
-    any,
-    Maybe<UseCreateViewModelConfig<AnyViewModel>>,
-  ];
+export function useCreateViewModel(
+  VM: Class<any>,
+  payload?: any,
+  config?: any,
+) {
+  if ('payloadChanged' in VM.prototype) {
+    // scenario for ViewModelBase
+    return useCreateViewModelBase(VM, payload, config);
+  }
 
+  // scenario for ViewModelSimple
+  return useCreateViewModelSimple(VM, payload);
+}
+
+const useCreateViewModelBase = (
+  VM: Class<any>,
+  payload?: any,
+  config?: Maybe<UseCreateViewModelConfig<AnyViewModel>>,
+) => {
   if (
     !('willMount' in VM.prototype) &&
     !('payloadChanged' in VM.prototype) &&
@@ -191,4 +169,40 @@ export function useCreateViewModel(VM: Class<any>, ...args: any[]) {
   instance.setPayload(payload ?? {});
 
   return instance;
-}
+};
+
+const useCreateViewModelSimple = (
+  VM: Class<ViewModelSimple>,
+  payload?: any,
+) => {
+  const viewModels = useContext(ViewModelsContext);
+  const instance = useValue(() => {
+    const instance = new VM();
+
+    viewModels?.markToBeAttached(instance);
+
+    return instance;
+  });
+
+  if ('setPayload' in instance) {
+    useLayoutEffect(() => {
+      instance.setPayload!(payload);
+    }, [payload]);
+  }
+
+  useIsomorphicLayoutEffect(() => {
+    if (viewModels) {
+      viewModels.attach(instance);
+      return () => {
+        viewModels.detach(instance.id);
+      };
+    } else {
+      instance.mount?.();
+      return () => {
+        instance.unmount?.();
+      };
+    }
+  }, [instance]);
+
+  return instance;
+};
