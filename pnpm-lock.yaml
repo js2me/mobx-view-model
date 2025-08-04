@@ -24,8 +24,8 @@ importers:
         specifier: ^2.3.9
         version: 2.3.9(react@19.1.0)
       yummies:
-        specifier: ^4.2.6
-        version: 4.2.6
+        specifier: ^4.8.0
+        version: 4.8.0
     devDependencies:
       '@changesets/changelog-github':
         specifier: ^0.5.1
@@ -4330,8 +4330,8 @@ packages:
     resolution: {integrity: sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==}
     engines: {node: '>=10'}
 
-  yummies@4.2.6:
-    resolution: {integrity: sha512-cx4Z2zs55t69mD8LR2/3IIrch01XT3QWazicJnTzw0zSJtFgcanMFhdwrkg+hkLQftHfBKiBXuOP18O1Ix4Ftw==}
+  yummies@4.8.0:
+    resolution: {integrity: sha512-9B2NNO7CgP+hRT5XBO2BGMkC5jYxgP6lDX0De4aLkaBC48LPIVRxTW7z4YJ4DvD4UgLEq6FPUdcUDhh2Cnvf8w==}
 
 snapshots:
 
@@ -9194,7 +9194,7 @@ snapshots:
 
   yocto-queue@0.1.0: {}
 
-  yummies@4.2.6:
+  yummies@4.8.0:
     dependencies:
       '@types/insane': 1.0.0
       class-variance-authority: 0.7.1
