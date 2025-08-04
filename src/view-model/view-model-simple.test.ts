@@ -8,7 +8,7 @@ import { ViewModelStore } from './index.js';
 export class ViewModelSimpleImpl implements ViewModelSimple<{ test: number }> {
   spies = {
     mount: vi.fn(),
-    linkStore: vi.fn(),
+    attachViewModelStore: vi.fn(),
     setPayload: vi.fn(),
     unmount: vi.fn(),
   };
@@ -23,8 +23,8 @@ export class ViewModelSimpleImpl implements ViewModelSimple<{ test: number }> {
     this.spies.mount();
   }
 
-  linkStore(viewModels: ViewModelStore): void {
-    this.spies.linkStore(viewModels);
+  attachViewModelStore(viewModels: ViewModelStore): void {
+    this.spies.attachViewModelStore(viewModels);
   }
 
   setPayload(payload: { test: number }): void {
@@ -52,8 +52,8 @@ describe('ViewModelSimple', () => {
       const vmStore = new ViewModelStoreBaseMock();
       const vm = new ViewModelSimpleImpl();
       vmStore.markToBeAttached(vm);
-      expect(vm.spies.linkStore).toBeCalledTimes(1);
-      expect(vm.spies.linkStore).toBeCalledWith(vmStore);
+      expect(vm.spies.attachViewModelStore).toBeCalledTimes(1);
+      expect(vm.spies.attachViewModelStore).toBeCalledWith(vmStore);
     });
 
     it('should ok "attach" simple vm to store', async () => {
