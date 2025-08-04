@@ -13,6 +13,7 @@ import { ViewModelsContext } from '../contexts/view-models-context.js';
 import { useIsomorphicLayoutEffect } from '../lib/hooks/use-isomorphic-layout-effect.js';
 import { useValue } from '../lib/hooks/use-value.js';
 import { generateVmId } from '../utils/generate-vm-id.js';
+import { isViewModelClass } from '../utils/typeguards.js';
 import { ViewModelSimple } from '../view-model/view-model-simple.js';
 import { ViewModelCreateConfig } from '../view-model/view-model.store.types.js';
 import {
@@ -83,7 +84,7 @@ export function useCreateViewModel(
   payload?: any,
   config?: any,
 ) {
-  if ('payloadChanged' in VM.prototype) {
+  if (isViewModelClass(VM)) {
     // scenario for ViewModelBase
     return useCreateViewModelBase(VM, payload, config);
   }

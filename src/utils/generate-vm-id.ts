@@ -1,12 +1,14 @@
 import { createCounter } from 'yummies/complex';
 
+import { GenerateViewModelIdFn } from '../config/index.js';
+
 import { AnyObject } from './types.js';
 
 declare const process: { env: { NODE_ENV?: string } };
 
 const staticCounter = createCounter((counter) => counter.toString(16));
 
-export const generateVmId = (ctx: AnyObject) => {
+export const generateVmId: GenerateViewModelIdFn = (ctx: AnyObject) => {
   if (!ctx.generateId) {
     const staticId = staticCounter();
     const counter = createCounter((counter) =>
