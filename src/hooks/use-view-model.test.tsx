@@ -1,6 +1,7 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { ReactNode, useState } from 'react';
 import { beforeEach, describe, expect, test } from 'vitest';
+import { createCounter } from 'yummies/complex';
 
 import { withViewModel } from '../hoc/index.js';
 import { ViewModelStore, ViewModelsProvider } from '../index.js';
@@ -10,14 +11,10 @@ import { ViewModelStoreBaseMock } from '../view-model/view-model.store.base.test
 import { useViewModel } from './use-view-model.js';
 
 describe('withViewModel', () => {
-  let counter = 0;
-
-  const generateId = () => {
-    return (counter++).toString();
-  };
+  const generateId = createCounter(String);
 
   beforeEach(() => {
-    counter = 0;
+    generateId.reset();
   });
 
   const createDepthComponent = (

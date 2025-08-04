@@ -66,7 +66,7 @@ describe('withViewModel', () => {
     );
 
     await act(async () => render(<Component />));
-    expect(screen.getByText('hello VM_0')).toBeDefined();
+    expect(screen.getByText('hello VM_1')).toBeDefined();
   });
 
   test('renders fallback', async () => {
@@ -182,8 +182,8 @@ describe('withViewModel', () => {
         <Component />
       </>,
     );
-    expect(screen.getByText('hello VM_0')).toBeDefined();
     expect(screen.getByText('hello VM_1')).toBeDefined();
+    expect(screen.getByText('hello VM_2')).toBeDefined();
   });
 
   test('renders with fixed id', () => {
@@ -1112,8 +1112,8 @@ describe('withViewModel', () => {
         },
       });
 
-      let renderParentCount = -1;
-      let renderChildCount = -1;
+      const renderParentCounter = createCounter();
+      const renderChildCounter = createCounter();
       class ParentVM extends ViewModelBaseMock {
         get payloadParam1() {
           return {};
@@ -1139,7 +1139,7 @@ describe('withViewModel', () => {
       }> {}
 
       const Child = withViewModel(ChildVM)(({ model }) => {
-        renderChildCount++;
+        renderChildCounter();
         return (
           <div>
             <label>{JSON.stringify(model.payload.payloadParam1)}</label>
@@ -1150,7 +1150,7 @@ describe('withViewModel', () => {
       });
 
       const Parent = withViewModel(ParentVM)(({ model }) => {
-        renderParentCount++;
+        renderParentCounter();
         return (
           <div>
             <Child
@@ -1171,8 +1171,8 @@ describe('withViewModel', () => {
         }),
       );
 
-      expect(renderParentCount).toBe(2);
-      expect(renderChildCount).toBe(0);
+      expect(renderParentCounter.value).toBe(3);
+      expect(renderChildCounter.value).toBe(1);
     });
   });
 
