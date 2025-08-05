@@ -24,6 +24,7 @@ declare const process: { env: { NODE_ENV?: string } };
 export class ViewModelBase<
   Payload extends AnyObject = EmptyObject,
   ParentViewModel extends AnyViewModel | null = null,
+  ComponentProps extends AnyObject = AnyObject,
 > implements ViewModel<Payload, ParentViewModel>
 {
   private abortController: AbortController;
@@ -46,9 +47,15 @@ export class ViewModelBase<
    * @deprecated use `vmParams`. This property will be removed in next major release
    * Reason: this word is very useful for users, so `vmParams` is more library-targered naming
    */
-  protected params: ViewModelParams<Payload, ParentViewModel>;
+  protected params: ViewModelParams<Payload, ParentViewModel, ComponentProps>;
 
-  constructor(protected vmParams: ViewModelParams<Payload, ParentViewModel>) {
+  constructor(
+    protected vmParams: ViewModelParams<
+      Payload,
+      ParentViewModel,
+      ComponentProps
+    >,
+  ) {
     this.params = vmParams;
     this.id = vmParams.id;
     this.vmConfig = mergeVMConfigs(vmParams.config ?? vmParams.vmConfig);

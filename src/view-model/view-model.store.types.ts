@@ -30,7 +30,7 @@ export interface ViewModelCreateConfig<VM extends AnyViewModel>
   VM: Class<VM>;
   fallback?: ComponentType;
   component?: VMComponent<AnyViewModel, any>;
-  componentProps?: AnyObject;
+  props?: AnyObject;
 }
 
 /**

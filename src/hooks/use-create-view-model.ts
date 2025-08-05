@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-use-before-define */
 /* eslint-disable react-hooks/rules-of-hooks */
 import { useContext, useLayoutEffect } from 'react';
-import { Class, AllPropertiesOptional, Maybe } from 'yummies/utils/types';
+import { Class, Maybe, IsPartial } from 'yummies/utils/types';
 
 import { viewModelsConfig } from '../config/global-config.js';
 import {
@@ -24,7 +24,7 @@ import {
 export interface UseCreateViewModelConfig<TViewModel extends AnyViewModel>
   extends Pick<
     ViewModelCreateConfig<TViewModel>,
-    'vmConfig' | 'config' | 'ctx' | 'component' | 'componentProps'
+    'vmConfig' | 'config' | 'ctx' | 'component' | 'props'
   > {
   /**
    * Unique identifier for the view
@@ -49,7 +49,7 @@ export interface UseCreateViewModelConfig<TViewModel extends AnyViewModel>
  */
 export function useCreateViewModel<TViewModel extends AnyViewModel>(
   VM: Class<TViewModel>,
-  ...args: AllPropertiesOptional<TViewModel['payload']> extends true
+  ...args: IsPartial<TViewModel['payload']> extends true
     ? [
         payload?: TViewModel['payload'],
         config?: UseCreateViewModelConfig<TViewModel>,
@@ -68,7 +68,7 @@ export function useCreateViewModel<TViewModel extends AnyViewModel>(
 export function useCreateViewModel<TViewModelSimple extends ViewModelSimple>(
   VM: Class<TViewModelSimple>,
   ...args: TViewModelSimple extends ViewModelSimple<infer TPayload>
-    ? AllPropertiesOptional<TPayload> extends true
+    ? IsPartial<TPayload> extends true
       ? [payload?: TPayload]
       : [payload: TPayload]
     : []

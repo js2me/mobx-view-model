@@ -13,10 +13,10 @@ import {
   UseCreateViewModelConfig,
 } from '../hooks/use-create-view-model.js';
 import {
-  AllPropertiesOptional,
   AnyObject,
   Class,
   EmptyObject,
+  IsPartial,
   Maybe,
 } from '../utils/types.js';
 import {
@@ -44,7 +44,7 @@ export type ViewModelInputProps<VM extends AnyViewModel | AnyViewModelSimple> =
   VM extends ViewModel<infer TPayload, any>
     ? TPayload extends EmptyObject
       ? AnyObject
-      : AllPropertiesOptional<TPayload> extends true
+      : IsPartial<TPayload> extends true
         ? {
             payload?: TPayload;
           }
@@ -54,7 +54,7 @@ export type ViewModelInputProps<VM extends AnyViewModel | AnyViewModelSimple> =
     : VM extends ViewModelSimple<infer TPayload>
       ? TPayload extends EmptyObject
         ? AnyObject
-        : AllPropertiesOptional<TPayload> extends true
+        : IsPartial<TPayload> extends true
           ? {
               payload?: TPayload;
             }
@@ -273,7 +273,7 @@ const withViewModelWrapper = (
     const model = useCreateViewModel(VM, payload, {
       ...config,
       component: ConnectedViewModel,
-      componentProps,
+      props: componentProps,
     }) as unknown as AnyViewModel | AnyViewModelSimple;
 
     const isRenderAllowedByStore =

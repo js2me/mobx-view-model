@@ -23,6 +23,7 @@ export type ViewModelParent<TViewModel extends AnyViewModel> =
 export interface ViewModelParams<
   Payload extends AnyObject = EmptyObject,
   ParentViewModel extends AnyViewModel | null = null,
+  ComponentProps extends AnyObject = AnyObject,
 > {
   /**
    * Unique identifier for the view
@@ -50,4 +51,8 @@ export interface ViewModelParams<
    * @deprecated use `vmConfig` instead. Will be removed in next major release
    */
   config?: ViewModelsRawConfig;
+  /**
+   * Original component props
+   */
+  props?: ComponentProps;
 }
