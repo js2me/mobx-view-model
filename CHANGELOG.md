@@ -1,5 +1,27 @@
 # mobx-view-model
 
+## 7.0.0
+
+### Major Changes
+
+- [`30907fe`](https://github.com/js2me/mobx-view-model/commit/30907fea494c1b7ca2260f1b46bd61c2d0e77b49) Thanks [@js2me](https://github.com/js2me)! - modify internal `ViewModel` ids generation. Counters starts from `1` (previously `0`) (`generateVmId`)
+
+### Minor Changes
+
+- [`7692d08`](https://github.com/js2me/mobx-view-model/commit/7692d08ecdd10d37fa1ac560b74ba1877ff32830) Thanks [@js2me](https://github.com/js2me)! - added type guards `isViewModel` and `isViewModelClass`
+
+- [`756e0fe`](https://github.com/js2me/mobx-view-model/commit/756e0febac6f6a331244e6da8bb94ffac93abe99) Thanks [@js2me](https://github.com/js2me)! - passing props to `ViewModelBase` as ref
+
+- [`7c82d2d`](https://github.com/js2me/mobx-view-model/commit/7c82d2d90ad0e4f39ae19df4faba563062f2cbe2) Thanks [@js2me](https://github.com/js2me)! - `protected` `props` property for `ViewModelBase` as reference to original component props (only `withViewModel` feature)
+
+### Patch Changes
+
+- [`7692d08`](https://github.com/js2me/mobx-view-model/commit/7692d08ecdd10d37fa1ac560b74ba1877ff32830) Thanks [@js2me](https://github.com/js2me)! - fix missing throwing exception in `useViewModel` hook
+
+- [`b8bdd77`](https://github.com/js2me/mobx-view-model/commit/b8bdd771a26773acef7828a947e70a5d0e371a02) Thanks [@js2me](https://github.com/js2me)! - refactored useCreateViewModel
+
+- [`b8bdd77`](https://github.com/js2me/mobx-view-model/commit/b8bdd771a26773acef7828a947e70a5d0e371a02) Thanks [@js2me](https://github.com/js2me)! - rename linkStore -> attachViewModelStore (ViewModelSimple)
+
 ## 6.16.1
 
 ### Patch Changes
