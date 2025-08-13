@@ -1,5 +1,11 @@
 # mobx-view-model
 
+## 7.0.1
+
+### Patch Changes
+
+- [`b84a501`](https://github.com/js2me/mobx-view-model/commit/b84a501561d9c4dc74790f8e3da4fba7d91e04bd) Thanks [@js2me](https://github.com/js2me)! - added keywords for npm
+
 ## 7.0.0
 
 ### Major Changes
