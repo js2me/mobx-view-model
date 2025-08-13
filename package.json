@@ -33,7 +33,10 @@
     "model",
     "vm",
     "mvvm",
-    "mvc"
+    "mvc",
+    "mvp",
+    "ViewModel",
+    "ModelViewModel"
   ],
   "author": "js2me",
   "license": "MIT",
