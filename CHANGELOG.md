@@ -1,5 +1,11 @@
 # mobx-view-model
 
+## 7.1.0
+
+### Minor Changes
+
+- [`8e6a123`](https://github.com/js2me/mobx-view-model/commit/8e6a1232f3279f2685cbf4dfc9e61e0ac839c551) Thanks [@js2me](https://github.com/js2me)! - improved documentation for missing viewModels param error
+
 ## 7.0.1
 
 ### Patch Changes
