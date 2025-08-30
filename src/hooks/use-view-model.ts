@@ -42,14 +42,14 @@ export const useViewModel = <T extends AnyViewModel | AnyViewModelSimple>(
     if (!activeViewModel) {
       if (process.env.NODE_ENV !== 'production') {
         throw new Error(
-          'Active ViewModel not found.\n' +
+          'Error #1: Active ViewModel not found.\n' +
             'This happened because "vmLookup" for hook "useViewModel" is not provided and hook trying to lookup active view model using ActiveViewModelContext which works only with using "withViewModel" HOC.\n' +
             'Please provide "vmLookup" (first argument for "useViewModel" hook) or use "withViewModel" HOC.\n' +
-            'More info: https://js2me.github.io/mobx-view-model/react/errors/1',
+            'More info: https://js2me.github.io/mobx-view-model/errors/1',
         );
       }
       throw new Error(
-        'Minified error #1: https://js2me.github.io/mobx-view-model/react/errors/1',
+        'Minified error #1: https://js2me.github.io/mobx-view-model/errors/1',
       );
     }
 
@@ -76,14 +76,14 @@ export const useViewModel = <T extends AnyViewModel | AnyViewModelSimple>(
         return devModeModelRef.current;
       } else {
         throw new Error(
-          `View model not found for ${displayName}.\n` +
+          `Error #2: View model not found for ${displayName}.\n` +
             'This happened because your "vmLookup" provided for hook "useViewModel" is not found in "ViewModelStore".\n' +
-            'More info: https://js2me.github.io/mobx-view-model/react/errors/2',
+            'More info: https://js2me.github.io/mobx-view-model/errors/2',
         );
       }
     } else {
       throw new Error(
-        'Minified error #2: https://js2me.github.io/mobx-view-model/react/errors/2',
+        'Minified error #2: https://js2me.github.io/mobx-view-model/errors/2',
       );
     }
   }

@@ -8,7 +8,7 @@
     "ts:check": "tsc --noEmit",
     "check": "npm run lint:check && npm run ts:check",
     "prebuild": "npm run clean && npm run check",
-    "build:watch": "npm run build && nodemon --watch src --ext ts --exec \"tsc && node ./post-build.mjs\"",
+    "build:watch": "npm run build && nodemon --watch src --ext ts,tsx --exec \"tsc && node ./post-build.mjs\"",
     "build": "tsc && node ./post-build.mjs",
     "pub": "PUBLISH=true pnpm run build",
     "pub-ci": "PUBLISH=true CI=true pnpm run build",

@@ -185,23 +185,27 @@ export default defineConfig({
               }
             ]
           },
-          {
-            text: 'Errors',
-            items: [
-              {
-                text: '#1: Active ViewModel not found',
-                link: '/react/errors/1',
-              },
-              {
-                text: '#2: ViewModel not found',
-                link: '/react/errors/2',
-              }
-            ]
-          }
         ],
       },
       {
-        text: 'Recipes',
+        text: 'Errors ⚠️',
+        items: [
+          {
+            text: '#1: Active ViewModel not found',
+            link: '/errors/1',
+          },
+          {
+            text: '#2: ViewModel not found',
+            link: '/errors/2',
+          },
+          {
+            text: '#3: No access to ViewModelStore',
+            link: '/errors/3',
+          }
+        ]
+      },
+      {
+        text: 'Recipes 📃',
         items: [
           { text: 'Wrap in observer() all view components', link: '/recipes/observer-wrap-all-view-components' },
           { text: 'Integration with RootStore', link: '/recipes/integration-with-root-store' },

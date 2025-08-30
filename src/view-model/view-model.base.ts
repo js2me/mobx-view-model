@@ -121,7 +121,9 @@ export class ViewModelBase<
   protected get viewModels(): ViewModelStore {
     if (process.env.NODE_ENV !== 'production' && !this.vmParams.viewModels) {
       console.error(
-        'accessing to viewModels is not possible. [viewModels] param is not setted during to creating instance ViewModelBase',
+        `Error #3: No access to ViewModelStore.\n` +
+          'This happened because [viewModels] param is not provided during to creating instance ViewModelBase.\n' +
+          'More info: https://js2me.github.io/mobx-view-model/errors/3',
       );
     }
 
