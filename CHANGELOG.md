@@ -1,5 +1,11 @@
 # mobx-view-model
 
+## 7.2.0
+
+### Minor Changes
+
+- [`e9af54f`](https://github.com/js2me/mobx-view-model/commit/e9af54fe9decd320db6c93e149bfbd07480cacaa) Thanks [@js2me](https://github.com/js2me)! - updated docs for warning messages
+
 ## 7.1.0
 
 ### Minor Changes
