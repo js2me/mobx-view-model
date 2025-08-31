@@ -1,13 +1,12 @@
-import { VMLazyComponent, VMComponent } from '../hoc/index.js';
-import { Class, Maybe } from '../utils/types.js';
-
-import { ViewModelSimple } from './view-model-simple.js';
-import {
+import type { VMComponent, VMLazyComponent } from '../hoc/index.js';
+import type { Class, Maybe } from '../utils/types.js';
+import type {
   ViewModelCreateConfig,
   ViewModelGenerateIdConfig,
   ViewModelLookup,
 } from './view-model.store.types.js';
-import { AnyViewModel, AnyViewModelSimple } from './view-model.types.js';
+import type { AnyViewModel, AnyViewModelSimple } from './view-model.types.js';
+import type { ViewModelSimple } from './view-model-simple.js';
 
 /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface) */
 export interface ViewModelStore<VMBase extends AnyViewModel = AnyViewModel> {

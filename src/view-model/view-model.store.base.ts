@@ -1,23 +1,23 @@
 import { action, computed, observable, runInAction } from 'mobx';
 
 import {
-  ViewModelsConfig,
-  mergeVMConfigs,
   applyObservable,
+  mergeVMConfigs,
+  type ViewModelsConfig,
 } from '../config/index.js';
-import { VMLazyComponent, VMComponent } from '../hoc/index.js';
+import type { VMComponent, VMLazyComponent } from '../hoc/index.js';
 import { generateVmId } from '../utils/index.js';
-import { Class, Maybe } from '../utils/types.js';
+import type { Class, Maybe } from '../utils/types.js';
 
-import { ViewModelBase } from './view-model.base.js';
-import { ViewModelStore } from './view-model.store.js';
-import {
+import type { ViewModelBase } from './view-model.base.js';
+import type { ViewModelStore } from './view-model.store.js';
+import type {
   ViewModelCreateConfig,
   ViewModelGenerateIdConfig,
   ViewModelLookup,
   ViewModelStoreConfig,
 } from './view-model.store.types.js';
-import {
+import type {
   AnyViewModel,
   AnyViewModelSimple,
   ViewModelParams,
@@ -269,7 +269,6 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
   }
 
   markToBeAttached(model: VMBase | AnyViewModelSimple) {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-expect-error
     this.viewModelsTempHeap.set(model.id, model);
 

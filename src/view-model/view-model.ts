@@ -1,7 +1,7 @@
-import { ViewModelsConfig } from '../config/types.js';
-import { AnyObject, EmptyObject } from '../utils/types.js';
+import type { ViewModelsConfig } from '../config/types.js';
+import type { AnyObject, EmptyObject } from '../utils/types.js';
 
-import { AnyViewModel } from './view-model.types.js';
+import type { AnyViewModel } from './view-model.types.js';
 
 /**
  * The main interface for all view models.

@@ -1,16 +1,16 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { AnyObject, EmptyObject, Maybe } from '../utils/types.js';
+import type { AnyObject, EmptyObject, Maybe } from '../utils/types.js';
 
 import { ViewModelBaseMock } from './view-model.base.test.js';
-import { ViewModel } from './view-model.js';
+import type { ViewModel } from './view-model.js';
 import { ViewModelStoreBase } from './view-model.store.base.js';
-import { ViewModelStore } from './view-model.store.js';
-import {
+import type { ViewModelStore } from './view-model.store.js';
+import type {
   ViewModelGenerateIdConfig,
   ViewModelLookup,
 } from './view-model.store.types.js';
-import {
+import type {
   AnyViewModel,
   AnyViewModelSimple,
   ViewModelParams,

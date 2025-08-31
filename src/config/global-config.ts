@@ -1,6 +1,6 @@
 import { createGlobalConfig } from 'yummies/complex';
 
-import { ViewModelsConfig } from './types.js';
+import type { ViewModelsConfig } from './types.js';
 import { mergeVMConfigs } from './utils/merge-vm-configs.js';
 
 /**

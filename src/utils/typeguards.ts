@@ -1,7 +1,6 @@
-/* eslint-disable @typescript-eslint/ban-types */
-import { ViewModel } from '../view-model/view-model.js';
+import type { ViewModel } from '../view-model/view-model.js';
 
-import { AnyObject, Class, EmptyObject } from './types.js';
+import type { AnyObject, Class, EmptyObject } from './types.js';
 
 export const isViewModel = <TPayload extends AnyObject = EmptyObject>(
   value: AnyObject,

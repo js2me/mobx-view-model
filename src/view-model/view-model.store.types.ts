@@ -1,10 +1,10 @@
-import { ComponentType } from 'react';
+import type { ComponentType } from 'react';
 
-import { ViewModelsRawConfig } from '../config/index.js';
-import { VMLazyComponent, VMComponent } from '../hoc/index.js';
-import { AnyObject, Class, Maybe } from '../utils/types.js';
+import type { ViewModelsRawConfig } from '../config/index.js';
+import type { VMComponent, VMLazyComponent } from '../hoc/index.js';
+import type { AnyObject, Class, Maybe } from '../utils/types.js';
 
-import {
+import type {
   AnyViewModel,
   AnyViewModelSimple,
   ViewModelParams,

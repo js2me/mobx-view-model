@@ -1,6 +1,6 @@
 import { createContext } from 'react';
 
-import { AnyViewModel, AnyViewModelSimple } from '../view-model/index.js';
+import type { AnyViewModel, AnyViewModelSimple } from '../view-model/index.js';
 
 // will contains the view model
 export const ActiveViewModelContext = createContext<

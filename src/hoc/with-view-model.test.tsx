@@ -1,4 +1,3 @@
-/* eslint-disable sonarjs/label-has-associated-control */
 import {
   act,
   fireEvent,
@@ -9,9 +8,9 @@ import {
 import { comparer, makeObservable, observable, runInAction } from 'mobx';
 import { observer } from 'mobx-react-lite';
 import {
-  ComponentType,
-  PropsWithChildren,
-  ReactNode,
+  type ComponentType,
+  type PropsWithChildren,
+  type ReactNode,
   useEffect,
   useState,
   version,
@@ -21,19 +20,19 @@ import { sleep } from 'yummies/async';
 import { createCounter } from 'yummies/complex';
 
 import {
-  ViewModelParams,
-  ViewModelSimple,
-  ViewModelStore,
+  type ViewModelParams,
+  type ViewModelSimple,
+  type ViewModelStore,
   ViewModelsProvider,
-  ViewModelsRawConfig,
+  type ViewModelsRawConfig,
 } from '../index.js';
-import { AnyObject, EmptyObject, Maybe } from '../utils/types.js';
+import type { AnyObject, EmptyObject, Maybe } from '../utils/types.js';
 import { ViewModelBaseMock } from '../view-model/view-model.base.test.js';
 import { ViewModelStoreBaseMock } from '../view-model/view-model.store.base.test.js';
 
-import { ViewModelProps, withViewModel } from './with-view-model.js';
+import { type ViewModelProps, withViewModel } from './with-view-model.js';
 import {
-  CircularVmPayloadDependencyTestCase,
+  type CircularVmPayloadDependencyTestCase,
   circularVmPayloadDependencyTestCases,
 } from './with-view-model.test.fixture.js';
 
@@ -71,7 +70,6 @@ describe('withViewModel', () => {
 
   test('renders fallback', async () => {
     class VM extends ViewModelBaseMock {
-      // eslint-disable-next-line sonarjs/no-empty-function
       mount() {}
     }
     const View = ({ model }: ViewModelProps<VM>) => {
@@ -94,7 +92,6 @@ describe('withViewModel', () => {
 
   test('renders fallback (times)', async () => {
     class VM extends ViewModelBaseMock {
-      // eslint-disable-next-line sonarjs/no-empty-function
       mount() {}
     }
     const View = ({ model }: ViewModelProps<VM>) => {
@@ -131,18 +128,16 @@ describe('withViewModel', () => {
   });
 
   test('renders nesting', () => {
-    const Component1 = withViewModel(ViewModelBaseMock)(({
-      children,
-    }: {
-      children?: ReactNode;
-    }) => {
-      return (
-        <div data-testid={'parent-container'}>
-          <div>parent</div>
-          {children}
-        </div>
-      );
-    });
+    const Component1 = withViewModel(ViewModelBaseMock)(
+      ({ children }: { children?: ReactNode }) => {
+        return (
+          <div data-testid={'parent-container'}>
+            <div>parent</div>
+            {children}
+          </div>
+        );
+      },
+    );
     const Component2 = withViewModel(ViewModelBaseMock)(() => {
       return <div>child</div>;
     });
@@ -326,7 +321,6 @@ describe('withViewModel', () => {
 
       const SuperContainer = () => {
         const [counter, setCounter] = useState(0);
-        // eslint-disable-next-line sonarjs/hook-use-state
         const [, forceUpdate] = useState({});
 
         return (
@@ -696,44 +690,41 @@ describe('withViewModel', () => {
     class VM1 extends ViewModelBaseMock {
       vm1Value = 'foo';
     }
-    const Component1 = withViewModel(VM1)(({
-      children,
-      model,
-    }: PropsWithChildren & ViewModelProps<VM1>) => {
-      return <div data-testid={`vm-${model.vm1Value}`}>{children}</div>;
-    });
+    const Component1 = withViewModel(VM1)(
+      ({ children, model }: PropsWithChildren & ViewModelProps<VM1>) => {
+        return <div data-testid={`vm-${model.vm1Value}`}>{children}</div>;
+      },
+    );
 
     class VM2 extends ViewModelBaseMock<EmptyObject, VM1> {
       vm2Value = 'bar';
     }
-    const Component2 = withViewModel(VM2)(({
-      children,
-      model,
-    }: PropsWithChildren & ViewModelProps<VM2>) => {
-      return (
-        <div
-          data-testid={`vm-${model.vm2Value}-${model.parentViewModel.vm1Value}`}
-        >
-          {children}
-        </div>
-      );
-    });
+    const Component2 = withViewModel(VM2)(
+      ({ children, model }: PropsWithChildren & ViewModelProps<VM2>) => {
+        return (
+          <div
+            data-testid={`vm-${model.vm2Value}-${model.parentViewModel.vm1Value}`}
+          >
+            {children}
+          </div>
+        );
+      },
+    );
 
     class VM3 extends ViewModelBaseMock<EmptyObject, VM2> {
       vm3Value = 'baz';
     }
-    const Component3 = withViewModel(VM3)(({
-      children,
-      model,
-    }: PropsWithChildren & ViewModelProps<VM3>) => {
-      return (
-        <div
-          data-testid={`vm-${model.vm3Value}-${model.parentViewModel.vm2Value}`}
-        >
-          {children}
-        </div>
-      );
-    });
+    const Component3 = withViewModel(VM3)(
+      ({ children, model }: PropsWithChildren & ViewModelProps<VM3>) => {
+        return (
+          <div
+            data-testid={`vm-${model.vm3Value}-${model.parentViewModel.vm2Value}`}
+          >
+            {children}
+          </div>
+        );
+      },
+    );
 
     const { container } = await act(async () =>
       render(
@@ -831,44 +822,41 @@ describe('withViewModel', () => {
       class VM1 extends ViewModelBaseMock {
         vm1Value = 'foo';
       }
-      const Component1 = withViewModel(VM1)(({
-        children,
-        model,
-      }: PropsWithChildren & ViewModelProps<VM1>) => {
-        return <div data-testid={`vm-${model.vm1Value}`}>{children}</div>;
-      });
+      const Component1 = withViewModel(VM1)(
+        ({ children, model }: PropsWithChildren & ViewModelProps<VM1>) => {
+          return <div data-testid={`vm-${model.vm1Value}`}>{children}</div>;
+        },
+      );
 
       class VM2 extends ViewModelBaseMock<EmptyObject, VM1> {
         vm2Value = 'bar';
       }
-      const Component2 = withViewModel(VM2)(({
-        children,
-        model,
-      }: PropsWithChildren & ViewModelProps<VM2>) => {
-        return (
-          <div
-            data-testid={`vm-${model.vm2Value}-${model.parentViewModel.vm1Value}`}
-          >
-            {children}
-          </div>
-        );
-      });
+      const Component2 = withViewModel(VM2)(
+        ({ children, model }: PropsWithChildren & ViewModelProps<VM2>) => {
+          return (
+            <div
+              data-testid={`vm-${model.vm2Value}-${model.parentViewModel.vm1Value}`}
+            >
+              {children}
+            </div>
+          );
+        },
+      );
 
       class VM3 extends ViewModelBaseMock<EmptyObject, VM2> {
         vm3Value = 'baz';
       }
-      const Component3 = withViewModel(VM3)(({
-        children,
-        model,
-      }: PropsWithChildren & ViewModelProps<VM3>) => {
-        return (
-          <div
-            data-testid={`vm-${model.vm3Value}-${model.parentViewModel.vm2Value}`}
-          >
-            {children}
-          </div>
-        );
-      });
+      const Component3 = withViewModel(VM3)(
+        ({ children, model }: PropsWithChildren & ViewModelProps<VM3>) => {
+          return (
+            <div
+              data-testid={`vm-${model.vm3Value}-${model.parentViewModel.vm2Value}`}
+            >
+              {children}
+            </div>
+          );
+        },
+      );
 
       const { container } = await act(async () =>
         render(
@@ -930,43 +918,42 @@ describe('withViewModel', () => {
           return this.child?.value;
         }
       }
-      const Parent = withViewModel(ParentVM)(({
-        children,
-        model,
-      }: PropsWithChildren & ViewModelProps<ParentVM>) => {
-        return (
-          <div data-testid={'parent'}>
-            <label>
-              {model.value}
-              {`and this is child value: "${model.childValue}"`}
-            </label>
-            {children}
-            {model.child?.id}
-          </div>
-        );
-      });
+      const Parent = withViewModel(ParentVM)(
+        ({ children, model }: PropsWithChildren & ViewModelProps<ParentVM>) => {
+          return (
+            <div data-testid={'parent'}>
+              <label>
+                {model.value}
+                {`and this is child value: "${model.childValue}"`}
+              </label>
+              {children}
+              {model.child?.id}
+            </div>
+          );
+        },
+      );
 
       class MiddleVM extends ViewModelBaseMock<EmptyObject, ParentVM> {
         value = 'value-from-middle';
       }
-      const Middle = withViewModel(MiddleVM)(({
-        model,
-      }: PropsWithChildren & ViewModelProps<MiddleVM>) => {
-        const [showChild, setShowChild] = useState(false);
+      const Middle = withViewModel(MiddleVM)(
+        ({ model }: PropsWithChildren & ViewModelProps<MiddleVM>) => {
+          const [showChild, setShowChild] = useState(false);
 
-        useEffect(() => {
-          setTimeout(() => {
-            setShowChild(true);
-          }, 400);
-        }, []);
+          useEffect(() => {
+            setTimeout(() => {
+              setShowChild(true);
+            }, 400);
+          }, []);
 
-        return (
-          <div data-testid={'middle'}>
-            <label>{model.value}</label>
-            {showChild && <Child />}
-          </div>
-        );
-      });
+          return (
+            <div data-testid={'middle'}>
+              <label>{model.value}</label>
+              {showChild && <Child />}
+            </div>
+          );
+        },
+      );
 
       const { container } = await act(async () =>
         render(

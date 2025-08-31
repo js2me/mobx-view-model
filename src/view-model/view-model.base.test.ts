@@ -1,10 +1,10 @@
 import { makeObservable, reaction } from 'mobx';
 import { describe, expect, it, vi } from 'vitest';
 
-import { AnyObject, EmptyObject } from '../utils/types.js';
+import type { AnyObject, EmptyObject } from '../utils/types.js';
 
 import { ViewModelBase } from './view-model.base.js';
-import { AnyViewModel, ViewModelParams } from './view-model.types.js';
+import type { AnyViewModel, ViewModelParams } from './view-model.types.js';
 
 export class ViewModelBaseMock<
   Payload extends AnyObject = EmptyObject,

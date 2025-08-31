@@ -1,10 +1,10 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
-import { ReactNode, useState } from 'react';
+import { type ReactNode, useState } from 'react';
 import { beforeEach, describe, expect, test } from 'vitest';
 import { createCounter } from 'yummies/complex';
 
 import { withViewModel } from '../hoc/index.js';
-import { ViewModelStore, ViewModelsProvider } from '../index.js';
+import { type ViewModelStore, ViewModelsProvider } from '../index.js';
 import { ViewModelBaseMock } from '../view-model/view-model.base.test.js';
 import { ViewModelStoreBaseMock } from '../view-model/view-model.store.base.test.js';
 
@@ -230,9 +230,7 @@ describe('withViewModel', () => {
 
       class ChildVM extends ViewModelBaseMock {}
 
-      const Child = withViewModel(ChildVM)(() => (
-        <div data-testid={'child'}></div>
-      ));
+      const Child = withViewModel(ChildVM)(() => <div data-testid={'child'} />);
 
       const App = () => {
         return (
@@ -270,7 +268,7 @@ describe('withViewModel', () => {
 
       const Child = withViewModel(ChildVM, {
         fallback: () => <div data-testid={'child-fallback'}> </div>,
-      })(() => <div data-testid={'child'}></div>);
+      })(() => <div data-testid={'child'} />);
 
       const App = () => {
         const [key, setKey] = useState(0);

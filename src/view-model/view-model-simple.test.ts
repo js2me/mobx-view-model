@@ -1,9 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
-
-import { ViewModelSimple } from './view-model-simple.js';
+import type { ViewModelStore } from './index.js';
 import { ViewModelStoreBaseMock } from './view-model.store.base.test.js';
-
-import { ViewModelStore } from './index.js';
+import type { ViewModelSimple } from './view-model-simple.js';
 
 export class ViewModelSimpleImpl implements ViewModelSimple<{ test: number }> {
   spies = {

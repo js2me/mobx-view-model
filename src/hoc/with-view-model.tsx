@@ -1,7 +1,10 @@
-/* eslint-disable @typescript-eslint/no-use-before-define */
-/* eslint-disable sonarjs/no-nested-functions */
 import { observer } from 'mobx-react-lite';
-import { ComponentClass, ComponentType, ReactNode, useContext } from 'react';
+import {
+  type ComponentClass,
+  type ComponentType,
+  type ReactNode,
+  useContext,
+} from 'react';
 
 import { viewModelsConfig } from '../config/global-config.js';
 import {
@@ -9,17 +12,17 @@ import {
   ViewModelsContext,
 } from '../contexts/index.js';
 import {
+  type UseCreateViewModelConfig,
   useCreateViewModel,
-  UseCreateViewModelConfig,
 } from '../hooks/use-create-view-model.js';
-import {
+import type {
   AnyObject,
   Class,
   EmptyObject,
   IsPartial,
   Maybe,
 } from '../utils/types.js';
-import {
+import type {
   AnyViewModel,
   AnyViewModelSimple,
   ViewModel,
@@ -27,7 +30,6 @@ import {
   ViewModelStore,
 } from '../view-model/index.js';
 
-// eslint-disable-next-line @typescript-eslint/ban-types
 type FixedComponentType<P extends AnyObject = {}> =
   /**
    * Fixes typings loss with use `withViewModel` with inline function component
@@ -86,8 +88,7 @@ export interface ViewModelHocConfig<VM extends AnyViewModel>
   getPayload?: (allProps: any) => any;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export interface ViewModelSimpleHocConfig<VM extends AnyViewModelSimple> {
+export interface ViewModelSimpleHocConfig<_VM extends AnyViewModelSimple> {
   /**
    * Component to render if the view model initialization takes too long
    */
@@ -251,7 +252,6 @@ const withViewModelWrapper = (
     Component &&
     (Component as any).$$typeof !== REACT_MEMO_SYMBOL
   ) {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     Component = observer(Component);
   }
@@ -278,7 +278,6 @@ const withViewModelWrapper = (
 
     const isRenderAllowedByStore =
       !viewModels || viewModels.isAbleToRenderView(model.id);
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     const isRenderAllowedLocally = model.isMounted !== false;
     const isRenderAllowed = isRenderAllowedByStore && isRenderAllowedLocally;

@@ -1,6 +1,6 @@
 import { createContext } from 'react';
 
-import { ViewModelStore } from '../view-model/index.js';
+import type { ViewModelStore } from '../view-model/index.js';
 
 /**
  * Context which contains the view models store instance.

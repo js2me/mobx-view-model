@@ -1,4 +1,4 @@
-import { ViewModelsConfig } from '../config/types.js';
+import type { ViewModelsConfig } from '../config/types.js';
 
 export type CircularVmPayloadDependencyTestCase = {
   vmConfig: Partial<ViewModelsConfig>;

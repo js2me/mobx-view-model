@@ -1,7 +1,7 @@
 import { makeObservable } from 'mobx';
-import { AnyObject } from 'yummies/utils/types';
+import type { AnyObject } from 'yummies/utils/types';
 
-import { ViewModelObservableConfig } from '../index.js';
+import type { ViewModelObservableConfig } from '../index.js';
 
 export type ObservableAnnotationsArray = [string, any][];
 

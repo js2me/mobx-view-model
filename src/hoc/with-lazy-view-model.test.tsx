@@ -4,7 +4,7 @@ import { describe, expect, test, vi } from 'vitest';
 import { ViewModelBaseMock } from '../view-model/view-model.base.test.js';
 
 import { withLazyViewModel } from './with-lazy-view-model.js';
-import { ViewModelProps } from './with-view-model.js';
+import type { ViewModelProps } from './with-view-model.js';
 
 describe('withLazyViewModel', () => {
   test('should has preload static method', async () => {

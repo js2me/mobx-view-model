@@ -1,15 +1,19 @@
-import { ComponentProps, ComponentType } from 'react';
-import { loadable, LoadableMixin, LoadableConfig } from 'react-simple-loadable';
-import { PackedAsyncModule, unpackAsyncModule } from 'yummies/imports';
+import type { ComponentProps, ComponentType } from 'react';
+import {
+  type LoadableConfig,
+  type LoadableMixin,
+  loadable,
+} from 'react-simple-loadable';
+import { type PackedAsyncModule, unpackAsyncModule } from 'yummies/imports';
 
 import { viewModelsConfig } from '../config/global-config.js';
-import { Class, Maybe, MaybePromise } from '../utils/types.js';
-import { AnyViewModel, AnyViewModelSimple } from '../view-model/index.js';
+import type { Class, Maybe, MaybePromise } from '../utils/types.js';
+import type { AnyViewModel, AnyViewModelSimple } from '../view-model/index.js';
 
 import {
-  VMComponent,
-  ViewModelHocConfig,
-  ViewModelSimpleHocConfig,
+  type ViewModelHocConfig,
+  type ViewModelSimpleHocConfig,
+  type VMComponent,
   withViewModel,
 } from './with-view-model.js';
 
@@ -100,7 +104,6 @@ export function withLazyViewModel<
   const patchedConfig: LazyViewModelHocConfig<any> = {
     ...config,
     ctx: {
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-expect-error
       ...config?.ctx,
       externalComponent: null,

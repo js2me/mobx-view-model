@@ -1,19 +1,18 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { action, comparer, computed, observable, runInAction } from 'mobx';
 import { isShallowEqual } from 'yummies/data';
 import { startViewTransitionSafety } from 'yummies/html';
 
 import {
-  ViewModelsConfig,
   applyObservable,
-  ObservableAnnotationsArray,
   mergeVMConfigs,
+  type ObservableAnnotationsArray,
+  type ViewModelsConfig,
 } from '../config/index.js';
-import { AnyObject, EmptyObject, Maybe } from '../utils/types.js';
+import type { AnyObject, EmptyObject, Maybe } from '../utils/types.js';
 
-import { ViewModel } from './view-model.js';
-import { ViewModelStore } from './view-model.store.js';
-import {
+import type { ViewModel } from './view-model.js';
+import type { ViewModelStore } from './view-model.store.js';
+import type {
   AnyViewModel,
   PayloadCompareFn,
   ViewModelParams,

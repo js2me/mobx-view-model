@@ -53,7 +53,7 @@ export default defineConfig({
     ],
     sidebar: [
       {
-        text: 'Introduction',
+        text: 'Introduction 👋',
         link: '/introduction/overview',
         items: [
           { text: 'Overview', link: '/introduction/overview' },
@@ -84,7 +84,7 @@ export default defineConfig({
         ],
       },
       {
-        text: 'Core API',
+        text: 'Core API ⚙️',
         link: '/api/view-models/overview',
         items: [
           {
@@ -144,7 +144,7 @@ export default defineConfig({
         ],
       },
       {
-        text: 'React',
+        text: 'React ✨',
         link: '/react/integration',
         items: [
           {
@@ -188,7 +188,25 @@ export default defineConfig({
         ],
       },
       {
-        text: 'Errors ⚠️',
+        text: 'Recipes 📃',
+        link: '/recipes/observer-wrap-all-view-components',
+        items: [
+          { text: 'Wrap in observer() all view components', link: '/recipes/observer-wrap-all-view-components' },
+          { text: 'Integration with RootStore', link: '/recipes/integration-with-root-store' },
+        ]
+      },
+      {
+        text: 'Other 🛸',
+        link: '/other/project-examples',
+        items: [
+          { text: 'Project examples', link: '/other/project-examples' },
+          { text: 'Dependent packages', link: '/other/dependent-packages' },
+          { text: 'Vite plugin', link: '/other/vite-plugin' },
+        ],
+      },
+      {
+        text: 'Errors 🚨',
+        link: '/errors/1',
         items: [
           {
             text: '#1: Active ViewModel not found',
@@ -205,20 +223,14 @@ export default defineConfig({
         ]
       },
       {
-        text: 'Recipes 📃',
+        text: 'Warnings ⚠️',
+        link: '/warnings/1',
         items: [
-          { text: 'Wrap in observer() all view components', link: '/recipes/observer-wrap-all-view-components' },
-          { text: 'Integration with RootStore', link: '/recipes/integration-with-root-store' },
+          {
+            text: '#1: ViewModelStore not found',
+            link: '/warnings/1',
+          },
         ]
-      },
-      {
-        text: 'Other',
-        link: '/other/project-examples',
-        items: [
-          { text: 'Project examples', link: '/other/project-examples' },
-          { text: 'Dependent packages', link: '/other/dependent-packages' },
-          { text: 'Vite plugin', link: '/other/vite-plugin' },
-        ],
       }
     ],
 

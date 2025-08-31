@@ -1,10 +1,8 @@
-/* eslint-disable @typescript-eslint/no-use-before-define */
-/* eslint-disable react-hooks/rules-of-hooks */
 import { useContext, useLayoutEffect } from 'react';
-import { Class, Maybe, IsPartial } from 'yummies/utils/types';
+import type { Class, IsPartial, Maybe } from 'yummies/utils/types';
 
 import { viewModelsConfig } from '../config/global-config.js';
-import {
+import type {
   CreateViewModelFactoryFn,
   GenerateViewModelIdFn,
 } from '../config/index.js';
@@ -14,12 +12,12 @@ import { useIsomorphicLayoutEffect } from '../lib/hooks/use-isomorphic-layout-ef
 import { useValue } from '../lib/hooks/use-value.js';
 import { generateVmId } from '../utils/generate-vm-id.js';
 import { isViewModelClass } from '../utils/typeguards.js';
-import { ViewModelSimple } from '../view-model/view-model-simple.js';
-import { ViewModelCreateConfig } from '../view-model/view-model.store.types.js';
-import {
+import type { ViewModelCreateConfig } from '../view-model/view-model.store.types.js';
+import type {
   AnyViewModel,
   AnyViewModelSimple,
 } from '../view-model/view-model.types.js';
+import type { ViewModelSimple } from '../view-model/view-model-simple.js';
 
 export interface UseCreateViewModelConfig<TViewModel extends AnyViewModel>
   extends Pick<

@@ -1,14 +1,14 @@
-import { ComponentType } from 'react';
-import { AnyObject, Class, DeepPartial, Maybe } from 'yummies/utils/types';
+import type { ComponentType } from 'react';
+import type { AnyObject, Class, DeepPartial, Maybe } from 'yummies/utils/types';
 
-import { ViewModelHocConfig } from '../hoc/with-view-model.js';
-import { ViewModelCreateConfig } from '../view-model/view-model.store.types.js';
+import type { ViewModelHocConfig } from '../hoc/with-view-model.js';
+import type { ViewModelCreateConfig } from '../view-model/view-model.store.types.js';
 import type {
   AnyViewModel,
   PayloadCompareFn,
 } from '../view-model/view-model.types.js';
 
-import { ObservableAnnotationsArray } from './utils/apply-observable.js';
+import type { ObservableAnnotationsArray } from './utils/apply-observable.js';
 
 export interface ViewModelObservableConfig {
   /**

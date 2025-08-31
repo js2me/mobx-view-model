@@ -1,11 +1,10 @@
-/* eslint-disable unicorn/no-negated-condition */
 import { useContext, useRef } from 'react';
-
+import type { AnyObject } from 'yummies/utils/types';
 import {
   ActiveViewModelContext,
   ViewModelsContext,
 } from '../contexts/index.js';
-import {
+import type {
   AnyViewModel,
   AnyViewModelSimple,
   ViewModelLookup,
@@ -28,14 +27,16 @@ export const useViewModel = <T extends AnyViewModel | AnyViewModelSimple>(
   let devModeModelRef = undefined as unknown as React.MutableRefObject<any>;
 
   if (process.env.NODE_ENV !== 'production') {
-    // eslint-disable-next-line react-hooks/rules-of-hooks
     devModeModelRef = useRef<any>();
   }
 
   if (vmLookup == null || !viewModels) {
     if (process.env.NODE_ENV !== 'production' && !viewModels) {
       console.warn(
-        'Unable to get access to view model by id or class name withouting using ViewModelStore. Last active view model will be returned',
+        'Warning #1: ViewModelStore not found.\n',
+        'Unable to get access to view model by id or class name without using ViewModelStore\n',
+        'Last active view model will be returned.\n',
+        'More info: https://js2me.github.io/mobx-view-model/warnings/1',
       );
     }
 
@@ -49,7 +50,7 @@ export const useViewModel = <T extends AnyViewModel | AnyViewModelSimple>(
         );
       }
       throw new Error(
-        'Minified error #1: https://js2me.github.io/mobx-view-model/errors/1',
+        'Error #1: https://js2me.github.io/mobx-view-model/errors/1',
       );
     }
 
@@ -68,7 +69,7 @@ export const useViewModel = <T extends AnyViewModel | AnyViewModelSimple>(
     } else if ('name' in vmLookup) {
       displayName = vmLookup.name;
     } else {
-      displayName = vmLookup['displayName'];
+      displayName = (vmLookup as AnyObject).displayName;
     }
 
     if (process.env.NODE_ENV !== 'production') {
@@ -83,7 +84,7 @@ export const useViewModel = <T extends AnyViewModel | AnyViewModelSimple>(
       }
     } else {
       throw new Error(
-        'Minified error #2: https://js2me.github.io/mobx-view-model/errors/2',
+        'Error #2: https://js2me.github.io/mobx-view-model/errors/2',
       );
     }
   }

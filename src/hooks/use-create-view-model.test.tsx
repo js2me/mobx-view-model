@@ -1,13 +1,13 @@
 import { act, render } from '@testing-library/react';
-import { ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { describe, expect, test, vi } from 'vitest';
 
 import {
-  ViewModelSimple,
-  ViewModelStore,
-  ViewModelsProvider,
   useCreateViewModel,
   useViewModel,
+  type ViewModelSimple,
+  type ViewModelStore,
+  ViewModelsProvider,
 } from '../index.js';
 import { ViewModelBaseMock } from '../view-model/view-model.base.test.js';
 import { ViewModelStoreBaseMock } from '../view-model/view-model.store.base.test.js';

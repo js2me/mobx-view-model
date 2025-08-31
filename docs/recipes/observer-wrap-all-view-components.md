@@ -24,7 +24,6 @@ viewModelsConfig.processViewComponent = (component) => {
   if ((component as any).$$typeof !== Symbol.for('react.memo')) {
     return;
   }
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
   return component && observer(component);
 };
