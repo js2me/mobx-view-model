@@ -4,11 +4,15 @@ import { describe, expect, it, vi } from 'vitest';
 import type { AnyObject, EmptyObject } from '../utils/types.js';
 
 import { ViewModelBase } from './view-model.base.js';
-import type { AnyViewModel, ViewModelParams } from './view-model.types.js';
+import type {
+  AnyViewModel,
+  AnyViewModelSimple,
+  ViewModelParams,
+} from './view-model.types.js';
 
 export class ViewModelBaseMock<
   Payload extends AnyObject = EmptyObject,
-  ParentViewModel extends AnyViewModel | null = null,
+  ParentViewModel extends AnyViewModel | AnyViewModelSimple | null = null,
 > extends ViewModelBase<Payload, ParentViewModel> {
   spies = {
     mount: vi.fn(),

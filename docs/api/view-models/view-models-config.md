@@ -41,7 +41,6 @@ import { viewModelsConfig, ViewModelStoreBase } from 'mobx-view-model';
 viewModelsConfig.comparePayload = false;
 viewModelsConfig.payloadComputed = 'struct';
 viewModelsConfig.payloadObservable = 'ref';
-viewModelsConfig.wrapViewsInObserver = true;
 
 viewModelsConfig.observable.viewModels.useDecorators = true; //false
 viewModelsConfig.observable.viewModelStores.useDecorators = true; // false
@@ -181,13 +180,15 @@ viewModelsConfig.processViewComponent = (Component) => {
 ## `wrapViewsInObserver`  
 
 Wrap View components in [`observer()` MobX HOC](https://mobx.js.org/api.html#observer)  
+This property is enabled by default.   
 
+
+You can turn off this behaviour by setting `wrapViewsInObserver` to `false`.   
 Example:    
-
 ```tsx
 import { viewModelsConfig } from "mobx-view-model";
 
-viewModelsConfig.wrapViewsInObserver = true;
+viewModelsConfig.wrapViewsInObserver = false;
 ```
 
 ::: warning It works only for [`withViewModel` HOCs](/react/api/with-view-model)  

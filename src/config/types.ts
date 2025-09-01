@@ -52,7 +52,7 @@ export interface ViewModelsConfig {
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#payloadcomputed) */
   payloadComputed?: 'struct' | boolean | ((a: any, b: any) => boolean);
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#generateid) */
-  generateId?: GenerateViewModelIdFn;
+  generateId: GenerateViewModelIdFn;
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#factory) */
   factory: CreateViewModelFactoryFn<AnyViewModel>;
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#fallbackcomponent) */
@@ -81,11 +81,12 @@ export interface ViewModelsConfig {
  */
 export type ViewModelsRawConfig = Omit<
   ViewModelsConfig,
-  'startViewTransitions' | 'observable' | 'factory'
+  'startViewTransitions' | 'observable' | 'factory' | 'generateId'
 > & {
   startViewTransitions?:
     | DeepPartial<ViewModelsConfig['startViewTransitions']>
     | boolean;
   observable?: DeepPartial<ViewModelsConfig['observable']>;
   factory?: ViewModelsConfig['factory'];
+  generateId?: ViewModelsConfig['generateId'];
 };

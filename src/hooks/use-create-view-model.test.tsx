@@ -244,5 +244,138 @@ describe('useCreateViewModel', () => {
 
       expect(unmountSpy).toHaveBeenCalledTimes(1);
     });
+
+    describe('ViewModelSimple without id', () => {
+      test('should create instance', async ({ task }) => {
+        const vmStore = new ViewModelStoreBaseMock();
+
+        class SimpleFoo {
+          bar = 'bar';
+        }
+
+        const A = () => {
+          const foo = useCreateViewModel(SimpleFoo);
+
+          return ` - ${foo.bar}`;
+        };
+
+        const App = () => {
+          return (
+            <div>
+              <A />
+            </div>
+          );
+        };
+
+        const { container } = await act(async () =>
+          render(<App />, { wrapper: createVMStoreWrapper(vmStore) }),
+        );
+
+        await expect(container.firstChild).toMatchFileSnapshot(
+          `../../tests/snapshots/hooks/use-create-view-model/ViewModelSimple/without-id/${task.name}.html`,
+        );
+      });
+
+      test('should call "attachViewModelStore"', async () => {
+        const vmStore = new ViewModelStoreBaseMock();
+        const attachViewModelStoreSpy = vi.fn();
+
+        class SimpleFoo implements ViewModelSimple {
+          bar = 'bar';
+
+          attachViewModelStore(viewModels: ViewModelStore): void {
+            attachViewModelStoreSpy(viewModels);
+          }
+        }
+
+        const A = () => {
+          const foo = useCreateViewModel(SimpleFoo);
+
+          return ` - ${foo.bar}`;
+        };
+
+        const App = () => {
+          return (
+            <div>
+              <A />
+            </div>
+          );
+        };
+
+        await act(async () =>
+          render(<App />, { wrapper: createVMStoreWrapper(vmStore) }),
+        );
+
+        expect(attachViewModelStoreSpy).toHaveBeenCalledTimes(1);
+      });
+
+      test('should call "mount()"', async () => {
+        const vmStore = new ViewModelStoreBaseMock();
+        const mountSpy = vi.fn();
+
+        class SimpleFoo implements ViewModelSimple {
+          bar = 'bar';
+
+          mount(): void {
+            mountSpy();
+          }
+        }
+
+        const A = () => {
+          const foo = useCreateViewModel(SimpleFoo);
+
+          return ` - ${foo.bar}`;
+        };
+
+        const App = () => {
+          return (
+            <div>
+              <A />
+            </div>
+          );
+        };
+
+        await act(async () =>
+          render(<App />, { wrapper: createVMStoreWrapper(vmStore) }),
+        );
+
+        expect(mountSpy).toHaveBeenCalledTimes(1);
+      });
+
+      test('should call "unmount()"', async () => {
+        const vmStore = new ViewModelStoreBaseMock();
+        const unmountSpy = vi.fn();
+
+        class SimpleFoo implements ViewModelSimple {
+          bar = 'bar';
+
+          unmount(): void {
+            unmountSpy();
+          }
+        }
+
+        const A = () => {
+          const foo = useCreateViewModel(SimpleFoo);
+
+          return ` - ${foo.bar}`;
+        };
+
+        const App = () => {
+          return (
+            <div>
+              <A />
+            </div>
+          );
+        };
+
+        const it = await act(async () =>
+          render(<App />, { wrapper: createVMStoreWrapper(vmStore) }),
+        );
+
+        it.unmount();
+
+        expect(unmountSpy).toHaveBeenCalledTimes(1);
+      });
+    });
   });
 });

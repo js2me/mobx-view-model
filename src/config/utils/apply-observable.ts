@@ -1,4 +1,4 @@
-import { makeObservable } from 'mobx';
+import { applyObservable as applyObservableLib } from 'yummies/mobx';
 import type { AnyObject } from 'yummies/utils/types';
 
 import type { ViewModelObservableConfig } from '../index.js';
@@ -13,16 +13,10 @@ export const applyObservable = (
   if (observableConfig.custom) {
     return observableConfig.custom(context, annotationsArray);
   }
+
   if (observableConfig.disableWrapping) {
     return;
   }
-  if (observableConfig.useDecorators) {
-    annotationsArray.forEach(([field, annotation]) => {
-      annotation(context, field);
-    });
 
-    makeObservable(context);
-  } else {
-    makeObservable(context, Object.fromEntries(annotationsArray));
-  }
+  applyObservableLib(context, annotationsArray, observableConfig.useDecorators);
 };

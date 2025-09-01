@@ -14,15 +14,30 @@ import type { ViewModel } from './view-model.js';
 import type { ViewModelStore } from './view-model.store.js';
 import type {
   AnyViewModel,
+  AnyViewModelSimple,
   PayloadCompareFn,
   ViewModelParams,
 } from './view-model.types.js';
 
 declare const process: { env: { NODE_ENV?: string } };
 
+const baseAnnotations: ObservableAnnotationsArray = [
+  ['_isMounted', observable.ref],
+  ['_isUnmounting', observable.ref],
+  ['isMounted', computed],
+  ['isUnmounting', computed],
+  ['parentViewModel', computed],
+  ['mount', action.bound],
+  ['didMount', action],
+  ['unmount', action.bound],
+  ['didUnmount', action],
+  ['willUnmount', action],
+  ['setPayload', action],
+];
+
 export class ViewModelBase<
   Payload extends AnyObject = EmptyObject,
-  ParentViewModel extends AnyViewModel | null = null,
+  ParentViewModel extends AnyViewModel | AnyViewModelSimple | null = null,
   ComponentProps extends AnyObject = AnyObject,
 > implements ViewModel<Payload, ParentViewModel>
 {
@@ -42,12 +57,6 @@ export class ViewModelBase<
 
   protected isPayloadEqual?: PayloadCompareFn<Payload>;
 
-  /**
-   * @deprecated use `vmParams`. This property will be removed in next major release
-   * Reason: this word is very useful for users, so `vmParams` is more library-targered naming
-   */
-  protected params: ViewModelParams<Payload, ParentViewModel, ComponentProps>;
-
   protected props: ComponentProps;
 
   constructor(
@@ -57,9 +66,8 @@ export class ViewModelBase<
       ComponentProps
     >,
   ) {
-    this.params = vmParams;
     this.id = vmParams.id;
-    this.vmConfig = mergeVMConfigs(vmParams.config ?? vmParams.vmConfig);
+    this.vmConfig = mergeVMConfigs(vmParams.vmConfig);
     this._payload = vmParams.payload;
     this.props = vmParams.props ?? ({} as ComponentProps);
     this.abortController = new AbortController();
@@ -73,19 +81,7 @@ export class ViewModelBase<
       this.isPayloadEqual = this.vmConfig.comparePayload;
     }
 
-    const annotations: ObservableAnnotationsArray = [
-      ['_isMounted', observable.ref],
-      ['_isUnmounting', observable.ref],
-      ['isMounted', computed],
-      ['isUnmounting', computed],
-      ['parentViewModel', computed],
-      ['mount', action.bound],
-      ['didMount', action],
-      ['unmount', action.bound],
-      ['didUnmount', action],
-      ['willUnmount', action],
-      ['setPayload', action],
-    ];
+    const annotations: ObservableAnnotationsArray = [...baseAnnotations];
 
     if (this.vmConfig.payloadObservable !== false) {
       annotations.push([

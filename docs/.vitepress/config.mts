@@ -192,6 +192,7 @@ export default defineConfig({
         link: '/recipes/observer-wrap-all-view-components',
         items: [
           { text: 'Wrap in observer() all view components', link: '/recipes/observer-wrap-all-view-components' },
+          { text: 'Wrap view components in custom HOC', link: '/recipes/wrap-view-components-in-custom-hoc' },
           { text: 'Integration with RootStore', link: '/recipes/integration-with-root-store' },
         ]
       },

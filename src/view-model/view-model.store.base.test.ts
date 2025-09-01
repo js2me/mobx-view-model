@@ -108,7 +108,7 @@ describe('ViewModelStoreBase', () => {
   it('accessing to parent view models using store [using parentViewModelId and vmStore]', async () => {
     class TestViewModelImpl1<
       Payload extends AnyObject = EmptyObject,
-      ParentViewModel extends AnyViewModel | null = null,
+      ParentViewModel extends AnyViewModel | AnyViewModelSimple | null = null,
     > extends ViewModelBaseMock<Payload, ParentViewModel> {
       constructor(
         private vmStore: ViewModelStore,

@@ -17,7 +17,7 @@ import { ViewModel as ViewModelBase } from 'mobx-view-model';
 
 export interface ViewModel<
   Payload extends AnyObject = EmptyObject,
-  ParentViewModel extends ViewModel<any> = ViewModel<any, any>,
+  ParentViewModel extends ViewModel<any, any> | null = null,
 > extends ViewModelBase<Payload, ParentViewModel> {
   trackName: string;
   getTrackTime(): Date;
@@ -33,7 +33,7 @@ import { ViewModel } from './view-model';
 
 export class ViewModelImpl<
     Payload extends AnyObject = EmptyObject,
-    ParentViewModel extends ViewModel<any> = ViewModel<any>,
+    ParentViewModel extends ViewModel<any, any> | null = null,
   >
   extends ViewModelBase<Payload, ParentViewModel>
   implements ViewModel<Payload, ParentViewModel>

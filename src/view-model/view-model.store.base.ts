@@ -6,7 +6,6 @@ import {
   type ViewModelsConfig,
 } from '../config/index.js';
 import type { VMComponent, VMLazyComponent } from '../hoc/index.js';
-import { generateVmId } from '../utils/index.js';
 import type { Class, Maybe } from '../utils/types.js';
 
 import type { ViewModelBase } from './view-model.base.js';
@@ -99,10 +98,7 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
 
   createViewModel<VM extends VMBase>(config: ViewModelCreateConfig<VM>): VM {
     const VMConstructor = config.VM as unknown as typeof ViewModelBase;
-    const vmConfig = mergeVMConfigs(
-      this.vmConfig,
-      config.config ?? config.vmConfig,
-    );
+    const vmConfig = mergeVMConfigs(this.vmConfig, config.vmConfig);
     const vmParams: ViewModelParams<any, any> & ViewModelCreateConfig<VM> = {
       ...config,
       vmConfig,
@@ -120,10 +116,8 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
   ): string {
     if (config.id) {
       return config.id;
-    } else if (this.vmConfig.generateId) {
-      return this.vmConfig.generateId(config.ctx);
     } else {
-      return generateVmId(config.ctx);
+      return this.vmConfig.generateId(config.ctx);
     }
   }
 
@@ -211,6 +205,16 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
     return observedVM ?? (this.viewModelsTempHeap.get(id) as Maybe<T>) ?? null;
   }
 
+  getOrCreateVmId(model: VMBase | AnyViewModelSimple): string {
+    if (!model.id) {
+      (model as AnyViewModelSimple).id = this.vmConfig.generateId({
+        VM: model.constructor,
+      });
+    }
+
+    return model.id!;
+  }
+
   getAll<T extends VMBase | AnyViewModelSimple>(
     vmLookup: Maybe<ViewModelLookup<T>>,
   ): T[] {
@@ -220,35 +224,40 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
   }
 
   async mount(model: VMBase | AnyViewModelSimple) {
-    this.mountingViews.add(model.id);
+    const modelId = this.getOrCreateVmId(model);
+
+    this.mountingViews.add(modelId);
 
     await model.mount?.();
 
     runInAction(() => {
-      this.mountingViews.delete(model.id);
+      this.mountingViews.delete(modelId);
     });
   }
 
   async unmount(model: VMBase | AnyViewModelSimple) {
-    this.unmountingViews.add(model.id);
+    const modelId = this.getOrCreateVmId(model);
+
+    this.unmountingViews.add(modelId);
 
     await model.unmount?.();
 
     runInAction(() => {
-      this.unmountingViews.delete(model.id);
+      this.unmountingViews.delete(modelId);
     });
   }
 
   protected attachVMConstructor(model: VMBase | AnyViewModelSimple) {
+    const modelId = this.getOrCreateVmId(model);
     const constructor = (model as any).constructor as Class<any, any>;
 
     if (this.viewModelIdsByClasses.has(constructor)) {
       const vmIds = this.viewModelIdsByClasses.get(constructor)!;
-      if (!vmIds.includes(model.id)) {
-        vmIds.push(model.id);
+      if (!vmIds.includes(modelId)) {
+        vmIds.push(modelId);
       }
     } else {
-      this.viewModelIdsByClasses.set(constructor, [model.id]);
+      this.viewModelIdsByClasses.set(constructor, [modelId]);
     }
   }
 
@@ -269,34 +278,35 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
   }
 
   markToBeAttached(model: VMBase | AnyViewModelSimple) {
-    // @ts-expect-error
-    this.viewModelsTempHeap.set(model.id, model);
+    const modelId = this.getOrCreateVmId(model);
 
-    if ('linkStore' in model) {
-      model.linkStore!(this as any);
-    } else if ('attachViewModelStore' in model) {
-      model.attachViewModelStore!(this as any);
+    this.viewModelsTempHeap.set(modelId, model as VMBase);
+
+    if ('attachViewModelStore' in model) {
+      model.attachViewModelStore!(this as ViewModelStore);
     }
 
     this.attachVMConstructor(model);
   }
 
   async attach(model: VMBase | AnyViewModelSimple) {
-    const attachedCount = this.instanceAttachedCount.get(model.id) ?? 0;
+    const modelId = this.getOrCreateVmId(model);
 
-    this.instanceAttachedCount.set(model.id, attachedCount + 1);
+    const attachedCount = this.instanceAttachedCount.get(modelId) ?? 0;
 
-    if (this.viewModels.has(model.id)) {
+    this.instanceAttachedCount.set(modelId, attachedCount + 1);
+
+    if (this.viewModels.has(modelId)) {
       return;
     }
 
-    this.viewModels.set(model.id, model);
+    this.viewModels.set(modelId, model);
 
     this.attachVMConstructor(model);
 
     await this.mount(model);
 
-    this.viewModelsTempHeap.delete(model.id);
+    this.viewModelsTempHeap.delete(modelId);
   }
 
   async detach(id: string) {

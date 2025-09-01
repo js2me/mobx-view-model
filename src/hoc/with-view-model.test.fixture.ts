@@ -1,3 +1,4 @@
+import type { AnyObject } from 'yummies/utils/types';
 import type { ViewModelsConfig } from '../config/types.js';
 
 export type CircularVmPayloadDependencyTestCase = {
@@ -5,709 +6,87 @@ export type CircularVmPayloadDependencyTestCase = {
   isRecursion: boolean;
 };
 
+type VmConfigPropVariant<TProp extends keyof ViewModelsConfig> = {
+  property: TProp;
+  possibleValues: ViewModelsConfig[TProp][];
+};
+
+const vmConfigPropertyVariants = [
+  {
+    property: 'wrapViewsInObserver',
+    possibleValues: [true, false],
+  } satisfies VmConfigPropVariant<'wrapViewsInObserver'>,
+  {
+    property: 'payloadComputed',
+    possibleValues: [true, false, 'struct'],
+  } satisfies VmConfigPropVariant<'payloadComputed'>,
+  {
+    property: 'comparePayload',
+    possibleValues: ['shallow', 'strict', false],
+  } satisfies VmConfigPropVariant<'comparePayload'>,
+  {
+    property: 'payloadObservable',
+    possibleValues: ['deep', 'ref', 'shallow', 'shallow', false],
+  } satisfies VmConfigPropVariant<'payloadObservable'>,
+];
+
+const createAllVmConfigScenarios = () => {
+  const valueArrays = vmConfigPropertyVariants.map(
+    (variant) => variant.possibleValues,
+  );
+  const propertyNames = vmConfigPropertyVariants.map(
+    (variant) => variant.property,
+  );
+
+  const combinations = valueArrays.reduce(
+    (acc, array) => {
+      return acc.flatMap((x) => array.map((y) => [...x, y]));
+    },
+    [[]] as any[][],
+  );
+
+  const allDuplicatedScenarios = combinations.map((combination) => {
+    const result: AnyObject = {};
+    propertyNames.forEach((prop, index) => {
+      result[prop] = combination[index];
+    });
+    return result;
+  });
+
+  return allDuplicatedScenarios
+    .map((it) => {
+      return {
+        vmConfig: it,
+        key: JSON.stringify(it),
+      };
+    })
+    .filter((it, i, arr) => {
+      return (
+        arr.find((l) => l.key === it.key) === it &&
+        arr.findLast((l) => l.key === it.key) === it
+      );
+    });
+};
+
+const recursionCases: string[] = [
+  '{"wrapViewsInObserver":true,"payloadComputed":true,"comparePayload":"shallow","payloadObservable":"deep"}',
+  '{"wrapViewsInObserver":true,"payloadComputed":true,"comparePayload":false,"payloadObservable":"deep"}',
+  '{"wrapViewsInObserver":true,"payloadComputed":true,"comparePayload":false,"payloadObservable":"ref"}',
+  '{"wrapViewsInObserver":true,"payloadComputed":false,"comparePayload":"shallow","payloadObservable":"deep"}',
+  '{"wrapViewsInObserver":true,"payloadComputed":false,"comparePayload":false,"payloadObservable":"deep"}',
+  '{"wrapViewsInObserver":true,"payloadComputed":false,"comparePayload":false,"payloadObservable":"ref"}',
+  '{"wrapViewsInObserver":false,"payloadComputed":true,"comparePayload":"shallow","payloadObservable":"deep"}',
+  '{"wrapViewsInObserver":false,"payloadComputed":true,"comparePayload":false,"payloadObservable":"deep"}',
+  '{"wrapViewsInObserver":false,"payloadComputed":true,"comparePayload":false,"payloadObservable":"ref"}',
+  '{"wrapViewsInObserver":false,"payloadComputed":false,"comparePayload":"shallow","payloadObservable":"deep"}',
+  '{"wrapViewsInObserver":false,"payloadComputed":false,"comparePayload":false,"payloadObservable":"deep"}',
+  '{"wrapViewsInObserver":false,"payloadComputed":false,"comparePayload":false,"payloadObservable":"ref"}',
+];
+
 export const circularVmPayloadDependencyTestCases: CircularVmPayloadDependencyTestCase[] =
-  [
-    {
-      vmConfig: {},
-      isRecursion: false,
-    },
-    {
-      vmConfig: {
-        payloadComputed: false,
-      },
-      isRecursion: false,
-    },
-    {
-      vmConfig: {
-        payloadComputed: true,
-      },
-      isRecursion: false,
-    },
-    {
-      vmConfig: {
-        payloadComputed: 'struct',
-      },
-      isRecursion: false,
-    },
-    {
-      vmConfig: {
-        comparePayload: false,
-      },
-      isRecursion: true,
-    },
-    {
-      vmConfig: {
-        comparePayload: 'shallow',
-      },
-      isRecursion: false,
-    },
-    {
-      vmConfig: {
-        comparePayload: 'strict',
-      },
-      isRecursion: false,
-    },
-    {
-      vmConfig: {
-        payloadObservable: false,
-      },
-      isRecursion: false,
-    },
-    {
-      vmConfig: {
-        payloadObservable: false,
-        comparePayload: false,
-      },
-      isRecursion: false,
-    },
-    {
-      vmConfig: {
-        payloadObservable: false,
-        comparePayload: 'shallow',
-      },
-      isRecursion: false,
-    },
-    {
-      vmConfig: {
-        payloadObservable: false,
-        comparePayload: 'strict',
-      },
-      isRecursion: false,
-    },
-    {
-      vmConfig: {
-        payloadObservable: 'ref',
-      },
-      isRecursion: false,
-    },
-    {
-      vmConfig: {
-        payloadObservable: 'ref',
-        comparePayload: false,
-      },
-      isRecursion: true,
-    },
-    {
-      vmConfig: {
-        payloadObservable: 'ref',
-        comparePayload: 'shallow',
-      },
-      isRecursion: false,
-    },
-    {
-      vmConfig: {
-        payloadObservable: 'ref',
-        comparePayload: 'strict',
-      },
-      isRecursion: false,
-    },
-    {
-      vmConfig: {
-        payloadObservable: 'shallow',
-      },
-      isRecursion: false,
-    },
-    {
-      vmConfig: {
-        payloadObservable: 'shallow',
-        comparePayload: false,
-      },
-      isRecursion: true,
-    },
-    {
-      vmConfig: {
-        payloadObservable: 'shallow',
-        comparePayload: 'shallow',
-      },
-      isRecursion: false,
-    },
-    {
-      vmConfig: {
-        payloadObservable: 'shallow',
-        comparePayload: 'strict',
-      },
-      isRecursion: false,
-    },
-    {
-      vmConfig: {
-        payloadObservable: 'struct',
-      },
-      isRecursion: false,
-    },
-    {
-      vmConfig: {
-        payloadObservable: 'struct',
-        comparePayload: false,
-      },
-      isRecursion: false,
-    },
-    {
-      vmConfig: {
-        payloadObservable: 'struct',
-        comparePayload: 'shallow',
-      },
-      isRecursion: false,
-    },
-    {
-      vmConfig: {
-        payloadObservable: 'struct',
-        comparePayload: 'strict',
-      },
-      isRecursion: false,
-    },
-    {
-      vmConfig: {
-        payloadObservable: 'deep',
-      },
-      isRecursion: false,
-    },
-    {
-      vmConfig: {
-        payloadObservable: 'deep',
-        comparePayload: false,
-      },
-      isRecursion: true,
-    },
-    {
-      vmConfig: {
-        payloadObservable: 'deep',
-        comparePayload: 'shallow',
-      },
-      isRecursion: true,
-    },
-    {
-      vmConfig: {
-        payloadObservable: 'deep',
-        comparePayload: 'strict',
-      },
-      isRecursion: false,
-    },
-    {
-      vmConfig: {
-        payloadComputed: false,
-        comparePayload: false,
-      },
-      isRecursion: true,
-    },
-    {
-      vmConfig: {
-        payloadComputed: false,
-        comparePayload: 'shallow',
-      },
-      isRecursion: false,
-    },
-    {
-      vmConfig: {
-        payloadComputed: false,
-        comparePayload: 'strict',
-      },
-      isRecursion: false,
-    },
-    {
-      vmConfig: {
-        payloadComputed: false,
-        payloadObservable: false,
-      },
-      isRecursion: false,
-    },
-    {
-      vmConfig: {
-        payloadComputed: false,
-        payloadObservable: false,
-        comparePayload: false,
-      },
-      isRecursion: false,
-    },
-    {
-      vmConfig: {
-        payloadComputed: false,
-        payloadObservable: false,
-        comparePayload: 'shallow',
-      },
-      isRecursion: false,
-    },
-    {
-      vmConfig: {
-        payloadComputed: false,
-        payloadObservable: false,
-        comparePayload: 'strict',
-      },
-      isRecursion: false,
-    },
-    {
-      vmConfig: {
-        payloadComputed: false,
-        payloadObservable: 'ref',
-      },
-      isRecursion: false,
-    },
-    {
-      vmConfig: {
-        payloadComputed: false,
-        payloadObservable: 'ref',
-        comparePayload: false,
-      },
-      isRecursion: true,
-    },
-    {
-      vmConfig: {
-        payloadComputed: false,
-        payloadObservable: 'ref',
-        comparePayload: 'shallow',
-      },
-      isRecursion: false,
-    },
-    {
-      vmConfig: {
-        payloadComputed: false,
-        payloadObservable: 'ref',
-        comparePayload: 'strict',
-      },
-      isRecursion: false,
-    },
-    {
-      vmConfig: {
-        payloadComputed: false,
-        payloadObservable: 'shallow',
-      },
-      isRecursion: false,
-    },
-    {
-      vmConfig: {
-        payloadComputed: false,
-        payloadObservable: 'shallow',
-        comparePayload: false,
-      },
-      isRecursion: true,
-    },
-    {
-      vmConfig: {
-        payloadComputed: false,
-        payloadObservable: 'shallow',
-        comparePayload: 'shallow',
-      },
-      isRecursion: false,
-    },
-    {
-      vmConfig: {
-        payloadComputed: false,
-        payloadObservable: 'shallow',
-        comparePayload: 'strict',
-      },
-      isRecursion: false,
-    },
-    {
-      vmConfig: {
-        payloadComputed: false,
-        payloadObservable: 'struct',
-      },
-      isRecursion: false,
-    },
-    {
-      vmConfig: {
-        payloadComputed: false,
-        payloadObservable: 'struct',
-        comparePayload: false,
-      },
-      isRecursion: false,
-    },
-    {
-      vmConfig: {
-        payloadComputed: false,
-        payloadObservable: 'struct',
-        comparePayload: 'shallow',
-      },
-      isRecursion: false,
-    },
-    {
-      vmConfig: {
-        payloadComputed: false,
-        payloadObservable: 'struct',
-        comparePayload: 'strict',
-      },
-      isRecursion: false,
-    },
-    {
-      vmConfig: {
-        payloadComputed: false,
-        payloadObservable: 'deep',
-      },
-      isRecursion: false,
-    },
-    {
-      vmConfig: {
-        payloadComputed: false,
-        payloadObservable: 'deep',
-        comparePayload: false,
-      },
-      isRecursion: true,
-    },
-    {
-      vmConfig: {
-        payloadComputed: false,
-        payloadObservable: 'deep',
-        comparePayload: 'shallow',
-      },
-      isRecursion: true,
-    },
-    {
-      vmConfig: {
-        payloadComputed: false,
-        payloadObservable: 'deep',
-        comparePayload: 'strict',
-      },
-      isRecursion: false,
-    },
-    {
-      vmConfig: {
-        payloadComputed: true,
-        comparePayload: false,
-      },
-      isRecursion: true,
-    },
-    {
-      vmConfig: {
-        payloadComputed: true,
-        comparePayload: 'shallow',
-      },
-      isRecursion: false,
-    },
-    {
-      vmConfig: {
-        payloadComputed: true,
-        comparePayload: 'strict',
-      },
-      isRecursion: false,
-    },
-    {
-      vmConfig: {
-        payloadComputed: true,
-        payloadObservable: false,
-      },
-      isRecursion: false,
-    },
-    {
-      vmConfig: {
-        payloadComputed: true,
-        payloadObservable: false,
-        comparePayload: false,
-      },
-      isRecursion: false,
-    },
-    {
-      vmConfig: {
-        payloadComputed: true,
-        payloadObservable: false,
-        comparePayload: 'shallow',
-      },
-      isRecursion: false,
-    },
-    {
-      vmConfig: {
-        payloadComputed: true,
-        payloadObservable: false,
-        comparePayload: 'strict',
-      },
-      isRecursion: false,
-    },
-    {
-      vmConfig: {
-        payloadComputed: true,
-        payloadObservable: 'ref',
-      },
-      isRecursion: false,
-    },
-    {
-      vmConfig: {
-        payloadComputed: true,
-        payloadObservable: 'ref',
-        comparePayload: false,
-      },
-      isRecursion: true,
-    },
-    {
-      vmConfig: {
-        payloadComputed: true,
-        payloadObservable: 'ref',
-        comparePayload: 'shallow',
-      },
-      isRecursion: false,
-    },
-    {
-      vmConfig: {
-        payloadComputed: true,
-        payloadObservable: 'ref',
-        comparePayload: 'strict',
-      },
-      isRecursion: false,
-    },
-    {
-      vmConfig: {
-        payloadComputed: true,
-        payloadObservable: 'shallow',
-      },
-      isRecursion: false,
-    },
-    {
-      vmConfig: {
-        payloadComputed: true,
-        payloadObservable: 'shallow',
-        comparePayload: false,
-      },
-      isRecursion: true,
-    },
-    {
-      vmConfig: {
-        payloadComputed: true,
-        payloadObservable: 'shallow',
-        comparePayload: 'shallow',
-      },
-      isRecursion: false,
-    },
-    {
-      vmConfig: {
-        payloadComputed: true,
-        payloadObservable: 'shallow',
-        comparePayload: 'strict',
-      },
-      isRecursion: false,
-    },
-    {
-      vmConfig: {
-        payloadComputed: true,
-        payloadObservable: 'struct',
-      },
-      isRecursion: false,
-    },
-    {
-      vmConfig: {
-        payloadComputed: true,
-        payloadObservable: 'struct',
-        comparePayload: false,
-      },
-      isRecursion: false,
-    },
-    {
-      vmConfig: {
-        payloadComputed: true,
-        payloadObservable: 'struct',
-        comparePayload: 'shallow',
-      },
-      isRecursion: false,
-    },
-    {
-      vmConfig: {
-        payloadComputed: true,
-        payloadObservable: 'struct',
-        comparePayload: 'strict',
-      },
-      isRecursion: false,
-    },
-    {
-      vmConfig: {
-        payloadComputed: true,
-        payloadObservable: 'deep',
-      },
-      isRecursion: false,
-    },
-    {
-      vmConfig: {
-        payloadComputed: true,
-        payloadObservable: 'deep',
-        comparePayload: false,
-      },
-      isRecursion: true,
-    },
-    {
-      vmConfig: {
-        payloadComputed: true,
-        payloadObservable: 'deep',
-        comparePayload: 'shallow',
-      },
-      isRecursion: true,
-    },
-    {
-      vmConfig: {
-        payloadComputed: true,
-        payloadObservable: 'deep',
-        comparePayload: 'strict',
-      },
-      isRecursion: false,
-    },
-    {
-      vmConfig: {
-        payloadComputed: 'struct',
-        comparePayload: false,
-      },
-      isRecursion: false,
-    },
-    {
-      vmConfig: {
-        payloadComputed: 'struct',
-        comparePayload: 'shallow',
-      },
-      isRecursion: false,
-    },
-    {
-      vmConfig: {
-        payloadComputed: 'struct',
-        comparePayload: 'strict',
-      },
-      isRecursion: false,
-    },
-    {
-      vmConfig: {
-        payloadComputed: 'struct',
-        payloadObservable: false,
-      },
-      isRecursion: false,
-    },
-    {
-      vmConfig: {
-        payloadComputed: 'struct',
-        payloadObservable: false,
-        comparePayload: false,
-      },
-      isRecursion: false,
-    },
-    {
-      vmConfig: {
-        payloadComputed: 'struct',
-        payloadObservable: false,
-        comparePayload: 'shallow',
-      },
-      isRecursion: false,
-    },
-    {
-      vmConfig: {
-        payloadComputed: 'struct',
-        payloadObservable: false,
-        comparePayload: 'strict',
-      },
-      isRecursion: false,
-    },
-    {
-      vmConfig: {
-        payloadComputed: 'struct',
-        payloadObservable: 'ref',
-      },
-      isRecursion: false,
-    },
-    {
-      vmConfig: {
-        payloadComputed: 'struct',
-        payloadObservable: 'ref',
-        comparePayload: false,
-      },
-      isRecursion: false,
-    },
-    {
-      vmConfig: {
-        payloadComputed: 'struct',
-        payloadObservable: 'ref',
-        comparePayload: 'shallow',
-      },
-      isRecursion: false,
-    },
-    {
-      vmConfig: {
-        payloadComputed: 'struct',
-        payloadObservable: 'ref',
-        comparePayload: 'strict',
-      },
-      isRecursion: false,
-    },
-    {
-      vmConfig: {
-        payloadComputed: 'struct',
-        payloadObservable: 'shallow',
-      },
-      isRecursion: false,
-    },
-    {
-      vmConfig: {
-        payloadComputed: 'struct',
-        payloadObservable: 'shallow',
-        comparePayload: false,
-      },
-      isRecursion: false,
-    },
-    {
-      vmConfig: {
-        payloadComputed: 'struct',
-        payloadObservable: 'shallow',
-        comparePayload: 'shallow',
-      },
-      isRecursion: false,
-    },
-    {
-      vmConfig: {
-        payloadComputed: 'struct',
-        payloadObservable: 'shallow',
-        comparePayload: 'strict',
-      },
-      isRecursion: false,
-    },
-    {
-      vmConfig: {
-        payloadComputed: 'struct',
-        payloadObservable: 'struct',
-      },
-      isRecursion: false,
-    },
-    {
-      vmConfig: {
-        payloadComputed: 'struct',
-        payloadObservable: 'struct',
-        comparePayload: false,
-      },
-      isRecursion: false,
-    },
-    {
-      vmConfig: {
-        payloadComputed: 'struct',
-        payloadObservable: 'struct',
-        comparePayload: 'shallow',
-      },
-      isRecursion: false,
-    },
-    {
-      vmConfig: {
-        payloadComputed: 'struct',
-        payloadObservable: 'struct',
-        comparePayload: 'strict',
-      },
-      isRecursion: false,
-    },
-    {
-      vmConfig: {
-        payloadComputed: 'struct',
-        payloadObservable: 'deep',
-      },
-      isRecursion: false,
-    },
-    {
-      vmConfig: {
-        payloadComputed: 'struct',
-        payloadObservable: 'deep',
-        comparePayload: false,
-      },
-      isRecursion: false,
-    },
-    {
-      vmConfig: {
-        payloadComputed: 'struct',
-        payloadObservable: 'deep',
-        comparePayload: 'shallow',
-      },
-      isRecursion: false,
-    },
-    {
-      vmConfig: {
-        payloadComputed: 'struct',
-        payloadObservable: 'deep',
-        comparePayload: 'strict',
-      },
-      isRecursion: false,
-    },
-  ];
+  createAllVmConfigScenarios().map((it) => {
+    return {
+      vmConfig: it.vmConfig,
+      isRecursion: recursionCases.includes(it.key),
+    };
+  });

@@ -21,7 +21,7 @@ export type ViewModelParent<TViewModel extends AnyViewModel> =
 
 export interface ViewModelParams<
   Payload extends AnyObject = EmptyObject,
-  ParentViewModel extends AnyViewModel | null = null,
+  ParentViewModel extends AnyViewModel | AnyViewModelSimple | null = null,
   ComponentProps extends AnyObject = AnyObject,
 > {
   /**
@@ -42,14 +42,6 @@ export interface ViewModelParams<
    * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config)
    */
   vmConfig?: ViewModelsRawConfig;
-  /**
-   * Additional configuration for the view model
-   * See {@link ViewModelsConfig}
-   * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config)
-   *
-   * @deprecated use `vmConfig` instead. Will be removed in next major release
-   */
-  config?: ViewModelsRawConfig;
   /**
    * Original component props
    */

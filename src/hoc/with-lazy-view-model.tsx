@@ -30,14 +30,6 @@ export type VMLazyComponent<
   TView extends ComponentType<any>,
 > = VMComponent<TViewModel, ComponentProps<TView>> & LoadableMixin;
 
-/**
- * @deprecated use `VMLazyComponent` instead. Will be removed in next major release
- */
-export type ComponentWithLazyViewModel<
-  TViewModel extends AnyViewModel | AnyViewModelSimple,
-  TView extends ComponentType<any>,
-> = VMLazyComponent<TViewModel, ComponentProps<TView>> & LoadableMixin;
-
 export interface LazyViewModelHocConfig<TViewModel extends AnyViewModel>
   extends ViewModelHocConfig<TViewModel>,
     Pick<LoadableConfig, 'loading' | 'preload' | 'throwOnError'> {}
