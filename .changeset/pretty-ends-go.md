@@ -2,7 +2,7 @@
 "mobx-view-model": minor
 ---
 
-`id` property not is optional for implementation for `ViewModelSimple` interface   
+`id` property now is optional for implementation for `ViewModelSimple` interface   
 
 Now you can do not implement `ViewModelSimple` interface to work with this library:   
 
