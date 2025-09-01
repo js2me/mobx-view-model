@@ -40,7 +40,7 @@ describe('ViewModelSimple', () => {
     expect(vm).toBeDefined();
   });
 
-  it('has id', () => {
+  it('has id (user defined)', () => {
     const vm = new ViewModelSimpleImpl();
     expect(vm.id).toBe('1');
   });

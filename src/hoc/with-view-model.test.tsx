@@ -239,7 +239,7 @@ describe('withViewModel', () => {
   });
 
   describe('payload manipulations', () => {
-    test('View should be updated when payload is changed', async () => {
+    test('View should be updated when payload is changed (no touching payload in View)', async () => {
       class VM extends ViewModelBaseMock<{ counter: number }> {}
       const View = vi.fn(({ model }: ViewModelProps<VM>) => {
         return <div>{`hello ${model.id}`}</div>;
@@ -272,7 +272,47 @@ describe('withViewModel', () => {
       fireEvent.click(incrementButton);
       fireEvent.click(incrementButton);
 
-      expect(View).toHaveBeenCalledTimes(4);
+      expect(View).toHaveBeenCalledTimes(1);
+    });
+    test('View should be updated when payload is changed (touching payload in View)', async () => {
+      class VM extends ViewModelBaseMock<{ counter: number }> {}
+      const View = vi.fn(({ model }: ViewModelProps<VM>) => {
+        return <div>{`hello ${model.id} ${model.payload.counter}`}</div>;
+      });
+      const Component = withViewModel(VM, { generateId: createIdGenerator() })(
+        View,
+      );
+
+      const SuperContainer = () => {
+        const [counter, setCounter] = useState(0);
+
+        return (
+          <>
+            <button
+              data-testid={'increment'}
+              onClick={() => setCounter(counter + 1)}
+            >
+              increment
+            </button>
+            <Component payload={{ counter }} />
+          </>
+        );
+      };
+
+      await act(() => render(<SuperContainer />));
+
+      const incrementButton = screen.getByTestId('increment');
+
+      fireEvent.click(incrementButton);
+      fireEvent.click(incrementButton);
+      fireEvent.click(incrementButton);
+
+      expect(View).toHaveBeenCalledTimes(
+        getBasedReactVersion({
+          18: 4,
+          19: 7,
+        }),
+      );
     });
 
     const createTestPayloadChanges = async ({
@@ -355,7 +395,7 @@ describe('withViewModel', () => {
       fireEvent.click(incrementButton);
       fireEvent.click(incrementButton);
 
-      // @ts-ignore
+      // @ts-expect-error
       expect(vm?.payload).toEqual({ counter: expectedCounterInPayload });
 
       fireEvent.click(forceUpdateButton);
@@ -370,7 +410,7 @@ describe('withViewModel', () => {
     test('View should have actual payload state (default isPayloadEqual)', async () => {
       await createTestPayloadChanges({
         expectedCounterInPayload: 3,
-        expectedRerendersCountInVMComponentView: 7,
+        expectedRerendersCountInVMComponentView: 1,
       });
     });
 
@@ -398,7 +438,7 @@ describe('withViewModel', () => {
       await createTestPayloadChanges({
         vmConfig: { comparePayload: 'strict' },
         expectedCounterInPayload: 3,
-        expectedRerendersCountInVMComponentView: 7,
+        expectedRerendersCountInVMComponentView: 1,
       });
     });
 
@@ -428,7 +468,7 @@ describe('withViewModel', () => {
       await createTestPayloadChanges({
         vmConfig: { comparePayload: 'shallow' },
         expectedCounterInPayload: 3,
-        expectedRerendersCountInVMComponentView: 7,
+        expectedRerendersCountInVMComponentView: 1,
       });
     });
 
@@ -458,7 +498,7 @@ describe('withViewModel', () => {
       await createTestPayloadChanges({
         vmConfig: { comparePayload: false },
         expectedCounterInPayload: 3,
-        expectedRerendersCountInVMComponentView: 7,
+        expectedRerendersCountInVMComponentView: 1,
       });
     });
 
@@ -476,8 +516,8 @@ describe('withViewModel', () => {
         vmConfig: { comparePayload: false },
         expectedCounterInPayload: 3,
         expectedRerendersCountInVMComponentView: getBasedReactVersion({
-          18: 7,
-          19: 13,
+          18: 4,
+          19: 7,
         }),
         wrapViewInObserver: true,
         renderPayloadInView: true,
@@ -488,7 +528,7 @@ describe('withViewModel', () => {
       await createTestPayloadChanges({
         vmConfig: { comparePayload: comparer.shallow },
         expectedCounterInPayload: 3,
-        expectedRerendersCountInVMComponentView: 7,
+        expectedRerendersCountInVMComponentView: 1,
       });
     });
 
@@ -518,7 +558,7 @@ describe('withViewModel', () => {
       await createTestPayloadChanges({
         vmConfig: { comparePayload: comparer.structural },
         expectedCounterInPayload: 3,
-        expectedRerendersCountInVMComponentView: 7,
+        expectedRerendersCountInVMComponentView: 1,
       });
     });
 
@@ -548,7 +588,7 @@ describe('withViewModel', () => {
       await createTestPayloadChanges({
         vmConfig: { comparePayload: comparer.identity },
         expectedCounterInPayload: 3,
-        expectedRerendersCountInVMComponentView: 7,
+        expectedRerendersCountInVMComponentView: 1,
       });
     });
 
@@ -566,8 +606,8 @@ describe('withViewModel', () => {
         vmConfig: { comparePayload: comparer.identity },
         expectedCounterInPayload: 3,
         expectedRerendersCountInVMComponentView: getBasedReactVersion({
-          18: 7,
-          19: 13,
+          18: 4,
+          19: 7,
         }),
         wrapViewInObserver: true,
         renderPayloadInView: true,
@@ -578,7 +618,7 @@ describe('withViewModel', () => {
       await createTestPayloadChanges({
         vmConfig: { comparePayload: comparer.default },
         expectedCounterInPayload: 3,
-        expectedRerendersCountInVMComponentView: 7,
+        expectedRerendersCountInVMComponentView: 1,
       });
     });
 
@@ -596,8 +636,8 @@ describe('withViewModel', () => {
         vmConfig: { comparePayload: comparer.default },
         expectedCounterInPayload: 3,
         expectedRerendersCountInVMComponentView: getBasedReactVersion({
-          18: 7,
-          19: 13,
+          18: 4,
+          19: 7,
         }),
         wrapViewInObserver: true,
         renderPayloadInView: true,
@@ -669,11 +709,7 @@ describe('withViewModel', () => {
       );
 
       const App = () => {
-        return (
-          <>
-            <ParentView />
-          </>
-        );
+        return <ParentView />;
       };
 
       const app = <App />;
@@ -1158,7 +1194,7 @@ describe('withViewModel', () => {
         }),
       );
 
-      expect(renderParentCounter.value).toBe(3);
+      expect(renderParentCounter.value).toBe(1);
       expect(renderChildCounter.value).toBe(1);
     });
   });
@@ -1169,23 +1205,8 @@ describe('withViewModel', () => {
       isRecursion,
     }: CircularVmPayloadDependencyTestCase) => {
       const caseNameTitle = `${isRecursion ? 'bad' : 'ok'} scenario`;
-      const caseNameSegments: string[] = [];
 
-      if (vmConfig.comparePayload != null) {
-        caseNameSegments.push(`comparePayload: ${vmConfig.comparePayload}`);
-      }
-
-      if (vmConfig.payloadObservable != null) {
-        caseNameSegments.push(
-          `payloadObservable: ${vmConfig.payloadObservable}`,
-        );
-      }
-
-      if (vmConfig.payloadComputed != null) {
-        caseNameSegments.push(`payloadComputed: ${vmConfig.payloadComputed}`);
-      }
-
-      const caseName = `${caseNameTitle} (${caseNameSegments.join(', ')})`;
+      const caseName = `${caseNameTitle} ${JSON.stringify(vmConfig)}`;
 
       it(caseName, async () => {
         vi.useFakeTimers();
@@ -1364,9 +1385,15 @@ describe('withViewModel', () => {
         const childElement = await findByTestId('child');
 
         if (isRecursion) {
-          expect(childElement.style.color).toBe('red');
+          expect(
+            childElement.style.color,
+            'This case should have endless recursion of updates',
+          ).toBe('red');
         } else {
-          expect(childElement.style.color).toBe('green');
+          expect(
+            childElement.style.color,
+            'This case should not have endless recursion of updates',
+          ).toBe('green');
         }
       });
     };
@@ -1438,6 +1465,64 @@ describe('withViewModel', () => {
 
       await act(async () => render(<Component />));
       expect(screen.getByText('hello 1234 bar')).toBeDefined();
+    });
+
+    describe('without id property', () => {
+      test('renders (1 overload)', async () => {
+        class VM {
+          foo = 'bar';
+        }
+        const View = ({ model }: ViewModelProps<VM>) => {
+          return <div data-testid={'view'}>{`hello ${model.foo}`}</div>;
+        };
+        const Component = withViewModel(VM)(View);
+
+        await act(async () => render(<Component />));
+        expect(screen.getByText('hello bar')).toBeDefined();
+      });
+
+      test('renders (1 overload) inline function', async () => {
+        class VM {
+          foo = 'bar';
+        }
+
+        const Component = withViewModel(VM, ({ model }) => {
+          return <div data-testid={'view'}>{`hello ${model.foo}`}</div>;
+        });
+
+        await act(async () => render(<Component />));
+        expect(screen.getByText('hello bar')).toBeDefined();
+      });
+
+      test('renders (1 overload) outer function declaration', async () => {
+        class VM {
+          foo = 'bar';
+        }
+
+        const VMView = ({ model }: ViewModelProps<VM>) => {
+          return <div data-testid={'view'}>{`hello ${model.foo}`}</div>;
+        };
+
+        const Component = withViewModel(VM, VMView);
+
+        await act(async () => render(<Component />));
+        expect(screen.getByText('hello bar')).toBeDefined();
+      });
+
+      test('renders (1 overload) outer function declaration + observer wrap()', async () => {
+        class VM {
+          foo = 'bar';
+        }
+
+        const VMView = observer(({ model }: ViewModelProps<VM>) => {
+          return <div data-testid={'view'}>{`hello ${model.foo}`}</div>;
+        });
+
+        const Component = withViewModel(VM, VMView);
+
+        await act(async () => render(<Component />));
+        expect(screen.getByText('hello bar')).toBeDefined();
+      });
     });
   });
 });

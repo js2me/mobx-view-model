@@ -10,13 +10,6 @@ Use `ViewModelSimple` when:
 2. You prefer a simple, boilerplate-free class structure  
 3. Your view model does not required advanced features like [`viewModels` access](/api/view-models/base-implementation.html#viewmodels) or complex lifecycle hooks.  
 
-## Implementation  
-
-### Requirements   
-To implement `ViewModelSimple`, your class must:   
-1. Define a unique `id` property to identify the instance (used for access in `ViewModelStore`)   
-
-
 ### Example   
 ```ts
 import { ViewModelSimple } from "mobx-view-model";
@@ -41,11 +34,58 @@ export class FruitViewModel implements ViewModelSimple {
 }
 ```
 
+::: tip defining `id` property is optional
+If you do not define the `id` property, a random id will be generated from `viewModelsConfig.generateId`
+:::
+
+### Example without any implemented method from interface    
+
+```ts{4}
+import { ViewModelSimple } from "mobx-view-model";
+import { makeAutoObservable } from "mobx";
+
+export class FruitViewModel {
+  // Observable state
+  fruit = "apple";
+
+  constructor() {
+    // Initialize MobX observables
+    makeAutoObservable(this);
+  }
+
+  // Example action
+  setFruit(newFruit: string) {
+    this.fruit = newFruit;
+  }
+}
+```
+
+::: tip `implements ViewModelSimple` was removed
+Because TypeScript throws an error about not implementing at least one property or method of the `ViewModelSimple` interface.
+:::
+
 ## Usage in React  
 
-### Instance creation  
+### Usage with [`withViewModel`](/react/api/with-view-model) HOC   
 
-Create instances using the [`useCreateViewModel`](/react/api/use-create-view-model) hook. This ensures proper lifecycle management and reactivity:   
+```tsx
+import { observer } from "mobx-react-lite";
+import { withViewModel } from "mobx-view-model";
+import { FruitViewModel } from "./model";
+
+export const FruitComponent = withViewModel(FruitViewModel, ({ model }) => {
+  return (
+    <div>
+      <p>Current fruit: {model.fruit}</p>
+      <button onClick={() => model.setFruit("banana")}>
+        Change to Banana
+      </button>
+    </div>
+  );
+});
+```
+
+### Usage with [`useCreateViewModel`](/react/api/use-create-view-model) hook   
 
 ```tsx
 import { observer } from "mobx-react-lite";
@@ -66,6 +106,8 @@ export const FruitComponent = observer(() => {
   );
 });
 ```
+
+
 
 ### Accessing Instances  
 To retrieve an existing instance elsewhere in your app:  

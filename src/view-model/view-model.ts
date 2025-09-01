@@ -1,7 +1,7 @@
 import type { ViewModelsConfig } from '../config/types.js';
 import type { AnyObject, EmptyObject } from '../utils/types.js';
 
-import type { AnyViewModel } from './view-model.types.js';
+import type { AnyViewModel, AnyViewModelSimple } from './view-model.types.js';
 
 /**
  * The main interface for all view models.
@@ -10,7 +10,7 @@ import type { AnyViewModel } from './view-model.types.js';
  */
 export interface ViewModel<
   Payload extends AnyObject = EmptyObject,
-  ParentViewModel extends AnyViewModel | null = null,
+  ParentViewModel extends AnyViewModel | AnyViewModelSimple | null = null,
 > {
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/interface#id-string) */
   readonly id: string;

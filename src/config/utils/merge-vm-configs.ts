@@ -23,9 +23,13 @@ export const mergeVMConfigs = (...configs: Maybe<ViewModelsRawConfig>[]) => {
       startViewTransitions,
       comparePayload,
       observable,
+      generateId,
       ...otherConfigUpdates
     } = config;
 
+    if (generateId) {
+      result.generateId = generateId;
+    }
     if (startViewTransitions) {
       const startViewTransitonsUpdate: Partial<
         ViewModelsConfig['startViewTransitions']

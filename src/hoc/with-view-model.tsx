@@ -38,12 +38,21 @@ type FixedComponentType<P extends AnyObject = {}> =
 
 declare const process: { env: { NODE_ENV?: string } };
 
-export type ViewModelProps<VM extends AnyViewModel | AnyViewModelSimple> = {
+export type ViewModelProps<VM> = {
   model: VM;
 };
 
-export type ViewModelInputProps<VM extends AnyViewModel | AnyViewModelSimple> =
-  VM extends ViewModel<infer TPayload, any>
+export type ViewModelInputProps<VM> = VM extends ViewModel<infer TPayload, any>
+  ? TPayload extends EmptyObject
+    ? AnyObject
+    : IsPartial<TPayload> extends true
+      ? {
+          payload?: TPayload;
+        }
+      : {
+          payload: TPayload;
+        }
+  : VM extends ViewModelSimple<infer TPayload>
     ? TPayload extends EmptyObject
       ? AnyObject
       : IsPartial<TPayload> extends true
@@ -53,17 +62,7 @@ export type ViewModelInputProps<VM extends AnyViewModel | AnyViewModelSimple> =
         : {
             payload: TPayload;
           }
-    : VM extends ViewModelSimple<infer TPayload>
-      ? TPayload extends EmptyObject
-        ? AnyObject
-        : IsPartial<TPayload> extends true
-          ? {
-              payload?: TPayload;
-            }
-          : {
-              payload: TPayload;
-            }
-      : AnyObject;
+    : AnyObject;
 
 export interface ViewModelHocConfig<VM extends AnyViewModel>
   extends Omit<UseCreateViewModelConfig<VM>, 'component' | 'componentProps'> {
@@ -88,7 +87,7 @@ export interface ViewModelHocConfig<VM extends AnyViewModel>
   getPayload?: (allProps: any) => any;
 }
 
-export interface ViewModelSimpleHocConfig<_VM extends AnyViewModelSimple> {
+export interface ViewModelSimpleHocConfig<_VM> {
   /**
    * Component to render if the view model initialization takes too long
    */
@@ -111,22 +110,14 @@ export interface ViewModelSimpleHocConfig<_VM extends AnyViewModelSimple> {
 }
 
 export type VMComponentProps<
-  TViewModel extends AnyViewModel | AnyViewModelSimple,
+  TViewModel,
   TComponentOriginProps extends AnyObject,
 > = Omit<TComponentOriginProps, 'model'> & ViewModelInputProps<TViewModel>;
 
 export type VMComponent<
-  TViewModel extends AnyViewModel | AnyViewModelSimple,
+  TViewModel,
   TComponentOriginProps extends AnyObject = ViewModelProps<TViewModel>,
 > = (props: VMComponentProps<TViewModel, TComponentOriginProps>) => ReactNode;
-
-/**
- * @deprecated use `VMComponent` type. Will be removed in next major release.
- */
-export type ComponentWithViewModel<
-  TViewModel extends AnyViewModel,
-  TComponentOriginProps extends AnyObject = ViewModelProps<TViewModel>,
-> = VMComponent<TViewModel, TComponentOriginProps>;
 
 /**
  * A Higher-Order Component that connects React components to their ViewModels, providing seamless MobX integration.
@@ -159,7 +150,7 @@ export function withViewModel<TViewModel extends AnyViewModel>(
  *
  * [**Documentation**](https://js2me.github.io/mobx-view-model/react/api/with-view-model.html)
  */
-export function withViewModel<TViewModel extends AnyViewModelSimple>(
+export function withViewModel<TViewModel>(
   model: Class<TViewModel>,
   config?: ViewModelSimpleHocConfig<TViewModel>,
 ): <TComponentOriginProps extends AnyObject = ViewModelProps<TViewModel>>(
@@ -175,6 +166,22 @@ export function withViewModel<TViewModel extends AnyViewModelSimple>(
  */
 export function withViewModel<
   TViewModel extends AnyViewModelSimple,
+  TComponentOriginProps extends AnyObject = ViewModelProps<TViewModel>,
+>(
+  model: Class<TViewModel>,
+  component: FixedComponentType<
+    TComponentOriginProps & ViewModelProps<TViewModel>
+  >,
+  config?: ViewModelSimpleHocConfig<TViewModel>,
+): VMComponent<TViewModel, TComponentOriginProps>;
+
+/**
+ * A Higher-Order Component that connects React components to their ViewModels, providing seamless MobX integration.
+ *
+ * [**Documentation**](https://js2me.github.io/mobx-view-model/react/api/with-view-model.html)
+ */
+export function withViewModel<
+  TViewModel,
   TComponentOriginProps extends AnyObject = ViewModelProps<TViewModel>,
 >(
   model: Class<TViewModel>,
@@ -235,12 +242,10 @@ const withViewModelWrapper = (
   OriginalComponent?: ComponentType<any>,
 ) => {
   const processViewComponent =
-    config.config?.processViewComponent ??
     config.vmConfig?.processViewComponent ??
     viewModelsConfig.processViewComponent;
 
   const wrapViewsInObserver =
-    config.config?.wrapViewsInObserver ??
     config.vmConfig?.wrapViewsInObserver ??
     viewModelsConfig.wrapViewsInObserver;
 
@@ -252,7 +257,7 @@ const withViewModelWrapper = (
     Component &&
     (Component as any).$$typeof !== REACT_MEMO_SYMBOL
   ) {
-    // @ts-ignore
+    // @ts-expect-error
     Component = observer(Component);
   }
 
@@ -278,8 +283,10 @@ const withViewModelWrapper = (
 
     const isRenderAllowedByStore =
       !viewModels || viewModels.isAbleToRenderView(model.id);
-    // @ts-ignore
-    const isRenderAllowedLocally = model.isMounted !== false;
+
+    // This condition is works for AnyViewModelSimple too
+    // All other variants will be bad for performance
+    const isRenderAllowedLocally = (model as AnyViewModel).isMounted !== false;
     const isRenderAllowed = isRenderAllowedByStore && isRenderAllowedLocally;
 
     if (isRenderAllowed) {

@@ -13,7 +13,7 @@ import { ViewModel as ViewModelBase } from 'mobx-view-model';
 
 export interface ViewModel<
   Payload extends AnyObject = EmptyObject,
-  ParentViewModel extends ViewModel<any> = ViewModel<any, any>,
+  ParentViewModel extends ViewModel<any, any> | null = null,
 > extends ViewModelBase<Payload, ParentViewModel> {}
 ```
 
@@ -27,7 +27,7 @@ import { RootStore } from "@/shared/store";
 
 export class ViewModelImpl<
     Payload extends AnyObject = EmptyObject,
-    ParentViewModel extends ViewModel<any> = ViewModel<any>,
+    ParentViewModel extends ViewModel<any, any> | null = null,
   >
   extends ViewModelBase<Payload, ParentViewModel>
   implements ViewModel<Payload, ParentViewModel>

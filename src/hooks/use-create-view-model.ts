@@ -10,7 +10,6 @@ import { ActiveViewModelContext } from '../contexts/active-view-context.js';
 import { ViewModelsContext } from '../contexts/view-models-context.js';
 import { useIsomorphicLayoutEffect } from '../lib/hooks/use-isomorphic-layout-effect.js';
 import { useValue } from '../lib/hooks/use-value.js';
-import { generateVmId } from '../utils/generate-vm-id.js';
 import { isViewModelClass } from '../utils/typeguards.js';
 import type { ViewModelCreateConfig } from '../view-model/view-model.store.types.js';
 import type {
@@ -22,7 +21,7 @@ import type { ViewModelSimple } from '../view-model/view-model-simple.js';
 export interface UseCreateViewModelConfig<TViewModel extends AnyViewModel>
   extends Pick<
     ViewModelCreateConfig<TViewModel>,
-    'vmConfig' | 'config' | 'ctx' | 'component' | 'props'
+    'vmConfig' | 'ctx' | 'component' | 'props'
   > {
   /**
    * Unique identifier for the view
@@ -73,6 +72,15 @@ export function useCreateViewModel<TViewModelSimple extends ViewModelSimple>(
 ): TViewModelSimple;
 
 /**
+ * Creates new instance of ViewModelSimple
+ *
+ * [**Documentation**](https://js2me.github.io/mobx-view-model/react/api/use-create-view-model.html)
+ */
+export function useCreateViewModel<TViewModelSimple>(
+  VM: Class<TViewModelSimple>,
+): TViewModelSimple;
+
+/**
  * Creates new instance of ViewModel
  *
  * [**Documentation**](https://js2me.github.io/mobx-view-model/react/api/use-create-view-model.html)
@@ -107,10 +115,10 @@ const useCreateViewModelBase = (
         ...config,
         ctx,
         VM,
-        parentViewModelId: parentViewModel?.id,
+        parentViewModelId: parentViewModel?.id ?? null,
       }) ??
       config?.id ??
-      generateVmId(ctx);
+      viewModelsConfig.generateId(ctx);
 
     const instanceFromStore = viewModels ? viewModels.get(id) : null;
 
@@ -119,7 +127,7 @@ const useCreateViewModelBase = (
     } else {
       const configCreate: ViewModelCreateConfig<any> = {
         ...config,
-        vmConfig: config?.config ?? config?.vmConfig,
+        vmConfig: config?.vmConfig,
         id,
         parentViewModelId: parentViewModel?.id,
         payload: payload ?? {},
@@ -169,8 +177,13 @@ const useCreateViewModelSimple = (
   payload?: any,
 ) => {
   const viewModels = useContext(ViewModelsContext);
+  const parentViewModel = useContext(ActiveViewModelContext) || null;
+
   const instance = useValue(() => {
     const instance = new VM();
+
+    instance.parentViewModel =
+      parentViewModel as unknown as (typeof instance)['parentViewModel'];
 
     viewModels?.markToBeAttached(instance);
 

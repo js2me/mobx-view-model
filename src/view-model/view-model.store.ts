@@ -60,14 +60,18 @@ export interface ViewModelStore<VMBase extends AnyViewModel = AnyViewModel> {
     vmLookup: Maybe<ViewModelLookup<T>>,
   ): T[];
 
-  markToBeAttached(model: VMBase | ViewModelSimple): void;
+  /**
+   * This is specific method to be called when a view model is about to be attached to view.
+   * This method is the first method where the created view model instance is passed to the view model store.
+   */
+  markToBeAttached(model: VMBase | AnyViewModelSimple): void;
 
   /**
    * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#attachviewmodel)
    * @param model - The view model to attach.
    * @returns A promise that resolves when the operation is complete.
    */
-  attach(model: VMBase | ViewModelSimple): Promise<void>;
+  attach(model: VMBase | AnyViewModelSimple): Promise<void>;
 
   /**
    * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#detachviewmodelid)
