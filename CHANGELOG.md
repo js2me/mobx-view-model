@@ -1,5 +1,68 @@
 # mobx-view-model
 
+## 8.0.0
+
+### Major Changes
+
+- [#24](https://github.com/js2me/mobx-view-model/pull/24) [`16d7a26`](https://github.com/js2me/mobx-view-model/commit/16d7a26a694eb1eed5854aa90f2d49d6dee67f70) Thanks [@js2me](https://github.com/js2me)! - removed all marked as deprecation properties and methods
+
+  - Removed `config` property in `ViewModelParams` interface (renamed to `vmConfig`)
+  - Removed `linkStore` method in `ViewModelSimple` interface (renamed to `attachViewModelStore`)
+  - Removed type `ComponentWithLazyViewModel` (renamed to `VMLazyComponent`)
+  - Removed type `ComponentWithViewModel` (renamed to `VMComponent`)
+  - Removed `params` property in `ViewModelBase` class (renamed to `vmParams`)
+
+- [#24](https://github.com/js2me/mobx-view-model/pull/24) [`16d7a26`](https://github.com/js2me/mobx-view-model/commit/16d7a26a694eb1eed5854aa90f2d49d6dee67f70) Thanks [@js2me](https://github.com/js2me)! - modified global payload processing
+
+  Previosly `viewModelsConfig` haved the following configuration:
+
+  ```ts
+    comparePayload: 'strict',
+    payloadObservable: 'ref',
+    payloadComputed: false,
+  ```
+
+  So it was a bit performance overhead. Now it is:
+
+  ```ts
+    comparePayload: false,
+    payloadComputed: 'struct',
+    payloadObservable: 'ref',
+  ```
+
+### Minor Changes
+
+- [#24](https://github.com/js2me/mobx-view-model/pull/24) [`16d7a26`](https://github.com/js2me/mobx-view-model/commit/16d7a26a694eb1eed5854aa90f2d49d6dee67f70) Thanks [@js2me](https://github.com/js2me)! - added default implementation for `generateId` property in global `viewModelsConfig`
+
+- [#24](https://github.com/js2me/mobx-view-model/pull/24) [`16d7a26`](https://github.com/js2me/mobx-view-model/commit/16d7a26a694eb1eed5854aa90f2d49d6dee67f70) Thanks [@js2me](https://github.com/js2me)! - `id` property now is optional for implementation for `ViewModelSimple` interface
+
+  Now you can do not implement `ViewModelSimple` interface to work with this library:
+
+  ```tsx
+  class MyVM {
+    bar = '1'
+  }
+  ...
+  const model = useCreateViewModel(MyVM);
+  return <div>{model.bar}</div>;
+  ```
+
+  ```tsx
+  class MyVM {
+    foo = '1';
+  }
+  ...
+  const YouComponent = withViewModel(MyVM, ({ model }) => {
+    return <div>{model.foo}</div>
+  });
+  ```
+
+- [#24](https://github.com/js2me/mobx-view-model/pull/24) [`16d7a26`](https://github.com/js2me/mobx-view-model/commit/16d7a26a694eb1eed5854aa90f2d49d6dee67f70) Thanks [@js2me](https://github.com/js2me)! - `parentViewModel` property for `ViewModelSimple` interface
+
+### Patch Changes
+
+- [#24](https://github.com/js2me/mobx-view-model/pull/24) [`16d7a26`](https://github.com/js2me/mobx-view-model/commit/16d7a26a694eb1eed5854aa90f2d49d6dee67f70) Thanks [@js2me](https://github.com/js2me)! - fixed typings for `ParentViewModel` generic type argument for all interfaces/classes (support AnyViewModelSimple)
+
 ## 7.2.0
 
 ### Minor Changes
