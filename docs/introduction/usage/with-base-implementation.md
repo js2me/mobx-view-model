@@ -2,9 +2,9 @@
 
 Another simplest usage is to work with [base implementation](/api/view-models/base-implementation) of the [`ViewModel` interface](/api/view-models/interface)  
 
-Steps:  
+Follow the steps:  
 
-1. Create your [`ViewModel`](/api/view-models/overview) class using [`ViewModelBase`](/api/view-models/base-implementation) (base implementation of [`ViewModel` package interface](/api/view-models/interface))   
+##### **1.** Create your [`ViewModel`](/api/view-models/overview) class using [`ViewModelBase`](/api/view-models/base-implementation) (base implementation of [`ViewModel` package interface](/api/view-models/interface))   
 
 ```tsx
 import {
@@ -31,17 +31,15 @@ export class MyPageVM extends ViewModelBase<{ payloadA: string }> {
 }
 ```
 
-2. Create view component using [HOC `withViewModel()`](/react/api/with-view-model)  
+##### **2.** Create view component using [HOC `withViewModel()`](/react/api/with-view-model)  
 
 ```tsx
 import { observer } from 'mobx-react-lite';
 import { withViewModel } from 'mobx-view-model';
 
-const MyPageView = observer(({ model }: ViewModelProps<MyPageVM>) => {
+export const MyPage = withViewModel(MyPageVM, ({ model }) => {
   return <div>{model.state}</div>;
 });
-
-export const MyPage = withViewModel(MyPageVM, MyPageView);
 ```
 
 or you can use [`useCreateViewModel()` hook](/react/api/use-create-view-model)  
@@ -50,16 +48,18 @@ or you can use [`useCreateViewModel()` hook](/react/api/use-create-view-model)
 import { observer } from 'mobx-react-lite';
 import { ViewModelPayload, useCreateViewModel } from 'mobx-view-model';
 
-const MyPageView = observer(
+export const MyPage = observer(
   ({ payload }: { payload: ViewModelPayload<MyPageVM> }) => {
     const model = useCreateViewModel(MyPageVM, payload);
 
     return <div>{model.state}</div>;
   },
 );
-```
+```  
+::: tip don't forget to use the [`observer()` hoc](https://mobx.js.org/react-integration.html#react-integration)   
+:::
 
-3. Use it  
+##### **3.** Use it  
 
 ```tsx
 <MyPage payload={{ payloadA: '1' }} />

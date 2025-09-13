@@ -4,7 +4,8 @@ The `mobx-view-model` source code is written on TypeScript and compiled into Nod
 
 ## Requirements  
 
-- [`MobX`](https://mobx.js.org) **6+**  
+- [`MobX`](https://mobx.js.org) **^6**  
+- [`React`](https://reactjs.org) **^18** optional    
 
 ## Installation
 
@@ -14,12 +15,12 @@ The `mobx-view-model` source code is written on TypeScript and compiled into Nod
 npm install {packageJson.name}
 ```
 
-```bash [yarn]
-yarn add {packageJson.name}
-```
-
 ```bash [pnpm]
 pnpm add {packageJson.name}
+```
+
+```bash [yarn]
+yarn add {packageJson.name}
 ```
 
 :::
@@ -48,8 +49,7 @@ import { observer } from "mobx-react-lite";
 import { withViewModel, ViewModelProps } from "mobx-view-model";
 import { PetCardVM } from "./model";
 
-const PetCardView = observer(({ model }: ViewModelProps<PetCardVM>) => {
-
+export const PetCard = withViewModel(PetCardVM, ({ model }) => {
   return (
     <div className="p-10 flex flex-col gap-3">
       <span>{`Pet name: ${model.petName}`}</span>
@@ -63,8 +63,6 @@ const PetCardView = observer(({ model }: ViewModelProps<PetCardVM>) => {
     </div> 
   )
 })
-
-export const PetCard = withViewModel(PetCardVM)(PetCardView)
 
 ...
 <PetCard />

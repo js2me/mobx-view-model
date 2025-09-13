@@ -162,3 +162,11 @@ html.dark {
 p:has(>em:first-child:last-child) + div[class*=language-] {
     margin-top: -10px;
 }
+
+.vp-doc strong a {
+    font-weight: bold;
+}
+
+.vp-doc strong code {
+    font-weight: bold;
+}

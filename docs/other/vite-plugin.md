@@ -10,12 +10,12 @@ This library has a `Vite` plugin that **can** improve DX when using the library.
 npm install mobx-view-model-vite-plugin
 ```
 
-```bash [yarn]
-yarn add mobx-view-model-vite-plugin
-```
-
 ```bash [pnpm]
 pnpm add mobx-view-model-vite-plugin
+```
+
+```bash [yarn]
+yarn add mobx-view-model-vite-plugin
 ```
 
 :::

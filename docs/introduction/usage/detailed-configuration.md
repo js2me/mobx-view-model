@@ -8,7 +8,7 @@ This way can be helpful when:
 
 Follow the steps:   
 
-1. Make your own `ViewModel` implementation and interface with some customizations:  
+##### 1. Make your own `ViewModel` implementation and interface with some customizations:  
 
 ```ts{9,10}
 // view-model.ts
@@ -48,7 +48,7 @@ export class ViewModelImpl<
 ```
 
 
-1. Make your own `ViewModelStore` implementation   
+##### 2. Make your own `ViewModelStore` implementation   
 
 ```ts{8,19,20,21}
 // view-model.store.impl.ts
@@ -81,7 +81,7 @@ export class ViewModelStoreImpl extends ViewModelStoreBase {
 }
 ```
 
-3. Create `View` with `ViewModel`   
+##### 3. Create `View` with `ViewModel`   
 
 ```tsx{2,4,10}
 import { ViewModelProps, withViewModel } from 'mobx-view-model';
@@ -106,11 +106,9 @@ export class MyPageVM extends ViewModelImpl {
   }
 }
 
-const MyPageView = observer(({ model }: ViewModelProps<MyPageVM>) => {
+export const MyPage = withViewModel(MyPageVM, ({ model }) => {
   return <div>{model.state}</div>;
 });
-
-export const MyPage = withViewModel(MyPageVM)(MyPageView);
 ```
 
 Also you may be helpful to read [**this recipe about integration with `RootStore`**](/recipes/integration-with-root-store)   

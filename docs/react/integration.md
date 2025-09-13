@@ -18,7 +18,7 @@ To achieve this you can use:
 
 ## 2. Render in React tree   
 
-#### If you are using [withViewModel() HOC](/react/api/with-view-model)  
+#### use [withViewModel() HOC](/react/api/with-view-model)  
 Then you should render component returned from this function  
 
 ```tsx
@@ -27,15 +27,16 @@ import { observer } from "mobx-react-lite";
 
 class YourComponentVM extends ViewModelBase {}
 
-const YourComponentView = observer(({ model }: ViewModelProps<YourComponentVM>) => {
-  return (
-    <div>
-      {model.id}
-    </div>
-  )
-})
+export interface YourComponentProps extends ViewModelProps<YourComponentVM> {
+  yourProp?: string;
+}
 
-const YourComponent = withViewModel(YourComponent)(YourComponentView)
+const YourComponent = withViewModel(
+  YourComponent,
+  ({ model, yourProp }: YourComponentProps) => {
+    return <div>{model.id}</div>;
+  },
+);
 
 const YourApp = () => {
   return (
@@ -44,10 +45,8 @@ const YourApp = () => {
 }
 ```
 
-_wrapping into [`observer` HOC](https://mobx.js.org/api.html#observer) is optional if you are not using MobX observables_
 
-
-#### If you are using [`useCreateViewModel()` hook](/react/api/use-create-view-model)  
+#### use [`useCreateViewModel()` hook](/react/api/use-create-view-model)  
 Then you should render your React components with using this hook  
 
 ```tsx
@@ -74,7 +73,7 @@ const YourApp = () => {
 ```
 
 
-## 3. _[Optional]_ Using [ViewModelStore](/api/view-model-store/interface)  
+## 3. _\[Optional\]_ Use [ViewModelStore](/api/view-model-store/interface)  
 [ViewModelStore](/api/view-model-store/interface) is very powerful thing which allows you to lookup and get access to your view model instances everywhere.  
 To use this store:
   1. Create instance of `ViewModelStore`

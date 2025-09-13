@@ -3,7 +3,7 @@
 View Model store allows you to get access to your view model instances from everywhere and give you more control of the creating view model instances.  
 Follow the simplest way of how to add view model store into your application:  
 
-1. Create a class implementing the [ViewModelStore interface](/api/view-model-store/interface) or use [basic library implementation (ViewModelStoreBase)](/api/view-model-store/base-implementation).  
+##### **1.** Create a class implementing the [ViewModelStore interface](/api/view-model-store/interface) or use [basic library implementation (ViewModelStoreBase)](/api/view-model-store/base-implementation).  
 
 ```tsx title="/src/shared/lib/mobx/view-model-store.ts"
 import { ViewModelStoreBase } from "mobx-view-model";
@@ -11,21 +11,21 @@ import { ViewModelStoreBase } from "mobx-view-model";
 class MyViewModelStore extends ViewModelStoreBase {}
 ```
 
-2. Create instance of the [ViewModelStore](/api/view-model-store/overview)  
+##### **2.** Create instance of the [ViewModelStore](/api/view-model-store/overview)  
 
 ```ts
 const viewModelStore = new MyViewModelStore() // or new ViewModelStoreBase
 ```
 
-3. Integrate with [React](https://react.dev/) using [`ViewModelsProvider`](/react/api/view-models-provider) somewhere in root of your application  
+##### **3.** Integrate with [React](https://react.dev/) using [`ViewModelsProvider`](/react/api/view-models-provider) somewhere in root of your application  
 
 ```tsx
-<ViewModelsProviders value={viewModelStore}>
+<ViewModelsProvider value={viewModelStore}>
 ...
-</ViewModelsProviders>
+</ViewModelsProvider>
 ```
 
-4. Get access to `ViewModelStore` inside your `ViewModels`   
+##### **4.** Get access to `ViewModelStore` inside your `ViewModels`   
 
 ```ts
 import { ViewModelBase } from "mobx-view-model";
@@ -47,7 +47,6 @@ export class YourVM extends ViewModelBase {
   }
 }
 ```
-
 
 
 
