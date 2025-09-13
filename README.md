@@ -23,7 +23,7 @@ Library for integration [MVVM](https://en.wikipedia.org/wiki/Model%E2%80%93view%
 ## Documentation is [here](https://js2me.github.io/mobx-view-model/)  
 
 
-_with HOC_   
+_React's HOC approach_   
 ```tsx
 import { withViewModel, ViewModelBase, ViewModelProps } from "mobx-view-model";
 import { observer } from "mobx-react-lite";
@@ -45,21 +45,21 @@ class UserBadgeVM extends ViewModelBase<{ userId: Maybe<string> }> {
   }
 }
 
-const UserBadgeView = observer(({ model }: ViewModelProps<UserBadgeVM>) => (
+...
+
+export const UserBadge = withViewModel(UserBadgeVM, ({ model }) => (
   <div className={'size-4 bg-[green]'}>
     <h3>{model.user?.fullName}</h3>
     {model.isAdmin && <span>admin</span>}
   </div>
-))
+));
 
-export const UserBadge = withViewModel(UserBadgeVM)(UserBadgeView);
-// export const UserBadge = withViewModel(UserBadgeVM, UserBadgeView);
+...
 
-
-// <UserBadge payload={{ userId: '1' }}>
+<UserBadge payload={{ userId: '1' }} />
 ```
 
-_with hook_  
+_React's hook approach_  
 ```tsx
 import { ViewModelBase, ViewModelPayload, useCreateViewModel } from "mobx-view-model";
 import { observer } from "mobx-react-lite";
@@ -81,6 +81,8 @@ class UserBadgeVM extends ViewModelBase<{ userId: Maybe<string> }> {
   }
 }
 
+...
+
 export const UserBadge = observer(({ userId }: ViewModelPayload<UserBadgeVM>) => {
   const model = useCreateViewModel(UserBadgeVM, { userId });
 
@@ -92,8 +94,9 @@ export const UserBadge = observer(({ userId }: ViewModelPayload<UserBadgeVM>) =>
   )
 })
 
+...
 
-// <UserBadge payload={{ userId: '1' }}>
+<UserBadge payload={{ userId: '1' }}/>
 ```
 
 ## Contribution Guide    
