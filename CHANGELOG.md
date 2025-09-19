@@ -1,5 +1,11 @@
 # mobx-view-model
 
+## 8.1.0
+
+### Minor Changes
+
+- [`868a5a6`](https://github.com/js2me/mobx-view-model/commit/868a5a6db4b73e951dfe7cc2da4f9e50f21bfbbf) Thanks [@js2me](https://github.com/js2me)! - refactor - switch build to zshy
+
 ## 8.0.1
 
 ### Patch Changes
