@@ -1,5 +1,11 @@
 # mobx-view-model
 
+## 8.2.0
+
+### Minor Changes
+
+- [`cd2f8dc`](https://github.com/js2me/mobx-view-model/commit/cd2f8dc79851920705373029e21e969d934dae6c) Thanks [@js2me](https://github.com/js2me)! - migrate build from tsc -> zshy (same as tsc)
+
 ## 8.1.0
 
 ### Minor Changes
