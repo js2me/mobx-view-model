@@ -1,7 +1,7 @@
 import { makeObservable, reaction } from 'mobx';
 import { describe, expect, it, vi } from 'vitest';
 
-import type { AnyObject, EmptyObject } from '../utils/types.js';
+import type { AnyObject, EmptyObject } from 'yummies/utils/types';
 
 import { ViewModelBase } from './view-model.base.js';
 import type {

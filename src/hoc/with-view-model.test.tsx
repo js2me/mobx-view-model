@@ -18,7 +18,7 @@ import {
 import { describe, expect, it, test, vi } from 'vitest';
 import { sleep } from 'yummies/async';
 import { createCounter } from 'yummies/complex';
-
+import type { AnyObject, EmptyObject, Maybe } from 'yummies/utils/types';
 import {
   type ViewModelParams,
   type ViewModelSimple,
@@ -26,7 +26,6 @@ import {
   ViewModelsProvider,
   type ViewModelsRawConfig,
 } from '../index.js';
-import type { AnyObject, EmptyObject, Maybe } from '../utils/types.js';
 import { ViewModelBaseMock } from '../view-model/view-model.base.test.js';
 import { ViewModelStoreBaseMock } from '../view-model/view-model.store.base.test.js';
 

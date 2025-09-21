@@ -1,8 +1,7 @@
 import type { ComponentType } from 'react';
-
+import type { AnyObject, Class, Maybe } from 'yummies/utils/types';
 import type { ViewModelsRawConfig } from '../config/index.js';
 import type { VMComponent, VMLazyComponent } from '../hoc/index.js';
-import type { AnyObject, Class, Maybe } from '../utils/types.js';
 
 import type {
   AnyViewModel,

@@ -3,3 +3,4 @@ dist
 coverage
 unit-tests-coverage
 docs/.vitepress/cache
+packalink.config.mjs

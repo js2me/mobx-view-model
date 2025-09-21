@@ -5,7 +5,13 @@ import {
   type ReactNode,
   useContext,
 } from 'react';
-
+import type {
+  AnyObject,
+  Class,
+  EmptyObject,
+  IsPartial,
+  Maybe,
+} from 'yummies/utils/types';
 import { viewModelsConfig } from '../config/global-config.js';
 import {
   ActiveViewModelContext,
@@ -15,13 +21,6 @@ import {
   type UseCreateViewModelConfig,
   useCreateViewModel,
 } from '../hooks/use-create-view-model.js';
-import type {
-  AnyObject,
-  Class,
-  EmptyObject,
-  IsPartial,
-  Maybe,
-} from '../utils/types.js';
 import type {
   AnyViewModel,
   AnyViewModelSimple,

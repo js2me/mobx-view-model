@@ -1,14 +1,13 @@
 import { action, comparer, computed, observable, runInAction } from 'mobx';
 import { isShallowEqual } from 'yummies/data';
 import { startViewTransitionSafety } from 'yummies/html';
-
+import type { AnyObject, EmptyObject, Maybe } from 'yummies/utils/types';
 import {
   applyObservable,
   mergeVMConfigs,
   type ObservableAnnotationsArray,
   type ViewModelsConfig,
 } from '../config/index.js';
-import type { AnyObject, EmptyObject, Maybe } from '../utils/types.js';
 
 import type { ViewModel } from './view-model.js';
 import type { ViewModelStore } from './view-model.store.js';

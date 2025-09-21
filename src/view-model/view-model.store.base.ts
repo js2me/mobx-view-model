@@ -1,12 +1,11 @@
 import { action, computed, observable, runInAction } from 'mobx';
-
+import type { Class, Maybe } from 'yummies/utils/types';
 import {
   applyObservable,
   mergeVMConfigs,
   type ViewModelsConfig,
 } from '../config/index.js';
 import type { VMComponent, VMLazyComponent } from '../hoc/index.js';
-import type { Class, Maybe } from '../utils/types.js';
 
 import type { ViewModelBase } from './view-model.base.js';
 import type { ViewModelStore } from './view-model.store.js';

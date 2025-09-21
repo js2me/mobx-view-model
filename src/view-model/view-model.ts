@@ -1,5 +1,5 @@
+import type { AnyObject, EmptyObject } from 'yummies/utils/types';
 import type { ViewModelsConfig } from '../config/types.js';
-import type { AnyObject, EmptyObject } from '../utils/types.js';
 
 import type { AnyViewModel, AnyViewModelSimple } from './view-model.types.js';
 
