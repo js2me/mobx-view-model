@@ -20,7 +20,7 @@
     "typeRoots": [
       "./node_modules/@types/", "./types", "./node_modules"
     ],
-    "noEmit": true,
+    "noEmit": false,
     "jsx": "react-jsx"
   },
   "include": [
