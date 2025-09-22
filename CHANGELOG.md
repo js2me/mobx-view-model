@@ -1,5 +1,11 @@
 # mobx-view-model
 
+## 8.2.1
+
+### Patch Changes
+
+- [`b595d0f`](https://github.com/js2me/mobx-view-model/commit/b595d0fb21236b7236b5a605e88d302eaa40fd5e) Thanks [@js2me](https://github.com/js2me)! - revert back build (fix yummies missing typings)
+
 ## 8.2.0
 
 ### Minor Changes
