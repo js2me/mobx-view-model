@@ -70,8 +70,8 @@ importers:
         specifier: ^6.0.1
         version: 6.0.1
       sborshik:
-        specifier: ^1.0.6
-        version: 1.0.6
+        specifier: ^1.0.10
+        version: 1.0.10
       tsx:
         specifier: ^4.20.5
         version: 4.20.5
@@ -2332,8 +2332,8 @@ packages:
     resolution: {integrity: sha512-xAg7SOnEhrm5zI3puOOKyy1OMcMlIJZYNJY7xLBwSze0UjhPLnWfj2GF2EpT0jmzaJKIWKHLsaSSajf35bcYnA==}
     engines: {node: '>=v12.22.7'}
 
-  sborshik@1.0.6:
-    resolution: {integrity: sha512-ffXXf4GcgvaluV/qZ9d/vfCcfWnu7qmB7/MRZ5g/ew9CY9zF812I7xpJXHvmWvGBsBqvF42PQvS/ENP+DmiE5w==}
+  sborshik@1.0.10:
+    resolution: {integrity: sha512-odrSTmg+R8ucIc1hK2lHioiZPuvbm/pbHgklANGZPTmJjZV+NnE6oTQ3T+ykvqmlkvfZEJGGrwKVrvlOQ2kZZg==}
     hasBin: true
 
   scheduler@0.23.2:
@@ -5063,7 +5063,7 @@ snapshots:
     dependencies:
       xmlchars: 2.2.0
 
-  sborshik@1.0.6:
+  sborshik@1.0.10:
     dependencies:
       gh-release: 7.0.2
       simple-git: 3.27.0
