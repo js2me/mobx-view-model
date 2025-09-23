@@ -1,5 +1,11 @@
 # mobx-view-model
 
+## 8.3.1
+
+### Patch Changes
+
+- [`df096d1`](https://github.com/js2me/mobx-view-model/commit/df096d11d2ca3660ffd857bfc264a0b1d7734215) Thanks [@js2me](https://github.com/js2me)! - fixed incorrect typings for `ViewModelsProvider` component
+
 ## 8.3.0
 
 ### Minor Changes
