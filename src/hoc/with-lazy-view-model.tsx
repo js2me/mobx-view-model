@@ -6,7 +6,7 @@ import {
 } from 'react-simple-loadable';
 import { type PackedAsyncModule, unpackAsyncModule } from 'yummies/imports';
 import type { Class, Maybe, MaybePromise } from 'yummies/utils/types';
-import { viewModelsConfig } from '../config/global-config.js';
+import { viewModelsConfig } from '../config/index.js';
 import type { AnyViewModel, AnyViewModelSimple } from '../view-model/index.js';
 
 import {

@@ -12,7 +12,7 @@ import type {
   IsPartial,
   Maybe,
 } from 'yummies/utils/types';
-import { viewModelsConfig } from '../config/global-config.js';
+import { viewModelsConfig } from '../config/index.js';
 import {
   ActiveViewModelContext,
   ViewModelsContext,
@@ -20,7 +20,7 @@ import {
 import {
   type UseCreateViewModelConfig,
   useCreateViewModel,
-} from '../hooks/use-create-view-model.js';
+} from '../hooks/index.js';
 import type {
   AnyViewModel,
   AnyViewModelSimple,
