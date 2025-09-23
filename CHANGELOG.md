@@ -1,5 +1,11 @@
 # mobx-view-model
 
+## 8.3.2
+
+### Patch Changes
+
+- [`8ffe4eb`](https://github.com/js2me/mobx-view-model/commit/8ffe4eb5c0ab7efcbf1170c7b13d27c7d196b017) Thanks [@js2me](https://github.com/js2me)! - use `React.*` global namespace to fix most typing bugs with React (18->19)
+
 ## 8.3.1
 
 ### Patch Changes
