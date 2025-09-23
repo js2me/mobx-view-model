@@ -1,4 +1,3 @@
-import type { ComponentType } from 'react';
 import type { AnyObject, Class, DeepPartial, Maybe } from 'yummies/utils/types';
 
 import type { ViewModelHocConfig } from '../hoc/with-view-model.js';
@@ -56,17 +55,17 @@ export interface ViewModelsConfig {
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#factory) */
   factory: CreateViewModelFactoryFn<AnyViewModel>;
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#fallbackcomponent) */
-  fallbackComponent?: ComponentType;
+  fallbackComponent?: React.ComponentType;
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#onmount) */
   onMount?: (viewModel: AnyViewModel) => void;
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#onunmount) */
   onUnmount?: (viewModel: AnyViewModel) => void;
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#processviewcomponent) */
   processViewComponent?: (
-    component: ComponentType<any> | undefined,
+    component: React.ComponentType<any> | undefined,
     VM: Class<AnyViewModel>,
     config: ViewModelHocConfig<any>,
-  ) => Maybe<ComponentType<any>>;
+  ) => Maybe<React.ComponentType<any>>;
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#wrapviewsinobserver) */
   wrapViewsInObserver?: boolean;
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#observable) */

@@ -1,10 +1,5 @@
 import { observer } from 'mobx-react-lite';
-import {
-  type ComponentClass,
-  type ComponentType,
-  type ReactNode,
-  useContext,
-} from 'react';
+import { useContext } from 'react';
 import type {
   AnyObject,
   Class,
@@ -33,7 +28,7 @@ type FixedComponentType<P extends AnyObject = {}> =
   /**
    * Fixes typings loss with use `withViewModel` with inline function component
    */
-  ((props: P) => ReactNode) | ComponentClass<P>;
+  ((props: P) => React.ReactNode) | React.ComponentClass<P>;
 
 declare const process: { env: { NODE_ENV?: string } };
 
@@ -68,7 +63,7 @@ export interface ViewModelHocConfig<VM extends AnyViewModel>
   /**
    * Component to render if the view model initialization takes too long
    */
-  fallback?: ComponentType;
+  fallback?: React.ComponentType;
 
   /**
    * Function to invoke additional React hooks in the resulting component
@@ -90,7 +85,7 @@ export interface ViewModelSimpleHocConfig<_VM> {
   /**
    * Component to render if the view model initialization takes too long
    */
-  fallback?: ComponentType;
+  fallback?: React.ComponentType;
 
   /**
    * Function to invoke additional React hooks in the resulting component
@@ -116,7 +111,9 @@ export type VMComponentProps<
 export type VMComponent<
   TViewModel,
   TComponentOriginProps extends AnyObject = ViewModelProps<TViewModel>,
-> = (props: VMComponentProps<TViewModel, TComponentOriginProps>) => ReactNode;
+> = (
+  props: VMComponentProps<TViewModel, TComponentOriginProps>,
+) => React.ReactNode;
 
 /**
  * A Higher-Order Component that connects React components to their ViewModels, providing seamless MobX integration.
@@ -128,7 +125,9 @@ export function withViewModel<
   TComponentOriginProps extends AnyObject = ViewModelProps<TViewModel>,
 >(
   model: Class<TViewModel>,
-  component: ComponentType<TComponentOriginProps & ViewModelProps<TViewModel>>,
+  component: React.ComponentType<
+    TComponentOriginProps & ViewModelProps<TViewModel>
+  >,
   config?: ViewModelHocConfig<TViewModel>,
 ): VMComponent<TViewModel, TComponentOriginProps>;
 
@@ -141,7 +140,9 @@ export function withViewModel<TViewModel extends AnyViewModel>(
   model: Class<TViewModel>,
   config?: ViewModelHocConfig<TViewModel>,
 ): <TComponentOriginProps extends AnyObject = ViewModelProps<TViewModel>>(
-  Component?: ComponentType<TComponentOriginProps & ViewModelProps<TViewModel>>,
+  Component?: React.ComponentType<
+    TComponentOriginProps & ViewModelProps<TViewModel>
+  >,
 ) => VMComponent<TViewModel, TComponentOriginProps>;
 
 /**
@@ -228,7 +229,7 @@ export function withViewModel(
       },
     };
 
-    return (Component: ComponentType<any>) =>
+    return (Component: React.ComponentType<any>) =>
       withViewModelWrapper(VM, finalConfig, Component);
   }
 }
@@ -238,7 +239,7 @@ const REACT_MEMO_SYMBOL = Symbol.for('react.memo');
 const withViewModelWrapper = (
   VM: Class<any>,
   config: ViewModelHocConfig<any>,
-  OriginalComponent?: ComponentType<any>,
+  OriginalComponent?: React.ComponentType<any>,
 ) => {
   const processViewComponent =
     config.vmConfig?.processViewComponent ??

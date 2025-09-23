@@ -8,7 +8,6 @@ import {
 import { comparer, makeObservable, observable, runInAction } from 'mobx';
 import { observer } from 'mobx-react-lite';
 import {
-  type ComponentType,
   type PropsWithChildren,
   type ReactNode,
   useEffect,
@@ -338,7 +337,7 @@ describe('withViewModel', () => {
 
       const vmConnectedComponentViewRenderSpy = vi.fn();
 
-      let VMConnectedComponentView: ComponentType<ViewModelProps<VM>> = ({
+      let VMConnectedComponentView: React.ComponentType<ViewModelProps<VM>> = ({
         model,
       }: ViewModelProps<VM>) => {
         vmConnectedComponentViewRenderSpy();

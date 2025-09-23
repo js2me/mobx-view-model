@@ -1,4 +1,3 @@
-import type { ComponentType } from 'react';
 import type { AnyObject, Class, Maybe } from 'yummies/utils/types';
 import type { ViewModelsRawConfig } from '../config/index.js';
 import type { VMComponent, VMLazyComponent } from '../hoc/index.js';
@@ -21,13 +20,13 @@ export interface ViewModelGenerateIdConfig<VM extends AnyViewModel> {
   id?: Maybe<string>;
   ctx: AnyObject;
   parentViewModelId: string | null;
-  fallback?: ComponentType;
+  fallback?: React.ComponentType;
 }
 
 export interface ViewModelCreateConfig<VM extends AnyViewModel>
   extends ViewModelParams<VM['payload'], VM['parentViewModel']> {
   VM: Class<VM>;
-  fallback?: ComponentType;
+  fallback?: React.ComponentType;
   component?: VMComponent<AnyViewModel, any>;
   props?: AnyObject;
 }

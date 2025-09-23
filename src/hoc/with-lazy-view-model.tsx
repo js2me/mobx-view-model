@@ -1,4 +1,3 @@
-import type { ComponentProps, ComponentType } from 'react';
 import {
   type LoadableConfig,
   type LoadableMixin,
@@ -18,7 +17,7 @@ import {
 
 export interface LazyViewAndModel<
   TViewModel extends AnyViewModel | AnyViewModelSimple,
-  TView extends ComponentType<any>,
+  TView extends React.ComponentType<any>,
 > {
   Model: Class<TViewModel> | PackedAsyncModule<Class<TViewModel>>;
   View?: TView | PackedAsyncModule<TView>;
@@ -26,8 +25,8 @@ export interface LazyViewAndModel<
 
 export type VMLazyComponent<
   TViewModel extends AnyViewModel | AnyViewModelSimple,
-  TView extends ComponentType<any>,
-> = VMComponent<TViewModel, ComponentProps<TView>> & LoadableMixin;
+  TView extends React.ComponentType<any>,
+> = VMComponent<TViewModel, React.ComponentProps<TView>> & LoadableMixin;
 
 export interface LazyViewModelHocConfig<TViewModel extends AnyViewModel>
   extends ViewModelHocConfig<TViewModel>,
@@ -45,7 +44,7 @@ export interface LazyViewModelSimpleHocConfig<
  */
 export function withLazyViewModel<
   TViewModel extends AnyViewModel,
-  TView extends ComponentType<any>,
+  TView extends React.ComponentType<any>,
 >(
   loadFunction: () => MaybePromise<LazyViewAndModel<TViewModel, TView>>,
   configOrFallbackComponent?:
@@ -60,7 +59,7 @@ export function withLazyViewModel<
  */
 export function withLazyViewModel<
   TViewModel extends AnyViewModelSimple,
-  TView extends ComponentType<any>,
+  TView extends React.ComponentType<any>,
 >(
   loadFunction: () => MaybePromise<LazyViewAndModel<TViewModel, TView>>,
   configOrFallbackComponent?:
@@ -75,7 +74,7 @@ export function withLazyViewModel<
  */
 export function withLazyViewModel<
   TViewModel extends AnyViewModel | AnyViewModelSimple,
-  TView extends ComponentType<any>,
+  TView extends React.ComponentType<any>,
 >(
   loadFunction: () => MaybePromise<LazyViewAndModel<TViewModel, TView>>,
   configOrFallbackComponent?:
