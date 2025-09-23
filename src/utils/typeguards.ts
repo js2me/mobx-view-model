@@ -1,6 +1,5 @@
+import type { AnyObject, Class, EmptyObject } from 'yummies/utils/types';
 import type { ViewModel } from '../view-model/view-model.js';
-
-import type { AnyObject, Class, EmptyObject } from './types.js';
 
 export const isViewModel = <TPayload extends AnyObject = EmptyObject>(
   value: AnyObject,

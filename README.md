@@ -16,11 +16,11 @@
 [bundlephobia-image]: https://badgen.net/bundlephobia/minzip/mobx-view-model
 
 
-_MobX ViewModel power for ReactJS_   
+⚡ Clean MVVM for React + MobX | Powerful ViewModels made simple ⚡  
 
 Library for integration [MVVM](https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93viewmodel) pattern with [MobX](https://mobx.js.org/README.html) and [React](https://react.dev/).  
 
-## Documentation is [here](https://js2me.github.io/mobx-view-model/)  
+## [Read the docs →](https://js2me.github.io/mobx-web-api/)  
 
 
 _React's HOC approach_   

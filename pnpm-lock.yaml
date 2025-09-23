@@ -24,8 +24,8 @@ importers:
         specifier: ^2.3.9
         version: 2.3.9(react@18.3.1)
       yummies:
-        specifier: ^5.4.7
-        version: 5.4.7(mobx@6.13.7)(react@18.3.1)
+        specifier: ^5.4.8
+        version: 5.4.8(mobx@6.13.7)(react@18.3.1)
     devDependencies:
       '@biomejs/biome':
         specifier: 2.2.2
@@ -57,9 +57,6 @@ importers:
       js2me-biome-config:
         specifier: ^1.0.4
         version: 1.0.4
-      js2me-exports-post-build-script:
-        specifier: ^5.7.1
-        version: 5.7.1
       jsdom:
         specifier: ^26.1.0
         version: 26.1.0
@@ -72,6 +69,9 @@ importers:
       rimraf:
         specifier: ^6.0.1
         version: 6.0.1
+      sborshik:
+        specifier: ^1.0.6
+        version: 1.0.6
       tsx:
         specifier: ^4.20.5
         version: 4.20.5
@@ -1772,9 +1772,6 @@ packages:
   js2me-biome-config@1.0.4:
     resolution: {integrity: sha512-OngF+ZdSWkYlNmF5i67Rkeh3ujy0C1rpOt5TeUuJ+ADaOomk/Y0qQS6zyy225uHTQ4smATzzDBZO3RcNgcdL8A==}
 
-  js2me-exports-post-build-script@5.7.1:
-    resolution: {integrity: sha512-N/H/kI22KBJ5a6nZyyF7owaK1lRLd+FSJayRuiQJCIEerk7edBq8iGCTzGLgm60laIxUr+/AtxUpvsS2gBGEsg==}
-
   jsdom@26.1.0:
     resolution: {integrity: sha512-Cvc9WUhxSMEo4McES3P7oK3QaXldCfNWp7pl2NNeiIFlCoLr3kfq9kb1fxftiwk1FLV7CvpvDfonxtzUDeSOPg==}
     engines: {node: '>=18'}
@@ -2335,6 +2332,10 @@ packages:
     resolution: {integrity: sha512-xAg7SOnEhrm5zI3puOOKyy1OMcMlIJZYNJY7xLBwSze0UjhPLnWfj2GF2EpT0jmzaJKIWKHLsaSSajf35bcYnA==}
     engines: {node: '>=v12.22.7'}
 
+  sborshik@1.0.6:
+    resolution: {integrity: sha512-ffXXf4GcgvaluV/qZ9d/vfCcfWnu7qmB7/MRZ5g/ew9CY9zF812I7xpJXHvmWvGBsBqvF42PQvS/ENP+DmiE5w==}
+    hasBin: true
+
   scheduler@0.23.2:
     resolution: {integrity: sha512-UOShsPwz7NrMUqhR6t0hWjFduvOzbtv7toDH1/hIrfRNIDBnnBWd0CwJTGvTpngVlmwGCdP9/Zl/tVrDqcuYzQ==}
 
@@ -2802,8 +2803,8 @@ packages:
     resolution: {integrity: sha512-7dSzzRQ++CKnNI/krKnYRV7JKKPUXMEh61soaHKg9mrWEhzFWhFnxPxGl+69cD1Ou63C13NUPCnmIcrvqCuM6w==}
     engines: {node: '>=12'}
 
-  yummies@5.4.7:
-    resolution: {integrity: sha512-UfZdn58N97Gd1GSa2repUzHV6tJg4oIWceHroUJZkq7/S1dOBsSaWzUqugtdiVxWa4Xsp3JKI68mwFw5IMCVcA==}
+  yummies@5.4.8:
+    resolution: {integrity: sha512-3rpVP1ECoB+vFJ5erXBBQV5Qy350/JC35HwywImxIv8gTwqz5/PfOc0r2Q5JlNlFXDfAso4eaugjUx1qJsPg4g==}
     peerDependencies:
       mobx: ^6.12.4
       react: ^18 || ^19
@@ -4521,14 +4522,6 @@ snapshots:
 
   js2me-biome-config@1.0.4: {}
 
-  js2me-exports-post-build-script@5.7.1:
-    dependencies:
-      gh-release: 7.0.2
-      simple-git: 3.27.0
-    transitivePeerDependencies:
-      - encoding
-      - supports-color
-
   jsdom@26.1.0:
     dependencies:
       cssstyle: 4.3.1
@@ -5070,6 +5063,14 @@ snapshots:
     dependencies:
       xmlchars: 2.2.0
 
+  sborshik@1.0.6:
+    dependencies:
+      gh-release: 7.0.2
+      simple-git: 3.27.0
+    transitivePeerDependencies:
+      - encoding
+      - supports-color
+
   scheduler@0.23.2:
     dependencies:
       loose-envify: 1.4.0
@@ -5510,7 +5511,7 @@ snapshots:
       y18n: 5.0.8
       yargs-parser: 21.1.1
 
-  yummies@5.4.7(mobx@6.13.7)(react@18.3.1):
+  yummies@5.4.8(mobx@6.13.7)(react@18.3.1):
     dependencies:
       class-variance-authority: 0.7.1
       clsx: 2.1.1
