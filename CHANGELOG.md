@@ -1,5 +1,11 @@
 # mobx-view-model
 
+## 8.3.0
+
+### Minor Changes
+
+- [`ef88fc3`](https://github.com/js2me/mobx-view-model/commit/ef88fc3902a72017532b6c7a4eafe8e87367afcc) Thanks [@js2me](https://github.com/js2me)! - migrate to zshy tool (bundler free tsc tool) to better DX and tree shaking
+
 ## 8.2.2
 
 ### Patch Changes
