@@ -1,5 +1,11 @@
 # mobx-view-model
 
+## 8.3.3
+
+### Patch Changes
+
+- [`9971b51`](https://github.com/js2me/mobx-view-model/commit/9971b51cdc9c4fd610e6c3115d7714ab9d60839b) Thanks [@js2me](https://github.com/js2me)! - fixed docs link
+
 ## 8.3.2
 
 ### Patch Changes
