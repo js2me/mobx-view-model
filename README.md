@@ -20,7 +20,7 @@
 
 Library for integration [MVVM](https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93viewmodel) pattern with [MobX](https://mobx.js.org/README.html) and [React](https://react.dev/).  
 
-## [Read the docs →](https://js2me.github.io/mobx-web-api/)  
+## [Read the docs →](https://js2me.github.io/mobx-view-model/)  
 
 
 _React's HOC approach_   
