@@ -1,50 +1,31 @@
 import { defineConfig } from 'vitepress';
+import { defineGhPagesDocConfig } from "sborshik/vitepress/define-gh-pages-doc-config";
 
 import path from 'path';
 import fs from 'fs';
 
-const { version, name: packageName, author, license } = JSON.parse(
+const pckgJson = JSON.parse(
   fs.readFileSync(
     path.resolve(__dirname, '../../package.json'),
     { encoding: 'utf-8' },
   ),
 );
 
-export default defineConfig({
-  title: packageName.replace(/-/g, ' '),
-  description: `${packageName.replace(/-/g, ' ')} documentation`,
-  transformHead: ({ pageData, head }) => {
-    head.push(['meta', { property: 'og:site_name', content: packageName }]);
-    head.push(['meta', { property: 'og:title', content: pageData.title }]);
-    if (pageData.description) {
-      head.push(['meta', { property: 'og:description', content: pageData.description }]);   
-    }
-    head.push(['meta', { property: 'og:image', content: `https://${author}.github.io/${packageName}/logo.png` }]);
-
-    return head
-  },
-  base: `/${packageName}/`,
-  lastUpdated: true,
-  head: [
-    ['link', { rel: 'icon', href: `/${packageName}/logo.png` }],
-  ],
+export default defineGhPagesDocConfig(pckgJson, {
+  createdYear: '2024',
   themeConfig: {
-    logo: '/logo.png',
-    search: {
-      provider: 'local'
-    },
     nav: [
       { text: 'Home', link: '/' },
       { text: 'Introduction', link: '/introduction/overview' },
-      { text: 'Changelog', link: `https://github.com/${author}/${packageName}/releases` },
+      { text: 'Changelog', link: `https://github.com/${pckgJson.author}/${pckgJson.name}/releases` },
       {
-        text: `${version}`,
+        text: `${pckgJson.version}`,
         items: [
           {
             items: [
               {
-                text: `${version}`,
-                link: `https://github.com/${author}/${packageName}/releases/tag/${version}`,
+                text: `${pckgJson.version}`,
+                link: `https://github.com/${pckgJson.author}/${pckgJson.name}/releases/tag/${pckgJson.version}`,
               },
             ],
           },
@@ -233,15 +214,6 @@ export default defineConfig({
           },
         ]
       }
-    ],
-
-    footer: {
-      message: `Released under the ${license} License.`,
-      copyright: `Copyright © 2024-PRESENT ${author}`,
-    },
-
-    socialLinks: [
-      { icon: 'github', link: `https://github.com/${author}/${packageName}` },
     ],
   },
 });

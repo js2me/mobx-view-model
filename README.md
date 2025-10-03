@@ -1,4 +1,4 @@
-<img src="assets/logo.png" align="right" width="156" alt="logo" />
+<img src="docs/public/logo.png" align="right" width="156" alt="logo" />
 
 # mobx-view-model  
 
