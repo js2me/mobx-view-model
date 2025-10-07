@@ -57,7 +57,7 @@
   },
   "dependencies": {
     "react-simple-loadable": "^2.3.9",
-    "yummies": "^5.4.8"
+    "yummies": "^5.9.0"
   },
   "peerDependencies": {
     "mobx": "^6.12.4",
@@ -76,7 +76,7 @@
     "@vitest/coverage-istanbul": "^3.1.2",
     "commitfmt": "^1.0.4",
     "js2me-biome-config": "^1.0.4",
-    "sborshik": "^1.0.10",
+    "sborshik": "^1.0.22",
     "jsdom": "^26.1.0",
     "lefthook": "^1.11.16",
     "nodemon": "^3.1.9",
