@@ -1,4 +1,3 @@
-import { defineConfig } from 'vitepress';
 import { defineGhPagesDocConfig } from "sborshik/vitepress/define-gh-pages-doc-config";
 
 import path from 'path';
