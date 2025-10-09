@@ -1,5 +1,11 @@
 # mobx-view-model
 
+## 8.3.5
+
+### Patch Changes
+
+- [`06d7815`](https://github.com/js2me/mobx-view-model/commit/06d78159c85570933b443f71854056f7f2a1d959) Thanks [@js2me](https://github.com/js2me)! - update yummies to latest (better treeshaking)
+
 ## 8.3.4
 
 ### Patch Changes
