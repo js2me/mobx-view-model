@@ -1,10 +1,15 @@
-# `withLazyViewModel` HOC  
+# ~~`withLazyViewModel` HOC~~  
+
+::: danger DEPRECATED
+This HOC will be removed after 2-3 next major releases since 8.x.x.  
+Better to use `loadable()` HOC from [react-simple-loadable](https://www.npmjs.com/package/react-simple-loadable) package instead.   
+
+Reason of the deprecation:   
+This HOC is requires you to load `model` and `view` modules separately. So they will be loaded as separated chunks.  
+This solution is not good and gives no benefits.   
+:::
 
 Optional for usage HOC that doing the same thing as [`withViewModel`](/react/api/with-view-model), but fetching `ViewModel` and `View` "lazy"  
-
-::: tip
-This HOC is using [react-simple-loadable](https://www.npmjs.com/package/react-simple-loadable) package  
-:::
 
 ## API Signature
 ```tsx

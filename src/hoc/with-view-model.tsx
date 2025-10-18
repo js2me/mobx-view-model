@@ -1,5 +1,5 @@
 import { observer } from 'mobx-react-lite';
-import { useContext } from 'react';
+import { forwardRef, useContext } from 'react';
 import type {
   AnyObject,
   Class,
@@ -32,11 +32,40 @@ type FixedComponentType<P extends AnyObject = {}> =
 
 declare const process: { env: { NODE_ENV?: string } };
 
-export type ViewModelProps<VM> = {
-  model: VM;
-};
+/**
+ * This type is needed to declare prop types for your View component wrapped into `withViewModel` HOC
+ *
+ * Use second generic type add typings for `forwardedRef` prop
+ */
+export type ViewModelProps<
+  VM,
+  TForwardedRef = void,
+> = TForwardedRef extends void
+  ? {
+      model: VM;
+      forwardedRef?: React.ForwardedRef<
+        TForwardedRef extends void ? any : TForwardedRef
+      >;
+    }
+  : {
+      model: VM;
+      forwardedRef?: React.ForwardedRef<
+        TForwardedRef extends void ? any : TForwardedRef
+      >;
+    };
 
-export type ViewModelInputProps<VM> = VM extends ViewModel<infer TPayload, any>
+type ViewModelPropsChargedProps<
+  TComponentOriginProps extends AnyObject,
+  TViewModel,
+  TForwardedRef = void,
+> = HasSpecificKey<TComponentOriginProps, 'ref'> extends true
+  ? Omit<TComponentOriginProps, 'ref'> &
+      ViewModelProps<TViewModel, TComponentOriginProps['ref']>
+  : HasSpecificKey<TComponentOriginProps, 'forwardedRef'> extends true
+    ? TComponentOriginProps
+    : TComponentOriginProps & ViewModelProps<TViewModel, TForwardedRef>;
+
+type VMInputPayloadPropObj<VM> = VM extends ViewModel<infer TPayload, any>
   ? TPayload extends EmptyObject
     ? AnyObject
     : IsPartial<TPayload> extends true
@@ -58,61 +87,110 @@ export type ViewModelInputProps<VM> = VM extends ViewModel<infer TPayload, any>
           }
     : AnyObject;
 
+/**
+ * @deprecated use `VMComponentProps`
+ */
+export type ViewModelInputProps<
+  VM,
+  TForwardedRef = void,
+> = VMInputPayloadPropObj<VM> & {
+  ref?: React.LegacyRef<TForwardedRef>;
+};
+
+export type WithViewModelReactHook = (
+  allProps: AnyObject,
+  ctx: AnyObject,
+  viewModels: Maybe<ViewModelStore>,
+  ref?: any,
+) => void;
+
 export interface ViewModelHocConfig<VM extends AnyViewModel>
   extends Omit<UseCreateViewModelConfig<VM>, 'component' | 'componentProps'> {
   /**
    * Component to render if the view model initialization takes too long
+   *
+   * [**Documentation**](https://js2me.github.io/mobx-view-model/react/api/with-view-model.html#fallback)
    */
   fallback?: React.ComponentType;
 
   /**
    * Function to invoke additional React hooks in the resulting component
+   *
+   * [**Documentation**](https://js2me.github.io/mobx-view-model/react/api/with-view-model.html#reacthook)
    */
-  reactHook?: (
-    allProps: AnyObject,
-    ctx: AnyObject,
-    viewModels: Maybe<ViewModelStore>,
-  ) => void;
+  reactHook?: WithViewModelReactHook;
 
   /**
    * Function that should return the payload for the VM
    * by default, it is - (props) => props.payload
+   *
+   * [**Documentation**](https://js2me.github.io/mobx-view-model/react/api/with-view-model.html#getpayload)
    */
   getPayload?: (allProps: any) => any;
+
+  /**
+   * Forwards ref using `React.forwardRef` but pass it to props as prop `ref`
+   *
+   * [**Documentation**](https://js2me.github.io/mobx-view-model/react/api/with-view-model.html#forwardref)
+   */
+  forwardRef?: boolean;
 }
 
 export interface ViewModelSimpleHocConfig<_VM> {
   /**
    * Component to render if the view model initialization takes too long
+   *
+   * [**Documentation**](https://js2me.github.io/mobx-view-model/react/api/with-view-model.html#fallback)
    */
   fallback?: React.ComponentType;
 
   /**
    * Function to invoke additional React hooks in the resulting component
+   *
+   * [**Documentation**](https://js2me.github.io/mobx-view-model/react/api/with-view-model.html#reacthook)
    */
-  reactHook?: (
-    allProps: AnyObject,
-    ctx: AnyObject,
-    viewModels: Maybe<ViewModelStore>,
-  ) => void;
+  reactHook?: WithViewModelReactHook;
 
   /**
    * Function that should return the payload for the VM
    * by default, it is - (props) => props.payload
    */
   getPayload?: (allProps: any) => any;
+
+  /**
+   * Forwards ref using `React.forwardRef` but pass it to props as prop `ref`
+   *
+   * [**Documentation**](https://js2me.github.io/mobx-view-model/react/api/with-view-model.html#forwardref)
+   */
+  forwardRef?: boolean;
 }
+
+type HasSpecificKey<T, TKey extends string> = string extends keyof T
+  ? false
+  : TKey extends keyof T
+    ? true
+    : false;
 
 export type VMComponentProps<
   TViewModel,
-  TComponentOriginProps extends AnyObject,
-> = Omit<TComponentOriginProps, 'model'> & ViewModelInputProps<TViewModel>;
+  TComponentOriginProps extends AnyObject = AnyObject,
+  TForwardedRef = void,
+> = Omit<TComponentOriginProps, keyof ViewModelProps<TViewModel, HTMLElement>> &
+  VMInputPayloadPropObj<TViewModel> &
+  (TForwardedRef extends void
+    ? HasSpecificKey<TComponentOriginProps, 'forwardedRef'> extends true
+      ? Pick<TComponentOriginProps, 'forwardedRef'>
+      : HasSpecificKey<TComponentOriginProps, 'ref'> extends true
+        ? { ref?: TComponentOriginProps['ref'] }
+        : {}
+    : { ref?: React.ForwardedRef<TForwardedRef> });
 
 export type VMComponent<
   TViewModel,
-  TComponentOriginProps extends AnyObject = ViewModelProps<TViewModel>,
+  TComponentOriginProps extends AnyObject = AnyObject,
+  TForwardedRef = void,
 > = (
-  props: VMComponentProps<TViewModel, TComponentOriginProps>,
+  props: VMComponentProps<TViewModel, TComponentOriginProps, TForwardedRef>,
 ) => React.ReactNode;
 
 /**
@@ -122,42 +200,46 @@ export type VMComponent<
  */
 export function withViewModel<
   TViewModel extends AnyViewModel,
-  TComponentOriginProps extends AnyObject = ViewModelProps<TViewModel>,
+  TComponentOriginProps extends AnyObject = AnyObject,
+  TForwardedRef = void,
 >(
   model: Class<TViewModel>,
   component: React.ComponentType<
-    TComponentOriginProps & ViewModelProps<TViewModel>
+    ViewModelPropsChargedProps<TComponentOriginProps, TViewModel, TForwardedRef>
   >,
   config?: ViewModelHocConfig<TViewModel>,
-): VMComponent<TViewModel, TComponentOriginProps>;
+): VMComponent<TViewModel, TComponentOriginProps, TForwardedRef>;
 
 /**
  * A Higher-Order Component that connects React components to their ViewModels, providing seamless MobX integration.
  *
  * [**Documentation**](https://js2me.github.io/mobx-view-model/react/api/with-view-model.html)
  */
-export function withViewModel<TViewModel extends AnyViewModel>(
+export function withViewModel<
+  TViewModel extends AnyViewModel,
+  TForwardedRef = void,
+>(
   model: Class<TViewModel>,
   config?: ViewModelHocConfig<TViewModel>,
 ): <TComponentOriginProps extends AnyObject = ViewModelProps<TViewModel>>(
   Component?: React.ComponentType<
-    TComponentOriginProps & ViewModelProps<TViewModel>
+    ViewModelPropsChargedProps<TComponentOriginProps, TViewModel, TForwardedRef>
   >,
-) => VMComponent<TViewModel, TComponentOriginProps>;
+) => VMComponent<TViewModel, TComponentOriginProps, TForwardedRef>;
 
 /**
  * A Higher-Order Component that connects React components to their ViewModels, providing seamless MobX integration.
  *
  * [**Documentation**](https://js2me.github.io/mobx-view-model/react/api/with-view-model.html)
  */
-export function withViewModel<TViewModel>(
+export function withViewModel<TViewModel, TForwardedRef = void>(
   model: Class<TViewModel>,
   config?: ViewModelSimpleHocConfig<TViewModel>,
 ): <TComponentOriginProps extends AnyObject = ViewModelProps<TViewModel>>(
   Component?: FixedComponentType<
-    TComponentOriginProps & ViewModelProps<TViewModel>
+    ViewModelPropsChargedProps<TComponentOriginProps, TViewModel, TForwardedRef>
   >,
-) => VMComponent<TViewModel, TComponentOriginProps>;
+) => VMComponent<TViewModel, TComponentOriginProps, TForwardedRef>;
 
 /**
  * A Higher-Order Component that connects React components to their ViewModels, providing seamless MobX integration.
@@ -166,14 +248,15 @@ export function withViewModel<TViewModel>(
  */
 export function withViewModel<
   TViewModel extends AnyViewModelSimple,
-  TComponentOriginProps extends AnyObject = ViewModelProps<TViewModel>,
+  TComponentOriginProps extends AnyObject = AnyObject,
+  TForwardedRef = void,
 >(
   model: Class<TViewModel>,
   component: FixedComponentType<
-    TComponentOriginProps & ViewModelProps<TViewModel>
+    ViewModelPropsChargedProps<TComponentOriginProps, TViewModel, TForwardedRef>
   >,
   config?: ViewModelSimpleHocConfig<TViewModel>,
-): VMComponent<TViewModel, TComponentOriginProps>;
+): VMComponent<TViewModel, TComponentOriginProps, TForwardedRef>;
 
 /**
  * A Higher-Order Component that connects React components to their ViewModels, providing seamless MobX integration.
@@ -183,13 +266,14 @@ export function withViewModel<
 export function withViewModel<
   TViewModel,
   TComponentOriginProps extends AnyObject = ViewModelProps<TViewModel>,
+  TForwardedRef = void,
 >(
   model: Class<TViewModel>,
   component: FixedComponentType<
-    TComponentOriginProps & ViewModelProps<TViewModel>
+    ViewModelPropsChargedProps<TComponentOriginProps, TViewModel, TForwardedRef>
   >,
   config?: ViewModelSimpleHocConfig<TViewModel>,
-): VMComponent<TViewModel, TComponentOriginProps>;
+): VMComponent<TViewModel, TComponentOriginProps, TForwardedRef>;
 
 /**
  * Creates new instance of ViewModel
@@ -266,18 +350,20 @@ const withViewModelWrapper = (
   const FallbackComponent =
     config.fallback ?? viewModelsConfig.fallbackComponent;
 
-  const ConnectedViewModel = observer((allProps: any) => {
+  const RawComponent = (allProps: any, ref: any) => {
     const viewModels = useContext(ViewModelsContext);
 
-    reactHook?.(allProps, config.ctx!, viewModels);
+    reactHook?.(allProps, config.ctx!, viewModels, ref);
 
     const { payload: rawPayload, ...componentProps } = allProps;
-
     const payload = getPayload?.(allProps) ?? rawPayload;
+
+    if (config.forwardRef && !('forwardedRef' in componentProps)) {
+      componentProps.forwardedRef = ref;
+    }
 
     const model = useCreateViewModel(VM, payload, {
       ...config,
-      component: ConnectedViewModel,
       props: componentProps,
     }) as unknown as AnyViewModel | AnyViewModelSimple;
 
@@ -286,8 +372,8 @@ const withViewModelWrapper = (
 
     // This condition is works for AnyViewModelSimple too
     // All other variants will be bad for performance
-    const isRenderAllowedLocally = (model as AnyViewModel).isMounted !== false;
-    const isRenderAllowed = isRenderAllowedByStore && isRenderAllowedLocally;
+    const isRenderAllowed =
+      isRenderAllowedByStore && (model as AnyViewModel).isMounted !== false;
 
     if (isRenderAllowed) {
       return (
@@ -297,14 +383,31 @@ const withViewModelWrapper = (
       );
     }
 
-    return FallbackComponent ? (
-      <FallbackComponent {...allProps} payload={payload} />
-    ) : null;
-  });
+    return (
+      FallbackComponent && <FallbackComponent {...allProps} payload={payload} />
+    );
+  };
+
+  let ConnectedViewModel = RawComponent;
+
+  if (config.forwardRef) {
+    ConnectedViewModel = forwardRef(ConnectedViewModel) as any;
+  }
+
+  ConnectedViewModel = observer(ConnectedViewModel);
 
   if (process.env.NODE_ENV !== 'production') {
-    ConnectedViewModel.displayName = `ConnectedViewModel(${VM.name}->Component)`;
+    (ConnectedViewModel as React.ComponentType).displayName =
+      `ConnectedViewModel(${VM.name}->Component)`;
   }
+
+  // There is no problem to just assign it here to config
+  // This property is needed to pass in `useCreateViewModel()` hook
+  // @ts-expect-error
+  config.component = ConnectedViewModel as unknown as VMComponent<
+    AnyViewModel,
+    any
+  >;
 
   return ConnectedViewModel;
 };

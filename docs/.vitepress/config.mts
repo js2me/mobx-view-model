@@ -80,7 +80,7 @@ export default defineGhPagesDocConfig(pckgJson, {
                 link: '/api/view-models/interface',
               },
               {
-                text: "Base Implementation",
+                text: "ViewModelBase",
                 link: '/api/view-models/base-implementation',
               },
               {
@@ -88,7 +88,7 @@ export default defineGhPagesDocConfig(pckgJson, {
                 link: '/api/view-models/view-model-simple',
               },
               {
-                text: "View Models Config",
+                text: "viewModelsConfig",
                 link: '/api/view-models/view-models-config',
               },
             ]
@@ -106,7 +106,7 @@ export default defineGhPagesDocConfig(pckgJson, {
                 link: '/api/view-model-store/interface',
               },
               {
-                text: "Base Implementation",
+                text: "ViewModelStoreBase",
                 link: '/api/view-model-store/base-implementation',
               },
             ]

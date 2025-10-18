@@ -1,9 +1,6 @@
 import { useContext, useLayoutEffect } from 'react';
 import type { Class, IsPartial, Maybe } from 'yummies/utils/types';
-import type {
-  CreateViewModelFactoryFn,
-  GenerateViewModelIdFn,
-} from '../config/index.js';
+import type { ViewModelsConfig } from '../config/index.js';
 import { viewModelsConfig } from '../config/index.js';
 import {
   ActiveViewModelContext,
@@ -25,18 +22,24 @@ export interface UseCreateViewModelConfig<TViewModel extends AnyViewModel>
   > {
   /**
    * Unique identifier for the view
+   *
+   * [**Documentation**](https://js2me.github.io/mobx-view-model/react/api/with-view-model.html#id)
    */
   id?: Maybe<string>;
 
   /**
    * Function to generate an identifier for the view model
+   *
+   * [**Documentation**](https://js2me.github.io/mobx-view-model/react/api/with-view-model.html#generateid)
    */
-  generateId?: GenerateViewModelIdFn;
+  generateId?: ViewModelsConfig<TViewModel>['generateId'];
 
   /**
    * Function to create an instance of the VM class
+   *
+   * [**Documentation**](https://js2me.github.io/mobx-view-model/react/api/with-view-model.html#factory)
    */
-  factory?: CreateViewModelFactoryFn<TViewModel>;
+  factory?: ViewModelsConfig<TViewModel>['factory'];
 }
 
 /**

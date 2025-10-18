@@ -40,6 +40,8 @@ export interface LazyViewModelSimpleHocConfig<
 /**
  * A Higher-Order Component that **LAZY** connects React components to their ViewModels, providing seamless MobX integration.
  *
+ * @deprecated use `loadable()` from `react-simple-loadable` instead.
+ *
  * [**Documentation**](https://js2me.github.io/mobx-view-model/react/api/with-lazy-view-model.html)
  */
 export function withLazyViewModel<
@@ -55,6 +57,8 @@ export function withLazyViewModel<
 /**
  * A Higher-Order Component that **LAZY** connects React components to their ViewModels, providing seamless MobX integration.
  *
+ * @deprecated use `loadable()` from `react-simple-loadable` instead.
+ *
  * [**Documentation**](https://js2me.github.io/mobx-view-model/react/api/with-lazy-view-model.html)
  */
 export function withLazyViewModel<
@@ -69,6 +73,8 @@ export function withLazyViewModel<
 
 /**
  * A Higher-Order Component that **LAZY** connects React components to their ViewModels, providing seamless MobX integration.
+ *
+ * @deprecated use `loadable()` from `react-simple-loadable` instead.
  *
  * [**Documentation**](https://js2me.github.io/mobx-view-model/react/api/with-lazy-view-model.html)
  */

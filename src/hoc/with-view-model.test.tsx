@@ -8,17 +8,20 @@ import {
 import { comparer, makeObservable, observable, runInAction } from 'mobx';
 import { observer } from 'mobx-react-lite';
 import {
+  type ComponentProps,
   type PropsWithChildren,
   type ReactNode,
   useEffect,
+  useRef,
   useState,
   version,
 } from 'react';
-import { describe, expect, it, test, vi } from 'vitest';
+import { describe, expect, expectTypeOf, it, test, vi } from 'vitest';
 import { sleep } from 'yummies/async';
 import { createCounter } from 'yummies/complex';
 import type { AnyObject, EmptyObject, Maybe } from 'yummies/utils/types';
 import {
+  ViewModelBase,
   type ViewModelParams,
   type ViewModelSimple,
   type ViewModelStore,
@@ -1521,6 +1524,170 @@ describe('withViewModel', () => {
         await act(async () => render(<Component />));
         expect(screen.getByText('hello bar')).toBeDefined();
       });
+    });
+  });
+
+  describe('forwardRef parameter', async () => {
+    it('should forward ref through 2 VM components (any type)', async () => {
+      class MyVM1 {}
+
+      const Test1 = withViewModel(
+        MyVM1,
+        ({ forwardedRef, model }: ViewModelProps<MyVM1, any>) => {
+          expectTypeOf(model).toEqualTypeOf<MyVM1>();
+          expectTypeOf(forwardedRef).toEqualTypeOf<
+            React.ForwardedRef<any> | undefined
+          >();
+          return <div ref={forwardedRef} id="test-1" />;
+        },
+        { forwardRef: true },
+      );
+      class MyVM2 {}
+      const Test2 = withViewModel(
+        MyVM2,
+        ({ forwardedRef, model }) => {
+          expectTypeOf(model).toEqualTypeOf<MyVM2>();
+          expectTypeOf(forwardedRef).toEqualTypeOf<
+            React.ForwardedRef<any> | undefined
+          >();
+          return <Test1 ref={forwardedRef} />;
+        },
+        { forwardRef: true },
+      );
+
+      const TestApp = () => {
+        const ref = useRef<HTMLDivElement>(null);
+
+        useEffect(() => {
+          expect(ref.current).not.toBeNull();
+          expect(ref.current?.id).toBe('test-1');
+        }, []);
+
+        return <Test2 ref={ref} />;
+      };
+
+      await act(async () => render(<TestApp />));
+    });
+    it('should forward ref through 2 VM components (HTMLDivElement type)', async () => {
+      class MyVM1 {}
+      const Test1 = withViewModel(
+        MyVM1,
+        ({ forwardedRef }: ViewModelProps<MyVM1, HTMLDivElement>) => {
+          expectTypeOf(forwardedRef).toEqualTypeOf<
+            React.ForwardedRef<HTMLDivElement> | undefined
+          >();
+          return <div ref={forwardedRef} id="test-1" />;
+        },
+        { forwardRef: true },
+      );
+
+      class MyVM2 {}
+      const Test2 = withViewModel(
+        MyVM2,
+        ({ forwardedRef }: ViewModelProps<MyVM2, HTMLDivElement>) => {
+          expectTypeOf(forwardedRef).toEqualTypeOf<
+            React.ForwardedRef<HTMLDivElement> | undefined
+          >();
+          return <Test1 ref={forwardedRef} />;
+        },
+        { forwardRef: true },
+      );
+
+      const TestApp = () => {
+        const ref = useRef<HTMLDivElement>(null);
+
+        useEffect(() => {
+          expect(ref.current).not.toBeNull();
+          expect(ref.current?.id).toBe('test-1');
+        }, []);
+
+        return <Test2 ref={ref} />;
+      };
+
+      await act(async () => render(<TestApp />));
+    });
+  });
+
+  describe('typings', () => {
+    it('1', async () => {
+      type JediType = 'defender' | 'guard' | 'consul';
+
+      class JediVM<TJediType extends JediType> extends ViewModelBase<{
+        jedi: TJediType;
+      }> {
+        get jediType() {
+          return this.payload.jedi;
+        }
+      }
+
+      const Jedi = withViewModel(
+        JediVM<JediType>,
+        ({ model, forwardedRef }) => {
+          expectTypeOf(model.jediType).toEqualTypeOf<JediType>();
+          expectTypeOf(forwardedRef).toEqualTypeOf<
+            React.ForwardedRef<any> | undefined
+          >();
+
+          expect(forwardedRef).toBeUndefined();
+
+          return <div>{model.jediType}</div>;
+        },
+      );
+
+      const data = {
+        payload: {
+          jedi: 'defender',
+        },
+        ref: undefined,
+      } as const satisfies ComponentProps<typeof Jedi>;
+
+      await act(async () => render(<Jedi {...data} />));
+    });
+    it('Using second generic type in ViewModelProps to define forwardedRef', async () => {
+      class YourVM extends ViewModelBase {}
+
+      interface ComponentProps extends ViewModelProps<YourVM, HTMLDivElement> {}
+
+      const Component = withViewModel(
+        YourVM,
+        ({ forwardedRef }: ComponentProps) => {
+          expectTypeOf(forwardedRef).toEqualTypeOf<
+            React.ForwardedRef<HTMLDivElement> | undefined
+          >();
+          return <div ref={forwardedRef}>hello</div>;
+        },
+        { forwardRef: true },
+      );
+
+      const TestApp = () => {
+        const ref = useRef<HTMLDivElement>(null);
+        return <Component ref={ref} />;
+      };
+
+      await act(async () => render(<TestApp />));
+    });
+    it('forwardedRef already defined (overrided) in ComponentProps', async () => {
+      class YourVM extends ViewModelBase {}
+
+      interface ComponentProps
+        extends Omit<ViewModelProps<YourVM>, 'forwardedRef'> {
+        forwardedRef: number;
+      }
+
+      const Component = withViewModel(
+        YourVM,
+        ({ forwardedRef }: ComponentProps) => {
+          expectTypeOf(forwardedRef).toEqualTypeOf<number>();
+          return <div>hello {forwardedRef}</div>;
+        },
+      );
+
+      const TestApp = () => {
+        return <Component forwardedRef={1} />;
+      };
+
+      await act(async () => render(<TestApp />));
+      expect(screen.getByText('hello 1')).toBeDefined();
     });
   });
 });
