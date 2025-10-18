@@ -75,7 +75,7 @@ class YourVM extends ViewModelBase {}
 
 const Component = withViewModel(
   YourVM,
-  ({ forwardedRef }: ViewModelWithRefProps<YourVM, HTMLDivElement>) => {
+  ({ forwardedRef }: ViewModelProps<YourVM, HTMLDivElement>) => {
     // forwardedRef: React.ForwardedRef<HTMLDivElement>!
     return (
       <div ref={forwardedRef}>hello</div>
