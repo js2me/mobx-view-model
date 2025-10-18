@@ -55,6 +55,10 @@ Using this parameter will require to use `ViewModelProps<YourVM, RefType>` (seco
 
 Default: `false`
 
+::: info Better to use custom prop
+This parameter uses React.forwardRef, so this thing is not a good thing instead using like `targetInputRef`
+:::
+
 Examples:   
 
 ```tsx{3,8}
