@@ -56,7 +56,8 @@ Using this parameter will require to use `ViewModelProps<YourVM, RefType>` (seco
 Default: `false`
 
 ::: info Better to use custom prop
-This parameter uses React.forwardRef, so this thing is not a good thing instead using like `targetInputRef`
+This parameter uses React.forwardRef, so this thing is not a good solution for performance.  
+Instead of thia parameter you can use custom prop like `targetInputRef`
 :::
 
 Examples:   
