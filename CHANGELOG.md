@@ -1,5 +1,17 @@
 # mobx-view-model
 
+## 8.4.0
+
+### Minor Changes
+
+- [#37](https://github.com/js2me/mobx-view-model/pull/37) [`3619b03`](https://github.com/js2me/mobx-view-model/commit/3619b03e6fee05fd5e2441780dee309ef2b3508e) Thanks [@js2me](https://github.com/js2me)! - `forwardRef` parameter for `withViewModel` HOC
+
+- [#37](https://github.com/js2me/mobx-view-model/pull/37) [`3619b03`](https://github.com/js2me/mobx-view-model/commit/3619b03e6fee05fd5e2441780dee309ef2b3508e) Thanks [@js2me](https://github.com/js2me)! - mark `withLazyViewModel` as deprecated
+
+### Patch Changes
+
+- [#37](https://github.com/js2me/mobx-view-model/pull/37) [`3619b03`](https://github.com/js2me/mobx-view-model/commit/3619b03e6fee05fd5e2441780dee309ef2b3508e) Thanks [@js2me](https://github.com/js2me)! - added documentation for `withViewModel` HOC (parameters)
+
 ## 8.3.5
 
 ### Patch Changes
