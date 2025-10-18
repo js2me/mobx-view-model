@@ -37,7 +37,7 @@ export type CreateViewModelFactoryFn<
  * Configuration options for view models.
  * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config)
  */
-export interface ViewModelsConfig {
+export interface ViewModelsConfig<VM extends AnyViewModel = AnyViewModel> {
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#startviewtransitions) */
   startViewTransitions: {
     mount: boolean;
@@ -53,17 +53,17 @@ export interface ViewModelsConfig {
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#generateid) */
   generateId: GenerateViewModelIdFn;
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#factory) */
-  factory: CreateViewModelFactoryFn<AnyViewModel>;
+  factory: CreateViewModelFactoryFn<VM>;
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#fallbackcomponent) */
   fallbackComponent?: React.ComponentType;
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#onmount) */
-  onMount?: (viewModel: AnyViewModel) => void;
+  onMount?: (viewModel: VM) => void;
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#onunmount) */
-  onUnmount?: (viewModel: AnyViewModel) => void;
+  onUnmount?: (viewModel: VM) => void;
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#processviewcomponent) */
   processViewComponent?: (
     component: React.ComponentType<any> | undefined,
-    VM: Class<AnyViewModel>,
+    VM: Class<VM>,
     config: ViewModelHocConfig<any>,
   ) => Maybe<React.ComponentType<any>>;
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#wrapviewsinobserver) */
