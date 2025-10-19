@@ -1609,7 +1609,32 @@ describe('withViewModel', () => {
   });
 
   describe('typings', () => {
-    it('1', async () => {
+    it('simple no props declaration (model prop infer type)', async () => {
+      class ParentMemeVM extends ViewModelBase {
+        kek = 1;
+      }
+      class MemeVM extends ViewModelBase<EmptyObject, ParentMemeVM> {
+        pek = this.parentViewModel?.kek;
+
+        getFoo() {
+          return '1';
+        }
+      }
+
+      const Meme = withViewModel(MemeVM, ({ model }) => {
+        expectTypeOf(model).toEqualTypeOf<MemeVM>();
+        return <div>{`hello ${model.pek} ${model.getFoo()}`}</div>;
+      });
+
+      const TestApp = () => {
+        return <Meme />;
+      };
+
+      const screen = await act(async () => render(<TestApp />));
+      expect(screen.getByText('hello undefined 1')).toBeDefined();
+    });
+
+    it('forwarding refs', async () => {
       type JediType = 'defender' | 'guard' | 'consul';
 
       class JediVM<TJediType extends JediType> extends ViewModelBase<{
@@ -1666,7 +1691,7 @@ describe('withViewModel', () => {
 
       await act(async () => render(<TestApp />));
     });
-    it('forwardedRef already defined (overrided) in ComponentProps', async () => {
+    it('forwardedRef already defined (overrided) in ComponentProps (number)', async () => {
       class YourVM extends ViewModelBase {}
 
       interface ComponentProps
@@ -1686,8 +1711,82 @@ describe('withViewModel', () => {
         return <Component forwardedRef={1} />;
       };
 
-      await act(async () => render(<TestApp />));
+      const screen = await act(async () => render(<TestApp />));
       expect(screen.getByText('hello 1')).toBeDefined();
+    });
+    it('forwardedRef already defined (overrided) in ComponentProps (number | undefined) (no prop passed)', async () => {
+      class YourVM extends ViewModelBase {}
+
+      interface ComponentProps
+        extends Omit<ViewModelProps<YourVM>, 'forwardedRef'> {
+        forwardedRef?: number;
+      }
+
+      const Component = withViewModel(
+        YourVM,
+        ({ forwardedRef }: ComponentProps) => {
+          expectTypeOf(forwardedRef).toEqualTypeOf<number | undefined>();
+          return <div>{`hello ${forwardedRef}`}</div>;
+        },
+      );
+
+      const TestApp = () => {
+        return <Component />;
+      };
+
+      const screen = await act(async () => render(<TestApp />));
+      expect(screen.getByText('hello undefined')).toBeDefined();
+    });
+    it('forwardedRef already defined (overrided) in ComponentProps (number | undefined) (prop passed)', async () => {
+      class YourVM extends ViewModelBase {}
+
+      interface ComponentProps
+        extends Omit<ViewModelProps<YourVM>, 'forwardedRef'> {
+        forwardedRef?: number;
+      }
+
+      const Component = withViewModel(
+        YourVM,
+        ({ forwardedRef }: ComponentProps) => {
+          expectTypeOf(forwardedRef).toEqualTypeOf<number | undefined>();
+          return <div>{`hello ${forwardedRef}`}</div>;
+        },
+      );
+
+      const TestApp = () => {
+        return <Component forwardedRef={666} />;
+      };
+
+      const screen = await act(async () => render(<TestApp />));
+      expect(screen.getByText('hello 666')).toBeDefined();
+    });
+    it('ref already defined in ComponentProps', async () => {
+      class YourVM extends ViewModelBase {}
+
+      interface ComponentProps extends ViewModelProps<YourVM> {
+        ref?: React.LegacyRef<number>;
+      }
+
+      const Component = withViewModel<YourVM, ComponentProps>(
+        YourVM,
+        ({ forwardedRef }) => {
+          expectTypeOf(forwardedRef).toEqualTypeOf<
+            React.ForwardedRef<number> | undefined
+          >();
+          return <div>hello</div>;
+        },
+        {
+          forwardRef: true,
+        },
+      );
+
+      const TestApp = () => {
+        const ref = useRef(1);
+        return <Component ref={ref} />;
+      };
+
+      const screen = await act(async () => render(<TestApp />));
+      expect(screen.getByText('hello')).toBeDefined();
     });
   });
 });

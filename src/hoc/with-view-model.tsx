@@ -3,8 +3,12 @@ import { forwardRef, useContext } from 'react';
 import type {
   AnyObject,
   Class,
+  Defined,
   EmptyObject,
+  HasKey,
+  IsAny,
   IsPartial,
+  IsUnknown,
   Maybe,
 } from 'yummies/utils/types';
 import { viewModelsConfig } from '../config/index.js';
@@ -32,6 +36,14 @@ type FixedComponentType<P extends AnyObject = {}> =
 
 declare const process: { env: { NODE_ENV?: string } };
 
+export type ExtractReactRef<T> = Defined<T> extends React.ForwardedRef<
+  infer TForwardedRef
+>
+  ? TForwardedRef
+  : Defined<T> extends React.LegacyRef<infer TRef>
+    ? TRef
+    : T;
+
 /**
  * This type is needed to declare prop types for your View component wrapped into `withViewModel` HOC
  *
@@ -39,35 +51,31 @@ declare const process: { env: { NODE_ENV?: string } };
  */
 export type ViewModelProps<
   VM,
-  TForwardedRef = void,
-> = TForwardedRef extends void
-  ? {
-      model: VM;
-      forwardedRef?: React.ForwardedRef<
-        TForwardedRef extends void ? any : TForwardedRef
-      >;
-    }
-  : {
-      model: VM;
-      forwardedRef?: React.ForwardedRef<
-        TForwardedRef extends void ? any : TForwardedRef
-      >;
-    };
+  TForwardedRef = unknown,
+> = IsAny<TForwardedRef> extends true
+  ? { model: VM; forwardedRef?: React.ForwardedRef<TForwardedRef> }
+  : IsUnknown<TForwardedRef> extends true
+    ? { model: VM }
+    : { model: VM; forwardedRef?: React.ForwardedRef<TForwardedRef> };
 
 type ViewModelPropsChargedProps<
   TComponentOriginProps extends AnyObject,
   TViewModel,
-  TForwardedRef = void,
-> = HasSpecificKey<TComponentOriginProps, 'ref'> extends true
+  TForwardedRef = unknown,
+> = HasKey<TComponentOriginProps, 'ref'> extends true
   ? Omit<TComponentOriginProps, 'ref'> &
-      ViewModelProps<TViewModel, TComponentOriginProps['ref']>
-  : HasSpecificKey<TComponentOriginProps, 'forwardedRef'> extends true
+      ViewModelProps<TViewModel, ExtractReactRef<TComponentOriginProps['ref']>>
+  : HasKey<TComponentOriginProps, 'forwardedRef'> extends true
     ? TComponentOriginProps
-    : TComponentOriginProps & ViewModelProps<TViewModel, TForwardedRef>;
+    : TComponentOriginProps &
+        ViewModelProps<
+          TViewModel,
+          IsUnknown<TForwardedRef> extends true ? any : TForwardedRef
+        >;
 
 type VMInputPayloadPropObj<VM> = VM extends ViewModel<infer TPayload, any>
   ? TPayload extends EmptyObject
-    ? AnyObject
+    ? {}
     : IsPartial<TPayload> extends true
       ? {
           payload?: TPayload;
@@ -77,7 +85,7 @@ type VMInputPayloadPropObj<VM> = VM extends ViewModel<infer TPayload, any>
         }
   : VM extends ViewModelSimple<infer TPayload>
     ? TPayload extends EmptyObject
-      ? AnyObject
+      ? {}
       : IsPartial<TPayload> extends true
         ? {
             payload?: TPayload;
@@ -85,14 +93,14 @@ type VMInputPayloadPropObj<VM> = VM extends ViewModel<infer TPayload, any>
         : {
             payload: TPayload;
           }
-    : AnyObject;
+    : {};
 
 /**
  * @deprecated use `VMComponentProps`
  */
 export type ViewModelInputProps<
   VM,
-  TForwardedRef = void,
+  TForwardedRef = unknown,
 > = VMInputPayloadPropObj<VM> & {
   ref?: React.LegacyRef<TForwardedRef>;
 };
@@ -165,30 +173,30 @@ export interface ViewModelSimpleHocConfig<_VM> {
   forwardRef?: boolean;
 }
 
-type HasSpecificKey<T, TKey extends string> = string extends keyof T
-  ? false
-  : TKey extends keyof T
-    ? true
-    : false;
+export type AllViewModelPropsKeys = keyof Required<ViewModelProps<any, any>>;
 
 export type VMComponentProps<
   TViewModel,
   TComponentOriginProps extends AnyObject = AnyObject,
-  TForwardedRef = void,
-> = Omit<TComponentOriginProps, keyof ViewModelProps<TViewModel, HTMLElement>> &
+  TForwardedRef = unknown,
+> = Omit<TComponentOriginProps, AllViewModelPropsKeys> &
   VMInputPayloadPropObj<TViewModel> &
-  (TForwardedRef extends void
-    ? HasSpecificKey<TComponentOriginProps, 'forwardedRef'> extends true
-      ? Pick<TComponentOriginProps, 'forwardedRef'>
-      : HasSpecificKey<TComponentOriginProps, 'ref'> extends true
-        ? { ref?: TComponentOriginProps['ref'] }
-        : {}
-    : { ref?: React.ForwardedRef<TForwardedRef> });
+  (HasKey<TComponentOriginProps, 'ref'> extends true
+    ? {}
+    : HasKey<TComponentOriginProps, 'forwardedRef'> extends true
+      ? Required<TComponentOriginProps>['forwardedRef'] extends React.LegacyRef<any>
+        ? {
+            ref?: TComponentOriginProps['forwardedRef'];
+          }
+        : Pick<TComponentOriginProps, 'forwardedRef'>
+      : IsUnknown<TForwardedRef> extends true
+        ? {}
+        : { ref?: React.LegacyRef<TForwardedRef> });
 
 export type VMComponent<
   TViewModel,
   TComponentOriginProps extends AnyObject = AnyObject,
-  TForwardedRef = void,
+  TForwardedRef = unknown,
 > = (
   props: VMComponentProps<TViewModel, TComponentOriginProps, TForwardedRef>,
 ) => React.ReactNode;
@@ -201,7 +209,7 @@ export type VMComponent<
 export function withViewModel<
   TViewModel extends AnyViewModel,
   TComponentOriginProps extends AnyObject = AnyObject,
-  TForwardedRef = void,
+  TForwardedRef = unknown,
 >(
   model: Class<TViewModel>,
   component: React.ComponentType<
@@ -217,7 +225,7 @@ export function withViewModel<
  */
 export function withViewModel<
   TViewModel extends AnyViewModel,
-  TForwardedRef = void,
+  TForwardedRef = unknown,
 >(
   model: Class<TViewModel>,
   config?: ViewModelHocConfig<TViewModel>,
@@ -232,7 +240,7 @@ export function withViewModel<
  *
  * [**Documentation**](https://js2me.github.io/mobx-view-model/react/api/with-view-model.html)
  */
-export function withViewModel<TViewModel, TForwardedRef = void>(
+export function withViewModel<TViewModel, TForwardedRef = unknown>(
   model: Class<TViewModel>,
   config?: ViewModelSimpleHocConfig<TViewModel>,
 ): <TComponentOriginProps extends AnyObject = ViewModelProps<TViewModel>>(
@@ -249,7 +257,7 @@ export function withViewModel<TViewModel, TForwardedRef = void>(
 export function withViewModel<
   TViewModel extends AnyViewModelSimple,
   TComponentOriginProps extends AnyObject = AnyObject,
-  TForwardedRef = void,
+  TForwardedRef = unknown,
 >(
   model: Class<TViewModel>,
   component: FixedComponentType<
@@ -266,7 +274,7 @@ export function withViewModel<
 export function withViewModel<
   TViewModel,
   TComponentOriginProps extends AnyObject = ViewModelProps<TViewModel>,
-  TForwardedRef = void,
+  TForwardedRef = unknown,
 >(
   model: Class<TViewModel>,
   component: FixedComponentType<
