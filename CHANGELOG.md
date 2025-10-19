@@ -1,5 +1,11 @@
 # mobx-view-model
 
+## 8.5.0
+
+### Minor Changes
+
+- [`1a58812`](https://github.com/js2me/mobx-view-model/commit/1a58812e2456f31df64c1cea569507985def70f0) Thanks [@js2me](https://github.com/js2me)! - better typings support of `forwardedRef` prop and `ref` prop handling
+
 ## 8.4.0
 
 ### Minor Changes
