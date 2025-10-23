@@ -37,12 +37,6 @@
     "ViewModel",
     "ModelViewModel"
   ],
-  "zshy": {
-    "exports": {
-      "./package.json": "./package.json",
-      ".": "./src/index.ts"
-    }
-  },
   "author": "js2me",
   "license": "MIT",
   "description": "⚡ Clean MVVM for React + MobX | Powerful ViewModels made simple ⚡",
@@ -80,7 +74,7 @@
     "lefthook": "^1.11.16",
     "nodemon": "^3.1.9",
     "rimraf": "^6.0.1",
-    "sborshik": "^1.0.33",
+    "sborshik": "^1.2.0",
     "vite": "^7.1.10",
     "tsx": "^4.20.5",
     "typescript": "^5.9.3",

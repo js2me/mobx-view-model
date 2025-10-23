@@ -1,50 +1,15 @@
-import { defineConfig } from 'vite';
-import Unocss from 'unocss/vite';
-import { presetAttributify, presetIcons, presetUno } from 'unocss';
-import path from 'path';
-import fs from 'fs';
+import { ConfigsManager } from 'sborshik/utils/configs-manager';
+import { defineDocsBuildConfig } from "sborshik/vitepress";
 
 import { circularVmPayloadDependencyTestCases } from '../src/hoc/with-view-model.test.fixture';
 
-const packageJson = JSON.parse(
-  fs.readFileSync(
-    path.resolve(__dirname, '../package.json'),
-    { encoding: 'utf-8' },
-  ),
-)
+const configs = ConfigsManager.create('../'); 
 
-export default defineConfig({
-  optimizeDeps: {
-    exclude: ['@vueuse/core', 'vitepress'],
-  },
-  server: {
-    hmr: {
-      overlay: false,
-    },
-  },
-  define: {
-    __PACKAGE_DATA__: JSON.stringify(packageJson),
-  },
+export default defineDocsBuildConfig(configs, {
   plugins: [
     {
-      name: 'replace-package-json-vars',
-      transform(code, id) {
-        if (!id.endsWith('.md')) return
-        return code.replace(/\{packageJson\.(\w+)\}/g, (_, key) => {
-          return packageJson[key] || ''
-        })
-      }
-    },
-    {
-      name: 'replace-source-links',
-      transform(code, id ) {
-        if (!id.endsWith('.md')) return;
-        return code.replace(/(\(\/src\/)/g, `(https://github.com/${packageJson.author}/${packageJson.name}/tree/master/src/`)
-      }
-    },
-    {
       name: 'vitepress-useless-fix',
-      transform(code, id) {
+      transform(code: string, id: string) {
         if (!id.endsWith('.md')) return;
 
         return code.replace(
@@ -60,17 +25,6 @@ ${it}
             .join('\n')
         )   
       }
-    },
-    Unocss({
-      presets: [
-        presetUno({
-          dark: 'media',
-        }),
-        presetAttributify(),
-        presetIcons({
-          scale: 1.2,
-        }),
-      ],
-    }),
-  ],
-});
+    }
+  ]
+} as any); 
