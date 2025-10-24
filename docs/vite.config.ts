@@ -6,6 +6,7 @@ import { circularVmPayloadDependencyTestCases } from '../src/hoc/with-view-model
 const configs = ConfigsManager.create('../'); 
 
 export default defineDocsBuildConfig(configs, {
+  base: `/${configs.package.name}/`,
   plugins: [
     {
       name: 'vitepress-useless-fix',
