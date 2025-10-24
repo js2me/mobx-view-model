@@ -38,6 +38,8 @@ jobs:
 
       - run: pnpm docs:build
 
+      - run: touch docs/.vitepress/dist/.nojekyll
+
       - name: Set-up Pages
         uses: actions/configure-pages@v5
 
