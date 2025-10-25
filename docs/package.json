@@ -3,7 +3,7 @@
   "type": "module",
   "devDependencies": {
     "@iconify-json/logos": "^1.2.9",
-    "sborshik": "^1.0.33",
+    "sborshik": "^1.4.0",
     "vitepress": "^1.6.4"
   },
   "scripts": {
