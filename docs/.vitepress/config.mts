@@ -1,9 +1,9 @@
-import { defineGhPagesDocConfig } from "sborshik/vitepress/define-gh-pages-doc-config";
+import { defineDocsVitepressConfig } from "sborshik/vitepress";
 import { ConfigsManager } from "sborshik/utils/configs-manager";
 
 const configs = ConfigsManager.create('../'); 
 
-export default defineGhPagesDocConfig(configs, {
+export default defineDocsVitepressConfig(configs, {
   createdYear: '2024',
   themeConfig: {
     nav: [
