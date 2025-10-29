@@ -54,6 +54,10 @@ export default defineDocsVitepressConfig(configs, {
               }
             ]
           },
+          {
+            text: 'Playground',
+            link: '/introduction/playground',
+          }
         ],
       },
       {
