@@ -1,5 +1,11 @@
 # mobx-view-model
 
+## 8.6.0
+
+### Minor Changes
+
+- [`bdb75f5`](https://github.com/js2me/mobx-view-model/commit/bdb75f5403c30ca36eadd0a4ff97c21fa5ec28bd) Thanks [@js2me](https://github.com/js2me)! - [internal] migration to yummies 6.x
+
 ## 8.5.0
 
 ### Minor Changes
