@@ -1,5 +1,5 @@
 import { useContext, useRef } from 'react';
-import type { AnyObject } from 'yummies/utils/types';
+import type { AnyObject } from 'yummies/types';
 import {
   ActiveViewModelContext,
   ViewModelsContext,

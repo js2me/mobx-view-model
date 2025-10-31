@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import type { AnyObject, EmptyObject, Maybe } from 'yummies/utils/types';
+import type { AnyObject, EmptyObject, Maybe } from 'yummies/types';
 
 import { ViewModelBaseMock } from './view-model.base.test.js';
 import type { ViewModel } from './view-model.js';

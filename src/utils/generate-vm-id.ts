@@ -1,5 +1,5 @@
 import { createCounter } from 'yummies/complex';
-import type { AnyObject } from 'yummies/utils/types';
+import type { AnyObject } from 'yummies/types';
 import type { GenerateViewModelIdFn } from '../config/index.js';
 
 declare const process: { env: { NODE_ENV?: string } };

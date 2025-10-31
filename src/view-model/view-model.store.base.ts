@@ -1,5 +1,5 @@
 import { action, computed, observable, runInAction } from 'mobx';
-import type { Class, Maybe } from 'yummies/utils/types';
+import type { Class, Maybe } from 'yummies/types';
 import {
   applyObservable,
   mergeVMConfigs,

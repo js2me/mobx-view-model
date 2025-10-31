@@ -1,4 +1,4 @@
-import type { Maybe } from 'yummies/utils/types';
+import type { Maybe } from 'yummies/types';
 
 import { viewModelsConfig } from '../global-config.js';
 import type { ViewModelsConfig, ViewModelsRawConfig } from '../types.js';

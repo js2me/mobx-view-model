@@ -1,7 +1,7 @@
 import { action, comparer, computed, observable, runInAction } from 'mobx';
 import { isShallowEqual } from 'yummies/data';
 import { startViewTransitionSafety } from 'yummies/html';
-import type { AnyObject, EmptyObject, Maybe } from 'yummies/utils/types';
+import type { AnyObject, EmptyObject, Maybe } from 'yummies/types';
 import {
   applyObservable,
   mergeVMConfigs,

@@ -1,4 +1,4 @@
-import type { AnyObject, Class, DeepPartial, Maybe } from 'yummies/utils/types';
+import type { AnyObject, Class, DeepPartial, Maybe } from 'yummies/types';
 
 import type { ViewModelHocConfig } from '../hoc/with-view-model.js';
 import type {

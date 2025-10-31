@@ -1,4 +1,4 @@
-import type { Class, Maybe } from 'yummies/utils/types';
+import type { Class, Maybe } from 'yummies/types';
 import type { VMComponent, VMLazyComponent } from '../hoc/index.js';
 import type {
   ViewModelCreateConfig,

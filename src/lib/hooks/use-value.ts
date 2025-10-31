@@ -1,5 +1,5 @@
 import { useMemo, useRef } from 'react';
-import type { AnyObject } from 'yummies/utils/types';
+import type { AnyObject } from 'yummies/types';
 
 type UseValueHook = <TValue extends AnyObject>(
   getValue: () => TValue,

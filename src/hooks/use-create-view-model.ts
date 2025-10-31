@@ -1,5 +1,5 @@
 import { useContext, useLayoutEffect } from 'react';
-import type { Class, IsPartial, Maybe } from 'yummies/utils/types';
+import type { Class, IsPartial, Maybe } from 'yummies/types';
 import type { ViewModelsConfig } from '../config/index.js';
 import { viewModelsConfig } from '../config/index.js';
 import {

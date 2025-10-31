@@ -1,6 +1,6 @@
 import { observer } from 'mobx-react-lite';
 import type { ReactNode } from 'react';
-import type { Class, IsPartial } from 'yummies/utils/types';
+import type { Class, IsPartial } from 'yummies/types';
 
 import {
   type UseCreateViewModelConfig,

@@ -1,5 +1,5 @@
 import { applyObservable as applyObservableLib } from 'yummies/mobx';
-import type { AnyObject } from 'yummies/utils/types';
+import type { AnyObject } from 'yummies/types';
 
 import type { ViewModelObservableConfig } from '../index.js';
 

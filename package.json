@@ -51,7 +51,7 @@
   },
   "dependencies": {
     "react-simple-loadable": "^2.3.9",
-    "yummies": "^5.12.0"
+    "yummies": "^6.0.0"
   },
   "peerDependencies": {
     "mobx": "^6.12.4",

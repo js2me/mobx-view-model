@@ -19,7 +19,7 @@ import {
 import { describe, expect, expectTypeOf, it, test, vi } from 'vitest';
 import { sleep } from 'yummies/async';
 import { createCounter } from 'yummies/complex';
-import type { AnyObject, EmptyObject, Maybe } from 'yummies/utils/types';
+import type { AnyObject, EmptyObject, Maybe } from 'yummies/types';
 import {
   ViewModelBase,
   type ViewModelParams,

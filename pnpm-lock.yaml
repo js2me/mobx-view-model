@@ -24,8 +24,8 @@ importers:
         specifier: ^2.3.9
         version: 2.3.9(react@18.3.1)
       yummies:
-        specifier: ^5.12.0
-        version: 5.12.0(mobx@6.13.7)(react@18.3.1)
+        specifier: ^6.0.0
+        version: 6.0.0(mobx@6.13.7)(react@18.3.1)
     devDependencies:
       '@biomejs/biome':
         specifier: 2.2.6
@@ -4182,8 +4182,8 @@ packages:
     resolution: {integrity: sha512-7dSzzRQ++CKnNI/krKnYRV7JKKPUXMEh61soaHKg9mrWEhzFWhFnxPxGl+69cD1Ou63C13NUPCnmIcrvqCuM6w==}
     engines: {node: '>=12'}
 
-  yummies@5.12.0:
-    resolution: {integrity: sha512-acbKYCQoGpxjsQaieKlUWTLtudTgJP4UWa7h5UksTfOZ/1UEUN/Rf3kCRVICQUyNHIVOQlZ0lQ/9Zfrqy3rzoA==}
+  yummies@6.0.0:
+    resolution: {integrity: sha512-Cz3eui7Inq2CvQPWaHRHYIyT0yc9R6ZeYaZrjsAkUJYSD5YTIEoWI9o1DjBXOHytpLb0EYzp3rK6RFqF1A9EBQ==}
     peerDependencies:
       mobx: ^6.12.4
       react: ^18 || ^19
@@ -5485,7 +5485,7 @@ snapshots:
 
   '@testing-library/dom@10.4.0':
     dependencies:
-      '@babel/code-frame': 7.26.2
+      '@babel/code-frame': 7.27.1
       '@babel/runtime': 7.27.0
       '@types/aria-query': 5.0.4
       aria-query: 5.3.0
@@ -8551,7 +8551,7 @@ snapshots:
       y18n: 5.0.8
       yargs-parser: 21.1.1
 
-  yummies@5.12.0(mobx@6.13.7)(react@18.3.1):
+  yummies@6.0.0(mobx@6.13.7)(react@18.3.1):
     dependencies:
       class-variance-authority: 0.7.1
       clsx: 2.1.1

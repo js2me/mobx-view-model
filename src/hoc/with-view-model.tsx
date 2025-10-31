@@ -10,7 +10,7 @@ import type {
   IsPartial,
   IsUnknown,
   Maybe,
-} from 'yummies/utils/types';
+} from 'yummies/types';
 import { viewModelsConfig } from '../config/index.js';
 import {
   ActiveViewModelContext,

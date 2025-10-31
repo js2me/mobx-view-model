@@ -1,4 +1,4 @@
-import type { AnyObject, EmptyObject, Maybe } from 'yummies/utils/types';
+import type { AnyObject, EmptyObject, Maybe } from 'yummies/types';
 import type { ViewModelsRawConfig } from '../config/index.js';
 import type { ViewModel } from './view-model.js';
 import type { ViewModelStore } from './view-model.store.js';
