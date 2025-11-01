@@ -1,5 +1,11 @@
 # mobx-view-model
 
+## 8.6.1
+
+### Patch Changes
+
+- [`3ab3d67`](https://github.com/js2me/mobx-view-model/commit/3ab3d677a6b2a57b9b7c5a91e4502a4de45f1a19) Thanks [@js2me](https://github.com/js2me)! - fixed problems with using `React` and bundled jsx-runtime
+
 ## 8.6.0
 
 ### Minor Changes
