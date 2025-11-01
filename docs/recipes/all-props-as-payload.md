@@ -12,7 +12,7 @@ What you will do:
 - Configure `withViewModel` HOC with `getPayload` function that returns all props as payload
 - Override type of output React component into fixed type
 
-```tsx{10,22,24}
+```tsx{8,20,22}
 import { withViewModel } from 'mobx-view-model';
 import { ViewModelBase } from 'mobx-view-model';
 
