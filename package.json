@@ -74,7 +74,7 @@
     "lefthook": "^1.11.16",
     "nodemon": "^3.1.9",
     "rimraf": "^6.0.1",
-    "sborshik": "^1.9.5",
+    "sborshik": "^1.9.6",
     "tsx": "^4.20.5",
     "typescript": "^5.9.3",
     "vite": "^7.1.10",
