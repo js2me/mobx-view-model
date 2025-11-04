@@ -11,11 +11,9 @@ import type {
   IsUnknown,
   Maybe,
 } from 'yummies/types';
+import { ActiveViewModelProvider } from '../components/active-view-model-provider.js';
 import { viewModelsConfig } from '../config/index.js';
-import {
-  ActiveViewModelContext,
-  ViewModelsContext,
-} from '../contexts/index.js';
+import { ViewModelsContext } from '../contexts/index.js';
 import {
   type UseCreateViewModelConfig,
   useCreateViewModel,
@@ -385,9 +383,9 @@ const withViewModelWrapper = (
 
     if (isRenderAllowed) {
       return (
-        <ActiveViewModelContext.Provider value={model}>
+        <ActiveViewModelProvider value={model}>
           {Component && <Component {...componentProps} model={model} />}
-        </ActiveViewModelContext.Provider>
+        </ActiveViewModelProvider>
       );
     }
 

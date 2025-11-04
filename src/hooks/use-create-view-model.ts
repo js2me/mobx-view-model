@@ -108,7 +108,7 @@ const useCreateViewModelBase = (
   config?: Maybe<UseCreateViewModelConfig<AnyViewModel>>,
 ) => {
   const viewModels = useContext(ViewModelsContext);
-  const parentViewModel = useContext(ActiveViewModelContext) || null;
+  const parentViewModel = useContext(ActiveViewModelContext);
 
   const ctx = config?.ctx ?? {};
 
@@ -180,7 +180,7 @@ const useCreateViewModelSimple = (
   payload?: any,
 ) => {
   const viewModels = useContext(ViewModelsContext);
-  const parentViewModel = useContext(ActiveViewModelContext) || null;
+  const parentViewModel = useContext(ActiveViewModelContext);
 
   const instance = useValue(() => {
     const instance = new VM();
