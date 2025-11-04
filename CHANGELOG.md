@@ -1,5 +1,15 @@
 # mobx-view-model
 
+## 8.7.0
+
+### Minor Changes
+
+- [`525635d`](https://github.com/js2me/mobx-view-model/commit/525635dad13b51b0bedd606e7aeef96cef56898e) Thanks [@js2me](https://github.com/js2me)! - added `ActiveViewModelProvider` internal HOC
+
+### Patch Changes
+
+- [`abf54e3`](https://github.com/js2me/mobx-view-model/commit/abf54e352cc633e58f437d966e79cd9c682d2b62) Thanks [@js2me](https://github.com/js2me)! - [internal] build modification
+
 ## 8.6.1
 
 ### Patch Changes
