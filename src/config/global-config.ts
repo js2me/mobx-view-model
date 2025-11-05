@@ -1,35 +1,42 @@
-import { createGlobalConfig } from 'yummies/complex';
+import { createGlobalConfig, createPubSub } from 'yummies/complex';
 import { generateVmId } from '../utils/generate-vm-id.js';
+import type { ViewModelStore } from '../view-model/view-model.store.js';
 import type { ViewModelsConfig } from './types.js';
 import { mergeVMConfigs } from './utils/merge-vm-configs.js';
 
 /**
  * Global configuration options for view models
  */
-export const viewModelsConfig = createGlobalConfig<ViewModelsConfig>({
-  comparePayload: false,
-  payloadComputed: 'struct',
-  payloadObservable: 'ref',
-  wrapViewsInObserver: true,
-  startViewTransitions: {
-    mount: false,
-    payloadChange: false,
-    unmount: false,
-  },
-  observable: {
-    viewModels: {
-      useDecorators: true,
+export const viewModelsConfig = createGlobalConfig<ViewModelsConfig>(
+  {
+    comparePayload: false,
+    payloadComputed: 'struct',
+    payloadObservable: 'ref',
+    wrapViewsInObserver: true,
+    startViewTransitions: {
+      mount: false,
+      payloadChange: false,
+      unmount: false,
     },
-    viewModelStores: {
-      useDecorators: true,
+    observable: {
+      viewModels: {
+        useDecorators: true,
+      },
+      viewModelStores: {
+        useDecorators: true,
+      },
+    },
+    generateId: generateVmId,
+    factory: (config) => {
+      const VM = config.VM;
+      return new VM({
+        ...config,
+        vmConfig: mergeVMConfigs(config.vmConfig),
+      });
+    },
+    hooks: {
+      storeCreate: createPubSub<[ViewModelStore]>(),
     },
   },
-  generateId: generateVmId,
-  factory: (config) => {
-    const VM = config.VM;
-    return new VM({
-      ...config,
-      vmConfig: mergeVMConfigs(config.vmConfig),
-    });
-  },
-});
+  Symbol.for('VIEW_MODELS_CONFIG'),
+);

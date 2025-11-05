@@ -1,12 +1,12 @@
+import type { PubSub } from 'yummies/complex';
 import type { AnyObject, Class, DeepPartial, Maybe } from 'yummies/types';
-
 import type { ViewModelHocConfig } from '../hoc/with-view-model.js';
 import type {
   AnyViewModel,
   PayloadCompareFn,
   ViewModelCreateConfig,
+  ViewModelStore,
 } from '../view-model/index.js';
-
 import type { ObservableAnnotationsArray } from './utils/apply-observable.js';
 
 export interface ViewModelObservableConfig {
@@ -37,7 +37,9 @@ export type CreateViewModelFactoryFn<
  * Configuration options for view models.
  * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config)
  */
-export interface ViewModelsConfig<VM extends AnyViewModel = AnyViewModel> {
+export interface ViewModelsConfig<
+  TViewModel extends AnyViewModel = AnyViewModel,
+> {
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#startviewtransitions) */
   startViewTransitions: {
     mount: boolean;
@@ -53,17 +55,22 @@ export interface ViewModelsConfig<VM extends AnyViewModel = AnyViewModel> {
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#generateid) */
   generateId: GenerateViewModelIdFn;
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#factory) */
-  factory: CreateViewModelFactoryFn<VM>;
+  factory: CreateViewModelFactoryFn<TViewModel>;
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#fallbackcomponent) */
   fallbackComponent?: React.ComponentType;
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#onmount) */
-  onMount?: (viewModel: VM) => void;
+  onMount?: (viewModel: TViewModel) => void;
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#onunmount) */
-  onUnmount?: (viewModel: VM) => void;
+  onUnmount?: (viewModel: TViewModel) => void;
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#processviewcomponent) */
+  readonly hooks: {
+    readonly storeCreate: PubSub<
+      [viewModelStore: ViewModelStore<AnyViewModel>]
+    >;
+  };
   processViewComponent?: (
     component: React.ComponentType<any> | undefined,
-    VM: Class<VM>,
+    VM: Class<TViewModel>,
     config: ViewModelHocConfig<any>,
   ) => Maybe<React.ComponentType<any>>;
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#wrapviewsinobserver) */
@@ -78,9 +85,11 @@ export interface ViewModelsConfig<VM extends AnyViewModel = AnyViewModel> {
 /**
  * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config)
  */
-export type ViewModelsRawConfig = Omit<
-  ViewModelsConfig,
-  'startViewTransitions' | 'observable' | 'factory' | 'generateId'
+export type ViewModelsRawConfig<
+  TViewModel extends AnyViewModel = AnyViewModel,
+> = Omit<
+  ViewModelsConfig<TViewModel>,
+  'startViewTransitions' | 'observable' | 'factory' | 'generateId' | 'hooks'
 > & {
   startViewTransitions?:
     | DeepPartial<ViewModelsConfig['startViewTransitions']>

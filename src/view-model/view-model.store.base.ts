@@ -76,6 +76,8 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
       ],
       this.vmConfig.observable.viewModelStores,
     );
+
+    this.vmConfig.hooks.storeCreate(this as ViewModelStore);
   }
 
   get mountedViewsCount() {
