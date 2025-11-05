@@ -62,8 +62,9 @@ export interface ViewModelsConfig<
   onMount?: (viewModel: TViewModel) => void;
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#onunmount) */
   onUnmount?: (viewModel: TViewModel) => void;
-  /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#processviewcomponent) */
+  /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#hooks) */
   readonly hooks: {
+    /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#hooks) */
     readonly storeCreate: PubSub<
       [viewModelStore: ViewModelStore<AnyViewModel>]
     >;
