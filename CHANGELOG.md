@@ -1,5 +1,11 @@
 # mobx-view-model
 
+## 8.8.0
+
+### Minor Changes
+
+- [`3a35c12`](https://github.com/js2me/mobx-view-model/commit/3a35c121d76f634f33bc0039c73f4f8ccbe22d4e) Thanks [@js2me](https://github.com/js2me)! - added `hooks` parameter for `viewModelsConfig`
+
 ## 8.7.0
 
 ### Minor Changes
