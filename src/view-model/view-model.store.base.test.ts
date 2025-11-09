@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import type { AnyObject, EmptyObject, Maybe } from 'yummies/types';
-
+import type { ViewModelsConfig } from '../config/types.js';
 import { ViewModelBaseMock } from './view-model.base.test.js';
 import type { ViewModel } from './view-model.js';
 import { ViewModelStoreBase } from './view-model.store.base.js';
@@ -184,5 +184,22 @@ describe('ViewModelStoreBase', () => {
     await vmStore.attach(vm);
 
     expect(vmStore.getId(MyVM)).toBe(vm.id);
+  });
+
+  it('bug with overriding observable after create second store', async () => {
+    new ViewModelStoreBase({
+      vmConfig: {
+        observable: {
+          viewModelStores: { useDecorators: false },
+          viewModels: { useDecorators: false },
+        },
+      },
+    });
+    const vmStore2 = new ViewModelStoreBaseMock();
+
+    const vmConfig = (vmStore2 as any).vmConfig as ViewModelsConfig;
+
+    expect(vmConfig.observable.viewModelStores.useDecorators).toBe(true);
+    expect(vmConfig.observable.viewModels.useDecorators).toBe(true);
   });
 });
