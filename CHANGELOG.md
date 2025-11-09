@@ -1,5 +1,11 @@
 # mobx-view-model
 
+## 8.8.1
+
+### Patch Changes
+
+- [`d3199de`](https://github.com/js2me/mobx-view-model/commit/d3199de80d5a957ffb3193656425a8b8da8c75c3) Thanks [@js2me](https://github.com/js2me)! - fix overriding observable config after create second view model store
+
 ## 8.8.0
 
 ### Minor Changes
