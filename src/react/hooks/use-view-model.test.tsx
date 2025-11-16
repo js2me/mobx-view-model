@@ -9,7 +9,7 @@ import { ViewModelsProvider } from '../components/index.js';
 import { withViewModel } from '../hoc/index.js';
 import { useViewModel } from './use-view-model.js';
 
-describe('withViewModel', () => {
+describe('useViewModel', () => {
   const generateId = createCounter(String);
 
   beforeEach(() => {
