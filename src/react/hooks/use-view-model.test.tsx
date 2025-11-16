@@ -139,7 +139,7 @@ describe('withViewModel', () => {
         );
 
         await expect(container.firstChild).toMatchFileSnapshot(
-          `../../tests/snapshots/hooks/use-view-model/${getParent ? 'parent-instance' : 'self-instance'}/access-using-${accessUsing}/${withVmStore ? 'with-view-model-store/' : ''}${depth}-depth.html`,
+          `../../../tests/snapshots/hooks/use-view-model/${getParent ? 'parent-instance' : 'self-instance'}/access-using-${accessUsing}/${withVmStore ? 'with-view-model-store/' : ''}${depth}-depth.html`,
         );
       });
     };
@@ -246,7 +246,7 @@ describe('withViewModel', () => {
       );
 
       await expect(container.firstChild).toMatchFileSnapshot(
-        `../../tests/snapshots/hooks/use-view-model/scenarios/${task.name}.html`,
+        `../../../tests/snapshots/hooks/use-view-model/scenarios/${task.name}.html`,
       );
     });
     test('container remounts VM with fixed id and some child with dynamic id', async ({
@@ -301,7 +301,7 @@ describe('withViewModel', () => {
       });
 
       await expect(container.firstChild).toMatchFileSnapshot(
-        `../../tests/snapshots/hooks/use-view-model/scenarios/${task.name}.html`,
+        `../../../tests/snapshots/hooks/use-view-model/scenarios/${task.name}.html`,
       );
     });
   });

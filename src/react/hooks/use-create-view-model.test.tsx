@@ -51,7 +51,7 @@ describe('useCreateViewModel', () => {
       );
 
       await expect(container.firstChild).toMatchFileSnapshot(
-        `../../tests/snapshots/hooks/use-create-view-model/scenarios/${task.name}.html`,
+        `../../../tests/snapshots/hooks/use-create-view-model/scenarios/${task.name}.html`,
       );
     });
     test('accessing to the parent VM', async ({ task }) => {
@@ -99,7 +99,7 @@ describe('useCreateViewModel', () => {
       );
 
       await expect(container.firstChild).toMatchFileSnapshot(
-        `../../tests/snapshots/hooks/use-create-view-model/scenarios/${task.name}.html`,
+        `../../../tests/snapshots/hooks/use-create-view-model/scenarios/${task.name}.html`,
       );
     });
   });
@@ -132,7 +132,7 @@ describe('useCreateViewModel', () => {
       );
 
       await expect(container.firstChild).toMatchFileSnapshot(
-        `../../tests/snapshots/hooks/use-create-view-model/ViewModelSimple/${task.name}.html`,
+        `../../../tests/snapshots/hooks/use-create-view-model/ViewModelSimple/${task.name}.html`,
       );
     });
 
@@ -267,7 +267,7 @@ describe('useCreateViewModel', () => {
         );
 
         await expect(container.firstChild).toMatchFileSnapshot(
-          `../../tests/snapshots/hooks/use-create-view-model/ViewModelSimple/without-id/${task.name}.html`,
+          `../../../tests/snapshots/hooks/use-create-view-model/ViewModelSimple/without-id/${task.name}.html`,
         );
       });
 

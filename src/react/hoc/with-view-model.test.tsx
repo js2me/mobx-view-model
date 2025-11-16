@@ -773,7 +773,7 @@ describe('withViewModel', () => {
     );
 
     await expect(container.firstChild).toMatchFileSnapshot(
-      `../../tests/snapshots/hoc/with-view-model/${task.name}.html`,
+      `../../../tests/snapshots/hoc/with-view-model/${task.name}.html`,
     );
   });
 
@@ -908,7 +908,7 @@ describe('withViewModel', () => {
       );
 
       await expect(container.firstChild).toMatchFileSnapshot(
-        `../../tests/snapshots/hoc/with-view-model/view-model-store/${task.name}.html`,
+        `../../../tests/snapshots/hoc/with-view-model/view-model-store/${task.name}.html`,
       );
       expect(vmStore.spies.get).toHaveBeenCalledTimes(3);
       expect(vmStore._instanceAttachedCount.size).toBe(3);
@@ -1007,7 +1007,7 @@ describe('withViewModel', () => {
       });
 
       await expect(container).toMatchFileSnapshot(
-        `../../tests/snapshots/hoc/with-view-model/view-model-store/${task.name}.html`,
+        `../../../tests/snapshots/hoc/with-view-model/view-model-store/${task.name}.html`,
       );
     });
 
@@ -1123,7 +1123,7 @@ describe('withViewModel', () => {
       });
 
       await expect(container).toMatchFileSnapshot(
-        `../../tests/snapshots/hoc/with-view-model/view-model-store/${task.name}.html`,
+        `../../../tests/snapshots/hoc/with-view-model/view-model-store/${task.name}.html`,
       );
     });
 
