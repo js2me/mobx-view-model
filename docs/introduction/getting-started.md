@@ -5,7 +5,7 @@ The `mobx-view-model` source code is written on TypeScript and compiled into Nod
 ## Requirements  
 
 - [`MobX`](https://mobx.js.org) **^6**  
-- [`React`](https://reactjs.org) **^18** optional    
+- [`React`](https://reactjs.org) **^18|^19** required for now    
 
 ## Installation
 

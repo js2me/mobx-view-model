@@ -6,7 +6,7 @@
     "declaration": true,
     "declarationMap": true,
     "useDefineForClassFields": true,
-    "lib": ["DOM", "DOM.Iterable", "ESNext"],
+    "lib": ["ESNext"],
     "allowJs": false,
     "skipLibCheck": true,
     "esModuleInterop": false,
@@ -21,7 +21,10 @@
       "./node_modules/@types/", "./types", "./node_modules"
     ],
     "noEmit": false,
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
+		"paths": {
+			"mobx-view-model": ["./src/index.ts"]
+    }
   },
   "include": [
     "src"

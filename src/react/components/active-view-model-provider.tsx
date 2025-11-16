@@ -1,6 +1,9 @@
 import type { ReactNode } from 'react';
+import type {
+  AnyViewModel,
+  AnyViewModelSimple,
+} from '../../view-model/index.js';
 import { ActiveViewModelContext } from '../contexts/index.js';
-import type { AnyViewModel, AnyViewModelSimple } from '../view-model/index.js';
 
 /**
  * This is a provider for the `ActiveViewModelContext`.

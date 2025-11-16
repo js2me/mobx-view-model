@@ -70,8 +70,8 @@ importers:
         specifier: ^6.0.1
         version: 6.0.1
       sborshik:
-        specifier: ^1.9.7
-        version: 1.9.7(@algolia/client-search@5.39.0)(@types/debug@4.1.12)(@types/react@18.3.20)(jiti@2.6.1)(postcss@8.5.6)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(search-insights@2.17.3)(tsx@4.20.5)(typescript@5.9.3)
+        specifier: ^1.9.12
+        version: 1.9.12(@algolia/client-search@5.39.0)(@types/debug@4.1.12)(@types/react@18.3.20)(jiti@2.6.1)(postcss@8.5.6)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(search-insights@2.17.3)(tsx@4.20.5)(typescript@5.9.3)
       tsx:
         specifier: ^4.20.5
         version: 4.20.5
@@ -3459,8 +3459,8 @@ packages:
     resolution: {integrity: sha512-xAg7SOnEhrm5zI3puOOKyy1OMcMlIJZYNJY7xLBwSze0UjhPLnWfj2GF2EpT0jmzaJKIWKHLsaSSajf35bcYnA==}
     engines: {node: '>=v12.22.7'}
 
-  sborshik@1.9.7:
-    resolution: {integrity: sha512-EJHos26jEzmK3LT4qwk9w6VM9xpN9whVU1qQd25KDB12psDsYLztVaeuZRtRGLCnB0Timaah5o9+g/U11upG1A==}
+  sborshik@1.9.12:
+    resolution: {integrity: sha512-Ek8+G9DK3BMDuTQ44ZnVRfeZB9Xd9/nNppfxOJ2zhJAMVy+gyh5RF8XFLR6WtirlnAPDZqPdOC0NEeRODvqm/A==}
     hasBin: true
 
   scheduler@0.23.2:
@@ -7964,7 +7964,7 @@ snapshots:
     dependencies:
       xmlchars: 2.2.0
 
-  sborshik@1.9.7(@algolia/client-search@5.39.0)(@types/debug@4.1.12)(@types/react@18.3.20)(jiti@2.6.1)(postcss@8.5.6)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(search-insights@2.17.3)(tsx@4.20.5)(typescript@5.9.3):
+  sborshik@1.9.12(@algolia/client-search@5.39.0)(@types/debug@4.1.12)(@types/react@18.3.20)(jiti@2.6.1)(postcss@8.5.6)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(search-insights@2.17.3)(tsx@4.20.5)(typescript@5.9.3):
     dependencies:
       '@iconify-json/logos': 1.2.9
       '@types/jsdom': 27.0.0

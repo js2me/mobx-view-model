@@ -25,12 +25,11 @@ import {
   type ViewModelParams,
   type ViewModelSimple,
   type ViewModelStore,
-  ViewModelsProvider,
   type ViewModelsRawConfig,
-} from '../index.js';
-import { ViewModelBaseMock } from '../view-model/view-model.base.test.js';
-import { ViewModelStoreBaseMock } from '../view-model/view-model.store.base.test.js';
-
+} from '../../index.js';
+import { ViewModelBaseMock } from '../../view-model/view-model.base.test.js';
+import { ViewModelStoreBaseMock } from '../../view-model/view-model.store.base.test.js';
+import { ViewModelsProvider } from '../components/index.js';
 import { type ViewModelProps, withViewModel } from './with-view-model.js';
 import {
   type CircularVmPayloadDependencyTestCase,

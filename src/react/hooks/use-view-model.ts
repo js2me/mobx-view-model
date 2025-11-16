@@ -1,14 +1,14 @@
 import { useContext, useRef } from 'react';
 import type { AnyObject } from 'yummies/types';
-import {
-  ActiveViewModelContext,
-  ViewModelsContext,
-} from '../contexts/index.js';
 import type {
   AnyViewModel,
   AnyViewModelSimple,
   ViewModelLookup,
-} from '../view-model/index.js';
+} from '../../view-model/index.js';
+import {
+  ActiveViewModelContext,
+  ViewModelsContext,
+} from '../contexts/index.js';
 
 /**
  * Get access to **already created** instance of ViewModel

@@ -11,20 +11,20 @@ import type {
   IsUnknown,
   Maybe,
 } from 'yummies/types';
-import { ActiveViewModelProvider } from '../components/active-view-model-provider.js';
-import { viewModelsConfig } from '../config/index.js';
-import { ViewModelsContext } from '../contexts/index.js';
-import {
-  type UseCreateViewModelConfig,
-  useCreateViewModel,
-} from '../hooks/index.js';
+import { viewModelsConfig } from '../../config/index.js';
 import type {
   AnyViewModel,
   AnyViewModelSimple,
   ViewModel,
   ViewModelSimple,
   ViewModelStore,
-} from '../view-model/index.js';
+} from '../../view-model/index.js';
+import { ActiveViewModelProvider } from '../components/active-view-model-provider.js';
+import { ViewModelsContext } from '../contexts/index.js';
+import {
+  type UseCreateViewModelConfig,
+  useCreateViewModel,
+} from '../hooks/index.js';
 
 type FixedComponentType<P extends AnyObject = {}> =
   /**

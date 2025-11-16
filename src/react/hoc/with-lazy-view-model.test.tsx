@@ -1,7 +1,7 @@
 import { act, render } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 
-import { ViewModelBaseMock } from '../view-model/view-model.base.test.js';
+import { ViewModelBaseMock } from '../../view-model/view-model.base.test.js';
 
 import { withLazyViewModel } from './with-lazy-view-model.js';
 import type { ViewModelProps } from './with-view-model.js';

@@ -5,7 +5,7 @@ import {
   mergeVMConfigs,
   type ViewModelsConfig,
 } from '../config/index.js';
-import type { VMComponent, VMLazyComponent } from '../hoc/index.js';
+import type { VMComponent, VMLazyComponent } from '../react/hoc/index.js';
 
 import type { ViewModelBase } from './view-model.base.js';
 import type { ViewModelStore } from './view-model.store.js';

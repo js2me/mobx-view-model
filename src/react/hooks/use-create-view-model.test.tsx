@@ -1,16 +1,11 @@
 import { act, render } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { describe, expect, test, vi } from 'vitest';
-
-import {
-  useCreateViewModel,
-  useViewModel,
-  type ViewModelSimple,
-  type ViewModelStore,
-  ViewModelsProvider,
-} from '../index.js';
-import { ViewModelBaseMock } from '../view-model/view-model.base.test.js';
-import { ViewModelStoreBaseMock } from '../view-model/view-model.store.base.test.js';
+import type { ViewModelSimple, ViewModelStore } from '../../index.js';
+import { ViewModelBaseMock } from '../../view-model/view-model.base.test.js';
+import { ViewModelStoreBaseMock } from '../../view-model/view-model.store.base.test.js';
+import { ViewModelsProvider } from '../components/index.js';
+import { useCreateViewModel, useViewModel } from '../hooks/index.js';
 
 describe('useCreateViewModel', () => {
   const createVMStoreWrapper = (vmStore: ViewModelStore) => {

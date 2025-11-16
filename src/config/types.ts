@@ -1,6 +1,6 @@
 import type { PubSub } from 'yummies/complex';
 import type { AnyObject, Class, DeepPartial, Maybe } from 'yummies/types';
-import type { ViewModelHocConfig } from '../hoc/with-view-model.js';
+import type { ViewModelHocConfig } from '../react/hoc/with-view-model.js';
 import type {
   AnyViewModel,
   PayloadCompareFn,
