@@ -1,5 +1,17 @@
 # mobx-view-model
 
+## 8.9.0
+
+### Minor Changes
+
+- [`a1ee8fd`](https://github.com/js2me/mobx-view-model/commit/a1ee8fdcc5519a320224d1a8b1c8636911d944ae) Thanks [@js2me](https://github.com/js2me)! - better hook `storeCreate` (`lastPub` parameter)
+
+- [`b3c6b53`](https://github.com/js2me/mobx-view-model/commit/b3c6b53b0e76ab95d21761e5d8f81517c01fb057) Thanks [@js2me](https://github.com/js2me)! - improved typeguards (isViewModelClass, isViewModelSimpleClass, isViewModel) by pass parent view model generic type
+
+### Patch Changes
+
+- [`2ceaefa`](https://github.com/js2me/mobx-view-model/commit/2ceaefa5121191f74fcb4bf3af405c9a3fc8df30) Thanks [@js2me](https://github.com/js2me)! - [internal] reorganize source code file immports (preparing ReactJS things as separated import)
+
 ## 8.8.1
 
 ### Patch Changes
