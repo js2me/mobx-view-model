@@ -1,5 +1,11 @@
 # mobx-view-model
 
+## 8.9.1
+
+### Patch Changes
+
+- [`643636d`](https://github.com/js2me/mobx-view-model/commit/643636ddd083c08d794494df8599e9c8f9e47d93) Thanks [@js2me](https://github.com/js2me)! - update yummies package (PubSub storeCreate improvenment)
+
 ## 8.9.0
 
 ### Minor Changes
