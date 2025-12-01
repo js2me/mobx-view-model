@@ -54,7 +54,7 @@ export const PetCard = withViewModel(PetCardVM, ({ model }) => {
     <div className="p-10 flex flex-col gap-3">
       <span>{`Pet name: ${model.petName}`}</span>
       <input
-        placeholer="name"
+        placeholder="name"
         value={model.petName}
         onChange={e => {
           model.setPetName(e.target.value);
