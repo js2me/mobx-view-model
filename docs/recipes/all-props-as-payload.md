@@ -25,7 +25,7 @@ class YourVM extends ViewModelBase<ComponentProps> {
 }
 
 export const YourComponent = withViewModel(
-  YourViewModel, 
+  YourVM, 
   ({ model }) => {
     return (
       <div>{model.payload.foo}</div>
