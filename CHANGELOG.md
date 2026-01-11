@@ -1,5 +1,11 @@
 # mobx-view-model
 
+## 8.10.0
+
+### Minor Changes
+
+- [`172bbff`](https://github.com/js2me/mobx-view-model/commit/172bbff8a464e4d062288eb9f3883993c0c97926) Thanks [@js2me](https://github.com/js2me)! - [internal] update yummies to latest (7.x.x) + rework `applyObservable` internal utility function for use
+
 ## 8.9.1
 
 ### Patch Changes
