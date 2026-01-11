@@ -1,4 +1,5 @@
 import type { PubSub } from 'yummies/complex';
+import type { ObservableAnnotationsArray } from 'yummies/mobx';
 import type { AnyObject, Class, DeepPartial, Maybe } from 'yummies/types';
 import type { ViewModelHocConfig } from '../react/hoc/with-view-model.js';
 import type {
@@ -7,7 +8,6 @@ import type {
   ViewModelCreateConfig,
   ViewModelStore,
 } from '../view-model/index.js';
-import type { ObservableAnnotationsArray } from './utils/apply-observable.js';
 
 export interface ViewModelObservableConfig {
   /**

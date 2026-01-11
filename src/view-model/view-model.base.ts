@@ -1,14 +1,13 @@
 import { action, comparer, computed, observable, runInAction } from 'mobx';
 import { isShallowEqual } from 'yummies/data';
 import { startViewTransitionSafety } from 'yummies/html';
+import type { ObservableAnnotationsArray } from 'yummies/mobx';
 import type { AnyObject, EmptyObject, Maybe } from 'yummies/types';
 import {
   applyObservable,
   mergeVMConfigs,
-  type ObservableAnnotationsArray,
   type ViewModelsConfig,
 } from '../config/index.js';
-
 import type { ViewModel } from './view-model.js';
 import type { ViewModelStore } from './view-model.store.js';
 import type {
@@ -21,17 +20,10 @@ import type {
 declare const process: { env: { NODE_ENV?: string } };
 
 const baseAnnotations: ObservableAnnotationsArray = [
-  ['_isMounted', observable.ref],
-  ['_isUnmounting', observable.ref],
-  ['isMounted', computed],
-  ['isUnmounting', computed],
-  ['parentViewModel', computed],
-  ['mount', action.bound],
-  ['didMount', action],
-  ['unmount', action.bound],
-  ['didUnmount', action],
-  ['willUnmount', action],
-  ['setPayload', action],
+  [observable.ref, '_isMounted', '_isUnmounting'],
+  [computed, 'isMounted', 'isUnmounting', 'parentViewModel'],
+  [action, 'didMount', 'didUnmount', 'willUnmount', 'setPayload'],
+  [action.bound, 'mount', 'unmount'],
 ];
 
 export class ViewModelBase<
@@ -84,23 +76,23 @@ export class ViewModelBase<
 
     if (this.vmConfig.payloadObservable !== false) {
       annotations.push([
-        '_payload',
         observable[this.vmConfig.payloadObservable ?? 'ref'],
+        '_payload',
       ]);
     }
 
     if (this.vmConfig.payloadComputed) {
       if (this.vmConfig.payloadComputed === 'struct') {
-        annotations.push(['payload', computed.struct]);
+        annotations.push([computed.struct, 'payload']);
       } else {
         annotations.push([
-          'payload',
           computed({
             equals:
               this.vmConfig.payloadComputed === true
                 ? undefined
                 : this.vmConfig.payloadComputed,
           }),
+          'payload',
         ]);
       }
     }

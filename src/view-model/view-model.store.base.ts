@@ -1,4 +1,5 @@
 import { action, computed, observable, runInAction } from 'mobx';
+import type { ObservableAnnotationsArray } from 'yummies/mobx';
 import type { Class, Maybe } from 'yummies/types';
 import {
   applyObservable,
@@ -6,7 +7,6 @@ import {
   type ViewModelsConfig,
 } from '../config/index.js';
 import type { VMComponent, VMLazyComponent } from '../react/hoc/index.js';
-
 import type { ViewModelBase } from './view-model.base.js';
 import type { ViewModelStore } from './view-model.store.js';
 import type {
@@ -20,6 +20,20 @@ import type {
   AnyViewModelSimple,
   ViewModelParams,
 } from './view-model.types.js';
+
+const baseAnnotations: ObservableAnnotationsArray = [
+  [computed, 'mountedViewsCount'],
+  [
+    action,
+    'mount',
+    'unmount',
+    'attachVMConstructor',
+    'attach',
+    'detach',
+    'linkComponents',
+    'unlinkComponents',
+  ],
+];
 
 export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
   implements ViewModelStore<VMBase>
@@ -64,16 +78,7 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
 
     applyObservable(
       this,
-      [
-        ['mountedViewsCount', computed],
-        ['mount', action],
-        ['unmount', action],
-        ['attachVMConstructor', action],
-        ['attach', action],
-        ['detach', action],
-        ['linkComponents', action],
-        ['unlinkComponents', action],
-      ],
+      baseAnnotations,
       this.vmConfig.observable.viewModelStores,
     );
 

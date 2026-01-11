@@ -1,9 +1,10 @@
-import { applyObservable as applyObservableLib } from 'yummies/mobx';
+import {
+  applyObservable as applyObservableLib,
+  type ObservableAnnotationsArray,
+} from 'yummies/mobx';
 import type { AnyObject } from 'yummies/types';
 
 import type { ViewModelObservableConfig } from '../index.js';
-
-export type ObservableAnnotationsArray = [string, any][];
 
 export const applyObservable = (
   context: AnyObject,
