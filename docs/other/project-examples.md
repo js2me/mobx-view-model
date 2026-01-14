@@ -1,5 +1,9 @@
 # Project Examples  
 
+## **GitlabActivityAnalyzer**  
+_Links_:
+  - Source: https://github.com/js2me/gitlab-activity-analyzer
+
 ## **HTTP Status Codes**  
 _Links_:  
   - Source: https://github.com/js2me/http-status-codes  
