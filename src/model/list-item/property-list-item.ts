@@ -24,6 +24,16 @@ export class PropertyListItem extends ListItem<any> {
 
   isEditMode = false;
 
+  get isExpanded() {
+    const { searchEngine } = this.devtools;
+    if (searchEngine.isActive && !searchEngine.endsWithDot) {
+      if (searchEngine.segments.length === 1) {
+        return false;
+      }
+    }
+    return this.cache.get(this.expandKey) === true;
+  }
+
   get data() {
     this.dataWatchAtom.reportObserved();
     return this.property && this.parent.data[this.property];
