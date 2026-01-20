@@ -25,21 +25,50 @@ export class VMListItem extends ListItem<AnyVM> {
       return true;
     }
 
-    const firstSegment = searchEngine.segments[0];
-    const secondSegment = searchEngine.segments[1];
+    const searchSegments = searchEngine.segments;
 
-    let isFittedById: boolean;
-    let isFittedByName: boolean;
-
-    if (secondSegment) {
-      isFittedById = this.searchData.id === firstSegment;
-      isFittedByName = this.searchData.name === firstSegment;
-    } else {
-      isFittedById = this.searchData.id.startsWith(firstSegment);
-      isFittedByName = this.searchData.name.startsWith(firstSegment);
+    if (searchSegments.length === 0) {
+      return true;
     }
 
-    return isFittedByName || isFittedById;
+    const firstSegment = searchSegments[0];
+
+    // Проверяем, содержит ли имя класса или ID первый сегмент поиска
+    const isFittedById = this.searchData.id.includes(firstSegment);
+    const isFittedByName = this.searchData.name.includes(firstSegment);
+    
+    // Также проверяем, есть ли у этой VM свойство с таким именем
+    // Это важно для случаев, когда ищем по имени свойства (например "id")
+    let hasPropertyWithName = false;
+    try {
+      // Проверяем, есть ли свойство с таким именем в данных VM
+      // Используем getAllKeys для получения всех ключей
+      const keys = getAllKeys(this.data);
+      hasPropertyWithName = keys.some(
+        (key) => key.toLowerCase().includes(firstSegment),
+      );
+    } catch {
+      // Игнорируем ошибки при проверке свойств
+    }
+
+    // Если только один сегмент - проверяем имя/ID или наличие свойства
+    if (searchSegments.length === 1) {
+      return isFittedByName || isFittedById || hasPropertyWithName;
+    }
+
+    // Если несколько сегментов (например "zalupa.foo")
+    // VM подходит если:
+    // 1. Имя/ID содержит первый сегмент ИЛИ есть свойство с таким именем И
+    // 2. Есть дочерние свойства, которые подходят под остальные сегменты
+    if (!isFittedByName && !isFittedById && !hasPropertyWithName) {
+      return false;
+    }
+
+    // Проверяем, есть ли у этой VM дочерние свойства, которые подходят под остальные сегменты
+    // Для этого нужно проверить дочерние PropertyListItem
+    // Но это может быть тяжело, поэтому просто возвращаем true если имя/ID подходит
+    // Детальная фильтрация будет сделана на уровне PropertyListItem
+    return true;
   }
 
   private get propertyListItems(): PropertyListItem[] {

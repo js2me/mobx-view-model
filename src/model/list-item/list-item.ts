@@ -1,8 +1,8 @@
 import { ArrowsRotateRight, FileArrowRightOut } from '@gravity-ui/icons';
 import { action, computed, createAtom, makeObservable } from 'mobx';
 import type { ComponentType } from 'react';
+import type { AnyObject } from 'yummies/types';
 import type { ViewModelDevtools } from '../view-model-devtools';
-import { AnyObject } from 'yummies/types';
 
 export type ListItemViewProps<T extends ListItem<any>> = { item: T };
 
@@ -18,7 +18,7 @@ export abstract class ListItem<T> {
   position: number = 0;
 
   metaData: AnyObject = {};
-  
+
   cache: Map<string, any>;
 
   protected tempVarName: string = '';
@@ -56,23 +56,37 @@ export abstract class ListItem<T> {
   }
 
   get expandedChildren(): ListItem<any>[] {
+    // При активном поиске не обрабатываем все элементы здесь,
+    // это будет сделано в ленивом поиске ViewModelDevtools
+    // Здесь возвращаем только развернутые элементы для обычного режима
     if (!this.isExpanded) {
       return [];
     }
 
+    // Защита от рекурсивных структур - используем Set для отслеживания посещенных элементов
+    const visited = new Set<ListItem<any>>();
     const result: ListItem<any>[] = [];
-
-    let stackIndex = 0;
-    const stack: ListItem<any>[] = this.children;
-
-    while (true) {
-      const child = stack[stackIndex++];
-
-      if (!child) {
-        break;
+    
+    // Используем рекурсивный обход в глубину для сохранения правильного порядка
+    const traverse = (item: ListItem<any>) => {
+      if (visited.has(item)) {
+        return;
       }
-
-      result.push(child, ...child.expandedChildren);
+      
+      visited.add(item);
+      result.push(item);
+      
+      // Рекурсивно обрабатываем дочерние элементы, если они развернуты
+      if (item.isExpanded) {
+        for (const child of item.children) {
+          traverse(child);
+        }
+      }
+    };
+    
+    // Обрабатываем детей в порядке их появления
+    for (const child of this.children) {
+      traverse(child);
     }
 
     return result;

@@ -5,8 +5,9 @@
   "scripts": {
     "build:watch": "nodemon --watch src --delay 600ms --ext ts,tsx,css --exec \"pnpm build\"",
     "build:watch-global-only": "nodemon --watch src --delay 600ms --ext ts,tsx,css --exec \"pnpm build:dev-global-only\"",
-    "build:watch-server": "nodemon --watch src --delay 600ms --ext ts,tsx,css --exec \"pnpm build && pnpm exec http-server dist -p 15000\"",
-    "build:watch-server-global-only": "nodemon --watch src --delay 600ms --ext ts,tsx,css --exec \"pnpm build:dev-global-only && pnpm exec http-server dist -p 15000\"",
+    "serve": "pnpm exec http-server dist -p 15000",
+    "build:watch-server": "nodemon --watch src --delay 600ms --ext ts,tsx,css --exec \"pnpm build && pnpm serve\"",
+    "build:watch-server-global-only": "nodemon --watch src --delay 600ms --ext ts,tsx,css --exec \"pnpm build:dev-global-only && pnpm serve\"",
     "build:dev-global-only": "cross-env NODE_ENV=development GLOBAL_ONLY=true tsx scripts/build",
     "build": "cross-env NODE_ENV=development tsx scripts/build",
     "build:prod": "tsc --noEmit && cross-env NODE_ENV=production tsx scripts/build",

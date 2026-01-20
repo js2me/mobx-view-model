@@ -5,6 +5,7 @@ import {
   type ObservableSet,
   observable,
   reaction,
+  runInAction,
 } from 'mobx';
 import { Storage } from 'mobx-swiss-knife';
 import type {
@@ -64,6 +65,13 @@ export class ViewModelDevtools {
 
   private autoscrollTimeout: number | undefined;
 
+  // Кэш для результатов поиска (ленивый поиск)
+  searchResultsCache = observable.array<ListItem<any>>([]);
+  searchCacheKey = '';
+  private searchTaskId: number | undefined;
+  isSearching = false;
+  private searchInitTaskId: number | undefined;
+
   get allVms() {
     const vmStore = this.projectVmStore as Maybe<ViewModelStoreBase>;
     const viewModelsMap =
@@ -93,77 +101,322 @@ export class ViewModelDevtools {
   }
 
   get listItems(): ListItem<any>[] {
-    const listItems: ListItem<any>[] = [];
-
-    if (this.searchEngine.isActive) {
-      // When search is active, filter items based on isFitted property
-      this.rootVmListItems.forEach((vmListItem) => {
-        const allChildren = vmListItem.expandedChildrenWithSelf;
-        const filteredChildren = allChildren.filter((item) => item.isFitted);
-
-        if (filteredChildren.length > 0) {
-          // Add parent items that contain matched children to maintain proper hierarchy
-          const parentItems = this.getParentItemsWithMatchedChildren(
-            vmListItem,
-            filteredChildren,
-          );
-          // Combine parent items and matched children, avoiding duplicates
-          const combinedItems = [
-            ...new Set([...parentItems, ...filteredChildren]),
-          ];
-          // Sort to maintain proper tree order
-          listItems.push(
-            ...combinedItems.sort(
-              (a, b) =>
-                this.getItemPosition(a, combinedItems) -
-                this.getItemPosition(b, combinedItems),
-            ),
-          );
-        }
-      });
-
-      this.extraListItems.forEach((listItem) => {
-        const allChildren = listItem.expandedChildrenWithSelf;
-        const filteredChildren = allChildren.filter((item) => item.isFitted);
-
-        if (filteredChildren.length > 0) {
-          // Add parent items that contain matched children to maintain proper hierarchy
-          const parentItems = this.getParentItemsWithMatchedChildren(
-            listItem,
-            filteredChildren,
-          );
-          // Combine parent items and matched children, avoiding duplicates
-          const combinedItems = [
-            ...new Set([...parentItems, ...filteredChildren]),
-          ];
-          // Sort to maintain proper tree order
-          listItems.push(
-            ...combinedItems.sort(
-              (a, b) =>
-                this.getItemPosition(a, combinedItems) -
-                this.getItemPosition(b, combinedItems),
-            ),
-          );
-        }
-      });
-    } else {
-      // When search is not active, return all items as before
+    if (!this.searchEngine.isActive) {
+      // Когда поиск не активен, возвращаем все элементы как раньше
+      const listItems: ListItem<any>[] = [];
       this.rootVmListItems.forEach((vmListItem) => {
         listItems.push(...vmListItem.expandedChildrenWithSelf);
       });
-
       this.extraListItems.forEach((listItem) => {
         listItems.push(...listItem.expandedChildrenWithSelf);
       });
+      return listItems;
     }
 
-    return listItems;
+    // Когда поиск активен, используем ленивый поиск
+    const cacheKey = this.searchEngine.formattedSearchText;
+    
+    // Если кэш актуален, возвращаем его
+    if (this.searchCacheKey === cacheKey && this.searchResultsCache.length > 0) {
+      return this.searchResultsCache;
+    }
+
+    // Если поиск уже выполняется, возвращаем предыдущие результаты
+    if (this.isSearching || this.searchInitTaskId !== undefined) {
+      return this.searchResultsCache;
+    }
+
+    // Запускаем ленивый поиск АСИНХРОННО
+    const scheduleInit = 
+      typeof requestIdleCallback !== 'undefined'
+        ? (cb: IdleRequestCallback) => requestIdleCallback(cb, { timeout: 50 })
+        : (cb: () => void) => {
+            this.searchInitTaskId = setTimeout(cb, 0) as any;
+          };
+
+    scheduleInit(() => {
+      this.searchInitTaskId = undefined;
+      // Проверяем, не изменился ли поисковый запрос
+      if (this.searchEngine.formattedSearchText !== cacheKey) {
+        return;
+      }
+      this.startLazySearch();
+    });
+    
+    // Возвращаем пустой массив пока идет поиск (или предыдущие результаты)
+    return this.searchResultsCache;
+  }
+
+  // Запускает ленивый поиск с разбивкой на чанки
+  private startLazySearch() {
+    const cacheKey = this.searchEngine.formattedSearchText;
+    
+    // Очищаем предыдущую задачу
+    if (this.searchTaskId !== undefined) {
+      clearTimeout(this.searchTaskId);
+      this.searchTaskId = undefined;
+    }
+
+    runInAction(() => {
+      this.isSearching = true;
+      this.searchCacheKey = '';
+      this.searchResultsCache.clear();
+    });
+
+    // Собираем корневые элементы асинхронно
+    const scheduleTask = 
+      typeof requestIdleCallback !== 'undefined'
+        ? (cb: IdleRequestCallback) => requestIdleCallback(cb, { timeout: 50 })
+        : (cb: () => void) => setTimeout(cb, 0);
+
+    scheduleTask(() => {
+      // Проверяем, не изменился ли поисковый запрос
+      if (this.searchEngine.formattedSearchText !== cacheKey) {
+        this.isSearching = false;
+        return;
+      }
+
+      // Собираем все корневые элементы для поиска
+      const rootItems: ListItem<any>[] = [
+        ...this.rootVmListItems,
+        ...this.extraListItems,
+      ];
+
+      // Запускаем асинхронный поиск
+      this.searchTaskId = setTimeout(() => {
+        this.performLazySearch(rootItems, cacheKey);
+      }, 0);
+    });
+  }
+
+  // Выполняет ленивый поиск с разбивкой на чанки
+  private performLazySearch(rootItems: ListItem<any>[], cacheKey: string) {
+    const searchSegments = this.searchEngine.segments;
+    const maxDepth = searchSegments.length; // Максимальная глубина = количество сегментов
+    
+    const visited = new Set<ListItem<any>>();
+    const allItems: ListItem<any>[] = [];
+    const itemDepthMap = new Map<ListItem<any>, number>();
+    
+    // Используем стек для итеративного обхода вместо рекурсии
+    const stack: Array<{ item: ListItem<any>; depth: number }> = rootItems.map(item => ({ item, depth: 0 }));
+    
+    // Собираем элементы по чанкам (чтобы не блокировать UI)
+    const CHUNK_SIZE = 50; // Количество элементов за раз
+    let processedCount = 0;
+    
+    const processChunk = () => {
+      const startTime = performance.now();
+      const maxTime = 2; // Максимум 2ms на чанк
+      
+      while (stack.length > 0 && processedCount < allItems.length + CHUNK_SIZE) {
+        if (performance.now() - startTime > maxTime) {
+          // Превысили лимит времени, продолжаем в следующем чанке
+          break;
+        }
+        
+        const { item, depth } = stack.shift()!;
+        
+        if (visited.has(item)) continue;
+        visited.add(item);
+        
+        // Ограничиваем глубину сбора
+        if (depth <= maxDepth) {
+          allItems.push(item);
+          itemDepthMap.set(item, depth);
+          
+          // Добавляем дочерние элементы только если не достигли максимальной глубины
+          if (depth < maxDepth && item.isExpandable) {
+            for (const child of item.children) {
+              stack.push({ item: child, depth: depth + 1 });
+            }
+          }
+        }
+        
+        processedCount++;
+      }
+      
+      if (stack.length > 0) {
+        // Продолжаем в следующем чанке
+        this.searchTaskId = setTimeout(processChunk, 0);
+      } else {
+        // Все элементы собраны, фильтруем
+        this.filterAndCacheResults(allItems, cacheKey);
+      }
+    };
+    
+    processChunk();
+  }
+
+  private filterAndCacheResults(allItems: ListItem<any>[], cacheKey: string) {
+    const filteredItems = this.filterItemsWithParentsLazy(allItems, cacheKey);
+    
+    runInAction(() => {
+      this.searchResultsCache.replace(filteredItems);
+      this.searchCacheKey = cacheKey;
+      this.isSearching = false;
+    });
+  }
+
+  private filterItemsWithParentsLazy(allItems: ListItem<any>[], cacheKey: string): ListItem<any>[] {
+    // Проверяем, не изменился ли поисковый запрос
+    if (this.searchEngine.formattedSearchText !== cacheKey) {
+      return [];
+    }
+    
+    const searchSegments = this.searchEngine.segments;
+    
+    // Функция для проверки, подходит ли PropertyListItem под поиск
+    const isPropertyFitted = (item: any): boolean => {
+      if (!item.path || !item.property) return false;
+      
+      const pathSegments = item.path.split('.').filter(Boolean);
+      const depth = pathSegments.length;
+      const propertyLower = item.property.toLowerCase();
+      const searchSegmentIndex = depth - 1;
+      
+      if (searchSegmentIndex >= searchSegments.length) {
+        return false;
+      }
+      
+      // Проверяем все предыдущие сегменты пути
+      for (let i = 0; i < searchSegmentIndex; i++) {
+        const pathSegment = pathSegments[i]?.toLowerCase() || '';
+        const searchSegment = searchSegments[i];
+        if (!pathSegment.includes(searchSegment)) {
+          return false;
+        }
+      }
+      
+      // Проверяем текущий сегмент
+      const currentSearchSegment = searchSegments[searchSegmentIndex];
+      return propertyLower.includes(currentSearchSegment);
+    };
+    
+    // Находим все подходящие элементы
+    const fittedItems = new Set<ListItem<any>>();
+    
+    for (const item of allItems) {
+      try {
+        if (item instanceof VMListItem || item.constructor.name === 'ExtraListItem') {
+          if (item.isFitted) {
+            fittedItems.add(item);
+          }
+        } else {
+          const propItem = item as any;
+          if (propItem.path && propItem.property) {
+            if (isPropertyFitted(propItem)) {
+              fittedItems.add(item);
+            }
+          }
+        }
+      } catch {
+        // Игнорируем ошибки
+      }
+    }
+    
+    if (fittedItems.size === 0) {
+      return [];
+    }
+    
+    // Создаем карту родитель -> дети
+    const parentMap = new Map<ListItem<any>, ListItem<any>>();
+    for (const item of allItems) {
+      for (const child of item.children) {
+        parentMap.set(child, item);
+      }
+    }
+    
+    const resultSet = new Set<ListItem<any>>();
+    
+    const addItemWithParents = (item: ListItem<any>) => {
+      if (resultSet.has(item)) return;
+      resultSet.add(item);
+      
+      const parent = parentMap.get(item);
+      if (parent) {
+        // Проверяем, подходит ли родитель под поиск (для PropertyListItem)
+        const propParent = parent as any;
+        if (propParent.path && propParent.property) {
+          if (isPropertyFitted(propParent)) {
+            addItemWithParents(parent);
+          }
+        } else {
+          // Для VMListItem и ExtraListItem добавляем без проверки
+          addItemWithParents(parent);
+        }
+      }
+    };
+    
+    for (const fittedItem of fittedItems) {
+      addItemWithParents(fittedItem);
+    }
+    
+    // Строим правильный порядок: проходим по allItems и добавляем элементы в правильной последовательности
+    // с учетом иерархии (родители перед детьми)
+    const orderedResult: ListItem<any>[] = [];
+    const added = new Set<ListItem<any>>();
+    
+    // Создаем карту родитель -> дети (только для элементов в resultSet)
+    const childrenMap = new Map<ListItem<any>, ListItem<any>[]>();
+    for (const item of allItems) {
+      if (resultSet.has(item)) {
+        for (const child of item.children) {
+          if (resultSet.has(child)) {
+            if (!childrenMap.has(item)) {
+              childrenMap.set(item, []);
+            }
+            childrenMap.get(item)!.push(child);
+          }
+        }
+      }
+    }
+    
+    // Рекурсивно добавляем элемент и всех его потомков в правильном порядке
+    const addItemRecursive = (item: ListItem<any>) => {
+      if (added.has(item)) return;
+      
+      // Добавляем элемент
+      orderedResult.push(item);
+      added.add(item);
+      
+      // Добавляем детей в порядке их появления в allItems
+      const children = childrenMap.get(item) || [];
+      if (children.length > 0) {
+        // Находим позиции детей в allItems для сохранения исходного порядка
+        const childrenWithIndex = children.map(child => ({
+          child,
+          index: allItems.indexOf(child),
+        })).filter(({ index }) => index !== -1);
+        
+        childrenWithIndex.sort((a, b) => a.index - b.index);
+        
+        for (const { child } of childrenWithIndex) {
+          addItemRecursive(child);
+        }
+      }
+    };
+    
+    // Проходим по allItems и добавляем элементы, начиная с корневых
+    for (const item of allItems) {
+      if (resultSet.has(item) && !added.has(item)) {
+        // Проверяем, есть ли у этого элемента родитель в resultSet
+        const parent = parentMap.get(item);
+        if (!parent || !resultSet.has(parent) || added.has(parent)) {
+          // Это корневой элемент или его родитель уже добавлен - добавляем его
+          addItemRecursive(item);
+        }
+      }
+    }
+    
+    return orderedResult;
   }
 
   // Helper method to get parent items that contain matched children
   private getParentItemsWithMatchedChildren(
     rootItem: ListItem<any>,
     matchedChildren: ListItem<any>[],
+    isPropertyFitted?: (item: any) => boolean,
   ): ListItem<any>[] {
     const parentItems: ListItem<any>[] = [rootItem]; // Always include the root item
 
@@ -176,7 +429,20 @@ export class ViewModelDevtools {
         // Try to find the parent of current item by checking if it's in the children of rootItem or its descendants
         const parent = this.findParent(rootItem, current);
         if (parent && !parentItems.includes(parent)) {
-          parentItems.push(parent);
+          // Для PropertyListItem проверяем, подходит ли он под поиск
+          const propParent = parent as any;
+          if (propParent.path && propParent.property && isPropertyFitted) {
+            const fitted = isPropertyFitted(propParent);
+            console.log(`  Checking parent ${propParent.path}: isFitted=${fitted}`);
+            if (fitted) {
+              parentItems.push(parent);
+            } else {
+              console.log(`  Skipping parent ${propParent.path} - doesn't match search`);
+            }
+          } else {
+            // Для VMListItem и других - добавляем без проверки
+            parentItems.push(parent);
+          }
         }
         current = parent;
       }
@@ -210,23 +476,6 @@ export class ViewModelDevtools {
     return undefined;
   }
 
-  // Helper method to get the position of an item in the overall list
-  private getItemPosition(
-    item: ListItem<any>,
-    allItems: ListItem<any>[],
-  ): number {
-    // Return the index of the item in the original expandedChildrenWithSelf array
-    // to maintain proper ordering
-    for (const rootItem of [...this.rootVmListItems, ...this.extraListItems]) {
-      const flatList = rootItem.expandedChildrenWithSelf;
-      const index = flatList.indexOf(item);
-      if (index !== -1) {
-        return index;
-      }
-    }
-
-    return Number.MAX_SAFE_INTEGER; // Fallback for items not found
-  }
 
   get isActive() {
     return !!this.projectVmStore || Object.keys(this.extras || {}).length > 0;
@@ -432,6 +681,9 @@ export class ViewModelDevtools {
       presentationMode: observable.ref,
       sortPropertiesBy: observable.ref,
       extras: observable.ref,
+      searchResultsCache: observable,
+      searchCacheKey: observable,
+      isSearching: observable,
       setStore: action.bound,
       setExtras: action.bound,
       showPopup: action.bound,

@@ -135,11 +135,55 @@ export class PropertyListItem extends ListItem<any> {
   get isFitted() {
     const { searchEngine } = this.devtools;
 
-    if (!searchEngine.isActive || !this.property) {
+    if (!searchEngine.isActive) {
       return true;
     }
 
-    return searchEngine.segments.some((it) => it.startsWith(this.property!));
+    if (!this.property) {
+      return false;
+    }
+
+    const searchSegments = searchEngine.segments;
+
+    // Если нет сегментов поиска, показываем все
+    if (searchSegments.length === 0) {
+      return true;
+    }
+
+    const propertyLower = this.property.toLowerCase();
+    
+    // Определяем глубину текущего элемента (количество сегментов в path)
+    // path = "property" -> depth 1
+    // path = "property.nested" -> depth 2
+    // path = "property.nested.deep" -> depth 3
+    const pathSegments = this.path.split('.').filter(Boolean);
+    const depth = pathSegments.length; // Глубина = количество сегментов в пути
+    
+    // Количество сегментов поиска определяет максимальную глубину
+    // При поиске "payload" (1 сегмент) - ищем только на глубине 1
+    // При поиске "payload.loading" (2 сегмента) - ищем на глубинах 1 и 2
+    
+    // Индекс сегмента поиска для текущей глубины
+    const searchSegmentIndex = depth - 1;
+    
+    // Если глубина больше количества сегментов поиска, элемент не подходит
+    // Это ограничивает поиск только нужными уровнями вложенности
+    if (searchSegmentIndex >= searchSegments.length) {
+      return false;
+    }
+    
+    // Проверяем, что все предыдущие сегменты пути соответствуют предыдущим сегментам поиска
+    for (let i = 0; i < searchSegmentIndex; i++) {
+      const pathSegment = pathSegments[i]?.toLowerCase() || '';
+      const searchSegment = searchSegments[i];
+      if (!pathSegment.includes(searchSegment)) {
+        return false; // Путь не соответствует поисковому запросу
+      }
+    }
+    
+    // Проверяем текущий сегмент
+    const currentSearchSegment = searchSegments[searchSegmentIndex];
+    return propertyLower.includes(currentSearchSegment);
   }
 
   get extraContent() {

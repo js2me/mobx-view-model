@@ -6,17 +6,6 @@ import {
   type FocusableRef,
 } from './utils/create-focusable-ref';
 
-export interface SearchResult {
-  isFitted: boolean;
-  isFittedById?: boolean;
-  isFittedByName?: boolean;
-  isFittedByPropertyPath?: boolean;
-  fittedProperties: string[];
-  isFittedAllProperties?: boolean;
-  fullFittedProperty?: string;
-  fittedPath: string[];
-}
-
 export type SearchInput =
   | { type: 'vm'; item: VMListItem }
   | { type: 'extras'; item: AnyObject };
@@ -122,9 +111,10 @@ export class SearchEngine {
 
         input.addEventListener('input', () => {
           clearTimeout(this.searchTextUpdateTimeout!);
+          // Увеличиваем debounce для больших иерархий
           this.searchTextUpdateTimeout = setTimeout(() => {
             this.setSearchText(input.value);
-          }, 100);
+          }, 300);
         });
       },
     });
