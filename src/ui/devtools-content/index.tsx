@@ -100,7 +100,6 @@ export const VmDevtoolsContent = withViewModel(
         >
           <div
             className={css.vmContentVirtualizedContent}
-            ref={model.virtualizedContentRef}
           >
             {model.itemNodes}
           </div>
