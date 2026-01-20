@@ -26,6 +26,11 @@ export class SearchEngine {
     return !!this.formattedSearchText;
   }
 
+  get endsWithDot() {
+    const trimmed = this.rawSearchText?.trim() || '';
+    return trimmed.length > 0 && trimmed[trimmed.length - 1] === '.';
+  }
+
   private setSearchText(searchText: string) {
     this.rawSearchText = searchText;
     this.formattedSearchText = searchText.toLowerCase().trim();

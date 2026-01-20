@@ -192,7 +192,9 @@ export class ViewModelDevtools {
   // Выполняет ленивый поиск с разбивкой на чанки
   private performLazySearch(rootItems: ListItem<any>[], cacheKey: string) {
     const searchSegments = this.searchEngine.segments;
-    const maxDepth = searchSegments.length; // Максимальная глубина = количество сегментов
+    const endsWithDot = this.searchEngine.endsWithDot;
+    // Если поиск заканчивается точкой, собираем на один уровень глубже
+    const maxDepth = searchSegments.length + (endsWithDot ? 1 : 0);
     
     const visited = new Set<ListItem<any>>();
     const allItems: ListItem<any>[] = [];
@@ -265,6 +267,7 @@ export class ViewModelDevtools {
     }
     
     const searchSegments = this.searchEngine.segments;
+    const endsWithDot = this.searchEngine.endsWithDot;
     
     // Функция для проверки, подходит ли PropertyListItem под поиск
     const isPropertyFitted = (item: any): boolean => {
@@ -328,10 +331,23 @@ export class ViewModelDevtools {
     }
     
     const resultSet = new Set<ListItem<any>>();
+    const allItemsSet = new Set(allItems);
     
     const addItemWithParents = (item: ListItem<any>) => {
       if (resultSet.has(item)) return;
       resultSet.add(item);
+      
+      // Если это VMListItem или ExtraListItem, добавляем ВСЕ его прямые дочерние элементы
+      // (свойства первого уровня), даже если они не соответствуют поиску
+      // Но только те, которые есть в allItems (т.е. были собраны при обходе)
+      if (item instanceof VMListItem || item.constructor.name === 'ExtraListItem') {
+        for (const child of item.children) {
+          // Добавляем только те дети, которые есть в allItems
+          if (allItemsSet.has(child) && !resultSet.has(child)) {
+            resultSet.add(child);
+          }
+        }
+      }
       
       const parent = parentMap.get(item);
       if (parent) {
@@ -350,6 +366,47 @@ export class ViewModelDevtools {
     
     for (const fittedItem of fittedItems) {
       addItemWithParents(fittedItem);
+    }
+    
+    // Если поиск заканчивается точкой, автоматически раскрываем соответствующее свойство
+    if (endsWithDot && searchSegments.length > 0) {
+      const lastSegment = searchSegments[searchSegments.length - 1];
+      
+      // Ищем PropertyListItem, который соответствует последнему сегменту
+      for (const item of resultSet) {
+        const propItem = item as any;
+        if (propItem.path && propItem.property) {
+          const pathSegments = propItem.path.split('.').filter(Boolean);
+          const depth = pathSegments.length;
+          
+          // Проверяем, соответствует ли это свойство последнему сегменту на правильной глубине
+          if (depth === searchSegments.length) {
+            const propertyLower = propItem.property.toLowerCase();
+            if (propertyLower.includes(lastSegment)) {
+              // Проверяем, что все предыдущие сегменты пути соответствуют предыдущим сегментам поиска
+              let matches = true;
+              for (let i = 0; i < depth - 1; i++) {
+                const pathSegment = pathSegments[i]?.toLowerCase() || '';
+                const searchSegment = searchSegments[i];
+                if (!pathSegment.includes(searchSegment)) {
+                  matches = false;
+                  break;
+                }
+              }
+              
+              if (matches && propItem.isExpandable) {
+                propItem.expand();
+                // Добавляем прямых детей раскрытого свойства в результаты
+                for (const child of propItem.children) {
+                  if (allItemsSet.has(child)) {
+                    resultSet.add(child);
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
     
     // Строим правильный порядок: проходим по allItems и добавляем элементы в правильной последовательности
