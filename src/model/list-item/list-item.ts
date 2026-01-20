@@ -81,6 +81,9 @@ export abstract class ListItem<T> {
         for (const child of item.children) {
           traverse(child);
         }
+        if (item.closingItem) {
+          result.push(item.closingItem);
+        }
       }
     };
     
@@ -93,6 +96,7 @@ export abstract class ListItem<T> {
   }
 
   get expandedChildrenWithSelf(): ListItem<any>[] {
+    console.warn('EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE');
     return [this, ...this.expandedChildren];
   }
 
@@ -102,6 +106,10 @@ export abstract class ListItem<T> {
 
   get isFitted() {
     return true;
+  }
+
+  get closingItem(): ListItem<any> | null {
+    return null;
   }
 
   abstract get depth(): number;

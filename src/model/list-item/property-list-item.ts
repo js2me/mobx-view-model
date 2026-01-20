@@ -229,6 +229,10 @@ export class PropertyListItem extends ListItem<any> {
     }
   }
 
+  get closingItem() {
+    return this.propertyClosingTag;
+  }
+
   get expandedChildren(): ListItem<any>[] {
     if (!this.isExpanded || !this.isExpandable) {
       return [];
@@ -248,9 +252,9 @@ export class PropertyListItem extends ListItem<any> {
 
       result.push(child, ...child.expandedChildren);
     }
-
-    if (this.propertyClosingTag) {
-      result.push(this.propertyClosingTag);
+ 
+    if (this.closingItem) {
+      result.push(this.closingItem);
     }
 
     return result;

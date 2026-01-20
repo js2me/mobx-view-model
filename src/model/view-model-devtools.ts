@@ -101,6 +101,7 @@ export class ViewModelDevtools {
   }
 
   get listItems(): ListItem<any>[] {
+    console.warn('EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE(2'); 
     if (!this.searchEngine.isActive) {
       // Когда поиск не активен, возвращаем все элементы как раньше
       const listItems: ListItem<any>[] = [];
@@ -451,6 +452,12 @@ export class ViewModelDevtools {
         for (const { child } of childrenWithIndex) {
           addItemRecursive(child);
         }
+      }
+
+      // Для раскрытых свойств добавляем closing tag последним
+      const closingItem = item.closingItem;
+      if (closingItem && item.isExpanded) {
+        orderedResult.push(closingItem);
       }
     };
     
