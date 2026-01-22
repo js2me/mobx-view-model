@@ -26,7 +26,7 @@ import { ViewModelImpl } from './lib/view-model.impl';
 import { ViewModelStoreImpl } from './lib/view-model-store.impl';
 import { ExtraListItem } from './list-item/extra-list-item';
 import type { ListItem } from './list-item/list-item';
-import type { PropertyListItem } from './list-item/property-list-item';
+import { PropertyListItem } from './list-item/property-list-item';
 import { VMListItem } from './list-item/vm-list-item';
 import { SearchEngine } from './search-engine';
 import type { AnyVM } from './types';
@@ -101,7 +101,6 @@ export class ViewModelDevtools {
   }
 
   get listItems(): ListItem<any>[] {
-    console.warn('EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE(2'); 
     if (!this.searchEngine.isActive) {
       // Когда поиск не активен, возвращаем все элементы как раньше
       const listItems: ListItem<any>[] = [];
@@ -228,12 +227,13 @@ export class ViewModelDevtools {
           allItems.push(item);
           itemDepthMap.set(item, depth);
           
-          // Добавляем дочерние элементы только если не достигли максимальной глубины
-          if (depth < maxDepth && item.isExpandable) {
-            for (const child of item.children) {
-              stack.push({ item: child, depth: depth + 1 });
-            }
+        // Добавляем дочерние элементы только если не достигли максимальной глубины
+        if (depth < maxDepth) {
+          const children = this.getSearchChildren(item);
+          for (const child of children) {
+            stack.push({ item: child, depth: depth + 1 });
           }
+        }
         }
         
         processedCount++;
@@ -249,6 +249,103 @@ export class ViewModelDevtools {
     };
     
     processChunk();
+  }
+
+  private isLargeSearchObject(value: unknown, limit: number) {
+    if (!value || (typeof value !== 'object' && typeof value !== 'function')) {
+      return false;
+    }
+    // Быстрый хак для глобальных объектов (window/globalThis),
+    // чтобы не перечислять тысячи свойств.
+    try {
+      const globalLike = value as Record<string, unknown>;
+      if (
+        globalLike === globalThis ||
+        globalLike.window === value ||
+        globalLike.self === value ||
+        globalLike.globalThis === value
+      ) {
+        return true;
+      }
+    } catch {
+      return true;
+    }
+    let count = 0;
+    try {
+      for (const _key in value as Record<string, unknown>) {
+        count++;
+        if (count > limit) {
+          return true;
+        }
+      }
+    } catch {
+      return true;
+    }
+    return false;
+  }
+
+  private getSearchChildren(item: ListItem<any>): ListItem<any>[] {
+    if (!this.searchEngine.isActive) {
+      return item.children;
+    }
+
+    if (item instanceof ExtraListItem) {
+      const data = item.data;
+      const isHuge = this.isLargeSearchObject(data, 100);
+      const shouldLimitHuge = this.searchEngine.segments.length > 2;
+      if (isHuge && shouldLimitHuge) {
+        const nextSegment = this.searchEngine.segments[0];
+        if (
+          nextSegment &&
+          data &&
+          (typeof data === 'object' || typeof data === 'function') &&
+          nextSegment in (data as Record<string, unknown>)
+        ) {
+          return [
+            PropertyListItem.create(
+              this,
+              nextSegment,
+              nextSegment,
+              0,
+              item,
+            ),
+          ];
+        }
+        return [];
+      }
+    }
+
+    if (item instanceof PropertyListItem) {
+      const data = item.data;
+      const pathSegments = item.path.split('.').filter(Boolean);
+      const nextSegment = this.searchEngine.segments[pathSegments.length];
+      const isHuge = this.isLargeSearchObject(data, 100);
+      const shouldLimitHuge = this.searchEngine.segments.length > 2;
+
+      // Для больших объектов углубляемся только по точному ключу,
+      // чтобы не перечислять тысячи свойств.
+      if (isHuge && shouldLimitHuge) {
+        if (
+          nextSegment &&
+          data &&
+          (typeof data === 'object' || typeof data === 'function') &&
+          nextSegment in (data as Record<string, unknown>)
+        ) {
+          return [
+            PropertyListItem.create(
+              this,
+              nextSegment,
+              `${item.path}.${nextSegment}`,
+              0,
+              item,
+            ),
+          ];
+        }
+        return [];
+      }
+    }
+
+    return item.children;
   }
 
   private filterAndCacheResults(allItems: ListItem<any>[], cacheKey: string) {
@@ -306,12 +403,9 @@ export class ViewModelDevtools {
           if (item.isFitted) {
             fittedItems.add(item);
           }
-        } else {
-          const propItem = item as any;
-          if (propItem.path && propItem.property) {
-            if (isPropertyFitted(propItem)) {
-              fittedItems.add(item);
-            }
+        } else if (item instanceof PropertyListItem) {
+          if (isPropertyFitted(item)) {
+            fittedItems.add(item);
           }
         }
       } catch {
@@ -326,7 +420,7 @@ export class ViewModelDevtools {
     // Создаем карту родитель -> дети
     const parentMap = new Map<ListItem<any>, ListItem<any>>();
     for (const item of allItems) {
-      for (const child of item.children) {
+      for (const child of this.getSearchChildren(item)) {
         parentMap.set(child, item);
       }
     }
@@ -342,8 +436,19 @@ export class ViewModelDevtools {
       // (свойства первого уровня), даже если они не соответствуют поиску
       // Но только те, которые есть в allItems (т.е. были собраны при обходе)
       if (item instanceof VMListItem || item.constructor.name === 'ExtraListItem') {
-        for (const child of item.children) {
+        for (const child of this.getSearchChildren(item)) {
           // Добавляем только те дети, которые есть в allItems
+          if (allItemsSet.has(child) && !resultSet.has(child)) {
+            resultSet.add(child);
+          }
+        }
+      }
+
+      // Если это PropertyListItem и оно подходит под поиск,
+      // добавляем все его прямые дочерние элементы (на текущей глубине поиска),
+      // даже если они не соответствуют поиску
+      if (item instanceof PropertyListItem && isPropertyFitted(item)) {
+        for (const child of this.getSearchChildren(item)) {
           if (allItemsSet.has(child) && !resultSet.has(child)) {
             resultSet.add(child);
           }
@@ -352,10 +457,8 @@ export class ViewModelDevtools {
       
       const parent = parentMap.get(item);
       if (parent) {
-        // Проверяем, подходит ли родитель под поиск (для PropertyListItem)
-        const propParent = parent as any;
-        if (propParent.path && propParent.property) {
-          if (isPropertyFitted(propParent)) {
+        if (parent instanceof PropertyListItem) {
+          if (isPropertyFitted(parent)) {
             addItemWithParents(parent);
           }
         } else {
@@ -398,7 +501,7 @@ export class ViewModelDevtools {
               if (matches && propItem.isExpandable) {
                 propItem.expand();
                 // Добавляем прямых детей раскрытого свойства в результаты
-                for (const child of propItem.children) {
+                for (const child of this.getSearchChildren(propItem)) {
                   if (allItemsSet.has(child)) {
                     resultSet.add(child);
                   }
@@ -419,7 +522,7 @@ export class ViewModelDevtools {
     const childrenMap = new Map<ListItem<any>, ListItem<any>[]>();
     for (const item of allItems) {
       if (resultSet.has(item)) {
-        for (const child of item.children) {
+        for (const child of this.getSearchChildren(item)) {
           if (resultSet.has(child)) {
             if (!childrenMap.has(item)) {
               childrenMap.set(item, []);

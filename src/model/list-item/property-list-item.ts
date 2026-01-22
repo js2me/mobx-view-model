@@ -34,6 +34,31 @@ export class PropertyListItem extends ListItem<any> {
     return this.cache.get(this.expandKey) === true;
   }
 
+  get isExpandable() {
+    const { searchEngine } = this.devtools;
+    if (searchEngine.isActive) {
+      switch (this.type) {
+        case 'primitive':
+          return false;
+        case 'array':
+          return Array.isArray(this.data) && this.data.length > 0;
+        case 'object':
+        case 'instance':
+        case 'function': {
+          try {
+            for (const _key in this.data as Record<string, unknown>) {
+              return true;
+            }
+          } catch {
+            return false;
+          }
+          return false;
+        }
+      }
+    }
+    return super.isExpandable;
+  }
+
   get data() {
     this.dataWatchAtom.reportObserved();
     return this.property && this.parent.data[this.property];

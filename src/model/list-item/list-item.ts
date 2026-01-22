@@ -96,7 +96,6 @@ export abstract class ListItem<T> {
   }
 
   get expandedChildrenWithSelf(): ListItem<any>[] {
-    console.warn('EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE');
     return [this, ...this.expandedChildren];
   }
 
