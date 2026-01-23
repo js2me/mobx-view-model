@@ -1,4 +1,4 @@
-import { observer } from 'mobx-react-lite';
+import { Observer, observer } from 'mobx-react-lite';
 import { forwardRef, useContext } from 'react';
 import type {
   AnyObject,
@@ -373,24 +373,31 @@ const withViewModelWrapper = (
       props: componentProps,
     }) as unknown as AnyViewModel | AnyViewModelSimple;
 
-    const isRenderAllowedByStore =
-      !viewModels || viewModels.isAbleToRenderView(model.id);
-
-    // This condition is works for AnyViewModelSimple too
-    // All other variants will be bad for performance
-    const isRenderAllowed =
-      isRenderAllowedByStore && (model as AnyViewModel).isMounted !== false;
-
-    if (isRenderAllowed) {
-      return (
-        <ActiveViewModelProvider value={model}>
-          {Component && <Component {...componentProps} model={model} />}
-        </ActiveViewModelProvider>
-      );
-    }
-
     return (
-      FallbackComponent && <FallbackComponent {...allProps} payload={payload} />
+      <Observer>
+        {() => {
+          const isRenderAllowedByStore =
+            !viewModels || viewModels.isAbleToRenderView(model.id);
+
+          // This condition is works for AnyViewModelSimple too
+          // All other variants will be bad for performance
+          const isRenderAllowed =
+            isRenderAllowedByStore &&
+            (model as AnyViewModel).isMounted !== false;
+
+          if (isRenderAllowed) {
+            return (
+              <ActiveViewModelProvider value={model}>
+                {Component && <Component {...componentProps} model={model} />}
+              </ActiveViewModelProvider>
+            );
+          }
+
+          return FallbackComponent ? (
+            <FallbackComponent {...allProps} payload={payload} />
+          ) : null;
+        }}
+      </Observer>
     );
   };
 
@@ -399,8 +406,6 @@ const withViewModelWrapper = (
   if (config.forwardRef) {
     ConnectedViewModel = forwardRef(ConnectedViewModel) as any;
   }
-
-  ConnectedViewModel = observer(ConnectedViewModel);
 
   if (process.env.NODE_ENV !== 'production') {
     (ConnectedViewModel as React.ComponentType).displayName =
