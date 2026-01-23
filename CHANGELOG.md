@@ -1,5 +1,11 @@
 # mobx-view-model
 
+## 8.11.0
+
+### Minor Changes
+
+- [`2eb1ffc`](https://github.com/js2me/mobx-view-model/commit/2eb1ffcefba10b2cc37d2aab0b73b0b60cb72e8c) Thanks [@js2me](https://github.com/js2me)! - optimize `withViewModel` HOC with replaced `observer()` wrap HOC to `<Observer>` component use
+
 ## 8.10.0
 
 ### Minor Changes
