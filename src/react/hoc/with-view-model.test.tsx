@@ -60,11 +60,11 @@ describe('withViewModel', () => {
     const View = ({ model }: ViewModelProps<VM>) => {
       return <div data-testid={'view'}>{`hello ${model.id}`}</div>;
     };
-    const Component = withViewModel(VM, { generateId: createIdGenerator() })(
-      View,
-    );
+    const VMChargedComponent = withViewModel(VM, {
+      generateId: createIdGenerator(),
+    })(View);
 
-    await act(async () => render(<Component />));
+    await act(async () => render(<VMChargedComponent />));
     expect(screen.getByText('hello VM_1')).toBeDefined();
   });
 
@@ -186,9 +186,9 @@ describe('withViewModel', () => {
     const View = ({ model }: ViewModelProps<VM>) => {
       return <div>{`hello ${model.id}`}</div>;
     };
-    const Component = withViewModel(VM, { id: 'my-test' })(View);
+    const VMChargedComponent = withViewModel(VM, { id: 'my-test' })(View);
 
-    render(<Component />);
+    render(<VMChargedComponent />);
     expect(screen.getByText('hello my-test')).toBeDefined();
   });
 
@@ -213,12 +213,40 @@ describe('withViewModel', () => {
     const View = vi.fn(({ model }: ViewModelProps<VM>) => {
       return <div>{`hello ${model.id}`}</div>;
     });
+    const VMChargedComponent = withViewModel(VM, {
+      generateId: createIdGenerator(),
+    })(View);
+
+    render(<VMChargedComponent />);
+    expect(View).toHaveBeenCalledTimes(1);
+  });
+
+  test('updates view when component props change', async () => {
+    class VM extends ViewModelBaseMock {}
+    const View = ({ model, title }: ViewModelProps<VM> & { title: string }) => {
+      return <div>{`${title}-${model.id}`}</div>;
+    };
     const Component = withViewModel(VM, { generateId: createIdGenerator() })(
       View,
     );
 
-    render(<Component />);
-    expect(View).toHaveBeenCalledTimes(1);
+    const SuperContainer = () => {
+      const [title, setTitle] = useState('first');
+      return (
+        <>
+          <button data-testid="toggle" onClick={() => setTitle('second')}>
+            toggle
+          </button>
+          <Component title={title} />
+        </>
+      );
+    };
+
+    await act(async () => render(<SuperContainer />));
+
+    fireEvent.click(screen.getByTestId('toggle'));
+
+    expect(screen.getByText('second-VM_1')).toBeDefined();
   });
 
   test('withViewModel wrapper should by only mounted (renders 2 times)', () => {
