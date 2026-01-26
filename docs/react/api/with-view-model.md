@@ -2,6 +2,11 @@
 
 A Higher-Order Component that connects React components to their [ViewModels](/api/view-models/overview), providing seamless MobX integration.  
 
+
+::: info This HOC wraps your view component into `observer()` HOC!
+This thing works because [`wrapViewsInObserver` option](/api/view-models/view-models-config#wrapviewsinobserver) is enabled by default.
+:::
+
 ## API Signature
 ```tsx
 function withViewModel<VM extends AnyViewModel>(
