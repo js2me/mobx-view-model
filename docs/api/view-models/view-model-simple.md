@@ -8,7 +8,7 @@
 Use `ViewModelSimple` when:   
 1. You need `direct control over MobX observability` (e.g., using `makeAutoObservable`)  
 2. You prefer a simple, boilerplate-free class structure  
-3. Your view model does not required advanced features like [`viewModels` access](/api/view-models/base-implementation.html#viewmodels) or complex lifecycle hooks.  
+3. Your view model does not require advanced features like [`viewModels` access](/api/view-models/base-implementation.html#viewmodels) or complex lifecycle hooks.  
 
 ### Example   
 ```ts

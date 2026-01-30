@@ -1,6 +1,6 @@
 # Simple usage  
 
-The most simplest way to make integration with this library is to use [`ViewModelSimple` interface](/api/view-models/view-model-simple)  
+The simplest way to make integration with this library is to use [`ViewModelSimple` interface](/api/view-models/view-model-simple)  
 
 Follow the steps:  
 

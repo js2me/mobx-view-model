@@ -66,6 +66,6 @@ export const MyPage = observer(
 ```
 
 
-If you need access to the all other view models then you need to add [ViewModelStore](/api/view-model-store/overview).  
+If you need access to all other view models then you need to add [ViewModelStore](/api/view-model-store/overview).  
 This guide you can found [on the next page](/introduction/usage/with-view-model-store)  
 

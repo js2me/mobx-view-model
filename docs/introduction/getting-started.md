@@ -1,6 +1,6 @@
 # Getting started  
 
-The `mobx-view-model` source code is written on TypeScript and compiled into NodeNext target.   
+The `mobx-view-model` source code is written in TypeScript and compiled into the NodeNext target.   
 
 ## Requirements  
 

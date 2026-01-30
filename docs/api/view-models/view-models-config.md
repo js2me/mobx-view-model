@@ -1,5 +1,5 @@
 # `ViewModelsConfig` configuration object   
-This configration contains all options for some behaviour of [`ViewModel`](/api/view-models/overview) instances.  
+This configuration contains all options for some behaviour of [`ViewModel`](/api/view-models/overview) instances.  
 
 The package provides a **global object** with this configuration, but you can also change it for each [`ViewModel`](/api/view-models/overview) and [`ViewModelStore`](/api/view-model-store/overview) separately using the `vmConfig` field.
 
@@ -314,10 +314,10 @@ viewModelsConfig.startViewTransitions = {
 // viewModelsConfig.onUnmount = (vm) => console.log('Unmounted:', vm.id);
 ```
 
-## Possible causes of infinite rerenders due to payload access  
+## Possible causes of infinite re-renders due to payload access  
 
-The flexible configuration of the payload reactivity and update behavior can lead to infinite rerenders inside the View component.  
-This happens when the payload is changing every time the component is rerendered.  
+The flexible configuration of the payload reactivity and update behavior can lead to infinite re-renders inside the View component.  
+This happens when the payload is changing every time the component is re-rendered.  
 
 The following ViewModel configurations can cause this problem:  
 

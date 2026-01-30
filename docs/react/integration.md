@@ -1,6 +1,6 @@
 ---
 id: integration-guide
-title: React intergation guide
+title: React integration guide
 sidebar_label: Integration
 sidebar_position: 1
 slug: /react/integration

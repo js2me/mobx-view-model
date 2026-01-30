@@ -4,7 +4,7 @@ title: View Model Store interface
 
 # `ViewModelStore` interface   
 
-Interface represeting a store for managing [`ViewModels`](/api/view-models/interface)  
+Interface representing a store for managing [`ViewModels`](/api/view-models/interface)  
 
 ::: tip OPTIONAL USE
 This is not required for targeted usage of this package, but can be helpful for accessing [ViewModels](/api/view-models/overview) from everywhere by [ViewModelLookup](/api/other/view-model-lookup)  
@@ -52,7 +52,7 @@ Requires [vmLookup](/api/other/view-model-lookup).
 Retrieves the **last** [ViewModel](/api/view-models/interface) instance from the store based on [vmLookup](/api/other/view-model-lookup).  
 
 :::tip
-If you node more than one VM use [getAll(vmLookup)](#getallvmlookup) method  
+If you need more than one VM, use [getAll(vmLookup)](#getallvmlookup) method  
 :::    
 
 #### Example
@@ -108,20 +108,20 @@ export class ViewModelStoreImpl extends ViewModelStoreBase {
 ```
 
 ### `processCreateConfig(config)`  
-Process the configuration for creating a [ViewModel](/api/view-models/overview).  
+Processes the configuration for creating a [ViewModel](/api/view-models/overview).  
 This method is called just before creating a new [ViewModel](/api/view-models/overview) instance.  
 It's useful for initializing the configuration, like linking components to the [ViewModel](/api/view-models/overview) class.  
 
 ### `linkComponents()`  
-Link React components with [ViewModel](/api/view-models/overview) class.  
+Links React components with [ViewModel](/api/view-models/overview) class.  
 
 ### `unlinkComponents()`   
-Unlink React components with [ViewModel](/api/view-models/overview) class.  
+Unlinks React components with [ViewModel](/api/view-models/overview) class.  
 
 ### `generateViewModelId(config)`   
 Generates a unique ID for a [ViewModel](/api/view-models/overview) based on the provided configuration.  
 
 ### `clean()`  
-Clean up resources associated with the [ViewModel](/api/view-models/overview) store.  
-Clean all inner data structures.  
+Cleans up resources associated with the [ViewModel](/api/view-models/overview) store.  
+Cleans all inner data structures.  
 

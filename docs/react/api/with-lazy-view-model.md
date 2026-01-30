@@ -30,7 +30,7 @@ Let's create a [ViewModel](/api/view-models/overview) with a lot blocks of code
 ```ts title="model.ts"
 import { ViewModelBase } from "mobx-view-model";
 
-export class FruitButtonHugeVM extends ViewMOdelBase {
+export class FruitButtonHugeVM extends ViewModelBase {
   ... // large of code lines
 
   handleButtonClick = () => {
@@ -78,7 +78,7 @@ export default class MyVM extends ViewModelBase {}
 ... // view.tsx
 export default function MyView() { return <div>1</div> }
 ... // index.ts
-export const MyComponent = withLazyeViewModel(() =>{
+export const MyComponent = withLazyViewModel(() =>{
   return {
     Model: import("./model"),
     View: import("./view"),

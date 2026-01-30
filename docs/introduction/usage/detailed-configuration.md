@@ -3,7 +3,7 @@
 This way can be helpful when: 
  - if you need to override default factory method of creating view model instances in [ViewModelStore](/api/view-model-store/interface).  
  - if you need to inject root store into [ViewModelStore](/api/view-model-store/interface).  
- - if you need more control of the mounting\unmounting [ViewModels](/api/view-models/overview).  
+ - if you need more control of the mounting/unmounting [ViewModels](/api/view-models/overview).  
 
 
 Follow the steps:   
@@ -70,7 +70,7 @@ export class ViewModelStoreImpl extends ViewModelStoreBase {
     // first argument into VM (your view model implementation)
     if (ViewModelImpl.isPrototypeOf(VM)) {
       const instance = super.createViewModel(config) as unknown as ViewModelImpl;
-      console.log(intance.getTrackTime());
+      console.log(instance.getTrackTime());
       return instance;
     }
 

@@ -24,5 +24,5 @@ features:
     details: Out-of-box TypeScript support
   - title: Dynamic
     icon: 🌪️
-    details: Create and destroy view models on a fly
+    details: Create and destroy view models on the fly
 ---

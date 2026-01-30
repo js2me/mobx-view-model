@@ -62,7 +62,7 @@ Default: `false`
 
 ::: info Better to use custom prop
 This parameter uses React.forwardRef, so this thing is not a good solution for performance.  
-Instead of thia parameter you can use custom prop like `targetInputRef`
+Instead of this parameter you can use custom prop like `targetInputRef`
 :::
 
 Examples:   
@@ -236,7 +236,7 @@ export const AnotherComponent = withViewModel(VM, ({ model }) => {
   return (
     <div>
       <input
-        className={"bg-[red]"}
+        className="bg-[red]"
         value={model.value}
         onChange={e => model.setValue(e.target.value)}
       />

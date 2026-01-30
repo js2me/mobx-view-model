@@ -84,10 +84,10 @@ Called when the component is mounted in the React tree.
 
 This method sets [`isMounted`](/api/view-models/interface#ismounted-boolean) to `true`.   
 If you are overriding this method be sure that you called the [`super.mount()`](/api/view-models/interface#mount-void-promise-void), 
-otherwise your view component connected to this `ViewModel` never been rendered
+otherwise your view component connected to this `ViewModel` will never be rendered
 because inside [`withViewModel`](/react/api/with-view-model) HOC libary comparing the [`isMounted`](/api/view-models/interface#ismounted-boolean) flag with `true` before render the view component  
 
-This method can be async. This feature is helpful if you want to load some data or do something before view component will been rendered  
+This method can be async. This feature is helpful if you want to load some data or do something before the view component will be rendered  
 
 #### Example: Async Mounting
 ```ts
@@ -135,7 +135,7 @@ Called when the component is unmounted from the React tree.
 
 This method sets [`isMounted`](/api/view-models/interface#ismounted-boolean) to `false`.   
 If you are overriding this method be sure that you called the [`super.unmount()`](/api/view-models/interface#mount-void-promise-void), 
-otherwise your view component connected to this `ViewModel` never been unmounted  
+otherwise your view component connected to this `ViewModel` will never be unmounted  
 
 ### `didUnmount(): void` <Badge type="info" text="action" />    
 Called after the view model is fully unmounted.  
