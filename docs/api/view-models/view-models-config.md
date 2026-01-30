@@ -57,17 +57,17 @@ This feature is experimental and not all browsers support it yet.
 ## `comparePayload`  
 Allows you to configure how payload should be compared   
 
-- `'strict'` - _**(default)**_ strict equality ([`comparer.structural` from MobX](https://mobx.js.org/computeds.html#built-in-comparers))  
+- `'strict'` - strict equality ([`comparer.structural` from MobX](https://mobx.js.org/computeds.html#built-in-comparers))  
 - `'shallow'` - shallow equality  
-- `false` - **(recommended)** no comparison  
+- `false` - _**(default)**_, **(recommended)** no comparison  
 - `fn` - custom payload compare fn (e.g. [MobX comparer functions](https://mobx.js.org/computeds.html#built-in-comparers))  
 
 ## `payloadComputed`  
 Allows you to configure `computed` statement of the payload  
-- `'struct'` - **(recommended)** [`computed.struct` from MobX](https://mobx.js.org/computeds.html#computed-struct)  
+- `'struct'` -  _**(default)**_, **(recommended)** [`computed.struct` from MobX](https://mobx.js.org/computeds.html#computed-struct)  
 - `true` - [`computed` from MobX](https://mobx.js.org/computeds.html)  
 - `fn` - [custom equality function](https://mobx.js.org/computeds.html#equals) for [`computed` from MobX](https://mobx.js.org/computeds.html)  
-- `false` - _**(default)**_ do not wrap `payload` into `computed` MobX utility  
+- `false` - do not wrap `payload` into `computed` MobX utility  
 
 ## `payloadObservable`  
 Indicates type of observable for `ViewModel` payload.  
