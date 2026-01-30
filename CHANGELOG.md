@@ -1,5 +1,13 @@
 # mobx-view-model
 
+## 8.10.1
+
+### Patch Changes
+
+- [`d43c73d`](https://github.com/js2me/mobx-view-model/commit/d43c73db442c2178b377ef11344939ee251c8351) Thanks [@js2me](https://github.com/js2me)! - docs: align docs with code and add doc links
+
+- [`45e0559`](https://github.com/js2me/mobx-view-model/commit/45e05590534cf224f3552b0db1287a93d5c48f9d) Thanks [@js2me](https://github.com/js2me)! - docs: fix grammar and typos
+
 ## 8.10.0
 
 ### Minor Changes
