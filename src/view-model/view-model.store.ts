@@ -63,6 +63,8 @@ export interface ViewModelStore<VMBase extends AnyViewModel = AnyViewModel> {
   /**
    * This is specific method to be called when a view model is about to be attached to view.
    * This method is the first method where the created view model instance is passed to the view model store.
+   *
+   * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#marktobeattachedviewmodel)
    */
   markToBeAttached(model: VMBase | AnyViewModelSimple): void;
 
@@ -81,6 +83,7 @@ export interface ViewModelStore<VMBase extends AnyViewModel = AnyViewModel> {
   detach(id: VMBase['id'] | ViewModelSimple['id']): Promise<void>;
 
   /**
+   * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#isabletorenderviewviewmodelid)
    * Determines if a view model is able to render based on its ID.
    * @param id - The ID of the view model.
    * @returns True if the view model can render, false otherwise.
@@ -88,6 +91,7 @@ export interface ViewModelStore<VMBase extends AnyViewModel = AnyViewModel> {
   isAbleToRenderView(id: Maybe<VMBase['id']>): boolean;
 
   /**
+   * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#createviewmodelconfig)
    * Creates a new view model instance based on the provided configuration.
    * @param config - The configuration for creating the view model.
    * @returns The newly created view model instance.
@@ -95,6 +99,7 @@ export interface ViewModelStore<VMBase extends AnyViewModel = AnyViewModel> {
   createViewModel<VM extends VMBase>(config: ViewModelCreateConfig<VM>): VM;
 
   /**
+   * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#processcreateconfigconfig)
    * Process the configuration for creating a view model.
    * This method is called just before creating a new view model instance.
    * It's useful for initializing the configuration, like linking components to the view model class.
@@ -105,6 +110,7 @@ export interface ViewModelStore<VMBase extends AnyViewModel = AnyViewModel> {
   ): void;
 
   /**
+   * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#linkcomponents)
    * Link React components with view model class.
    * @param VM - The view model class to link to.
    * @param components - The components to link.
@@ -117,6 +123,7 @@ export interface ViewModelStore<VMBase extends AnyViewModel = AnyViewModel> {
   ): void;
 
   /**
+   * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#unlinkcomponents)
    * Unlink React components with view model class.
    * @param components - The components to unlink.
    */
@@ -127,6 +134,7 @@ export interface ViewModelStore<VMBase extends AnyViewModel = AnyViewModel> {
   ): void;
 
   /**
+   * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#generateviewmodelidconfig)
    * Generates a unique ID for a view model based on the provided configuration.
    * @param config - The configuration for generating the ID.
    * @returns The generated unique ID.
@@ -136,6 +144,7 @@ export interface ViewModelStore<VMBase extends AnyViewModel = AnyViewModel> {
   ): string;
 
   /**
+   * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#clean)
    * Clean up resources associated with the view model store.
    * Clean all inner data structures.
    */

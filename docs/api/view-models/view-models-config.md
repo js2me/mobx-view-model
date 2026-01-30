@@ -47,8 +47,16 @@ viewModelsConfig.observable.viewModelStores.useDecorators = true; // false
 ```
 
 ## `startViewTransitions`  
-Indicates whether to enable transitions for the start view.  
+Controls view transitions for view model lifecycle moments.  
 [MDN Reference](https://developer.mozilla.org/docs/Web/API/View_Transitions_API)
+
+#### Shape  
+`startViewTransitions` is an object with these flags:
+- `mount` - start transition when the view mounts
+- `payloadChange` - start transition when the payload changes
+- `unmount` - start transition when the view unmounts
+
+In `ViewModelsRawConfig` you can also pass a boolean to toggle all flags at once.
 
 ::: warning  
 This feature is experimental and not all browsers support it yet.  
@@ -153,6 +161,13 @@ viewModelsConfig.onUnmount = (viewModel) => {
   viewModel.dispose();
 };
 ```
+
+## `hooks`  
+Internal event hooks for view model stores.
+
+### `hooks.storeCreate`  
+Called when a `ViewModelStore` instance is created.  
+Useful for wiring external listeners or diagnostics.
 
 ## `processViewComponent`  
 A higher-order function that processes and transforms the view component before it is rendered.   

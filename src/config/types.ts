@@ -69,6 +69,7 @@ export interface ViewModelsConfig<
       [viewModelStore: ViewModelStore<AnyViewModel>]
     >;
   };
+  /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#processviewcomponent) */
   processViewComponent?: (
     component: React.ComponentType<any> | undefined,
     VM: Class<TViewModel>,

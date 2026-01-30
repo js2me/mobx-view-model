@@ -160,6 +160,8 @@ export interface ViewModelSimpleHocConfig<_VM> {
   /**
    * Function that should return the payload for the VM
    * by default, it is - (props) => props.payload
+   *
+   * [**Documentation**](https://js2me.github.io/mobx-view-model/react/api/with-view-model.html#getpayload)
    */
   getPayload?: (allProps: any) => any;
 

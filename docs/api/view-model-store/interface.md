@@ -73,10 +73,14 @@ vmStore.get(UserSelectVM)?.selectedUser.id; // '1'
 ### `getAll(vmLookup)`  
 Retrieves all [ViewModel](/api/view-models/overview) instances from the store based on [vmLookup](/api/other/view-model-lookup).  
 
+### `markToBeAttached(viewModel)`  
+Called when a [ViewModel](/api/view-models/overview) is about to be attached to the view.  
+This is the first point where the created instance is passed to the store.  
+
 ### `attach(viewModel)`  
 Attaches a [ViewModel](/api/view-models/overview) to the store.  
 
-### `dettach(viewModelId)`  
+### `detach(viewModelId)`  
 Detaches a [ViewModel](/api/view-models/overview) from the store using its ID.  
 
 ### `isAbleToRenderView(viewModelId)`  
