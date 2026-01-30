@@ -109,6 +109,74 @@ describe('withViewModel', () => {
     expect(spyFallbackRender).toHaveBeenCalledTimes(1);
   });
 
+  test('updates UI when isMounted becomes true', async () => {
+    class VM extends ViewModelBaseMock {
+      mount() {
+        setTimeout(() => {
+          super.mount();
+        }, 20);
+      }
+    }
+    const View = ({ model }: ViewModelProps<VM>) => {
+      return <div data-testid={'view'}>{`hello ${model.id}`}</div>;
+    };
+    const Fallback = () => {
+      return <div data-testid={'fallback'}>fallback</div>;
+    };
+    const Component = withViewModel(VM, {
+      generateId: createIdGenerator(),
+      fallback: Fallback,
+    })(View);
+
+    render(<Component />);
+
+    expect(screen.getByTestId('fallback')).toBeDefined();
+
+    await act(async () => {
+      await sleep(30);
+    });
+
+    expect(screen.getByTestId('view')).toBeDefined();
+  });
+
+  test('updates UI when isMounted becomes false', async () => {
+    class VM extends ViewModelBaseMock {
+      triggerUnmount() {
+        this.unmount();
+      }
+    }
+    const View = ({ model }: ViewModelProps<VM>) => {
+      return (
+        <div>
+          <button
+            data-testid={'unmount'}
+            onClick={() => model.triggerUnmount()}
+          >
+            unmount
+          </button>
+          <div data-testid={'view'}>{`hello ${model.id}`}</div>
+        </div>
+      );
+    };
+    const Fallback = () => {
+      return <div data-testid={'fallback'}>fallback</div>;
+    };
+    const Component = withViewModel(VM, {
+      generateId: createIdGenerator(),
+      fallback: Fallback,
+    })(View);
+
+    await act(async () => render(<Component />));
+
+    expect(screen.getByTestId('view')).toBeDefined();
+
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('unmount'));
+    });
+
+    expect(screen.getByTestId('fallback')).toBeDefined();
+  });
+
   test('renders fallback before render REAL COMPONENT (times)', async () => {
     class VM extends ViewModelBaseMock {}
     const View = ({ model }: ViewModelProps<VM>) => {
@@ -249,7 +317,7 @@ describe('withViewModel', () => {
     expect(screen.getByText('second-VM_1')).toBeDefined();
   });
 
-  test('withViewModel wrapper should by only mounted (renders 2 times)', () => {
+  test('withViewModel wrapper should by only mounted (renders 1 time)', () => {
     class VM extends ViewModelBaseMock {}
     const View = vi.fn(({ model }: ViewModelProps<VM>) => {
       return <div>{`hello ${model.id}`}</div>;
@@ -263,7 +331,7 @@ describe('withViewModel', () => {
     })(View);
 
     render(<Component />);
-    expect(useHookSpy).toHaveBeenCalledTimes(2);
+    expect(useHookSpy).toHaveBeenCalledTimes(1);
   });
 
   describe('payload manipulations', () => {
@@ -746,7 +814,11 @@ describe('withViewModel', () => {
 
       await sleep(200);
 
-      expect(setPayloadSpy).toHaveBeenCalledTimes(2);
+      expect(setPayloadSpy).toHaveBeenCalledTimes(1);
+      expect(setPayloadSpy.mock.calls[0]?.[0]).toMatchObject({
+        techreviewId: '1',
+        selectedCompIds: ['1', '2', '3'],
+      });
     });
   });
 
