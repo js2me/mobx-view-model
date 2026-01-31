@@ -116,7 +116,7 @@ export class MyPageVM extends ViewModelImpl {
     super.mount(); // this.isMounted = true
   }
 
-  didMount() {
+  protected didMount() {
     console.info('did mount');
   }
 

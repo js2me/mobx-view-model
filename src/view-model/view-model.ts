@@ -28,10 +28,6 @@ export interface ViewModel<
   willMount(): void;
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/interface#mount-void-promise-void) */
   mount(): void | Promise<void>;
-  /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/interface#didmount-void) */
-  didMount(): void;
-  /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/interface#didunmount-void) */
-  didUnmount(): void;
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/interface#willunmount-void) */
   willUnmount(): void;
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/interface#unmount-void-promise-void) */

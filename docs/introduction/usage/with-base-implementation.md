@@ -21,7 +21,7 @@ export class MyPageVM extends ViewModelBase<{ payloadA: string }> {
     super.mount();
   }
 
-  didMount() {
+  protected didMount() {
     console.info('did mount');
   }
 

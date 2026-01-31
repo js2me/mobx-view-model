@@ -157,7 +157,7 @@ export class ViewModelBase<
   /**
    * The method is called when the view was mounted
    */
-  didMount() {
+  protected didMount() {
     /* Empty method to be overridden */
   }
 
@@ -178,14 +178,18 @@ export class ViewModelBase<
     );
 
     this.didUnmount();
+    this.finalizeUnmount();
   }
 
   /**
    * The method is called when the view was unmounted
    */
-  didUnmount() {
-    this.abortController.abort();
+  protected didUnmount() {
+    /* Empty method to be overridden */
+  }
 
+  private finalizeUnmount() {
+    this.abortController.abort();
     runInAction(() => {
       this._isUnmounting = false;
     });
