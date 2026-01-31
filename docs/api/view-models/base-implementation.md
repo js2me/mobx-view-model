@@ -48,7 +48,7 @@ export class StarWarsBattlefieldVM extends ViewModelBase {
 
 
 ### `unmountSignal`   
-This is [`AbortSignal`](https://developer.mozilla.org/ru/docs/Web/API/AbortSignal) which signaled when your [`ViewModel`](/api/view-models/interface) is unmounted. It happens after `unmount()` completes in the base implementation.   
+This is [`AbortSignal`](https://developer.mozilla.org/ru/docs/Web/API/AbortSignal) which is signaled when your [`ViewModel`](/api/view-models/interface) is unmounted. It happens after `unmount()` completes in the base implementation.   
 
 #### Example   
 ```ts
