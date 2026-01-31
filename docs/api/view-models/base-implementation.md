@@ -56,7 +56,7 @@ import { ViewModelBase } from "mobx-view-model";
 import { autorun } from "mobx"
 
 export class TestVM extends ViewModelBase {
-  willMount() {
+  protected willMount() {
     autorun(
       () => {
         console.log("log", this.id, this.isMounted);
@@ -78,6 +78,10 @@ Indicates whether the `ViewModel` is currently mounted with its associated compo
 
 ### `isUnmounting: boolean` <Badge type="tip" text="computed" />  
 Indicates whether the `ViewModel` is in the process of unmounting.  
+
+### `willMount(): void` <Badge type="info" text="protected" />  
+Called when the component begins mounting in the React tree.  
+Executes before the `mount()` method.
 
 ### `mount(): void | Promise<void>` <Badge type="info" text="action.bound" />  
 Called when the component is mounted in the React tree.  
@@ -126,7 +130,7 @@ class ForceAlertVM extends ViewModelBase<{ message: string }> {
 }
 ```
 
-### `willUnmount(): void` <Badge type="info" text="action" />  
+### `willUnmount(): void` <Badge type="info" text="protected" />  
 Called when the component begins unmounting from the React tree.  
 Executes before the `unmount()` method.
 

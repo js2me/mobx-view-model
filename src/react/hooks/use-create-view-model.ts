@@ -147,8 +147,6 @@ const useCreateViewModelBase = (
         viewModels?.createViewModel<any>(configCreate) ??
         viewModelsConfig.factory(configCreate);
 
-      instance.willMount();
-
       viewModels?.markToBeAttached(instance);
 
       return instance;
@@ -164,7 +162,6 @@ const useCreateViewModelBase = (
     } else {
       instance.mount();
       return () => {
-        instance.willUnmount();
         instance.unmount();
       };
     }

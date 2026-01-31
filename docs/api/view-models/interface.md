@@ -75,10 +75,6 @@ class ChildVM extends ViewModelBase<{}, ParentVM> {
 
 ## Lifecycle Methods
 
-### `willMount(): void`  
-Called when the component begins mounting in the React tree.  
-Executes before the `mount()` method.
-
 ### `mount(): void | Promise<void>`  
 Called when the component is mounted in the React tree.  
 
@@ -107,10 +103,6 @@ class JediProfileVM extends ViewModelBase<{ jediId: string }> {
   }
 }
 ```
-
-### `willUnmount(): void`  
-Called when the component begins unmounting from the React tree.  
-Executes before the `unmount()` method.
 
 ### `unmount(): void | Promise<void>`  
 Called when the component is unmounted from the React tree.  

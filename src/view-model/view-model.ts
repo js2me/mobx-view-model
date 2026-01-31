@@ -24,12 +24,8 @@ export interface ViewModel<
   readonly isUnmounting: boolean;
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/interface#parentviewmodel-parentviewmodel-null) */
   readonly parentViewModel: ParentViewModel;
-  /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/interface#willmount-void) */
-  willMount(): void;
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/interface#mount-void-promise-void) */
   mount(): void | Promise<void>;
-  /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/interface#willunmount-void) */
-  willUnmount(): void;
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/interface#unmount-void-promise-void) */
   unmount(): void | Promise<void>;
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/interface#setpayload-payload-payload-void) */
