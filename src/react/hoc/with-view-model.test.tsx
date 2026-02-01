@@ -16,6 +16,8 @@ import {
   useState,
   version,
 } from 'react';
+// @ts-expect-error react-dom/client types are not in dev deps
+import { hydrateRoot } from 'react-dom/client';
 // @ts-expect-error react-dom/server types are not in dev deps
 import { renderToString } from 'react-dom/server';
 import { describe, expect, expectTypeOf, it, test, vi } from 'vitest';
@@ -172,6 +174,32 @@ describe('withViewModel', () => {
 
       expect(reactHook).toHaveBeenCalledTimes(1);
       expect(reactHook.mock.calls[0]?.[2]).toBe(vmStore);
+    });
+
+    test('nextjs-like SSR + hydration renders same markup', async () => {
+      class VM extends ViewModelBaseMock<{ value: string }> {}
+      const View = ({ model }: ViewModelProps<VM>) => {
+        return <div>{`hello ${model.id} ${model.payload.value}`}</div>;
+      };
+      const Component = withViewModel(VM, {
+        id: 'ssr-hydration',
+      })(View);
+
+      const html = renderOnServer(<Component payload={{ value: 'next' }} />);
+
+      const container = document.createElement('div');
+      container.innerHTML = html;
+
+      let root: ReturnType<typeof hydrateRoot> | null = null;
+      await act(async () => {
+        root = hydrateRoot(
+          container,
+          <Component payload={{ value: 'next' }} />,
+        );
+      });
+
+      expect(container.textContent).toContain('hello ssr-hydration next');
+      root?.unmount();
     });
   });
 
