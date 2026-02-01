@@ -16,6 +16,8 @@ import {
   useState,
   version,
 } from 'react';
+// @ts-expect-error react-dom/server types are not in dev deps
+import { renderToString } from 'react-dom/server';
 import { describe, expect, expectTypeOf, it, test, vi } from 'vitest';
 import { sleep } from 'yummies/async';
 import { createCounter } from 'yummies/complex';
@@ -66,6 +68,111 @@ describe('withViewModel', () => {
 
     await act(async () => render(<VMChargedComponent />));
     expect(screen.getByText('hello VM_1')).toBeDefined();
+  });
+
+  describe('SSR', () => {
+    const renderOnServer = (node: ReactNode) => {
+      vi.stubGlobal('window', undefined);
+      try {
+        return renderToString(<>{node}</>);
+      } finally {
+        vi.unstubAllGlobals();
+      }
+    };
+
+    test('renders view without store when VM is not mounted', () => {
+      class VM extends ViewModelBaseMock {}
+      const View = ({ model }: ViewModelProps<VM>) => {
+        return <div data-testid={'view'}>{`hello ${model.id}`}</div>;
+      };
+      const VMChargedComponent = withViewModel(VM, {
+        generateId: createIdGenerator(),
+      })(View);
+
+      const html = renderOnServer(<VMChargedComponent />);
+      expect(html).toContain('hello VM_1');
+    });
+
+    test('uses getPayload to build payload during SSR', () => {
+      class VM extends ViewModelBaseMock<{ value: string }> {}
+      const View = ({ model }: ViewModelProps<VM>) => {
+        return <div>{`payload ${model.payload.value}`}</div>;
+      };
+      const VMChargedComponent = withViewModel(VM, {
+        generateId: createIdGenerator(),
+        getPayload: (props: { payload: { value: string } }) => ({
+          value: `server-${props.payload.value}`,
+        }),
+      })(View);
+
+      const html = renderOnServer(
+        <VMChargedComponent payload={{ value: 'x' }} />,
+      );
+      expect(html).toContain('payload server-x');
+    });
+
+    test('renders fallback when store blocks render on server', () => {
+      class VM extends ViewModelBaseMock {}
+      const View = ({ model }: ViewModelProps<VM>) => {
+        return <div>{`hello ${model.id}`}</div>;
+      };
+      const vmStore = new ViewModelStoreBaseMock();
+      const Component = withViewModel(VM, {
+        generateId: createIdGenerator(),
+        fallback: () => 'fallback-ssr',
+      })(View);
+
+      const html = renderOnServer(
+        <ViewModelsProvider value={vmStore}>
+          <Component />
+        </ViewModelsProvider>,
+      );
+      expect(html).toContain('fallback-ssr');
+    });
+
+    test('renders view when store already has VM attached', async () => {
+      class VM extends ViewModelBaseMock {}
+      const View = ({ model }: ViewModelProps<VM>) => {
+        return <div>{`hello ${model.id}`}</div>;
+      };
+      const vmStore = new ViewModelStoreBaseMock();
+      const vm = new VM({ id: 'ssr-1' });
+      await vmStore.attach(vm);
+
+      const Component = withViewModel(VM, {
+        id: 'ssr-1',
+      })(View);
+
+      const html = renderOnServer(
+        <ViewModelsProvider value={vmStore}>
+          <Component />
+        </ViewModelsProvider>,
+      );
+      expect(html).toContain('hello ssr-1');
+    });
+
+    test('invokes reactHook on server with store', () => {
+      class VM extends ViewModelBaseMock {}
+      const View = ({ model }: ViewModelProps<VM>) => {
+        return <div>{`hello ${model.id}`}</div>;
+      };
+      const vmStore = new ViewModelStoreBaseMock();
+      const reactHook = vi.fn();
+      const Component = withViewModel(VM, {
+        generateId: createIdGenerator(),
+        reactHook,
+        fallback: () => 'fallback-ssr',
+      })(View);
+
+      renderOnServer(
+        <ViewModelsProvider value={vmStore}>
+          <Component />
+        </ViewModelsProvider>,
+      );
+
+      expect(reactHook).toHaveBeenCalledTimes(1);
+      expect(reactHook.mock.calls[0]?.[2]).toBe(vmStore);
+    });
   });
 
   test('renders fallback', async () => {
