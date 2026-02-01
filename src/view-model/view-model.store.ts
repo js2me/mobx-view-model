@@ -1,5 +1,5 @@
 import type { Class, Maybe } from 'yummies/types';
-import type { VMComponent, VMLazyComponent } from '../react/hoc/index.js';
+import type { VMComponent } from '../react/hoc/index.js';
 import type {
   ViewModelCreateConfig,
   ViewModelGenerateIdConfig,
@@ -117,9 +117,7 @@ export interface ViewModelStore<VMBase extends AnyViewModel = AnyViewModel> {
    */
   linkComponents(
     VM: Class<VMBase>,
-    ...components: Maybe<
-      VMComponent<VMBase, any> | VMLazyComponent<VMBase, any>
-    >[]
+    ...components: Maybe<VMComponent<VMBase, any>>[]
   ): void;
 
   /**
@@ -127,11 +125,7 @@ export interface ViewModelStore<VMBase extends AnyViewModel = AnyViewModel> {
    * Unlink React components with view model class.
    * @param components - The components to unlink.
    */
-  unlinkComponents(
-    ...components: Maybe<
-      VMComponent<VMBase, any> | VMLazyComponent<VMBase, any>
-    >[]
-  ): void;
+  unlinkComponents(...components: Maybe<VMComponent<VMBase, any>>[]): void;
 
   /**
    * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#generateviewmodelidconfig)

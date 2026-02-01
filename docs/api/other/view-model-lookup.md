@@ -6,7 +6,7 @@ This type is declaration of which data is needed to find your [ViewModel](/api/v
 It can be:   
   - [ViewModel id](/api/view-models/interface#id-string)  
   - `ViewModel class reference`  
-  - [`React`](https://react.dev) component created with [`withViewModel()`](/react/api/with-view-model) or [`withLazyViewModel()`](/react/api/with-lazy-view-model)  
+  - [`React`](https://react.dev) component created with [`withViewModel()`](/react/api/with-view-model)  
 
 [Reference to source code type](/src/view-model/view-model.store.types.ts#L42)  
 [Reference to source code with internal usage of this value](/src/view-model/view-model.store.base.ts#L220)  

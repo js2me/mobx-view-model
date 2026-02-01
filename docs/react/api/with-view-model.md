@@ -251,7 +251,7 @@ The `withViewModel` HOC is not compatible with the React's built-in [`<Suspense 
 
 Using `Suspense` and `lazy` with `withViewModel` HOC can lead to unexpected behavior and bugs due to double/triple calls of `useMemo` or lazy `useState` hooks inside [`useCreateViewModel`](/react/api/use-create-view-model) hook.
 
-To avoid this issue, it is recommended to use [`withLazyViewModel`](/react/api/with-lazy-view-model) HOC instead.
+To avoid this issue, either avoid using `Suspense`/`lazy` with this HOC or use `loadable()` from `react-simple-loadable` in your app code.
 
 
 

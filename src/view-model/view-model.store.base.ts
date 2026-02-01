@@ -6,7 +6,7 @@ import {
   mergeVMConfigs,
   type ViewModelsConfig,
 } from '../config/index.js';
-import type { VMComponent, VMLazyComponent } from '../react/hoc/index.js';
+import type { VMComponent } from '../react/hoc/index.js';
 import type { ViewModelBase } from './view-model.base.js';
 import type { ViewModelStore } from './view-model.store.js';
 import type {
@@ -129,9 +129,7 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
 
   linkComponents(
     VM: Class<VMBase>,
-    ...components: Maybe<
-      VMComponent<VMBase, any> | VMLazyComponent<VMBase, any>
-    >[]
+    ...components: Maybe<VMComponent<VMBase, any>>[]
   ): void {
     components.forEach((component) => {
       if (component && !this.linkedComponentVMClasses.has(component)) {
@@ -140,11 +138,7 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
     });
   }
 
-  unlinkComponents(
-    ...components: Maybe<
-      VMComponent<VMBase, any> | VMLazyComponent<VMBase, any>
-    >[]
-  ): void {
+  unlinkComponents(...components: Maybe<VMComponent<VMBase, any>>[]): void {
     components.forEach((component) => {
       if (component && this.linkedComponentVMClasses.has(component)) {
         this.linkedComponentVMClasses.delete(component);

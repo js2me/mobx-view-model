@@ -153,10 +153,6 @@ export default defineDocsVitepressConfig(configs, {
                 link: '/react/api/use-create-view-model',
               },
               {
-                text: 'withLazyViewModel',
-                link: '/react/api/with-lazy-view-model',
-              },
-              {
                 text: 'OnlyViewModel',
                 link: '/react/api/only-view-model',
               }

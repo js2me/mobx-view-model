@@ -93,16 +93,6 @@ type VMInputPayloadPropObj<VM> = VM extends ViewModel<infer TPayload, any>
           }
     : {};
 
-/**
- * @deprecated use `VMComponentProps`
- */
-export type ViewModelInputProps<
-  VM,
-  TForwardedRef = unknown,
-> = VMInputPayloadPropObj<VM> & {
-  ref?: React.LegacyRef<TForwardedRef>;
-};
-
 export type WithViewModelReactHook = (
   allProps: AnyObject,
   ctx: AnyObject,

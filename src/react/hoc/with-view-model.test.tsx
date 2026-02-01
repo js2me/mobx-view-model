@@ -975,7 +975,7 @@ describe('withViewModel', () => {
         value = 'value-from-parent';
 
         get child() {
-          return vmStore.get(Child);
+          return vmStore.get<ChildVM>(Child);
         }
 
         get childValue() {
@@ -1076,7 +1076,7 @@ describe('withViewModel', () => {
         value = 'value-from-parent';
 
         get child() {
-          return vmStore.get(Child);
+          return vmStore.get<ChildVM>(Child);
         }
 
         get childValue() {

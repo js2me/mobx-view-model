@@ -1,6 +1,6 @@
 import type { AnyObject, Class, Maybe } from 'yummies/types';
 import type { ViewModelsRawConfig } from '../config/index.js';
-import type { VMComponent, VMLazyComponent } from '../react/hoc/index.js';
+import type { VMComponent } from '../react/hoc/index.js';
 
 import type {
   AnyViewModel,
@@ -37,6 +37,4 @@ export interface ViewModelCreateConfig<VM extends AnyViewModel>
 export type ViewModelLookup<T extends AnyViewModel | AnyViewModelSimple> =
   | AnyViewModel['id']
   | Class<T>
-  | (T extends AnyViewModel
-      ? VMComponent<T, any> | VMLazyComponent<T, any>
-      : Class<T>);
+  | (T extends AnyViewModel ? VMComponent<T, any> : Class<T>);
