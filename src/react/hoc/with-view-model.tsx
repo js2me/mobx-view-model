@@ -378,13 +378,10 @@ const withViewModelWrapper = (
     const isRenderAllowedByStore =
       !viewModels || viewModels.isAbleToRenderView(model.id);
 
-    const isServerRender = typeof window === 'undefined';
-
     // This condition is works for AnyViewModelSimple too
     // All other variants will be bad for performance
     const isRenderAllowed =
-      isRenderAllowedByStore &&
-      (isServerRender || (model as AnyViewModel).isMounted !== false);
+      isRenderAllowedByStore && (model as AnyViewModel).isMounted !== false;
 
     if (isRenderAllowed) {
       return (

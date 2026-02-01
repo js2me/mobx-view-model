@@ -82,35 +82,38 @@ describe('withViewModel', () => {
       }
     };
 
-    test('renders view without store when VM is not mounted', () => {
+    test('renders fallback without store when VM is not mounted', () => {
       class VM extends ViewModelBaseMock {}
       const View = ({ model }: ViewModelProps<VM>) => {
         return <div data-testid={'view'}>{`hello ${model.id}`}</div>;
       };
       const VMChargedComponent = withViewModel(VM, {
         generateId: createIdGenerator(),
+        fallback: () => 'fallback-ssr',
       })(View);
 
       const html = renderOnServer(<VMChargedComponent />);
-      expect(html).toContain('hello VM_1');
+      expect(html).toContain('fallback-ssr');
     });
 
-    test('uses getPayload to build payload during SSR', () => {
+    test('uses getPayload to build payload during SSR fallback', () => {
       class VM extends ViewModelBaseMock<{ value: string }> {}
       const View = ({ model }: ViewModelProps<VM>) => {
         return <div>{`payload ${model.payload.value}`}</div>;
       };
-      const VMChargedComponent = withViewModel(VM, {
+      const VMChargedComponent = withViewModel(VM, View, {
         generateId: createIdGenerator(),
         getPayload: (props: { payload: { value: string } }) => ({
           value: `server-${props.payload.value}`,
         }),
-      })(View);
+        fallback: ({ payload }: { payload?: { value: string } }) =>
+          `fallback ${payload?.value ?? ''}`,
+      });
 
       const html = renderOnServer(
         <VMChargedComponent payload={{ value: 'x' }} />,
       );
-      expect(html).toContain('payload server-x');
+      expect(html).toContain('fallback server-x');
     });
 
     test('renders fallback when store blocks render on server', () => {
@@ -183,6 +186,7 @@ describe('withViewModel', () => {
       };
       const Component = withViewModel(VM, {
         id: 'ssr-hydration',
+        fallback: () => 'loading',
       })(View);
 
       const html = renderOnServer(<Component payload={{ value: 'next' }} />);
@@ -198,7 +202,9 @@ describe('withViewModel', () => {
         );
       });
 
-      expect(container.textContent).toContain('hello ssr-hydration next');
+      await waitFor(() =>
+        expect(container.textContent).toContain('hello ssr-hydration next'),
+      );
       root?.unmount();
     });
   });
