@@ -207,6 +207,45 @@ describe('withViewModel', () => {
       );
       root?.unmount();
     });
+
+    test('async mount shows fallback on SSR and CSR initial', async () => {
+      class VM extends ViewModelBaseMock {
+        async mount() {
+          await sleep(100);
+          super.mount();
+        }
+      }
+      const View = ({ model }: ViewModelProps<VM>) => {
+        return <div>{`hello ${model.id}`}</div>;
+      };
+      const Component = withViewModel(VM, {
+        id: 'async-1',
+        fallback: () => 'loading',
+      })(View);
+
+      const html = renderOnServer(<Component />);
+      expect(html).toContain('loading');
+
+      vi.useFakeTimers();
+      try {
+        render(<Component />);
+        expect(screen.getByText('loading')).toBeDefined();
+
+        await act(async () => {
+          vi.advanceTimersByTime(100);
+          await Promise.resolve();
+        });
+
+        await act(async () => {
+          vi.runAllTimers();
+          await Promise.resolve();
+        });
+
+        expect(screen.getByText('hello async-1')).toBeDefined();
+      } finally {
+        vi.useRealTimers();
+      }
+    });
   });
 
   test('renders fallback', async () => {
