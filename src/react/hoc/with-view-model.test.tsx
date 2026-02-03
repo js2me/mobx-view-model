@@ -77,7 +77,7 @@ describe('withViewModel', () => {
     const renderOnServer = (node: ReactNode) => {
       vi.stubGlobal('window', undefined);
       try {
-        return renderToString(<>{node}</>);
+        return renderToString(node);
       } finally {
         vi.unstubAllGlobals();
       }

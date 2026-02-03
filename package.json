@@ -56,7 +56,8 @@
     "mobx": "^6.12.4",
     "mobx-react-lite": "^4.0.7",
     "react": "^18.0.0 || ^19.0.0",
-    "react-dom": "^18.0.0 || ^19.0.0"
+    "react-dom": "^18.0.0 || ^19.0.0",
+    "vue": "^3.0.0"
   },
   "peerDependenciesMeta": {
     "mobx-react-lite": {
@@ -66,6 +67,9 @@
       "optional": true
     },
     "react-dom": {
+      "optional": true
+    },
+    "vue": {
       "optional": true
     }
   },
@@ -88,7 +92,8 @@
     "tsx": "^4.20.5",
     "typescript": "^5.9.3",
     "vite": "^7.1.10",
-    "vitest": "^3.1.2"
+    "vitest": "^3.1.2",
+    "vue": "^3.5.27"
   },
   "packageManager": "pnpm@9.5.0+sha512.140036830124618d624a2187b50d04289d5a087f326c9edfc0ccd733d76c4f52c3a313d4fc148794a2a9d81553016004e6742e8cf850670268a7387fc220c903"
 }
