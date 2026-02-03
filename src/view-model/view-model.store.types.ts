@@ -1,7 +1,7 @@
+import type { ComponentType } from 'react';
 import type { AnyObject, Class, Maybe } from 'yummies/types';
 import type { ViewModelsRawConfig } from '../config/index.js';
 import type { VMComponent } from '../react/hoc/index.js';
-
 import type {
   AnyViewModel,
   AnyViewModelSimple,
@@ -28,6 +28,11 @@ export interface ViewModelCreateConfig<VM extends AnyViewModel>
   VM: Class<VM>;
   fallback?: React.ComponentType;
   component?: VMComponent<AnyViewModel, any>;
+  /**
+   * Additional component anchors for the same VM instance.
+   * useViewModel(AnchorComponent) will return this VM when mounted.
+   */
+  anchors?: React.ComponentType[];
   props?: AnyObject;
 }
 
@@ -37,4 +42,6 @@ export interface ViewModelCreateConfig<VM extends AnyViewModel>
 export type ViewModelLookup<T extends AnyViewModel | AnyViewModelSimple> =
   | AnyViewModel['id']
   | Class<T>
-  | (T extends AnyViewModel ? VMComponent<T, any> : Class<T>);
+  | (T extends AnyViewModel
+      ? VMComponent<T, any> | ComponentType<any>
+      : ComponentType<any>);

@@ -6,7 +6,6 @@ import {
   mergeVMConfigs,
   type ViewModelsConfig,
 } from '../config/index.js';
-import type { VMComponent } from '../react/hoc/index.js';
 import type { ViewModelBase } from './view-model.base.js';
 import type { ViewModelStore } from './view-model.store.js';
 import type {
@@ -30,8 +29,8 @@ const baseAnnotations: ObservableAnnotationsArray = [
     'attachVMConstructor',
     'attach',
     'detach',
-    'linkComponents',
-    'unlinkComponents',
+    'link',
+    'unlink',
   ],
 ];
 
@@ -39,10 +38,7 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
   implements ViewModelStore<VMBase>
 {
   protected viewModels: Map<string, VMBase | AnyViewModelSimple>;
-  protected linkedComponentVMClasses: Map<
-    VMComponent<VMBase, any>,
-    Class<VMBase>
-  >;
+  protected linkedAnchorVMClasses: Map<unknown, Class<VMBase>>;
   protected viewModelIdsByClasses: Map<
     Class<VMBase> | Class<AnyViewModelSimple>,
     string[]
@@ -68,7 +64,7 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
 
   constructor(protected config?: ViewModelStoreConfig) {
     this.viewModels = observable.map([], { deep: false });
-    this.linkedComponentVMClasses = observable.map([], { deep: false });
+    this.linkedAnchorVMClasses = observable.map([], { deep: false });
     this.viewModelIdsByClasses = observable.map([], { deep: true });
     this.instanceAttachedCount = observable.map([], { deep: false });
     this.mountingViews = observable.set([], { deep: false });
@@ -95,11 +91,9 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
   processCreateConfig<VM extends VMBase>(
     config: ViewModelCreateConfig<VM>,
   ): void {
-    this.linkComponents(
-      config.VM,
-      config.component,
-      config.ctx?.externalComponent,
-    );
+    const fromConfig = config.anchors ?? [];
+
+    this.link(config.VM, config.component, ...fromConfig);
   }
 
   createViewModel<VM extends VMBase>(config: ViewModelCreateConfig<VM>): VM {
@@ -127,21 +121,18 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
     }
   }
 
-  linkComponents(
-    VM: Class<VMBase>,
-    ...components: Maybe<VMComponent<VMBase, any>>[]
-  ): void {
-    components.forEach((component) => {
-      if (component && !this.linkedComponentVMClasses.has(component)) {
-        this.linkedComponentVMClasses.set(component, VM);
+  link(VM: Class<VMBase>, ...anchors: Maybe<unknown>[]): void {
+    anchors.forEach((anchor) => {
+      if (anchor && !this.linkedAnchorVMClasses.has(anchor)) {
+        this.linkedAnchorVMClasses.set(anchor, VM);
       }
     });
   }
 
-  unlinkComponents(...components: Maybe<VMComponent<VMBase, any>>[]): void {
-    components.forEach((component) => {
-      if (component && this.linkedComponentVMClasses.has(component)) {
-        this.linkedComponentVMClasses.delete(component);
+  unlink(...anchors: Maybe<unknown>[]): void {
+    anchors.forEach((anchor) => {
+      if (anchor && this.linkedAnchorVMClasses.has(anchor)) {
+        this.linkedAnchorVMClasses.delete(anchor);
       }
     });
   }
@@ -155,9 +146,8 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
       return [vmLookup];
     }
 
-    const viewModelClass = (this.linkedComponentVMClasses.get(
-      vmLookup as any,
-    ) || vmLookup) as Class<T>;
+    const viewModelClass = (this.linkedAnchorVMClasses.get(vmLookup as any) ||
+      vmLookup) as Class<T>;
 
     const viewModelIds = this.viewModelIdsByClasses.get(viewModelClass) || [];
 
@@ -345,7 +335,7 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
 
   clean(): void {
     this.viewModels.clear();
-    this.linkedComponentVMClasses.clear();
+    this.linkedAnchorVMClasses.clear();
     this.viewModelIdsByClasses.clear();
     this.instanceAttachedCount.clear();
     this.mountingViews.clear();

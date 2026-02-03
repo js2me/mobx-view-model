@@ -7,6 +7,7 @@ It can be:
   - [ViewModel id](/api/view-models/interface#id-string)  
   - `ViewModel class reference`  
   - [`React`](https://react.dev) component created with [`withViewModel()`](/react/api/with-view-model)  
+  - Anchor component registered via [config `anchors`](/react/api/with-view-model#anchors) or method [`connect()`](/react/api/with-view-model#connectanchor)  
 
 [Reference to source code type](/src/view-model/view-model.store.types.ts#L42)  
 [Reference to source code with internal usage of this value](/src/view-model/view-model.store.base.ts#L220)  

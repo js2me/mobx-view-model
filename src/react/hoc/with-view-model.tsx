@@ -1,5 +1,5 @@
 import { observer } from 'mobx-react-lite';
-import { forwardRef, useContext } from 'react';
+import { type ComponentType, forwardRef, useContext } from 'react';
 import type {
   AnyObject,
   Class,
@@ -130,6 +130,12 @@ export interface ViewModelHocConfig<VM extends AnyViewModel>
    * [**Documentation**](https://js2me.github.io/mobx-view-model/react/api/with-view-model.html#forwardref)
    */
   forwardRef?: boolean;
+
+  /**
+   * Additional component anchors for the same VM instance.
+   * useViewModel(AnchorComponent) will return this VM when the connected component is mounted.
+   */
+  anchors?: React.ComponentType[];
 }
 
 export interface ViewModelSimpleHocConfig<_VM> {
@@ -161,6 +167,12 @@ export interface ViewModelSimpleHocConfig<_VM> {
    * [**Documentation**](https://js2me.github.io/mobx-view-model/react/api/with-view-model.html#forwardref)
    */
   forwardRef?: boolean;
+
+  /**
+   * Additional component anchors for the same VM instance.
+   * useViewModel(AnchorComponent) will return this VM when the connected component is mounted.
+   */
+  anchors?: React.ComponentType[];
 }
 
 export type AllViewModelPropsKeys = keyof Required<ViewModelProps<any, any>>;
@@ -183,13 +195,25 @@ export type VMComponentProps<
         ? {}
         : { ref?: React.LegacyRef<TForwardedRef> });
 
-export type VMComponent<
+export interface VMComponent<
   TViewModel,
   TComponentOriginProps extends AnyObject = AnyObject,
   TForwardedRef = unknown,
-> = (
-  props: VMComponentProps<TViewModel, TComponentOriginProps, TForwardedRef>,
-) => React.ReactNode;
+> {
+  (
+    props: VMComponentProps<TViewModel, TComponentOriginProps, TForwardedRef>,
+  ): React.ReactNode;
+
+  /**
+   * Registers an anchor component for the same VM instance.
+   * `useViewModel(anchor)` will return this VM when the connected component is mounted.
+   * Anchors are stored in config.anchors and passed to the store's link() during processCreateConfig.
+   * @param anchor - React component to use as lookup key for useViewModel
+   */
+  connect(
+    anchor: ComponentType<any>,
+  ): VMComponent<TViewModel, TComponentOriginProps, TForwardedRef>;
+}
 
 /**
  * A Higher-Order Component that connects React components to their ViewModels, providing seamless MobX integration.
@@ -407,5 +431,24 @@ const withViewModelWrapper = (
     any
   >;
 
-  return ConnectedViewModel;
+  config.anchors ??= [];
+
+  const anchors = config.anchors;
+
+  const ConnectedWithConnect =
+    ConnectedViewModel as typeof ConnectedViewModel & {
+      connect: (anchor: React.ComponentType) => typeof ConnectedWithConnect;
+    };
+  /**
+   * Registers an anchor component for the same VM instance.
+   * Adds the anchor to config.anchors — useViewModel(anchor) will return this VM when mounted.
+   */
+  ConnectedWithConnect.connect = (anchor: React.ComponentType) => {
+    if (!anchors.includes(anchor)) {
+      anchors.push(anchor);
+    }
+    return ConnectedWithConnect;
+  };
+
+  return ConnectedWithConnect;
 };

@@ -160,6 +160,35 @@ Additional configuration for the `ViewModel`
 ### `ctx`  
 Object which contains some static unique based on this HOC call data.   
 
+### `anchors`  
+Additional React component anchors for the same VM instance.  
+When you pass anchor components here, `useViewModel(AnchorComponent)` will return this VM when the connected component is mounted.  
+Useful when multiple components need to access the same ViewModel instance.
+
+Anchors are stored in config and passed to the store's [`link()`](/api/view-model-store/interface#link) during `processCreateConfig`.
+
+Example:
+```tsx
+const Anchor = () => null;
+const Component = withViewModel(VM, View, {
+  anchors: [Anchor],
+});
+// useViewModel(Anchor) returns the same VM as View receives
+```
+
+### `connect(anchor)`  
+Registers additional anchors dynamically.  
+Each anchor is added to `config.anchors`; `useViewModel(anchor)` will return this VM when the connected component is mounted.  
+Use `connect()` when the anchor is defined elsewhere or when using the curried form without config.
+
+Example:
+```tsx
+const Anchor = () => null;
+const Component = withViewModel(VM, { generateId: createIdGenerator() })(View).connect(Anchor);
+
+// In another component:
+const model = useViewModel(Anchor); // returns the same VM as View receives
+```
 
 ##  Usage  
 
@@ -181,6 +210,7 @@ export const YourComponent = withViewModel(VMClass, {
   generateId, // custom fn for generate id for this VM instances
   getPayload: (props) => props.payload, // function to getting payload data from props
   id, // unique id if you need to create 1 instance of your VM
+  anchors: [], // additional components for useViewModel lookup
   reactHook: (allProps, ctx, viewModels) => void 0, // hook for integration inside render HOC component  
 })(ViewComponent)
 
@@ -192,6 +222,7 @@ export const YourComponent = withViewModel(VMClass, ViewComponent, {
   generateId, // custom fn for generate id for this VM instances
   getPayload: (props) => props.payload, // function to getting payload data from props
   id, // unique id if you need to create 1 instance of your VM
+  anchors: [], // additional components for useViewModel lookup
   reactHook: (allProps, ctx, viewModels) => void 0, // hook for integration inside render HOC component  
 })
 ```

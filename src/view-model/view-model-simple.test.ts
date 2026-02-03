@@ -68,7 +68,7 @@ describe('ViewModelSimple', () => {
       expect([...vmStore._viewModels.values()]).toHaveLength(2);
       expect([...vmStore._mountingViews.values()]).toHaveLength(0);
       expect([...vmStore._unmountingViews.values()]).toHaveLength(0);
-      expect([...vmStore._linkedComponentVMClasses.values()]).toHaveLength(0);
+      expect([...vmStore._linkedAnchorVMClasses.values()]).toHaveLength(0);
       expect([...vmStore._instanceAttachedCount.values()]).toHaveLength(2);
       expect([...vmStore._viewModelIdsByClasses.values()]).toHaveLength(1);
     });
@@ -87,7 +87,7 @@ describe('ViewModelSimple', () => {
       expect([...vmStore._viewModels.values()]).toHaveLength(0);
       expect([...vmStore._mountingViews.values()]).toHaveLength(0);
       expect([...vmStore._unmountingViews.values()]).toHaveLength(0);
-      expect([...vmStore._linkedComponentVMClasses.values()]).toHaveLength(0);
+      expect([...vmStore._linkedAnchorVMClasses.values()]).toHaveLength(0);
       expect([...vmStore._instanceAttachedCount.values()]).toHaveLength(0);
       expect([...vmStore._viewModelIdsByClasses.values()]).toHaveLength(0);
     });
