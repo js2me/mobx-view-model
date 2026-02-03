@@ -31,8 +31,7 @@ export class ViewModelBaseMock<
     makeObservable(this);
   }
 
-  didMount(): void {
-    super.didMount();
+  protected didMount(): void {
     this.spies.didMount();
   }
 
@@ -50,9 +49,8 @@ export class ViewModelBaseMock<
     this.spies.payloadChanged(payload);
   }
 
-  didUnmount(): void {
+  protected didUnmount(): void {
     this.spies.didUnmount();
-    super.didUnmount();
   }
 }
 
