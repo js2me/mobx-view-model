@@ -16,6 +16,10 @@ import {
   useState,
   version,
 } from 'react';
+// @ts-expect-error react-dom/client types are not in dev deps
+import { hydrateRoot } from 'react-dom/client';
+// @ts-expect-error react-dom/server types are not in dev deps
+import { renderToString } from 'react-dom/server';
 import { describe, expect, expectTypeOf, it, test, vi } from 'vitest';
 import { sleep } from 'yummies/async';
 import { createCounter } from 'yummies/complex';
@@ -67,6 +71,594 @@ describe('withViewModel', () => {
 
     await act(async () => render(<VMChargedComponent />));
     expect(screen.getByText('hello VM_1')).toBeDefined();
+  });
+
+  describe('SSR', () => {
+    const renderOnServer = (node: ReactNode) => {
+      vi.stubGlobal('window', undefined);
+      try {
+        return renderToString(<>{node}</>);
+      } finally {
+        vi.unstubAllGlobals();
+      }
+    };
+
+    test('renders fallback without store when VM is not mounted', () => {
+      class VM extends ViewModelBaseMock {}
+      const View = ({ model }: ViewModelProps<VM>) => {
+        return <div data-testid={'view'}>{`hello ${model.id}`}</div>;
+      };
+      const VMChargedComponent = withViewModel(VM, {
+        generateId: createIdGenerator(),
+        fallback: () => 'fallback-ssr',
+      })(View);
+
+      const html = renderOnServer(<VMChargedComponent />);
+      expect(html).toContain('fallback-ssr');
+    });
+
+    test('uses getPayload to build payload during SSR fallback', () => {
+      class VM extends ViewModelBaseMock<{ value: string }> {}
+      const View = ({ model }: ViewModelProps<VM>) => {
+        return <div>{`payload ${model.payload.value}`}</div>;
+      };
+      const VMChargedComponent = withViewModel(VM, View, {
+        generateId: createIdGenerator(),
+        getPayload: (props: { payload: { value: string } }) => ({
+          value: `server-${props.payload.value}`,
+        }),
+        fallback: ({ payload }: { payload?: { value: string } }) =>
+          `fallback ${payload?.value ?? ''}`,
+      });
+
+      const html = renderOnServer(
+        <VMChargedComponent payload={{ value: 'x' }} />,
+      );
+      expect(html).toContain('fallback server-x');
+    });
+
+    test('renders fallback when store blocks render on server', () => {
+      class VM extends ViewModelBaseMock {}
+      const View = ({ model }: ViewModelProps<VM>) => {
+        return <div>{`hello ${model.id}`}</div>;
+      };
+      const vmStore = new ViewModelStoreBaseMock();
+      const Component = withViewModel(VM, {
+        generateId: createIdGenerator(),
+        fallback: () => 'fallback-ssr',
+      })(View);
+
+      const html = renderOnServer(
+        <ViewModelsProvider value={vmStore}>
+          <Component />
+        </ViewModelsProvider>,
+      );
+      expect(html).toContain('fallback-ssr');
+    });
+
+    test('renders view when store already has VM attached', async () => {
+      class VM extends ViewModelBaseMock {}
+      const View = ({ model }: ViewModelProps<VM>) => {
+        return <div>{`hello ${model.id}`}</div>;
+      };
+      const vmStore = new ViewModelStoreBaseMock();
+      const vm = new VM({ id: 'ssr-1' });
+      await vmStore.attach(vm);
+
+      const Component = withViewModel(VM, {
+        id: 'ssr-1',
+      })(View);
+
+      const html = renderOnServer(
+        <ViewModelsProvider value={vmStore}>
+          <Component />
+        </ViewModelsProvider>,
+      );
+      expect(html).toContain('hello ssr-1');
+    });
+
+    test('invokes reactHook on server with store', () => {
+      class VM extends ViewModelBaseMock {}
+      const View = ({ model }: ViewModelProps<VM>) => {
+        return <div>{`hello ${model.id}`}</div>;
+      };
+      const vmStore = new ViewModelStoreBaseMock();
+      const reactHook = vi.fn();
+      const Component = withViewModel(VM, {
+        generateId: createIdGenerator(),
+        reactHook,
+        fallback: () => 'fallback-ssr',
+      })(View);
+
+      renderOnServer(
+        <ViewModelsProvider value={vmStore}>
+          <Component />
+        </ViewModelsProvider>,
+      );
+
+      expect(reactHook).toHaveBeenCalledTimes(1);
+      expect(reactHook.mock.calls[0]?.[2]).toBe(vmStore);
+    });
+
+    test('nextjs-like SSR + hydration renders same markup', async () => {
+      class VM extends ViewModelBaseMock<{ value: string }> {}
+      const View = ({ model }: ViewModelProps<VM>) => {
+        return <div>{`hello ${model.id} ${model.payload.value}`}</div>;
+      };
+      const Component = withViewModel(VM, {
+        id: 'ssr-hydration',
+        fallback: () => 'loading',
+      })(View);
+
+      const html = renderOnServer(<Component payload={{ value: 'next' }} />);
+
+      const container = document.createElement('div');
+      container.innerHTML = html;
+
+      let root: ReturnType<typeof hydrateRoot> | null = null;
+      await act(async () => {
+        root = hydrateRoot(
+          container,
+          <Component payload={{ value: 'next' }} />,
+        );
+      });
+
+      await waitFor(() =>
+        expect(container.textContent).toContain('hello ssr-hydration next'),
+      );
+      root?.unmount();
+    });
+
+    test('async mount shows fallback on SSR and CSR initial', async () => {
+      class VM extends ViewModelBaseMock {
+        async mount() {
+          await sleep(100);
+          super.mount();
+        }
+      }
+      const View = ({ model }: ViewModelProps<VM>) => {
+        return <div>{`hello ${model.id}`}</div>;
+      };
+      const Component = withViewModel(VM, {
+        id: 'async-1',
+        fallback: () => 'loading',
+      })(View);
+
+      const html = renderOnServer(<Component />);
+      expect(html).toContain('loading');
+
+      vi.useFakeTimers();
+      try {
+        render(<Component />);
+        expect(screen.getByText('loading')).toBeDefined();
+
+        await act(async () => {
+          vi.advanceTimersByTime(100);
+          await Promise.resolve();
+        });
+
+        await act(async () => {
+          vi.runAllTimers();
+          await Promise.resolve();
+        });
+
+        expect(screen.getByText('hello async-1')).toBeDefined();
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    test('hydrates preloaded payload from store in SSR/CSR (static id)', async () => {
+      class VM extends ViewModelBaseMock<{ count: number }> {}
+      const View = ({ model }: ViewModelProps<VM>) => {
+        return <div>{`count ${model.payload.count}`}</div>;
+      };
+      const vmStore = new ViewModelStoreBaseMock();
+
+      const Component = withViewModel(VM, {
+        id: 'hydration-store',
+        fallback: () => 'loading',
+      })(View);
+
+      const html = renderOnServer(
+        <ViewModelsProvider value={vmStore}>
+          <Component payload={{ count: 1 }} />
+        </ViewModelsProvider>,
+      );
+
+      const container = document.createElement('div');
+      container.innerHTML = html;
+
+      let root: ReturnType<typeof hydrateRoot> | null = null;
+      await act(async () => {
+        root = hydrateRoot(
+          container,
+          <ViewModelsProvider value={vmStore}>
+            <Component payload={{ count: 1 }} />
+          </ViewModelsProvider>,
+        );
+      });
+
+      await waitFor(() => expect(container.textContent).toContain('count 1'));
+      await waitFor(() => {
+        const vmFromStore = vmStore.get('hydration-store') as VM | null;
+        expect(vmFromStore?.payload.count).toBe(1);
+      });
+      root?.unmount();
+    });
+
+    test('updates hydrated payload in ViewModelBase after CSR render (static id)', async () => {
+      class VM extends ViewModelBaseMock<{ count: number }> {}
+      const View = ({ model }: ViewModelProps<VM>) => {
+        return <div>{`count ${model.payload.count}`}</div>;
+      };
+      const vmStore = new ViewModelStoreBaseMock();
+
+      const Component = withViewModel(VM, {
+        id: 'hydration-update',
+        fallback: () => 'loading',
+      })(View);
+
+      const html = renderOnServer(
+        <ViewModelsProvider value={vmStore}>
+          <Component payload={{ count: 1 }} />
+        </ViewModelsProvider>,
+      );
+
+      const container = document.createElement('div');
+      container.innerHTML = html;
+
+      let root: ReturnType<typeof hydrateRoot> | null = null;
+      await act(async () => {
+        root = hydrateRoot(
+          container,
+          <ViewModelsProvider value={vmStore}>
+            <Component payload={{ count: 1 }} />
+          </ViewModelsProvider>,
+        );
+      });
+
+      await waitFor(() => {
+        const vmFromStore = vmStore.get('hydration-update') as VM | null;
+        expect(vmFromStore?.payload.count).toBe(1);
+      });
+      const vm = vmStore.get('hydration-update') as VM;
+
+      await act(async () => {
+        root?.render(
+          <ViewModelsProvider value={vmStore}>
+            <Component payload={{ count: 2 }} />
+          </ViewModelsProvider>,
+        );
+      });
+
+      expect(container.textContent).toContain('count 2');
+      expect(vm.spies.payloadChanged).toHaveBeenCalled();
+      root?.unmount();
+    });
+
+    test('hydrates preloaded payload from store in SSR/CSR (generated id)', async () => {
+      class VM extends ViewModelBaseMock<{ count: number }> {}
+      const View = ({ model }: ViewModelProps<VM>) => {
+        return <div>{`count ${model.payload.count}`}</div>;
+      };
+      const vmStore = new ViewModelStoreBaseMock();
+
+      const Component = withViewModel(VM, {
+        fallback: () => 'loading',
+      })(View);
+
+      const html = renderOnServer(
+        <ViewModelsProvider value={vmStore}>
+          <Component payload={{ count: 1 }} />
+        </ViewModelsProvider>,
+      );
+
+      const container = document.createElement('div');
+      container.innerHTML = html;
+
+      let root: ReturnType<typeof hydrateRoot> | null = null;
+      await act(async () => {
+        root = hydrateRoot(
+          container,
+          <ViewModelsProvider value={vmStore}>
+            <Component payload={{ count: 1 }} />
+          </ViewModelsProvider>,
+        );
+      });
+
+      await waitFor(() => expect(container.textContent).toContain('count 1'));
+      await waitFor(() => {
+        const vmFromStore = vmStore.get(VM) as VM | null;
+        expect(vmFromStore?.payload.count).toBe(1);
+      });
+      root?.unmount();
+    });
+
+    test('updates hydrated payload in ViewModelBase after CSR render (generated id)', async () => {
+      class VM extends ViewModelBaseMock<{ count: number }> {}
+      const View = ({ model }: ViewModelProps<VM>) => {
+        return <div>{`count ${model.payload.count}`}</div>;
+      };
+      const vmStore = new ViewModelStoreBaseMock();
+
+      const Component = withViewModel(VM, {
+        fallback: () => 'loading',
+      })(View);
+
+      const html = renderOnServer(
+        <ViewModelsProvider value={vmStore}>
+          <Component payload={{ count: 1 }} />
+        </ViewModelsProvider>,
+      );
+
+      const container = document.createElement('div');
+      container.innerHTML = html;
+
+      let root: ReturnType<typeof hydrateRoot> | null = null;
+      await act(async () => {
+        root = hydrateRoot(
+          container,
+          <ViewModelsProvider value={vmStore}>
+            <Component payload={{ count: 1 }} />
+          </ViewModelsProvider>,
+        );
+      });
+
+      await waitFor(() => {
+        const vmFromStore = vmStore.get(VM) as VM | null;
+        expect(vmFromStore?.payload.count).toBe(1);
+      });
+      const vm = vmStore.get(VM) as VM;
+
+      await act(async () => {
+        root?.render(
+          <ViewModelsProvider value={vmStore}>
+            <Component payload={{ count: 2 }} />
+          </ViewModelsProvider>,
+        );
+      });
+
+      expect(container.textContent).toContain('count 2');
+      expect(vm.spies.payloadChanged).toHaveBeenCalled();
+      root?.unmount();
+    });
+
+    test('hydrates payloads for two different VMs in SSR/CSR (generated id)', async () => {
+      class VMFirst extends ViewModelBaseMock<{ count: number }> {}
+      class VMSecond extends ViewModelBaseMock<{ total: number }> {}
+
+      const ViewFirst = ({ model }: ViewModelProps<VMFirst>) => {
+        return <div>{`first ${model.payload.count}`}</div>;
+      };
+      const ViewSecond = ({ model }: ViewModelProps<VMSecond>) => {
+        return <div>{`second ${model.payload.total}`}</div>;
+      };
+
+      const vmStore = new ViewModelStoreBaseMock();
+      const ComponentFirst = withViewModel(VMFirst, {
+        fallback: () => 'loading',
+      })(ViewFirst);
+      const ComponentSecond = withViewModel(VMSecond, {
+        fallback: () => 'loading',
+      })(ViewSecond);
+
+      const html = renderOnServer(
+        <ViewModelsProvider value={vmStore}>
+          <ComponentFirst payload={{ count: 1 }} />
+          <ComponentSecond payload={{ total: 10 }} />
+        </ViewModelsProvider>,
+      );
+
+      const container = document.createElement('div');
+      container.innerHTML = html;
+
+      let root: ReturnType<typeof hydrateRoot> | null = null;
+      await act(async () => {
+        root = hydrateRoot(
+          container,
+          <ViewModelsProvider value={vmStore}>
+            <ComponentFirst payload={{ count: 1 }} />
+            <ComponentSecond payload={{ total: 10 }} />
+          </ViewModelsProvider>,
+        );
+      });
+
+      await waitFor(() => expect(container.textContent).toContain('first 1'));
+      await waitFor(() => expect(container.textContent).toContain('second 10'));
+      await waitFor(() => {
+        const vmFirst = vmStore.get(VMFirst) as VMFirst | null;
+        const vmSecond = vmStore.get(VMSecond) as VMSecond | null;
+        expect(vmFirst?.payload.count).toBe(1);
+        expect(vmSecond?.payload.total).toBe(10);
+      });
+      root?.unmount();
+    });
+
+    test('updates hydrated payloads for two different VMs after CSR render (generated id)', async () => {
+      class VMFirst extends ViewModelBaseMock<{ count: number }> {}
+      class VMSecond extends ViewModelBaseMock<{ total: number }> {}
+
+      const ViewFirst = ({ model }: ViewModelProps<VMFirst>) => {
+        return <div>{`first ${model.payload.count}`}</div>;
+      };
+      const ViewSecond = ({ model }: ViewModelProps<VMSecond>) => {
+        return <div>{`second ${model.payload.total}`}</div>;
+      };
+
+      const vmStore = new ViewModelStoreBaseMock();
+      const ComponentFirst = withViewModel(VMFirst, {
+        fallback: () => 'loading',
+      })(ViewFirst);
+      const ComponentSecond = withViewModel(VMSecond, {
+        fallback: () => 'loading',
+      })(ViewSecond);
+
+      const html = renderOnServer(
+        <ViewModelsProvider value={vmStore}>
+          <ComponentFirst payload={{ count: 1 }} />
+          <ComponentSecond payload={{ total: 10 }} />
+        </ViewModelsProvider>,
+      );
+
+      const container = document.createElement('div');
+      container.innerHTML = html;
+
+      let root: ReturnType<typeof hydrateRoot> | null = null;
+      await act(async () => {
+        root = hydrateRoot(
+          container,
+          <ViewModelsProvider value={vmStore}>
+            <ComponentFirst payload={{ count: 1 }} />
+            <ComponentSecond payload={{ total: 10 }} />
+          </ViewModelsProvider>,
+        );
+      });
+
+      await waitFor(() => {
+        const vmFirst = vmStore.get(VMFirst) as VMFirst | null;
+        const vmSecond = vmStore.get(VMSecond) as VMSecond | null;
+        expect(vmFirst?.payload.count).toBe(1);
+        expect(vmSecond?.payload.total).toBe(10);
+      });
+      const vmFirst = vmStore.get(VMFirst) as VMFirst;
+      const vmSecond = vmStore.get(VMSecond) as VMSecond;
+
+      await act(async () => {
+        root?.render(
+          <ViewModelsProvider value={vmStore}>
+            <ComponentFirst payload={{ count: 2 }} />
+            <ComponentSecond payload={{ total: 20 }} />
+          </ViewModelsProvider>,
+        );
+      });
+
+      expect(container.textContent).toContain('first 2');
+      expect(container.textContent).toContain('second 20');
+      expect(vmFirst.spies.payloadChanged).toHaveBeenCalled();
+      expect(vmSecond.spies.payloadChanged).toHaveBeenCalled();
+      root?.unmount();
+    });
+
+    test('hydrates payloads for two different VMs in SSR/CSR (static id)', async () => {
+      class VMFirst extends ViewModelBaseMock<{ count: number }> {}
+      class VMSecond extends ViewModelBaseMock<{ total: number }> {}
+
+      const ViewFirst = ({ model }: ViewModelProps<VMFirst>) => {
+        return <div>{`first ${model.payload.count}`}</div>;
+      };
+      const ViewSecond = ({ model }: ViewModelProps<VMSecond>) => {
+        return <div>{`second ${model.payload.total}`}</div>;
+      };
+
+      const vmStore = new ViewModelStoreBaseMock();
+      const ComponentFirst = withViewModel(VMFirst, {
+        id: 'vm-first',
+        fallback: () => 'loading',
+      })(ViewFirst);
+      const ComponentSecond = withViewModel(VMSecond, {
+        id: 'vm-second',
+        fallback: () => 'loading',
+      })(ViewSecond);
+
+      const html = renderOnServer(
+        <ViewModelsProvider value={vmStore}>
+          <ComponentFirst payload={{ count: 1 }} />
+          <ComponentSecond payload={{ total: 10 }} />
+        </ViewModelsProvider>,
+      );
+
+      const container = document.createElement('div');
+      container.innerHTML = html;
+
+      let root: ReturnType<typeof hydrateRoot> | null = null;
+      await act(async () => {
+        root = hydrateRoot(
+          container,
+          <ViewModelsProvider value={vmStore}>
+            <ComponentFirst payload={{ count: 1 }} />
+            <ComponentSecond payload={{ total: 10 }} />
+          </ViewModelsProvider>,
+        );
+      });
+
+      await waitFor(() => expect(container.textContent).toContain('first 1'));
+      await waitFor(() => expect(container.textContent).toContain('second 10'));
+      await waitFor(() => {
+        const vmFirst = vmStore.get('vm-first') as VMFirst | null;
+        const vmSecond = vmStore.get('vm-second') as VMSecond | null;
+        expect(vmFirst?.payload.count).toBe(1);
+        expect(vmSecond?.payload.total).toBe(10);
+      });
+      root?.unmount();
+    });
+
+    test('updates hydrated payloads for two different VMs after CSR render (static id)', async () => {
+      class VMFirst extends ViewModelBaseMock<{ count: number }> {}
+      class VMSecond extends ViewModelBaseMock<{ total: number }> {}
+
+      const ViewFirst = ({ model }: ViewModelProps<VMFirst>) => {
+        return <div>{`first ${model.payload.count}`}</div>;
+      };
+      const ViewSecond = ({ model }: ViewModelProps<VMSecond>) => {
+        return <div>{`second ${model.payload.total}`}</div>;
+      };
+
+      const vmStore = new ViewModelStoreBaseMock();
+      const ComponentFirst = withViewModel(VMFirst, {
+        id: 'vm-first',
+        fallback: () => 'loading',
+      })(ViewFirst);
+      const ComponentSecond = withViewModel(VMSecond, {
+        id: 'vm-second',
+        fallback: () => 'loading',
+      })(ViewSecond);
+
+      const html = renderOnServer(
+        <ViewModelsProvider value={vmStore}>
+          <ComponentFirst payload={{ count: 1 }} />
+          <ComponentSecond payload={{ total: 10 }} />
+        </ViewModelsProvider>,
+      );
+
+      const container = document.createElement('div');
+      container.innerHTML = html;
+
+      let root: ReturnType<typeof hydrateRoot> | null = null;
+      await act(async () => {
+        root = hydrateRoot(
+          container,
+          <ViewModelsProvider value={vmStore}>
+            <ComponentFirst payload={{ count: 1 }} />
+            <ComponentSecond payload={{ total: 10 }} />
+          </ViewModelsProvider>,
+        );
+      });
+
+      await waitFor(() => {
+        const vmFirst = vmStore.get('vm-first') as VMFirst | null;
+        const vmSecond = vmStore.get('vm-second') as VMSecond | null;
+        expect(vmFirst?.payload.count).toBe(1);
+        expect(vmSecond?.payload.total).toBe(10);
+      });
+      const vmFirst = vmStore.get('vm-first') as VMFirst;
+      const vmSecond = vmStore.get('vm-second') as VMSecond;
+
+      await act(async () => {
+        root?.render(
+          <ViewModelsProvider value={vmStore}>
+            <ComponentFirst payload={{ count: 2 }} />
+            <ComponentSecond payload={{ total: 20 }} />
+          </ViewModelsProvider>,
+        );
+      });
+
+      expect(container.textContent).toContain('first 2');
+      expect(container.textContent).toContain('second 20');
+      expect(vmFirst.spies.payloadChanged).toHaveBeenCalled();
+      expect(vmSecond.spies.payloadChanged).toHaveBeenCalled();
+      root?.unmount();
+    });
   });
 
   test('renders fallback', async () => {
