@@ -48,7 +48,7 @@ export class StarWarsBattlefieldVM extends ViewModelBase {
 
 
 ### `unmountSignal`   
-This is [`AbortSignal`](https://developer.mozilla.org/ru/docs/Web/API/AbortSignal) which signaled when your [`ViewModel`](/api/view-models/interface) is unmounted. It happens in [`didUnmount()`](/api/view-models/interface#didunmount-void) method   
+This is [`AbortSignal`](https://developer.mozilla.org/ru/docs/Web/API/AbortSignal) which is signaled when your [`ViewModel`](/api/view-models/interface) is unmounted. It happens after `unmount()` completes in the base implementation.   
 
 #### Example   
 ```ts
@@ -56,7 +56,7 @@ import { ViewModelBase } from "mobx-view-model";
 import { autorun } from "mobx"
 
 export class TestVM extends ViewModelBase {
-  willMount() {
+  protected willMount() {
     autorun(
       () => {
         console.log("log", this.id, this.isMounted);
@@ -78,6 +78,10 @@ Indicates whether the `ViewModel` is currently mounted with its associated compo
 
 ### `isUnmounting: boolean` <Badge type="tip" text="computed" />  
 Indicates whether the `ViewModel` is in the process of unmounting.  
+
+### `willMount(): void` <Badge type="info" text="protected" />  
+Called when the component begins mounting in the React tree.  
+Executes before the `mount()` method.
 
 ### `mount(): void | Promise<void>` <Badge type="info" text="action.bound" />  
 Called when the component is mounted in the React tree.  
@@ -107,7 +111,7 @@ class JediProfileVM extends ViewModelBase<{ jediId: string }> {
 ```
 
 
-### `didMount(): void` <Badge type="info" text="action" />  
+### `didMount(): void` <Badge type="info" text="protected" />  
 Called after the view model is fully mounted and ready for use.  
 Ideal for post-mount initialization and side effects.
 
@@ -116,7 +120,7 @@ Ideal for post-mount initialization and side effects.
 import { ViewModelBase } from "mobx-view-model";
 
 class ForceAlertVM extends ViewModelBase<{ message: string }> {
-  didMount() {
+  protected didMount() {
     this.rootStore.notifications.push({
       type: 'success',
       title: "May the Force be with you!",
@@ -126,7 +130,7 @@ class ForceAlertVM extends ViewModelBase<{ message: string }> {
 }
 ```
 
-### `willUnmount(): void` <Badge type="info" text="action" />  
+### `willUnmount(): void` <Badge type="info" text="protected" />  
 Called when the component begins unmounting from the React tree.  
 Executes before the `unmount()` method.
 
@@ -137,7 +141,7 @@ This method sets [`isMounted`](/api/view-models/interface#ismounted-boolean) to 
 If you are overriding this method be sure that you called the [`super.unmount()`](/api/view-models/interface#mount-void-promise-void), 
 otherwise your view component connected to this `ViewModel` will never be unmounted  
 
-### `didUnmount(): void` <Badge type="info" text="action" />    
+### `didUnmount(): void` <Badge type="info" text="protected" />    
 Called after the view model is fully unmounted.  
 Ideal for final cleanup operations.
 

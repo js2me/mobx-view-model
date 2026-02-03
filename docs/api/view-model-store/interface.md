@@ -110,13 +110,14 @@ export class ViewModelStoreImpl extends ViewModelStoreBase {
 ### `processCreateConfig(config)`  
 Processes the configuration for creating a [ViewModel](/api/view-models/overview).  
 This method is called just before creating a new [ViewModel](/api/view-models/overview) instance.  
-It's useful for initializing the configuration, like linking components to the [ViewModel](/api/view-models/overview) class.  
+It's useful for initializing the configuration, like linking anchors to the [ViewModel](/api/view-models/overview) class.  
+The config may contain `anchors` — additional React components that can be used as lookup keys for the same VM instance (e.g. `useViewModel(AnchorComponent)` will return this VM when mounted).
 
-### `linkComponents()`  
-Links React components with [ViewModel](/api/view-models/overview) class.  
+### `link()`  
+Links anchors (React components) with [ViewModel](/api/view-models/overview) class.  
 
-### `unlinkComponents()`   
-Unlinks React components with [ViewModel](/api/view-models/overview) class.  
+### `unlink()`   
+Unlinks anchors (React components) with [ViewModel](/api/view-models/overview) class.  
 
 ### `generateViewModelId(config)`   
 Generates a unique ID for a [ViewModel](/api/view-models/overview) based on the provided configuration.  

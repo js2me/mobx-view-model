@@ -75,10 +75,6 @@ class ChildVM extends ViewModelBase<{}, ParentVM> {
 
 ## Lifecycle Methods
 
-### `willMount(): void`  
-Called when the component begins mounting in the React tree.  
-Executes before the `mount()` method.
-
 ### `mount(): void | Promise<void>`  
 Called when the component is mounted in the React tree.  
 
@@ -108,29 +104,6 @@ class JediProfileVM extends ViewModelBase<{ jediId: string }> {
 }
 ```
 
-### `didMount(): void`  
-Called after the view model is fully mounted and ready for use.  
-Ideal for post-mount initialization and side effects.
-
-#### Example: Post-Mount Actions
-```ts
-import { ViewModelBase } from "mobx-view-model";
-
-class ForceAlertVM extends ViewModelBase<{ message: string }> {
-  didMount() {
-    this.rootStore.notifications.push({
-      type: 'success',
-      title: "May the Force be with you!",
-      message: this.payload.message
-    });
-  }
-}
-```
-
-### `willUnmount(): void`  
-Called when the component begins unmounting from the React tree.  
-Executes before the `unmount()` method.
-
 ### `unmount(): void | Promise<void>`  
 Called when the component is unmounted from the React tree.  
 
@@ -142,10 +115,6 @@ Base implementation sets `isMounted` to `false` after this method.
 :::tip
 Can return a Promise for asynchronous cleanup operations.
 :::
-
-### `didUnmount(): void`  
-Called after the view model is fully unmounted.  
-Ideal for final cleanup operations.
 
 ## Payload Management
 

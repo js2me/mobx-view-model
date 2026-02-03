@@ -124,14 +124,14 @@ export class ViewModelBase<
     return this._isUnmounting;
   }
 
-  willUnmount(): void {
-    this._isUnmounting = true;
+  protected willUnmount(): void {
+    /* Empty method to be overridden */
   }
 
   /**
    * Empty method to be overridden
    */
-  willMount(): void {
+  protected willMount(): void {
     /* Empty method to be overridden */
   }
 
@@ -139,6 +139,7 @@ export class ViewModelBase<
    * The method is called when the view starts mounting
    */
   mount() {
+    this.willMount();
     this.vmConfig.onMount?.(this);
     startViewTransitionSafety(
       () => {
@@ -157,7 +158,7 @@ export class ViewModelBase<
   /**
    * The method is called when the view was mounted
    */
-  didMount() {
+  protected didMount() {
     /* Empty method to be overridden */
   }
 
@@ -165,6 +166,8 @@ export class ViewModelBase<
    * The method is called when the view starts unmounting
    */
   unmount() {
+    this.beginUnmounting();
+    this.willUnmount();
     this.vmConfig.onUnmount?.(this);
     startViewTransitionSafety(
       () => {
@@ -178,16 +181,26 @@ export class ViewModelBase<
     );
 
     this.didUnmount();
+    this.finalizeUnmount();
   }
 
   /**
    * The method is called when the view was unmounted
    */
-  didUnmount() {
-    this.abortController.abort();
+  protected didUnmount() {
+    /* Empty method to be overridden */
+  }
 
+  private finalizeUnmount() {
+    this.abortController.abort();
     runInAction(() => {
       this._isUnmounting = false;
+    });
+  }
+
+  private beginUnmounting() {
+    runInAction(() => {
+      this._isUnmounting = true;
     });
   }
 

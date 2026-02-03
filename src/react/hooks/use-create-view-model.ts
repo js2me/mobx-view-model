@@ -18,7 +18,7 @@ import { useIsomorphicLayoutEffect, useValue } from '../lib/hooks/index.js';
 export interface UseCreateViewModelConfig<TViewModel extends AnyViewModel>
   extends Pick<
     ViewModelCreateConfig<TViewModel>,
-    'vmConfig' | 'ctx' | 'component' | 'props'
+    'vmConfig' | 'ctx' | 'component' | 'anchors' | 'props'
   > {
   /**
    * Unique identifier for the view
@@ -147,8 +147,6 @@ const useCreateViewModelBase = (
         viewModels?.createViewModel<any>(configCreate) ??
         viewModelsConfig.factory(configCreate);
 
-      instance.willMount();
-
       viewModels?.markToBeAttached(instance);
 
       return instance;
@@ -164,7 +162,6 @@ const useCreateViewModelBase = (
     } else {
       instance.mount();
       return () => {
-        instance.willUnmount();
         instance.unmount();
       };
     }

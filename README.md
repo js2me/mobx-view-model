@@ -32,7 +32,7 @@ import { action, observable } from "mobx";
 class UserBadgeVM extends ViewModelBase<{ userId: Maybe<string> }> {
   private userSource = new UserSource({ abortSignal: this.unmountSignal });
 
-  willMount() {
+  protected willMount() {
     this.userSource.connectWith(() => this.payload.userId)
   }
 
@@ -68,7 +68,7 @@ import { action, observable } from "mobx";
 class UserBadgeVM extends ViewModelBase<{ userId: Maybe<string> }> {
   private userSource = new UserSource({ abortSignal: this.unmountSignal });
 
-  willMount() {
+  protected willMount() {
     this.userSource.connectWith(() => this.payload.userId)
   }
 

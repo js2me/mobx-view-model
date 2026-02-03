@@ -1,5 +1,4 @@
 import type { Class, Maybe } from 'yummies/types';
-import type { VMComponent, VMLazyComponent } from '../react/hoc/index.js';
 import type {
   ViewModelCreateConfig,
   ViewModelGenerateIdConfig,
@@ -102,7 +101,7 @@ export interface ViewModelStore<VMBase extends AnyViewModel = AnyViewModel> {
    * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#processcreateconfigconfig)
    * Process the configuration for creating a view model.
    * This method is called just before creating a new view model instance.
-   * It's useful for initializing the configuration, like linking components to the view model class.
+   * It's useful for initializing the configuration, like linking anchors to the view model class.
    * @param config - The configuration for creating the view model.
    */
   processCreateConfig<VM extends VMBase>(
@@ -110,28 +109,19 @@ export interface ViewModelStore<VMBase extends AnyViewModel = AnyViewModel> {
   ): void;
 
   /**
-   * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#linkcomponents)
-   * Link React components with view model class.
+   * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#link)
+   * Link anchors (React components) with view model class.
    * @param VM - The view model class to link to.
-   * @param components - The components to link.
+   * @param anchors - The anchors to link.
    */
-  linkComponents(
-    VM: Class<VMBase>,
-    ...components: Maybe<
-      VMComponent<VMBase, any> | VMLazyComponent<VMBase, any>
-    >[]
-  ): void;
+  link(VM: Class<VMBase>, ...anchors: Maybe<unknown>[]): void;
 
   /**
-   * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#unlinkcomponents)
-   * Unlink React components with view model class.
-   * @param components - The components to unlink.
+   * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#unlink)
+   * Unlink anchors (React components) with view model class.
+   * @param anchors - The anchors to unlink.
    */
-  unlinkComponents(
-    ...components: Maybe<
-      VMComponent<VMBase, any> | VMLazyComponent<VMBase, any>
-    >[]
-  ): void;
+  unlink(...anchors: Maybe<unknown>[]): void;
 
   /**
    * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#generateviewmodelidconfig)
