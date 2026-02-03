@@ -18,7 +18,7 @@ import { useIsomorphicLayoutEffect, useValue } from '../lib/hooks/index.js';
 export interface UseCreateViewModelConfig<TViewModel extends AnyViewModel>
   extends Pick<
     ViewModelCreateConfig<TViewModel>,
-    'vmConfig' | 'ctx' | 'component' | 'props'
+    'vmConfig' | 'ctx' | 'component' | 'anchors' | 'props'
   > {
   /**
    * Unique identifier for the view

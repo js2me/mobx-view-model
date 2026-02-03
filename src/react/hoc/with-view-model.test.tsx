@@ -30,6 +30,7 @@ import {
 import { ViewModelBaseMock } from '../../view-model/view-model.base.test.js';
 import { ViewModelStoreBaseMock } from '../../view-model/view-model.store.base.test.js';
 import { ViewModelsProvider } from '../components/index.js';
+import { useViewModel } from '../hooks/use-view-model.js';
 import { type ViewModelProps, withViewModel } from './with-view-model.js';
 import {
   type CircularVmPayloadDependencyTestCase,
@@ -179,6 +180,65 @@ describe('withViewModel', () => {
     );
     expect(screen.getByText('hello VM_1')).toBeDefined();
     expect(screen.getByText('hello VM_2')).toBeDefined();
+  });
+
+  test('useViewModel(AnotherComponent) returns VM when anchors in config', async () => {
+    class VM extends ViewModelBaseMock {
+      foo = 'foooooo';
+    }
+    const View = ({ model }: ViewModelProps<VM>) => (
+      <div data-testid="view">{`hello_${model.id}_${model.foo}`}</div>
+    );
+    const Anchor = () => <span data-testid="anchor-placeholder" />;
+    const Consumer = () => {
+      const model = useViewModel<VM>(Anchor);
+      return <span data-testid="anchor">{`${model.foo}_anchor`}</span>;
+    };
+    const Component = withViewModel(VM, View, {
+      generateId: createIdGenerator(),
+      anchors: [Anchor],
+    });
+
+    const vmStore = new ViewModelStoreBaseMock();
+    await act(async () =>
+      render(
+        <ViewModelsProvider value={vmStore}>
+          <Component />
+          <Consumer />
+        </ViewModelsProvider>,
+      ),
+    );
+    expect(screen.getByText('hello_VM_1_foooooo')).toBeDefined();
+    expect(screen.getByText('foooooo_anchor')).toBeDefined();
+  });
+
+  test('useViewModel(AnotherComponent) returns VM when connect() used', async () => {
+    class VM extends ViewModelBaseMock {
+      foo = 'foooooo';
+    }
+    const View = ({ model }: ViewModelProps<VM>) => (
+      <div data-testid="view">{`hello_${model.id}_${model.foo}`}</div>
+    );
+    const Anchor = () => <span data-testid="anchor-placeholder" />;
+    const Consumer = () => {
+      const model = useViewModel<VM>(Anchor);
+      return <span data-testid="anchor">{`${model.foo}_anchor`}</span>;
+    };
+    const Component = withViewModel(VM, {
+      generateId: createIdGenerator(),
+    })(View).connect(Anchor);
+
+    const vmStore = new ViewModelStoreBaseMock();
+    await act(async () =>
+      render(
+        <ViewModelsProvider value={vmStore}>
+          <Component />
+          <Consumer />
+        </ViewModelsProvider>,
+      ),
+    );
+    expect(screen.getByText('hello_VM_1_foooooo')).toBeDefined();
+    expect(screen.getByText('foooooo_anchor')).toBeDefined();
   });
 
   test('renders with fixed id', () => {
@@ -975,7 +1035,7 @@ describe('withViewModel', () => {
         value = 'value-from-parent';
 
         get child() {
-          return vmStore.get(Child);
+          return vmStore.get<ChildVM>(Child);
         }
 
         get childValue() {
@@ -1076,7 +1136,7 @@ describe('withViewModel', () => {
         value = 'value-from-parent';
 
         get child() {
-          return vmStore.get(Child);
+          return vmStore.get<ChildVM>(Child);
         }
 
         get childValue() {

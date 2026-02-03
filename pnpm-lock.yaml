@@ -20,9 +20,6 @@ importers:
       react-dom:
         specifier: ^18.0.0 || ^19.0.0
         version: 18.3.1(react@18.3.1)
-      react-simple-loadable:
-        specifier: ^2.3.9
-        version: 2.3.9(react@18.3.1)
       yummies:
         specifier: ^7.0.0
         version: 7.0.0(mobx@6.13.7)(react@18.3.1)
@@ -3314,11 +3311,6 @@ packages:
 
   react-is@17.0.2:
     resolution: {integrity: sha512-w2GsyukL62IJnlaff/nRegPQR94C/XXamvMWmSHRJ4y7Ts/4ocGRmTHvOs8PSE6pB3dWOrD/nueuU5sduBsQ4w==}
-
-  react-simple-loadable@2.3.9:
-    resolution: {integrity: sha512-XEVV0N64wNct7XZgUIoXHWpkp8en36APdlJatAA+I3i9JeFHDxf0w/Y0zVeE8hoWBvYez/Y8Hulem16SkmRalg==}
-    peerDependencies:
-      react: ^18.0.0 || ^19.0.0
 
   react@18.3.1:
     resolution: {integrity: sha512-wS+hAgJShR0KhEvPJArfuPVN1+Hz1t0Y6n5jLrGQbkb4urgPE/0Rve+1kMB1v/oWgHgm4WIcV+i7F2pTVj+2iQ==}
@@ -7775,10 +7767,6 @@ snapshots:
       scheduler: 0.23.2
 
   react-is@17.0.2: {}
-
-  react-simple-loadable@2.3.9(react@18.3.1):
-    dependencies:
-      react: 18.3.1
 
   react@18.3.1:
     dependencies:

@@ -42,6 +42,7 @@ export const YourComponent = observer(() => {
     factory: (config) => new config.VM(config), // factory method for creating VM instances
     generateId, // custom fn for generate id for this VM instances
     id, // unique id if you need to create 1 instance of your VM
+    anchors: [], // additional components for useViewModel lookup
   });
 })
 ```

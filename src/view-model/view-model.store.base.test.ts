@@ -25,8 +25,8 @@ export class ViewModelStoreBaseMock extends ViewModelStoreBase {
   get _viewModels() {
     return this.viewModels;
   }
-  get _linkedComponentVMClasses() {
-    return this.linkedComponentVMClasses;
+  get _linkedAnchorVMClasses() {
+    return this.linkedAnchorVMClasses;
   }
   get _viewModelIdsByClasses() {
     return this.viewModelIdsByClasses;

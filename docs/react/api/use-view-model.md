@@ -47,3 +47,45 @@ export const YourComponent = observer(() => {
   const yourVM = useViewModel<YourVM>('view-model-id');
 });
 ```
+
+### 3. Lookup by anchor component  
+When using [anchors](/react/api/with-view-model#anchors) or [connect()](/react/api/with-view-model#connectanchor----method-on-returned-vmcomponent), pass the anchor component as lookup:
+
+```tsx
+const Anchor = () => null;
+const MainView = withViewModel(VM, View, { anchors: [Anchor] });
+
+const Consumer = observer(() => {
+  const model = useViewModel<VM>(Anchor); // same VM as MainView receives
+  return <span>{model.id}</span>;
+});
+```
+
+### 4. Lookup from lazy-loaded component  
+With [react-simple-loadable](https://github.com/js2me/react-simple-loadable) or similar, use `connect()` to register the loadable as anchor. `PageLazy` is the loadable-wrapped `Page`; after `Page.connect(PageLazy)` the lazy chunk can access the VM via `useViewModel(PageLazy)`:
+
+```tsx
+// page.lazy.tsx
+import { loadable } from 'react-simple-loadable';
+
+export const PageLazy = loadable(
+  () => import('./page').then((m) => m.Page),
+  () => <div>Loading...</div>,
+);
+
+// page.tsx
+import { PageLazy } from './page.lazy';
+
+export const Page = withViewModel(PageVM, ({ model }) => (
+  <div>
+    <main>...</main>
+  </div>
+));
+Page.connect(PageLazy);
+```
+
+```tsx
+// Some child inside the lazy chunk — uses the same VM
+const model = useViewModel<PageVM>(PageLazy);
+```
+
