@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { createApp, defineComponent, h, nextTick, ref } from 'vue';
+import { createApp, defineComponent, h, isRef, nextTick, ref } from 'vue';
+import { ViewModelBase } from '../view-model/index.js';
 import { ActiveViewModelProvider } from './providers.js';
 import { useCreateViewModel } from './use-create-view-model.js';
 import { useViewModel } from './use-view-model.js';
@@ -20,19 +21,18 @@ const mount = (root: ReturnType<typeof defineComponent>) => {
 
 describe('vue integration', () => {
   it('useCreateViewModel updates payload for ViewModelSimple', async () => {
+    const payloads: any[] = [];
     class SimpleVm {
-      payloads: any[] = [];
       setPayload(payload: any) {
-        this.payloads.push(payload);
+        payloads.push(payload);
       }
     }
 
-    const payload = ref({ count: 1 });
-    let instance: SimpleVm | null = null;
+    const payload = { count: 1 };
 
     const Root = defineComponent({
       setup() {
-        instance = useCreateViewModel(SimpleVm, payload);
+        useCreateViewModel(SimpleVm, payload);
         return () => h('div');
       },
     });
@@ -40,12 +40,44 @@ describe('vue integration', () => {
     const { unmount } = mount(Root);
     await nextTick();
 
-    expect(instance?.payloads[0]).toEqual({ count: 1 });
+    expect(isRef(payloads[0])).toBe(true);
+    expect((payloads[0] as any)?.value).toEqual({ count: 1 });
+
+    (payloads[0] as any).value = { count: 2 };
+    await nextTick();
+
+    expect(payloads.at(-1)).toBe(payloads[0]);
+    expect((payloads.at(-1) as any)?.value).toEqual({ count: 2 });
+
+    unmount();
+  });
+
+  it('useCreateViewModel updates payload for ViewModelBase', async () => {
+    const payloadChanges: Array<{ count: number }> = [];
+    class BaseVm extends ViewModelBase<{ count: number }> {
+      payloadChanged(payload: { count: number }) {
+        payloadChanges.push(payload);
+      }
+    }
+
+    const payload = ref({ count: 1 });
+
+    const Root = defineComponent({
+      setup() {
+        useCreateViewModel(BaseVm, payload);
+        return () => h('div');
+      },
+    });
+
+    const { unmount } = mount(Root);
+    await nextTick();
+
+    expect(payloadChanges[0]).toEqual({ count: 1 });
 
     payload.value = { count: 2 };
     await nextTick();
 
-    expect(instance?.payloads.at(-1)).toEqual({ count: 2 });
+    expect(payloadChanges.at(-1)).toEqual({ count: 2 });
 
     unmount();
   });
@@ -68,7 +100,7 @@ describe('vue integration', () => {
         return () =>
           h(
             ActiveViewModelProvider,
-            { value: created },
+            { value: created! },
             { default: () => h(Child) },
           );
       },
@@ -90,7 +122,7 @@ describe('vue integration', () => {
       }
     }
 
-    let receivedModel: SimpleVm | null = null;
+    let receivedPayload: any;
 
     const View = defineComponent({
       name: 'View',
@@ -105,7 +137,7 @@ describe('vue integration', () => {
         },
       },
       setup(props) {
-        receivedModel = props.model as SimpleVm;
+        receivedPayload = (props.model as SimpleVm).payload;
         return () => h('div');
       },
     });
@@ -123,7 +155,8 @@ describe('vue integration', () => {
     const { unmount } = mount(Root);
     await nextTick();
 
-    expect(receivedModel?.payload).toEqual({ foo: 'bar' });
+    expect(isRef(receivedPayload)).toBe(true);
+    expect(receivedPayload?.value).toEqual({ foo: 'bar' });
 
     unmount();
   });

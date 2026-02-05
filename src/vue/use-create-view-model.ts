@@ -1,7 +1,9 @@
 import {
   getCurrentInstance,
+  isRef,
   onBeforeUnmount,
   onMounted,
+  ref,
   unref,
   watch,
 } from 'vue';
@@ -66,7 +68,8 @@ const useCreateViewModelBase = (
   const ctx = config?.ctx ?? {};
   const instanceComponent = config?.component ?? getCurrentInstance()?.type;
 
-  const resolvePayload = () => unref(payload) ?? {};
+  const isPayloadRef = isRef(payload);
+  const resolvePayloadValue = () => unref(payload) ?? {};
 
   const id =
     viewModels?.generateViewModelId({
@@ -90,7 +93,7 @@ const useCreateViewModelBase = (
         vmConfig: config?.vmConfig,
         id,
         parentViewModelId: parentViewModel?.id,
-        payload: resolvePayload(),
+        payload: resolvePayloadValue(),
         VM,
         viewModels,
         parentViewModel: parentViewModel ?? undefined,
@@ -128,13 +131,23 @@ const useCreateViewModelBase = (
     }
   });
 
-  watch(
-    () => resolvePayload(),
-    (nextPayload) => {
-      instance.setPayload(nextPayload);
-    },
-    { immediate: true },
-  );
+  if (isPayloadRef && payload) {
+    watch(
+      payload,
+      () => {
+        instance.setPayload(unref(payload));
+      },
+      { immediate: true },
+    );
+  } else {
+    watch(
+      () => resolvePayloadValue(),
+      (nextPayload) => {
+        instance.setPayload(nextPayload);
+      },
+      { immediate: true },
+    );
+  }
 
   return instance;
 };
@@ -145,6 +158,7 @@ const useCreateViewModelSimple = (
 ) => {
   const viewModels = useViewModelsStore();
   const parentViewModel = useActiveViewModel();
+  const payloadRef = isRef(payload) ? payload : ref(payload);
 
   const instance = new VM();
 
@@ -155,9 +169,9 @@ const useCreateViewModelSimple = (
 
   if ('setPayload' in instance) {
     watch(
-      () => unref(payload),
-      (nextPayload) => {
-        instance.setPayload?.(nextPayload);
+      payloadRef,
+      () => {
+        instance.setPayload?.(payloadRef);
       },
       { immediate: true },
     );
