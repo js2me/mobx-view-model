@@ -1,5 +1,26 @@
 # mobx-view-model
 
+## 9.0.0
+
+### Major Changes
+
+- [#53](https://github.com/js2me/mobx-view-model/pull/53) [`39af226`](https://github.com/js2me/mobx-view-model/commit/39af226074a6791caed10428ecbcd96d5d4161bc) Thanks [@js2me](https://github.com/js2me)! - move hooks didUnmount didMount to the base implementation `ViewModelBase` (removed from `ViewModel` interface)
+
+- [#55](https://github.com/js2me/mobx-view-model/pull/55) [`7bb6ddf`](https://github.com/js2me/mobx-view-model/commit/7bb6ddffe5853fdec2bd3a942a84f7b5945816ad) Thanks [@js2me](https://github.com/js2me)! - added partial support of the SSR for React
+
+- [#54](https://github.com/js2me/mobx-view-model/pull/54) [`459bb0f`](https://github.com/js2me/mobx-view-model/commit/459bb0fee30323b2918b332b8e5acfccd3166252) Thanks [@js2me](https://github.com/js2me)! - renamed methods for `ViewModelStore` and `ViewModelStoreBase` `linkComponents` -> `link`, `unlinkComponents` -> `unlink`.
+  It helps to link\unlink not only React components.
+
+- [#54](https://github.com/js2me/mobx-view-model/pull/54) [`c754c14`](https://github.com/js2me/mobx-view-model/commit/c754c147717a3844c81ad9dc3a8bed2228e615b6) Thanks [@js2me](https://github.com/js2me)! - removed `withLazyViewModel` HOC
+
+### Minor Changes
+
+- [`32702f1`](https://github.com/js2me/mobx-view-model/commit/32702f1956ec3d9086b4a9092d65bfc239c6a3ea) Thanks [@js2me](https://github.com/js2me)! - added `InferViewModelParams` utility type to infer ViewModelParams (helpful to reduce duplications)
+
+- [#54](https://github.com/js2me/mobx-view-model/pull/54) [`459bb0f`](https://github.com/js2me/mobx-view-model/commit/459bb0fee30323b2918b332b8e5acfccd3166252) Thanks [@js2me](https://github.com/js2me)! - added `connect()` function for `withViewModel()` `VMComponent` function
+
+- [#54](https://github.com/js2me/mobx-view-model/pull/54) [`459bb0f`](https://github.com/js2me/mobx-view-model/commit/459bb0fee30323b2918b332b8e5acfccd3166252) Thanks [@js2me](https://github.com/js2me)! - added `anchors` config option for vm create configs
+
 ## 8.10.1
 
 ### Patch Changes
