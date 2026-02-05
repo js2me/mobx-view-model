@@ -165,3 +165,34 @@ class PostcardBox extends ViewModelBase {
   }
 }
 ```
+
+## Additional utility types  
+
+[Reference to source code](/src/view-model/view-model.base.types.ts)  
+
+### `InferViewModelParams<T>`  
+Utility type that infers constructor params for a `ViewModelBase` subclass.  
+It resolves to `ViewModelParams<Payload, ParentViewModel, ComponentProps>` based on the class generics.  
+
+#### Example  
+```ts
+import {
+  ViewModelBase,
+  InferViewModelParams,
+} from "mobx-view-model";
+
+class UserVM extends ViewModelBase<
+  { userId: string },
+  null,
+  { isAdmin?: boolean }
+> {
+  constructor(params: InferViewModelParams<UserVM>) {
+    params.vmConfig = {
+      ...params.vmConfig,
+      comparePayload: 'strict',
+    };
+
+    super(params);
+  }
+}
+```
