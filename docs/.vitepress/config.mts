@@ -7,7 +7,7 @@ export default defineDocsVitepressConfig(configs, {
   createdYear: '2024',
   themeConfig: {
     nav: [
-      { text: 'LLM', 'link': '/llms-full.txt' },
+      { text: 'LLM', 'link': `https://${configs.package.author}.github.io/${configs.package.name}/llms-full.txt` },
       { text: 'Home', link: '/' },
       { text: 'Introduction', link: '/introduction/overview' },
       { text: 'Changelog', link: `https://github.com/${configs.package.author}/${configs.package.name}/releases` },
