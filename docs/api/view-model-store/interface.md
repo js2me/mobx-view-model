@@ -17,7 +17,7 @@ This is not required for targeted usage of this package, but can be helpful for 
 
 ### `getIds(vmLookup)`  
 
-Retrieves ids [ViewModels](/api/view-models/interface) based on [vmLookup](/api/other/view-model-lookup).  
+Retrieves ids of [ViewModels](/api/view-models/interface) based on [vmLookup](/api/other/view-model-lookup).  
 
 #### Example  
 
@@ -58,7 +58,7 @@ If you need more than one VM, use [getAll(vmLookup)](#getallvmlookup) method
 #### Example
 
 ```ts
-import { mobx-view-model } from "mobx-view-model";
+import { ViewModelBase } from "mobx-view-model";
 
 class UserSelectVM extends ViewModelBase {
   selectedUser = {

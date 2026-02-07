@@ -4,7 +4,7 @@ A Higher-Order Component that connects React components to their [ViewModels](/a
 
 
 ::: info This HOC wraps your view component into `observer()` HOC!
-This thing works because [`wrapViewsInObserver` option](/api/view-models/view-models-config#wrapviewsinobserver) is enabled by default.
+This works because the [`wrapViewsInObserver` option](/api/view-models/view-models-config#wrapviewsinobserver) is enabled by default.
 :::
 
 ## API Signature
@@ -37,7 +37,7 @@ Example:
 _Using all props as "payload" for `ViewModel`_   
 ```tsx
 class VM extends ViewModelBase {
-  @computed.get
+  @computed
   get foo() {
     return this.payload.foo;
   }
@@ -53,16 +53,16 @@ export const YourComponent = withViewModel(VM, () =>{
 ```
 
 ### `forwardRef`   
-This parameter wraps React component into `React.forwardRef` HOC.  
-It might be helpful if need to forward ref to your `View` component.   
+This parameter wraps the React component with the `React.forwardRef` HOC.  
+It might be helpful if you need to forward a ref to your `View` component.   
 
-Using this parameter will require to use `ViewModelProps<YourVM, RefType>` (second generic type `RefType`) to add type property `forwardedRef` in your props.   
+Using this parameter requires `ViewModelProps<YourVM, RefType>` (second generic type `RefType`) to add the `forwardedRef` prop type.   
 
 Default: `false`
 
 ::: info Better to use custom prop
-This parameter uses React.forwardRef, so this thing is not a good solution for performance.  
-Instead of this parameter you can use custom prop like `targetInputRef`
+This parameter uses `React.forwardRef`, so this is not a good solution for performance.  
+Instead of this parameter you can use a custom prop like `targetInputRef`.
 :::
 
 Examples:   
@@ -78,7 +78,7 @@ const Component = withViewModel(YourVM, ({ forwardedRef }) => {
 }, { forwardRef: true })
 ```
 
-_Case with add type to `forwardedRef`_  
+_Case with an explicit `forwardedRef` type_  
 
 ```tsx{5}
 class YourVM extends ViewModelBase {}
@@ -97,21 +97,21 @@ const Component = withViewModel(
 
 ### `factory`  
 
-This is factory function for creating ViewModel instances.  
+This is a factory function for creating ViewModel instances.  
 [Same as factory function in `viewModelsConfig`](/api/view-models/view-models-config.html#factory)  
 
 ### `id`  
 Unique identifier for the view.   
 
 ### `generateId`   
-Function to generate an identifier for the view model  
+Function to generate an identifier for the view model.  
 [Same as `generateId` function in `viewModelsConfig`](/api/view-models/view-models-config.html#generateid)  
 
 ### `reactHook`  
 Function to invoke additional React hooks in the resulting component.   
 
 :::info This React hook calls before everything what happens inside `withViewModel` HOC.
-That might be helpful to do some tricks with input data.
+This can be helpful for preprocessing input data.
 :::
 
 Example:   
@@ -132,7 +132,7 @@ const Component = withViewModel(YourVM, () => {
 ```
 
 ### `fallback`   
-Component to render if the view model initialization takes too long   
+Component to render if the view model initialization takes too long.   
 
 Example:   
 ```tsx{5,12,13,14}
@@ -154,11 +154,11 @@ const Component = withViewModel(YourVM, () => {
 ```
 
 ### `vmConfig`  
-Additional configuration for the `ViewModel`   
+Additional configuration for the `ViewModel`.   
 [See `viewModelsConfig` for details](/api/view-models/view-models-config)  
 
 ### `ctx`  
-Object which contains some static unique based on this HOC call data.   
+Object that contains static, unique data for this HOC call.   
 
 ### `anchors`  
 Additional React component anchors for the same VM instance.  
@@ -204,11 +204,11 @@ export const YourComponent = withViewModel(VMClass, ViewComponent);
 ```tsx
 export const YourComponent = withViewModel(VMClass, {
   vmConfig: {}, // vmConfig
-  ctx: {}, // internal object as source for all cache inside this HOC
+  ctx: {}, // internal object used as cache key source inside this HOC
   factory: (config) => new config.VM(config), // factory method for creating VM instances
-  fallback: () => <div>loading</div>, // fallback component for cases when your VM is mounting\loading
-  generateId, // custom fn for generate id for this VM instances
-  getPayload: (props) => props.payload, // function to getting payload data from props
+  fallback: () => <div>loading</div>, // fallback while your VM is mounting/loading
+  generateId, // custom fn for generating ids for VM instances
+  getPayload: (props) => props.payload, // function to get payload data from props
   id, // unique id if you need to create 1 instance of your VM
   anchors: [], // additional components for useViewModel lookup
   reactHook: (allProps, ctx, viewModels) => void 0, // hook for integration inside render HOC component  
@@ -216,11 +216,11 @@ export const YourComponent = withViewModel(VMClass, {
 
 export const YourComponent = withViewModel(VMClass, ViewComponent, {
   vmConfig: {}, // vmConfig
-  ctx: {}, // internal object as source for all cache inside this HOC
+  ctx: {}, // internal object used as cache key source inside this HOC
   factory: (config) => new config.VM(config), // factory method for creating VM instances
-  fallback: () => <div>loading</div>, // fallback component for cases when your VM is mounting\loading
-  generateId, // custom fn for generate id for this VM instances
-  getPayload: (props) => props.payload, // function to getting payload data from props
+  fallback: () => <div>loading</div>, // fallback while your VM is mounting/loading
+  generateId, // custom fn for generating ids for VM instances
+  getPayload: (props) => props.payload, // function to get payload data from props
   id, // unique id if you need to create 1 instance of your VM
   anchors: [], // additional components for useViewModel lookup
   reactHook: (allProps, ctx, viewModels) => void 0, // hook for integration inside render HOC component  
@@ -286,9 +286,9 @@ To avoid this issue, either avoid using `Suspense`/`lazy` with this HOC or use `
 
 
 
-## Generic types for your wrapped `ViewModel` into this HOC   
+## Generic types for your wrapped `ViewModel` in this HOC   
 
-Using this HOC you encounter some limitation that you unable to pass generic types for your `ViewModel`. For example:   
+When using this HOC you can run into a limitation: you cannot pass generic types for your `ViewModel`. For example:   
 
 ```tsx{3,9}
 type JediType = 'defender'  | 'guard' | 'consul'
@@ -311,7 +311,7 @@ const Jedi = withViewModel<JediVM<JediType>>(JediVM, ({ model }) => {
 // Anyway `TJediType` will be `JediType`, but should be 'defender'
 ```
 
-To achieve ability to use generic types you need to cast output `Jedi` component into specific type:   
+To enable generic types you need to cast the output `Jedi` component to a specific type:   
 
 ```tsx{1,7-9}
 const Jedi = withViewModel(JediVM<JediType>, ({ model }) => {
@@ -320,9 +320,9 @@ const Jedi = withViewModel(JediVM<JediType>, ({ model }) => {
       {model.jediType}
     </div>
   )
-}) as <TJediType extends JediType>(
+}) as unknown as <TJediType extends JediType>(
   props: VMComponentProps<JediVM<TJediType>>,
 ) => React.ReactNode
 ```
 
-This might be helpful if you need to customize "payload" of your `ViewModel` based on generic types.  
+This can be helpful if you need to customize the `payload` of your `ViewModel` based on generic types.  

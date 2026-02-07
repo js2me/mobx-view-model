@@ -1,6 +1,6 @@
 # `useCreateViewModel` hook  
-A hook that connects [ViewModel](/api/view-models/overview) with React render tree, providing seamless MobX integration.  
-Using in [`withViewModel()`](/react/api/with-view-model) HOC.  
+A hook that connects a [ViewModel](/api/view-models/overview) (or `ViewModelSimple`) to the React render tree, providing seamless MobX integration.  
+It is used inside the [`withViewModel()`](/react/api/with-view-model) HOC.  
 
 ## API Signature
 ```tsx
@@ -37,10 +37,10 @@ import { observer } from "mobx-react-lite";
 
 export const YourComponent = observer(() => {
   const model = useCreateViewModel(YourVM, {}, {
-    config: {}, // vmConfig
-    ctx: {}, // internal object as source for all cache inside this HOC
+    vmConfig: {}, // vmConfig
+    ctx: {}, // internal object used as cache key source inside this hook
     factory: (config) => new config.VM(config), // factory method for creating VM instances
-    generateId, // custom fn for generate id for this VM instances
+    generateId, // custom fn for generating ids for VM instances
     id, // unique id if you need to create 1 instance of your VM
     anchors: [], // additional components for useViewModel lookup
   });

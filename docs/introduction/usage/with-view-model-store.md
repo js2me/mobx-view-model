@@ -1,7 +1,7 @@
 # Usage with View Model Store
 
-View Model store allows you to get access to your view model instances from everywhere and give you more control of the creating view model instances.  
-Follow the simplest way of how to add view model store into your application:  
+ViewModelStore lets you access your view model instances from anywhere and gives you more control over creating them.  
+Follow the simplest way to add a view model store to your application:  
 
 ##### **1.** Create a class implementing the [ViewModelStore interface](/api/view-model-store/interface) or use [basic library implementation (ViewModelStoreBase)](/api/view-model-store/base-implementation).  
 
@@ -11,13 +11,13 @@ import { ViewModelStoreBase } from "mobx-view-model";
 class MyViewModelStore extends ViewModelStoreBase {}
 ```
 
-##### **2.** Create instance of the [ViewModelStore](/api/view-model-store/overview)  
+##### **2.** Create an instance of the [ViewModelStore](/api/view-model-store/overview)  
 
 ```ts
 const viewModelStore = new MyViewModelStore() // or new ViewModelStoreBase
 ```
 
-##### **3.** Integrate with [React](https://react.dev/) using [`ViewModelsProvider`](/react/api/view-models-provider) somewhere in root of your application  
+##### **3.** Integrate with [React](https://react.dev/) using [`ViewModelsProvider`](/react/api/view-models-provider) at the root of your application  
 
 ```tsx
 <ViewModelsProvider value={viewModelStore}>

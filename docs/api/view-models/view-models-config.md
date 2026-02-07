@@ -1,5 +1,5 @@
 # `ViewModelsConfig` configuration object   
-This configuration contains all options for some behaviour of [`ViewModel`](/api/view-models/overview) instances.  
+This configuration contains all options for the behavior of [`ViewModel`](/api/view-models/overview) instances.  
 
 The package provides a **global object** with this configuration, but you can also change it for each [`ViewModel`](/api/view-models/overview) and [`ViewModelStore`](/api/view-model-store/overview) separately using the `vmConfig` field.
 
@@ -14,7 +14,7 @@ viewModelsConfig.comparePayload = false;
 
 import { withViewModel } from "mobx-view-model";
 
-viewViewModel(VM, {
+withViewModel(VM, {
   vmConfig: {
     comparePayload: false
   }
@@ -35,7 +35,6 @@ These are the recommended settings for the global configuration `viewModelsConfi
 which contain the most optimal values.
 
 ```ts
-import { loadableDefaultConfig } from '@one-web/uikit-7';
 import { viewModelsConfig, ViewModelStoreBase } from 'mobx-view-model';
 
 viewModelsConfig.comparePayload = false;
@@ -65,7 +64,7 @@ This feature is experimental and not all browsers support it yet.
 ## `comparePayload`  
 Allows you to configure how payload should be compared   
 
-- `'strict'` - strict equality ([`comparer.structural` from MobX](https://mobx.js.org/computeds.html#built-in-comparers))  
+- `'strict'` - structural equality ([`comparer.structural` from MobX](https://mobx.js.org/computeds.html#built-in-comparers))  
 - `'shallow'` - shallow equality  
 - `false` - _**(default)**_, **(recommended)** no comparison  
 - `fn` - custom payload compare fn (e.g. [MobX comparer functions](https://mobx.js.org/computeds.html#built-in-comparers))  
@@ -84,10 +83,10 @@ Indicates type of observable for `ViewModel` payload.
 - `'deep'` - [MobX deep observable](https://mobx.js.org/api.html#observabledeep)  
 - `'struct'` - [MobX struct observable](https://mobx.js.org/api.html#observablestruct)   
 - `'shallow'` - [MobX shallow observable](https://mobx.js.org/api.html#observableshallow)  
-- `false` - no observer  
+- `false` - no observable wrapping  
 
 ## `generateId()`  
-Generates an unique identifier for a [`ViewModel`](/api/view-models/interface).   
+Generates a unique identifier for a [`ViewModel`](/api/view-models/interface).   
 
 ::: tip This property has default implementation [here](/src/utils/generate-vm-id.ts#L16)
 :::
@@ -158,7 +157,6 @@ Useful for cleanup operations, removing subscriptions, or tracking component lif
 viewModelsConfig.onUnmount = (viewModel) => {
   console.log(`ViewModel ${viewModel.id} unmounted`);
   // Cleanup subscriptions
-  viewModel.dispose();
 };
 ```
 
@@ -198,7 +196,7 @@ Wrap View components in [`observer()` MobX HOC](https://mobx.js.org/api.html#obs
 This property is enabled by default.   
 
 
-You can turn off this behaviour by setting `wrapViewsInObserver` to `false`.   
+You can turn off this behavior by setting `wrapViewsInObserver` to `false`.   
 Example:    
 ```tsx
 import { viewModelsConfig } from "mobx-view-model";
@@ -211,14 +209,14 @@ viewModelsConfig.wrapViewsInObserver = false;
 
 ## `observable`  
 
-This is huge configuration object for all base implementations `mobx-view-model` entities like `ViewModelBase` or `ViewModelStoreBase`.   
-You can modify default behaviour of the wrapping in [`makeObservable()` MobX functions](https://mobx.js.org/observable-state.html#makeobservable).   
+This is a large configuration object for all base implementations in `mobx-view-model`, like `ViewModelBase` or `ViewModelStoreBase`.   
+You can modify the default behavior of wrapping in [`makeObservable()` MobX functions](https://mobx.js.org/observable-state.html#makeobservable).   
 
 Properties of the nested observable configs:  
 ### - `disableWrapping`  
-This is removes `makeObservable(this, annotations)`/`makeObservable(this)` calls  
+This removes `makeObservable(this, annotations)`/`makeObservable(this)` calls  
 ### - `useDecorators`  
-This is change style of marking `MobX` annotations from "decorators style" to "non decorators style".   
+This changes the style of marking `MobX` annotations from "decorators style" to "non-decorators style".   
 Very helpful if you want to write code with "non decorators style".   
 
 ::: tip This property has default value - `true` 
@@ -286,14 +284,14 @@ You can override default global config using import `viewModelsConfig`.
 import { viewModelsConfig } from "mobx-view-model";
 ```
 
-You should do this before start whole app  
+You should do this before the app starts.  
 
 ## Usage  
 
 ```ts
 import { viewModelsConfig } from "mobx-view-model";
 
-// Configure payload update\reactivity behaviour
+// Configure payload update/reactivity behavior
 viewModelsConfig.payloadObservable = 'ref';
 viewModelsConfig.comparePayload = false;
 viewModelsConfig.payloadComputed = 'struct';

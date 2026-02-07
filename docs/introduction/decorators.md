@@ -1,15 +1,15 @@
 # MobX decorators and other
 
-If you want to use decorators in your view models you need to configure your bundle.  
-All next documentation contains code with accessor decorators which works using only with Babel. You can replace them with [`makeObservable`](https://mobx.js.org/observable-state.html#makeobservable), [`extendObservable`](https://mobx.js.org/api.html#extendobservable) MobX functions  
+If you want to use decorators in your view models you need to configure your build.  
+Most of the documentation uses accessor decorators that work only with Babel. You can replace them with [`makeObservable`](https://mobx.js.org/observable-state.html#makeobservable) or [`extendObservable`](https://mobx.js.org/api.html#extendobservable) from MobX.  
 
 Base implementations of [`ViewModelStore`](/api/view-model-store/interface) and [`ViewModel`](/api/view-models/interface) are using `makeObservable(this)` in class constructor.   
 
 
-## No decorators way   
+## No-decorators approach   
 
-You need to disable "decorators style" of wrapping base entities into `MobX` functions like `makeObservable`.  
-To achieve this you need to configure [global `viewModelsConfig`](/api/view-models/view-models-config):  
+You need to disable the "decorators style" for wrapping base entities with MobX functions like `makeObservable`.  
+To achieve this, configure the [global `viewModelsConfig`](/api/view-models/view-models-config):  
 
 ```ts
 import { viewModelsConfig } from "mobx-view-model";

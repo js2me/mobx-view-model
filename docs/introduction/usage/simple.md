@@ -1,6 +1,6 @@
 # Simple usage  
 
-The simplest way to make integration with this library is to use [`ViewModelSimple` interface](/api/view-models/view-model-simple)  
+The simplest way to integrate with this library is to use the [`ViewModelSimple` interface](/api/view-models/view-model-simple).  
 
 Follow the steps:  
 
@@ -24,11 +24,10 @@ export class MyPageVM {
 }
 ```
 
-##### 2. Create instance of your `ViewModel` using [`withViewModel()` HOC](/react/api/with-view-model)   
+##### 2. Create an instance of your `ViewModel` using [`withViewModel()` HOC](/react/api/with-view-model)   
 
 ```tsx
-import { observer } from 'mobx-react-lite';
-import { ViewModelPayload, useCreateViewModel } from 'mobx-view-model';
+import { withViewModel } from 'mobx-view-model';
 
 const MyPage = withViewModel(MyPageVM, ({ model }) => {
   return <div>{model.state}</div>;
@@ -42,6 +41,6 @@ const MyPage = withViewModel(MyPageVM, ({ model }) => {
 ```
 
 
-If you need access more lifecycle methods or full [ViewModel interface](/api/view-models/interface)   
-This guide you can found [on the next page](/introduction/usage/with-base-implementation)  
+If you need access to more lifecycle methods or the full [ViewModel interface](/api/view-models/interface),  
+you can find that guide [on the next page](/introduction/usage/with-base-implementation).  
 

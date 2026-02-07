@@ -1,6 +1,6 @@
 # `ViewModelSimple`  
 
-`ViewModelSimple` is a minimalistic implementation of the [ViewModel interface](/api/view-models/interface), designed for lightweight state management with **MobX**. It simplifies reactive state initialization using `makeAutoObservable` while enforcing a consistent instance lifecycle in React applications.  
+`ViewModelSimple` is a minimal contract aligned with the [ViewModel interface](/api/view-models/interface), designed for lightweight state management with **MobX**. It keeps reactive state initialization simple (for example, via `makeAutoObservable`) while still fitting the library lifecycle in React applications.  
 
 [Reference to source code](/src/view-model/view-model-simple.ts)  
 
@@ -38,7 +38,7 @@ export class FruitViewModel implements ViewModelSimple {
 If you do not define the `id` property, a random id will be generated from `viewModelsConfig.generateId`
 :::
 
-### Example without any implemented method from interface    
+### Example without implementing any interface methods    
 
 ```ts{4}
 import { ViewModelSimple } from "mobx-view-model";

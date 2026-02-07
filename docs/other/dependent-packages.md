@@ -1,6 +1,6 @@
 # Dependent Packages
 
-List of dependent `NPM` packages, libraries which based on this package or using it   
+List of dependent `NPM` packages and libraries that are based on this package or use it.   
 
 ## mobx-wouter  
 
