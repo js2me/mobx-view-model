@@ -16,25 +16,25 @@ Core idea:
 
 ```tsx{9}
 import { loadable } from 'react-simple-loadable';
-import { DrawerModalLayoutSkeleton } from '@/shared/ui/dialogs/ui/drawer-skeleton';
-import type { OrdersDrawer as LoadedOrdersDrawer } from './orders-drawer';
+import { DialogSkeleton } from '@/shared/ui/dialogs/ui/dialog-skeleton';
+import type { OrdersDialog as LoadedOrdersDialog } from './orders-dialog';
 
-export const OrdersDrawer = loadable(
+export const OrdersDialog = loadable(
   () =>
-    import('./orders-drawer').then(
-      ({ OrdersDrawer: LoadedOrdersDrawer }) => {
-        LoadedOrdersDrawer.connect(OrdersDrawer);
-        return LoadedOrdersDrawer;
+    import('./orders-dialog').then(
+      ({ OrdersDialog: LoadedOrdersDialog }) => {
+        LoadedOrdersDialog.connect(OrdersDialog);
+        return LoadedOrdersDialog;
       },
     ),
-  DrawerModalLayoutSkeleton,
-) as unknown as typeof LoadedOrdersDrawer;
+  DialogSkeleton,
+) as unknown as typeof LoadedOrdersDialog;
 ```
 
 What happens here:
-- `LoadedOrdersDrawer` is a `VMComponent` created by `withViewModel`
-- `connect(OrdersDrawer)` registers the lazy wrapper as an anchor
-- While `LoadedOrdersDrawer` is mounted, `useViewModel(OrdersDrawer)` points to the same `ViewModel`
+- `LoadedOrdersDialog` is a `VMComponent` created by `withViewModel`
+- `connect(OrdersDialog)` registers the lazy wrapper as an anchor
+- While `LoadedOrdersDialog` is mounted, `useViewModel(OrdersDialog)` points to the same `ViewModel`
 
 If your anchor is known in advance, you can also use static [`anchors`](/react/api/with-view-model#anchors) in `withViewModel` config.  
 Use `connect()` for dynamic or externally defined anchors.
