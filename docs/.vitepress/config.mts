@@ -166,6 +166,7 @@ export default defineDocsVitepressConfig(configs, {
         link: '/recipes/observer-wrap-all-view-components',
         items: [
           { text: 'All props as payload', link: '/recipes/all-props-as-payload' },
+          { text: 'Connect other components to VMComponent', link: '/recipes/connect-components-to-vm-component' },
           { text: 'Generic ViewModel types in React', link: '/recipes/generic-view-models-in-react' },
           { text: 'Wrap in observer() all view components', link: '/recipes/observer-wrap-all-view-components' },
           { text: 'Wrap view components in custom HOC', link: '/recipes/wrap-view-components-in-custom-hoc' },
