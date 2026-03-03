@@ -6,7 +6,7 @@
     "declaration": true,
     "declarationMap": true,
     "useDefineForClassFields": true,
-    "lib": ["ESNext"],
+    "lib": ["ESNext", "DOM"],
     "allowJs": false,
     "skipLibCheck": true,
     "esModuleInterop": false,

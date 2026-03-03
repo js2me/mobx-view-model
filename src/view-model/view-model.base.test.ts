@@ -1,4 +1,5 @@
 import { makeObservable, reaction } from 'mobx';
+import type { Mock } from 'vitest';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { AnyObject, EmptyObject } from 'yummies/types';
@@ -14,7 +15,15 @@ export class ViewModelBaseMock<
   Payload extends AnyObject = EmptyObject,
   ParentViewModel extends AnyViewModel | AnyViewModelSimple | null = null,
 > extends ViewModelBase<Payload, ParentViewModel> {
-  spies = {
+  spies: {
+    mount: Mock<() => void>;
+    unmount: Mock<() => void>;
+    payloadChanged: Mock<(payload: any, prevPayload: any) => void>;
+    willMount: Mock<() => void>;
+    didMount: Mock<() => void>;
+    willUnmount: Mock<() => void>;
+    didUnmount: Mock<() => void>;
+  } = {
     mount: vi.fn(),
     unmount: vi.fn(),
     payloadChanged: vi.fn(),
