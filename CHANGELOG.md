@@ -1,5 +1,11 @@
 # mobx-view-model
 
+## 9.0.1
+
+### Patch Changes
+
+- [`3f53a3e`](https://github.com/js2me/mobx-view-model/commit/3f53a3e204073ee5eba33fbb3111bd9c02c4dd99) Thanks [@js2me](https://github.com/js2me)! - [internal] update all dev deps to latest
+
 ## 9.0.0
 
 ### Major Changes
