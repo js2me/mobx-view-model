@@ -166,6 +166,44 @@ class PostcardBox extends ViewModelBase {
 }
 ```
 
+### `hasChild(vm, deep?): boolean` <Badge type="info" text="protected" /> {#haschild-vm-anyviewmodel--anyviewmodelsimple-deep-boolean-boolean}
+Checks whether the given view model is a child of the current view model.
+
+- **Shallow** (`deep` is `false`/`undefined`): `vm.parentViewModel === this`
+- **Deep** (`deep` is `true`): checks the whole parent chain of `vm` and returns `true` if it contains `this`
+
+#### Example
+```ts
+class RootVM extends ViewModelBase {}
+class ChildVM extends ViewModelBase {}
+
+const root = new RootVM({ id: "root", payload: {} });
+const child = new ChildVM({ id: "child", payload: {}, parentViewModel: root });
+
+// inside RootVM
+this.hasChild(child) // true
+this.hasChild(child, true) // true
+```
+
+### `hasParent(vm, deep?): boolean` <Badge type="info" text="protected" /> {#hasparent-vm-anyviewmodel--anyviewmodelsimple-deep-boolean-boolean}
+Checks whether the given view model is a parent of the current view model.
+
+- **Shallow** (`deep` is `false`/`undefined`): `this.parentViewModel === vm`
+- **Deep** (`deep` is `true`): checks the whole parent chain of `this` and returns `true` if it contains `vm`
+
+#### Example
+```ts
+class RootVM extends ViewModelBase {}
+class ChildVM extends ViewModelBase {}
+
+const root = new RootVM({ id: "root", payload: {} });
+const child = new ChildVM({ id: "child", payload: {}, parentViewModel: root });
+
+// inside ChildVM
+this.hasParent(root) // true
+this.hasParent(root, true) // true
+```
+
 ## Additional utility types  
 
 [Reference to source code](/src/view-model/view-model.base.types.ts)  

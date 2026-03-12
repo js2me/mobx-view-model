@@ -205,6 +205,53 @@ export class ViewModelBase<
   }
 
   /**
+   * Checks whether the given view model is a child of the current view model.
+   * When `deep` is `true`, checks the whole parent chain.
+   *
+   * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/base-implementation#haschild-vm-anyviewmodel--anyviewmodelsimple-deep-boolean-boolean)
+   */
+  protected hasChild(vm: AnyViewModel | AnyViewModelSimple, deep?: boolean) {
+    if (deep) {
+      let usedVm: Maybe<AnyViewModel | AnyViewModelSimple> = vm;
+      while (usedVm) {
+        if (usedVm.parentViewModel === this) {
+          return true;
+        } else {
+          usedVm = usedVm.parentViewModel;
+        }
+      }
+
+      return false;
+    }
+
+    return vm.parentViewModel === this;
+  }
+
+  /**
+   * Checks whether the given view model is a parent of the current view model.
+   * When `deep` is `true`, checks the whole parent chain.
+   *
+   * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/base-implementation#hasparent-vm-anyviewmodel--anyviewmodelsimple-deep-boolean-boolean)
+   */
+  protected hasParent(vm: AnyViewModel | AnyViewModelSimple, deep?: boolean) {
+    if (deep) {
+      let usedVm: Maybe<AnyViewModel | AnyViewModelSimple> =
+        this.parentViewModel;
+      while (usedVm) {
+        if (usedVm === vm) {
+          return true;
+        } else {
+          usedVm = usedVm.parentViewModel;
+        }
+      }
+
+      return false;
+    } else {
+      return this.parentViewModel === vm;
+    }
+  }
+
+  /**
    * The method is called when the payload of the view model was changed
    *
    * The state - "was changed" is determined inside the setPayload method
@@ -242,13 +289,22 @@ export class ViewModelBase<
 
   /**
    * The method of getting the parent view model
+   *
+   * @deprecated Use getter `get parentViewModel` instead. This method will be removed in the future.
    */
   protected getParentViewModel(
     parentViewModelId: Maybe<string>,
   ): ParentViewModel {
-    return (
-      this.vmParams.parentViewModel ??
-      (this.viewModels?.get(parentViewModelId) as unknown as ParentViewModel)
-    );
+    if (this.vmParams.parentViewModel !== undefined) {
+      return this.vmParams.parentViewModel as ParentViewModel;
+    }
+
+    if (parentViewModelId == null) {
+      return null as unknown as ParentViewModel;
+    }
+
+    return this.viewModels?.get(
+      parentViewModelId,
+    ) as unknown as ParentViewModel;
   }
 }

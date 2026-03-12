@@ -270,4 +270,75 @@ describe('ViewModelBase', () => {
     expect(vm.unmountSignal.aborted).toBe(true);
     expect(spy).toHaveBeenCalledOnce();
   });
+
+  describe('hasChild / hasParent', () => {
+    class RelationsVM extends ViewModelBaseMock<
+      any,
+      AnyViewModel | AnyViewModelSimple | null
+    > {
+      hasChildPublic(vm: AnyViewModel | AnyViewModelSimple, deep?: boolean) {
+        return this.hasChild(vm, deep);
+      }
+      hasParentPublic(vm: AnyViewModel | AnyViewModelSimple, deep?: boolean) {
+        return this.hasParent(vm, deep);
+      }
+    }
+
+    const createTree = () => {
+      const root = new RelationsVM({ id: 'root' });
+      const child = new RelationsVM({ id: 'child', parentViewModel: root });
+      const grandchild = new RelationsVM({
+        id: 'grandchild',
+        parentViewModel: child,
+      });
+
+      return { root, child, grandchild };
+    };
+
+    it('hasChild: shallow (deep undefined/false)', () => {
+      const { root, child, grandchild } = createTree();
+
+      expect(root.hasChildPublic(child)).toBe(true);
+      expect(root.hasChildPublic(child, false)).toBe(true);
+
+      expect(root.hasChildPublic(grandchild)).toBe(false);
+      expect(root.hasChildPublic(grandchild, false)).toBe(false);
+
+      expect(child.hasChildPublic(grandchild)).toBe(true);
+      expect(child.hasChildPublic(root)).toBe(false);
+    });
+
+    it('hasChild: deep', () => {
+      const { root, child, grandchild } = createTree();
+
+      expect(root.hasChildPublic(child, true)).toBe(true);
+      expect(root.hasChildPublic(grandchild, true)).toBe(true);
+
+      expect(child.hasChildPublic(grandchild, true)).toBe(true);
+      expect(child.hasChildPublic(root, true)).toBe(false);
+
+      expect(root.hasChildPublic(root, true)).toBe(false);
+    });
+
+    it('hasParent: shallow (deep undefined/false)', () => {
+      const { root, child, grandchild } = createTree();
+
+      expect(child.hasParentPublic(root)).toBe(true);
+      expect(child.hasParentPublic(root, false)).toBe(true);
+
+      expect(grandchild.hasParentPublic(child)).toBe(true);
+      expect(grandchild.hasParentPublic(root)).toBe(false);
+    });
+
+    it('hasParent: deep', () => {
+      const { root, child, grandchild } = createTree();
+
+      expect(child.hasParentPublic(root, true)).toBe(true);
+      expect(grandchild.hasParentPublic(child, true)).toBe(true);
+      expect(grandchild.hasParentPublic(root, true)).toBe(true);
+
+      expect(root.hasParentPublic(child, true)).toBe(false);
+      expect(root.hasParentPublic(root, true)).toBe(false);
+    });
+  });
 });
