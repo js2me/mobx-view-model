@@ -1,5 +1,15 @@
 # mobx-view-model
 
+## 9.1.0
+
+### Minor Changes
+
+- [`37f09fc`](https://github.com/js2me/mobx-view-model/commit/37f09fcb9a5841a2c6ae4c431497869054caa31a) Thanks [@js2me](https://github.com/js2me)! - added `protected hasChild` `protected hasParent` methods fo `ViewModelBase`
+
+### Patch Changes
+
+- [`3f53a3e`](https://github.com/js2me/mobx-view-model/commit/3f53a3e204073ee5eba33fbb3111bd9c02c4dd99) Thanks [@js2me](https://github.com/js2me)! - [internal] update all dev deps to latest
+
 ## 9.0.0
 
 ### Major Changes
