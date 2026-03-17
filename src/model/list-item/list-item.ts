@@ -103,10 +103,6 @@ export abstract class ListItem<T> {
     return this._data;
   }
 
-  get isFitted() {
-    return true;
-  }
-
   get closingItem(): ListItem<any> | null {
     return null;
   }
@@ -170,7 +166,6 @@ export abstract class ListItem<T> {
     this.cache = cache ?? devtools.anyCache;
     this.expandKey = `${key}/expand-key`;
     computed(this, 'isExpanded');
-    computed(this, 'isFitted');
     computed(this, 'totalChildCount');
     computed(this, 'depthLine');
     computed(this, 'depth');

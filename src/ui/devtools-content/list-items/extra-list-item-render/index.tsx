@@ -10,7 +10,7 @@ export const ExtraListItemRender = observer(
     return (
       <div
         className={cx(css.treeItem, css.extraTreeItem)}
-        data-fitted={item.isFitted}
+        data-fitted={item.devtools.searchEngine.isItemFitted(item)}
         data-depth={item.depthLine}
         style={{ '--level': item.depth } as CSSProperties}
       >

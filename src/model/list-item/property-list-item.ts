@@ -136,10 +136,6 @@ export class PropertyListItem extends ListItem<any> {
     return listItems;
   }
 
-  get isFitted() {
-    return this.devtools.searchEngine.isPropertyItemFitted(this);
-  }
-
   get extraContent() {
     if (this.isExpanded) {
       return null;

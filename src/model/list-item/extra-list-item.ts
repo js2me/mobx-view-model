@@ -6,10 +6,6 @@ import { ListItem, type ListItemOperation } from './list-item';
 import { PropertyListItem } from './property-list-item';
 
 export class ExtraListItem extends ListItem<AnyVM> {
-  get isFitted() {
-    return this.devtools.searchEngine.isExtraItemFitted(this);
-  }
-
   private get propertyListItems(): PropertyListItem[] {
     this.dataWatchAtom.reportObserved();
 

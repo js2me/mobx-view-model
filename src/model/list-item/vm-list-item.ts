@@ -18,10 +18,6 @@ export class VMListItem extends ListItem<AnyVM> {
       .map((it) => new VMListItem(this.devtools, it, this.allVms, this));
   }
 
-  get isFitted() {
-    return this.devtools.searchEngine.isVmItemFitted(this);
-  }
-
   private get propertyListItems(): PropertyListItem[] {
     this.dataWatchAtom.reportObserved();
 

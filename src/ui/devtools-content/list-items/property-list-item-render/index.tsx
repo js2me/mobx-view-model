@@ -12,7 +12,6 @@ import css from './styles.module.css';
 
 export interface PropertyListItemRenderProps {
   item: PropertyListItem;
-  isFitted?: boolean;
 }
 
 export const PropertyListItemRender = observer(
@@ -55,7 +54,7 @@ export const PropertyListItemRender = observer(
         style={
           { '--level': item.depth, '--order': item.order } as CSSProperties
         }
-        data-fitted={item.isFitted}
+        data-fitted={item.devtools.searchEngine.isItemFitted(item)}
         title={item.stringifiedData}
         onClick={(e) => item.devtools.handlePropertyClick(item, e)}
         data-depth={item.depthLine}

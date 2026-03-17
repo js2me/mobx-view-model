@@ -16,11 +16,3 @@ export type VmTreeItem = {
     id: string;
   };
 };
-
-export interface FittedInfo {
-  isFitted: boolean;
-  isFittedById?: boolean;
-  isFittedByName?: boolean;
-  isFittedByPropertyPath?: boolean;
-  fittedProperties: string[];
-}

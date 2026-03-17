@@ -10,7 +10,7 @@ export const MetaListItemRender = observer(
       <div
         className={cx(css.property, css.primitive)}
         style={{ '--level': item.depth } as CSSProperties}
-        data-fitted={item.isFitted}
+        data-fitted={item.devtools.searchEngine.isItemFitted(item)}
         title={item.stringifiedData}
         data-depth={item.depthLine}
       >
