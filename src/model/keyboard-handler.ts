@@ -25,7 +25,6 @@ export class KeyboardHandler extends KeyboardHandlerLib<KeyboardHandlerAction> {
         {
           shortcuts: ['Escape'],
           action: (e) => {
-            console.log('ee', e);
             if (typeGuard.isElement(e.target) && e.target.dataset.ignoreGlobalKeys) {
               return;
             }

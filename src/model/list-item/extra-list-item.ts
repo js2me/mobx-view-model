@@ -7,31 +7,7 @@ import { PropertyListItem } from './property-list-item';
 
 export class ExtraListItem extends ListItem<AnyVM> {
   get isFitted() {
-    const { searchEngine } = this.devtools;
-
-    if (!searchEngine.isActive) {
-      return true;
-    }
-
-    const searchSegments = searchEngine.segments;
-
-    if (searchSegments.length === 0) {
-      return true;
-    }
-
-    const firstSegment = searchSegments[0];
-
-    // Проверяем, содержит ли имя первый сегмент поиска
-    const isFittedByName = this.searchData.name.includes(firstSegment);
-
-    // Если только один сегмент - проверяем имя
-    if (searchSegments.length === 1) {
-      return isFittedByName;
-    }
-
-    // Если несколько сегментов - ExtraListItem подходит если имя содержит первый сегмент
-    // Детальная фильтрация будет на уровне дочерних PropertyListItem
-    return isFittedByName;
+    return this.devtools.searchEngine.isExtraItemFitted(this);
   }
 
   private get propertyListItems(): PropertyListItem[] {

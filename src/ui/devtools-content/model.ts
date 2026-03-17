@@ -46,7 +46,6 @@ export class DevtoolsContentVM extends ViewModelImpl<{
       this.contentRef.meta = { scrollbar };
       const scrollElement = scrollbar.getScrollElement();
 
-      console.log('on set');
 
       if (!scrollElement) return;
 
