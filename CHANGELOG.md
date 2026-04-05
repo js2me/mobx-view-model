@@ -1,5 +1,11 @@
 # mobx-view-model
 
+## 9.1.1
+
+### Patch Changes
+
+- [`2a44bca`](https://github.com/js2me/mobx-view-model/commit/2a44bca92ee90b6aa314eb1014133545afee3259) Thanks [@js2me](https://github.com/js2me)! - added ssr example with NextJS (examples/ssr-nextjs)
+
 ## 9.1.0
 
 ### Minor Changes
