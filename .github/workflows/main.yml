@@ -33,6 +33,9 @@ jobs:
 
       - run: pnpm build
 
+      - name: Next.js SSR example (production build)
+        run: pnpm example:ssr:build:example
+
       - run: pnpm docs:build
 
       - run: pnpm test:coverage

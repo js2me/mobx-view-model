@@ -31,13 +31,14 @@ pnpm example:ssr
 
 Open [http://localhost:3010](http://localhost:3010).
 
-Production build of the example:
+Production build of the example (from repo root; includes library `pnpm build`):
 
 ```bash
-pnpm build
 pnpm example:ssr:build
 cd examples/ssr-nextjs && pnpm start
 ```
+
+After you already ran `pnpm build` at the root (e.g. in CI), use **`pnpm example:ssr:build:example`** to install deps in the example and run `next build` only once for the library.
 
 ## Layout
 
