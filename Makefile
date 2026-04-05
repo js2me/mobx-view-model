@@ -25,6 +25,10 @@ doc-build:
 	pnpm i && \
 	pnpm build
 
+.PHONY: ssr-example
+ssr-example:
+	pnpm example:ssr
+
 .PHONY: build
 build: reinstall
 	pnpm build

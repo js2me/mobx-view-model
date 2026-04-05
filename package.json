@@ -21,6 +21,8 @@
     "docs:install": "cd docs && pnpm i",
     "docs:build": "cd docs && pnpm build",
     "docs:serve": "cd docs && pnpm preview",
+    "example:ssr": "pnpm build && pnpm --dir examples/ssr-nextjs dev",
+    "example:ssr:build": "pnpm build && pnpm --dir examples/ssr-nextjs build",
     "dev": "pnpm test:watch",
     "dev:install-hooks": "if [ -z \"$CI\" ]; then lefthook install; fi"
   },
@@ -44,6 +46,15 @@
     "url": "https://github.com/js2me/mobx-view-model/issues"
   },
   "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
   "homepage": "https://github.com/js2me/mobx-view-model",
   "repository": {
     "type": "git",

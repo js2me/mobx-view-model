@@ -1,5 +1,9 @@
 # Project Examples  
 
+## **SSR + Next.js (this repository)**  
+_Links_:  
+  - Source: https://github.com/js2me/mobx-view-model/tree/master/examples/ssr-nextjs — App Router, `ViewModelStore`, hydration, `enableStaticRendering`.
+
 ## **GitlabActivityAnalyzer**  
 _Links_:
   - Source: https://github.com/js2me/gitlab-activity-analyzer

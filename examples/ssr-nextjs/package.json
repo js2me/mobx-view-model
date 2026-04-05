@@ -1,0 +1,25 @@
+{
+  "name": "mobx-view-model-example-ssr-nextjs",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm i && next dev --port 3010",
+    "build": "next build",
+    "start": "next start --port 3010"
+  },
+  "dependencies": {
+    "mobx": "^6.13.7",
+    "mobx-react-lite": "^4.1.1",
+    "mobx-view-model": "file:../../dist",
+    "next": "^15.5.4",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "yummies": "^7.14.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.21",
+    "@types/react": "^19.1.6",
+    "@types/react-dom": "^19.1.5",
+    "typescript": "^5.9.3"
+  }
+}
