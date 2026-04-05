@@ -21,8 +21,8 @@
     "docs:install": "cd docs && pnpm i",
     "docs:build": "cd docs && pnpm build",
     "docs:serve": "cd docs && pnpm preview",
-    "example:ssr": "pnpm build && pnpm --dir examples/ssr-nextjs dev",
-    "example:ssr:build": "pnpm build && pnpm --dir examples/ssr-nextjs build",
+    "example:ssr": "pnpm build && pnpm --dir examples/ssr-nextjs install && pnpm --dir examples/ssr-nextjs dev",
+    "example:ssr:build": "pnpm build && pnpm --dir examples/ssr-nextjs install && pnpm --dir examples/ssr-nextjs build",
     "dev": "pnpm test:watch",
     "dev:install-hooks": "if [ -z \"$CI\" ]; then lefthook install; fi"
   },
