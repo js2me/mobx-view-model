@@ -1,26 +1,25 @@
 import Head from 'next/head';
-import type { GetServerSideProps, NextPage } from 'next';
+import type { NextPage } from 'next';
 import type { DemoPagePayload } from '@/components/demo-page-client/model';
 import { loadDemoPayload } from '@/shared/api/load-demo-payload';
 import {
-  mergeRootStorePageProps,
+  withRootStoreProps,
   type WithRootStorePageProps,
-} from '@/shared/lib/root-store-server-props';
+} from '@/stores/root-store/lib/with-root-store-props';
 import { TimelineDemoClient } from '@/components/pages/timeline-demo-client';
 
 type TimelinePageProps = WithRootStorePageProps<{
   initialPayload: DemoPagePayload;
 }>;
 
-export const getServerSideProps: GetServerSideProps<TimelinePageProps> =
-  async () => {
-    const initialPayload = await loadDemoPayload({
-      pageTitle: 'Timeline',
-      headline: 'Another server headline — MobX state is scoped to this page',
-      bumpable: false,
-    });
-    return { props: mergeRootStorePageProps({ initialPayload }) };
-  };
+export const getServerSideProps = withRootStoreProps(async () => {
+  const initialPayload = await loadDemoPayload({
+    pageTitle: 'Timeline',
+    headline: 'Another server headline — MobX state is scoped to this page',
+    bumpable: false,
+  });
+  return { props: { initialPayload } };
+});
 
 const TimelinePage: NextPage<TimelinePageProps> = ({ initialPayload }) => (
   <>

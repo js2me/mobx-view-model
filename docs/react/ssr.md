@@ -8,27 +8,20 @@ slug: /react/ssr
 
 # Server-Side Rendering
 
-`mobx-view-model` supports **SSR** together with [`ViewModelStore`](/api/view-model-store/interface) and predictable **hydration** on the client. The HTML from the server and the first client render must be **the same** (same `payload`, same store wiring, same tree).
+SSR works with a [`ViewModelStore`](/api/view-model-store/interface) and normal client **hydration**. The rule that matters: **the first server HTML and the first client render must match** (same props/payload, same provider tree).
 
-This page is a **step-by-step** recipe for **Next.js** using the reference app in [`examples/ssr-nextjs`](https://github.com/js2me/mobx-view-model/tree/master/examples/ssr-nextjs) (**Pages Router**, `getServerSideProps`). The same ideas apply to the **App Router**: keep a **client** boundary for hooks (`withViewModel`, `useCreateViewModel`, `useViewModel`), load data where Next allows, and pass **serializable** props into that tree.
+Below is a **Next.js (Pages Router)** checklist. A working layout lives in [`examples/ssr-nextjs`](https://github.com/js2me/mobx-view-model/tree/master/examples/ssr-nextjs). For the **App Router**, keep the same idea: load data on the server, pass **serializable** props into a **client** subtree that uses [`ViewModelsProvider`](/react/api/view-models-provider) and your hooks/HOCs.
 
-::: warning React Server Components and `"use server"`
-Hooks from this library run only in **client components**. You cannot use them inside Server Components or `"use server"` modules. Fetch on the server, then pass results as props into a client subtree wrapped in [`ViewModelsProvider`](/react/api/view-models-provider).
+::: warning Client components only
+[`withViewModel`](/react/api/with-view-model), [`useCreateViewModel`](/react/api/use-create-view-model), and [`useViewModel`](/react/api/use-view-model) use React hooks. They belong in **client components**, not in Server Components or `"use server"` modules.
 :::
 
 ---
 
-## Step 1 — Dependencies
+## 1. `next.config`
 
-Install **MobX**, **mobx-react-lite**, and **mobx-view-model** (from npm or a local `file:` build, as in the monorepo example).
-
----
-
-## Step 2 — `next.config`
-
-1. **`transpilePackages`** — include `mobx-view-model` so Next compiles the package (needed for many setups).
-
-2. **`reactStrictMode: false`** — in **development**, Strict Mode double-invokes effects and remounts. That can break view-model **lifecycle / reference counting** tied to `useLayoutEffect`. For a stable VM lifecycle during local SSR debugging, turn Strict Mode off (the example documents this explicitly).
+- **`transpilePackages: ['mobx-view-model']`** — so Next compiles the library.
+- **`reactStrictMode: false`** — in dev, Strict Mode remounts components; that can interfere with view-model lifecycle tied to effects. Turn it off if you hit double mount issues while developing SSR.
 
 ```ts
 import type { NextConfig } from 'next';
@@ -43,30 +36,27 @@ export default nextConfig;
 
 ---
 
-## Step 3 — One-time MobX setup for SSR (`enableStaticRendering`)
+## 2. MobX on the server: `enableStaticRendering`
 
-On the **server**, MobX reactions inside `observer` must not run like in the browser. Call **`enableStaticRendering`** from `mobx-react-lite` once, before any React render, and set MobX **`configure`** as you prefer.
-
-Use a small client-only module and import it **at the top** of your client root (e.g. `_app.tsx` with `'use client'`):
+On the server, `observer` should not run reactions like in the browser. Run once before rendering (e.g. import at the top of client `_app`):
 
 ```ts
 import { configure } from 'mobx';
 import { enableStaticRendering } from 'mobx-react-lite';
 
 configure({ enforceActions: 'always' });
-
 enableStaticRendering(typeof window === 'undefined');
 ```
 
-Reference: `examples/ssr-nextjs/src/bootstrap/client.ts`.
+Example: [`examples/ssr-nextjs/src/bootstrap/client.ts`](https://github.com/js2me/mobx-view-model/blob/master/examples/ssr-nextjs/src/bootstrap/client.ts).
 
 ---
 
-## Step 4 — `ViewModelStore` inside a root store
+## 3. Root store + `ViewModelsProvider`
 
-Subclass [`ViewModelStoreBase`](/api/view-model-store/base-implementation) (or implement [`ViewModelStore`](/api/view-model-store/interface)) and hang it on your app **root store**. Override **`createViewModel`** if every VM should receive `rootStore` (same pattern as [Integration with RootStore](/recipes/integration-with-root-store)).
+Put a [`ViewModelStoreBase`](/api/view-model-store/base-implementation) (or custom store) on your app root. If every VM needs `rootStore`, override **`createViewModel`** — see [Integration with RootStore](/recipes/integration-with-root-store).
 
-Expose a provider that combines **your** React context with [`ViewModelsProvider`](/react/api/view-models-provider):
+Wrap the tree with your context and [`ViewModelsProvider`](/react/api/view-models-provider):
 
 ```tsx
 import { ViewModelsProvider } from 'mobx-view-model';
@@ -80,70 +70,53 @@ export function RootStoreProvider({ store, children }: { store: RootStore; child
 }
 ```
 
-Reference: `examples/ssr-nextjs/src/stores/root-store/` and `src/shared/lib/vm-store.ts`.
+Example: [`examples/ssr-nextjs/src/stores/root-store/`](https://github.com/js2me/mobx-view-model/tree/master/examples/ssr-nextjs/src/stores/root-store), [`examples/ssr-nextjs/src/shared/lib/vm-store.ts`](https://github.com/js2me/mobx-view-model/blob/master/examples/ssr-nextjs/src/shared/lib/vm-store.ts).
 
 ---
 
-## Step 5 — Client `_app` and a **single** `RootStore` per load
+## 4. `_app`, one `RootStore`, and page data
 
-Next.js does **not** support `getServerSideProps` on `_app`. The usual pattern:
+**`getServerSideProps` cannot live on `_app`.** Typical split:
 
-1. Define a **serializable** snapshot type for data that must match server → client (e.g. `appInfo`, user session summary).
-2. In **each** page’s `getServerSideProps`, merge that snapshot into `props` (helper `mergeRootStorePageProps` in the example).
-3. In `_app`, read `pageProps.rootStoreSnapshot`, then create **one** `RootStore` with `useState(() => new RootStore(...))` so the instance survives navigations but is not recreated every render.
+**Snapshot** — JSON-safe fields you pass from the server (e.g. `appInfo`). Optional fields are fine: static pages like **`/404`** may not send a snapshot; your domain stores can fall back to defaults.
 
-Wrap the app with your HOC (e.g. `withRootStore`) that:
+**`withRootStoreProps`** — wraps each page’s `getServerSideProps` and adds **`rootStoreSnapshot`** (built on the server, e.g. `getRootStoreSnapshot()` in the example).
 
-- builds `new RootStore({ ...snapshot, router })` (router from `useRouter()` on the client is fine for non-serialized context),
-- renders `RootStoreProvider`.
+**`withRootStore` (around `_app`)** — holds **one** root store for the lifetime of that load and merges the server snapshot with any **client-only** fields your root store needs. *In the example repo*, that includes **`router`** from **`useRouter()`** — not a framework requirement, just one way to expose the Pages Router to the store.
 
-Routes **without** `getServerSideProps` (e.g. static error pages) may omit `rootStoreSnapshot` — fall back to defaults that match your server merge helper.
-
-Reference: `examples/ssr-nextjs/src/pages/_app.tsx`, `src/stores/root-store/components/with-root-store.tsx`, `src/shared/lib/root-store-server-props.ts`.
+Example files: [`pages/_app.tsx`](https://github.com/js2me/mobx-view-model/blob/master/examples/ssr-nextjs/src/pages/_app.tsx), [`with-root-store.tsx`](https://github.com/js2me/mobx-view-model/blob/master/examples/ssr-nextjs/src/stores/root-store/components/with-root-store.tsx), [`with-root-store-props.ts`](https://github.com/js2me/mobx-view-model/blob/master/examples/ssr-nextjs/src/stores/root-store/lib/with-root-store-props.ts), [`snapshot.ts`](https://github.com/js2me/mobx-view-model/blob/master/examples/ssr-nextjs/src/stores/root-store/snapshot.ts), [`app-info-store/snapshot.ts`](https://github.com/js2me/mobx-view-model/blob/master/examples/ssr-nextjs/src/stores/app-info-store/snapshot.ts) (under [`examples/ssr-nextjs/src/`](https://github.com/js2me/mobx-view-model/tree/master/examples/ssr-nextjs/src)).
 
 ---
 
-## Step 6 — Page: load data on the server, pass props to a client tree
-
-In `getServerSideProps`, await your data (DB, API, etc.), then return:
+## 5. Page: `getServerSideProps` + props into client UI
 
 ```ts
-return {
-  props: mergeRootStorePageProps({
+export const getServerSideProps = withRootStoreProps(async () => ({
+  props: {
     initialPayload: await loadPagePayload(),
-  }),
-};
+  },
+}));
 ```
 
-The **page** component (can stay a server-friendly default export without `'use client'`) receives `initialPayload` and passes it into a **client** component that uses `withViewModel` / hooks.
-
-Reference: `examples/ssr-nextjs/src/pages/index.tsx`, `src/pages/widgets/index.tsx`, `src/pages/timeline/index.tsx`.
+The page module can stay without `'use client'`; pass `initialPayload` into a **client** component that uses `withViewModel` / hooks.
 
 ---
 
-## Step 7 — Client UI: `withViewModel`, `id`, `fallback`, `observer`
+## 6. Client screen: `withViewModel`, `id`, `fallback`, `observer`
 
-1. Mark the file **`'use client'`** when using [`withViewModel`](/react/api/with-view-model) or hooks.
-2. Pass **`payload`** from the page so server and client use the **same** object shape.
-3. Give each logical screen a stable **`id`** if several pages use the same VM class — otherwise instances collide in the store (`demo-widgets-vm` vs `demo-timeline-vm` in the example).
-4. Provide **`fallback`** if [`mount()`](/api/view-models/interface) is **async** — first paint shows fallback on both server and client, avoiding hydration mismatches ([warning #2](/warnings/2)).
-5. Child components that read the VM should use [`useViewModel`](/react/api/use-view-model) and be wrapped in **`observer`** from `mobx-react-lite`.
+1. **`'use client'`** where you use the library’s hooks/HOCs.
+2. Pass the same **`payload`** (or props) on server and client.
+3. Use a stable **`id`** per route if several pages share one VM class — avoids collisions in the store.
+4. If **`mount()`** is **async**, set **`fallback`** so the first server and client paint match ([warning #2](/warnings/2)).
+5. Deep children: [`useViewModel`](/react/api/use-view-model) + **`observer`**.
 
-Reference: `examples/ssr-nextjs/src/components/demo-page-client/`, `src/components/pages/widgets-demo-client.tsx`.
-
----
-
-## How this ties to `attach` and the first paint
-
-React does not run `useLayoutEffect` / `useEffect` during the **server** render. [`useCreateViewModel`](/react/api/use-create-view-model) therefore calls **`attach`** during the **first render** when the VM is not yet in the store (and calls `mount()` synchronously when there is no store), so server HTML aligns with the first client paint after hydration. The layout effect path still handles `attach` when the instance was not registered yet, keeping reference counting correct.
-
-Custom `ViewModelStore` implementations should mirror [`ViewModelStoreBase.attach`](/api/view-model-store/base-implementation): **synchronous** `mount()` must finish in the same turn, or SSR output may not match the main view until the client.
+**Why the first paint matches:** on the server, React does not run `useLayoutEffect` / `useEffect`. [`useCreateViewModel`](/react/api/use-create-view-model) runs **`attach`** during that first render when needed so the VM is ready for the same markup after hydration. Custom stores should follow [`ViewModelStoreBase.attach`](/api/view-model-store/base-implementation): **`mount()` must finish synchronously** in the sync path, or SSR and the main view can diverge.
 
 ---
 
-## Minimal standalone pattern (any SSR runtime)
+## Minimal pattern (any SSR stack)
 
-Shared store + same payload on server and client:
+Same store + same payload on server and client:
 
 ```tsx
 import { ViewModelBase, ViewModelsProvider, ViewModelStoreBase, withViewModel } from 'mobx-view-model';
@@ -155,17 +128,17 @@ const Page = withViewModel(
   ({ model }) => <div>{`count ${model.payload.count}`}</div>,
 );
 
-export const renderPage = (count: number) => {
+export function renderPage(count: number) {
   const vmStore = new ViewModelStoreBase();
   return (
     <ViewModelsProvider value={vmStore}>
       <Page payload={{ count }} />
     </ViewModelsProvider>
   );
-};
+}
 ```
 
-Client-only hydration (same payload and store wiring):
+Hydration on the client (same wiring):
 
 ```tsx
 import { ViewModelStoreBase, ViewModelsProvider } from 'mobx-view-model';
@@ -185,7 +158,7 @@ hydrateRoot(
 
 ## Async `mount()`
 
-If `mount()` is async, the initial render shows **`fallback`** on both server and client, which avoids hydration mismatches.
+Use **`fallback`** for the initial render on server and client:
 
 ```tsx
 class PageVM extends ViewModelBase {
@@ -196,6 +169,6 @@ class PageVM extends ViewModelBase {
 }
 ```
 
-::: tip Keep SSR and CSR identical
-Use the same **`payload`** and **`ViewModelsProvider`** / store setup on server and client. Do not rely on side effects inside `mount()` for the first paint.
+::: tip Same data everywhere
+Reuse the same **`payload`** and the same **`ViewModelsProvider`** / store wiring on server and client. Do not depend on `mount()` side effects for the first paint.
 :::

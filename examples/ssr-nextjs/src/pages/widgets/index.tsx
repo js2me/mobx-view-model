@@ -1,25 +1,24 @@
 import Head from 'next/head';
-import type { GetServerSideProps, NextPage } from 'next';
+import type { NextPage } from 'next';
 import type { DemoPagePayload } from '@/components/demo-page-client/model';
 import { loadDemoPayload } from '@/shared/api/load-demo-payload';
 import {
-  mergeRootStorePageProps,
+  withRootStoreProps,
   type WithRootStorePageProps,
-} from '@/shared/lib/root-store-server-props';
+} from '@/stores/root-store/lib/with-root-store-props';
 import { WidgetsDemoClient } from '@/components/pages/widgets-demo-client';
 
 type WidgetsPageProps = WithRootStorePageProps<{
   initialPayload: DemoPagePayload;
 }>;
 
-export const getServerSideProps: GetServerSideProps<WidgetsPageProps> =
-  async () => {
-    const initialPayload = await loadDemoPayload({
-      pageTitle: 'Widgets',
-      headline: 'SSR payload for the Widgets route — separate ViewModel id',
-    });
-    return { props: mergeRootStorePageProps({ initialPayload }) };
-  };
+export const getServerSideProps = withRootStoreProps(async () => {
+  const initialPayload = await loadDemoPayload({
+    pageTitle: 'Widgets',
+    headline: 'SSR payload for the Widgets route — separate ViewModel id',
+  });
+  return { props: { initialPayload } };
+});
 
 const WidgetsPage: NextPage<WidgetsPageProps> = ({ initialPayload }) => (
   <>

@@ -1,19 +1,19 @@
 import Head from 'next/head';
-import type { GetServerSideProps, NextPage } from 'next';
+import type { NextPage } from 'next';
 import type { DemoPagePayload } from '@/components/demo-page-client/model';
 import { DemoPageClient } from '@/components/demo-page-client';
 import { loadDemoPayload } from '@/shared/api/load-demo-payload';
 import {
-  mergeRootStorePageProps,
+  withRootStoreProps,
   type WithRootStorePageProps,
-} from '@/shared/lib/root-store-server-props';
+} from '@/stores/root-store/lib/with-root-store-props';
 
 type HomeProps = WithRootStorePageProps<{ initialPayload: DemoPagePayload }>;
 
-export const getServerSideProps: GetServerSideProps<HomeProps> = async () => {
+export const getServerSideProps = withRootStoreProps(async () => {
   const initialPayload = await loadDemoPayload();
-  return { props: mergeRootStorePageProps({ initialPayload }) };
-};
+  return { props: { initialPayload } };
+});
 
 const HomePage: NextPage<HomeProps> = ({ initialPayload }) => (
   <>

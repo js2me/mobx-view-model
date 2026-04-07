@@ -3,7 +3,7 @@ import { VMStore } from '@/shared/lib/vm-store';
 import { NextRouter } from 'next/router';
 
 /** Serializable input for `RootStore` (e.g. from `getServerSideProps`). */
-export type RootStoreInitialSnapshot = {
+export type RootStoreSnapshot = {
   appInfo?: Partial<AppInfoSnapshot>;
   router?: NextRouter;
 };
@@ -16,20 +16,20 @@ export class RootStore {
   readonly viewModels;
   readonly router;
 
-  constructor(snapshot?: RootStoreInitialSnapshot) {
-     this.appInfo = new AppInfoStore(snapshot?.appInfo);
-     this.router = snapshot?.router;
-     this.viewModels = new VMStore(this, {
+  constructor(snapshot: RootStoreSnapshot) {
+    this.appInfo = new AppInfoStore(snapshot.appInfo);
+    this.router = snapshot.router;
+    this.viewModels = new VMStore(this, {
       vmConfig: {
         observable: {
           viewModels: {
-            useDecorators: false
+            useDecorators: false,
           },
           viewModelStores: {
             useDecorators: false,
-          }
+          },
         },
       },
-    })
+    });
   }
 }

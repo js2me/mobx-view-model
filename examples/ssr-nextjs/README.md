@@ -1,19 +1,19 @@
-# Example: Next.js (App Router) + SSR + mobx-view-model
+# Example: Next.js (Pages Router) + SSR + mobx-view-model
 
-Demonstrates the setup described in `docs/react/ssr.md`.
+Matches the walkthrough in [`docs/react/ssr.md`](../../docs/react/ssr.md).
 
-- The **Server Component** (`app/page.tsx`) loads data and passes it to the client as **`payload`** for `ViewModelBase`.
-- **`enableStaticRendering`** (`mobx-react-lite`) and **`configure`** (`mobx`) run once in `src/app/bootstrap/client.ts` (imported from the client `Providers` shell).
-- **`RootStore`** holds **`viewModels`** (`ViewModelStoreBase`); the instance is created in **`app/providers.tsx`** and passed as **`store`** into **`RootStoreProvider`**, which wires **`ViewModelsProvider`** + React context. **`withViewModel`** uses a stable **`id`** and **`fallback`**.
-- After hydration, the button increments **`clientInteractions`** on the VM to verify MobX and `observer` in the browser.
+- **Pages Router** with **`getServerSideProps`**. Each data page wraps its handler in **`withRootStoreProps`** so `pageProps.rootStoreSnapshot` includes server-built **`appInfo`**. **`_app`** uses **`withRootStore`**, which creates one **`RootStore`** from the snapshot; *in this example* it also merges **`router`** from **`useRouter()`** (optional pattern, not required by the library). Static routes (**`/404`**, **`/500`**) have no snapshot — **`appInfo`** is omitted and **`AppInfoStore`** uses its **constructor defaults**.
+- **`RootStoreSnapshot`** has optional **`appInfo`** / **`router`** on the wire; **`getRootStoreSnapshot()`** (`src/stores/root-store/snapshot.ts`, demo **`sleep(50)`** via **`yummies/async`**) delegates to **`getAppInfoStoreSnapshot()`** in `src/stores/app-info-store/snapshot.ts`.
+- **`enableStaticRendering`** and **`configure`** run once from [`src/bootstrap/client.ts`](https://github.com/js2me/mobx-view-model/blob/master/examples/ssr-nextjs/src/bootstrap/client.ts), imported at the top of **`src/pages/_app.tsx`**.
+- Demo routes use **`withViewModel`**, stable **`id`** per screen, **`fallback`**, and **`observer`** + **`useViewModel`** to verify hydration.
 
-This package is **standalone** (no `pnpm-workspace`): `mobx-view-model` is linked via **`file:../../dist`** (the built artifact). The repo root `node_modules` is not used by the example.
+The package is **standalone** (no `pnpm-workspace`): `mobx-view-model` is linked via **`file:../../dist`**. Build the library first so `dist/` exists.
 
 ## Run
 
-1. At the repo root: `pnpm install` and **`pnpm build`** (you need **`dist/`** — that is what `file:../../dist` points to).
+1. Repo root: `pnpm install` and **`pnpm build`** (produces **`dist/`**).
 
-2. In the example folder:
+2. Example folder:
 
    ```bash
    cd examples/ssr-nextjs
@@ -21,9 +21,9 @@ This package is **standalone** (no `pnpm-workspace`): `mobx-view-model` is linke
    pnpm dev
    ```
 
-   If you change the library source: run `pnpm build` at the root again, then **`pnpm install`** in the example (so pnpm picks up the updated `dist`).
+   After changing the library: `pnpm build` at the root, then **`pnpm install`** in the example.
 
-Or from the repo root (after the first `pnpm install` in `examples/ssr-nextjs`):
+From repo root (after `pnpm install` in `examples/ssr-nextjs`):
 
 ```bash
 pnpm example:ssr
@@ -31,30 +31,31 @@ pnpm example:ssr
 
 Open [http://localhost:3010](http://localhost:3010).
 
-Production build of the example (from repo root; includes library `pnpm build`):
+Production (from root; includes library build):
 
 ```bash
 pnpm example:ssr:build
 cd examples/ssr-nextjs && pnpm start
 ```
 
-After you already ran `pnpm build` at the root (e.g. in CI), use **`pnpm example:ssr:build:example`** to install deps in the example and run `next build` only once for the library.
+If `dist/` is already built (e.g. CI): **`pnpm example:ssr:build:example`** installs example deps and runs `next build` only.
 
 ## Layout
 
-| File | Role |
+| Path | Role |
 |------|------|
-| `src/app/bootstrap/client.ts` | `configure`, `enableStaticRendering`, `viewModelsConfig` |
-| `src/stores/root-store/index.ts` | `RootStore` class (`viewModels` + room for more stores) |
-| `src/stores/root-store/context.ts` | `RootStoreContext` |
-| `src/stores/root-store/utils/assert-defined.ts` | `assertDefined` via `yummies/type-guard` (`typeGuard.isDefined`) |
-| `src/stores/root-store/hooks/use-root-store.ts` | `useRootStore` |
-| `src/stores/root-store/components/provider.tsx` | `RootStoreProvider` (`store` prop) + `ViewModelsProvider` |
-| `src/app/providers.tsx` | MobX init, `new RootStore()`, passes `store` to `RootStoreProvider` |
-| `src/components/demo-page-client/model.ts` | `ViewModelBase` + `makeObservable` |
-| `src/components/demo-page-client/index.tsx` | `withViewModel` + page client entry |
-| `src/app/page.tsx` | Async RSC; data as `initialPayload` |
+| [`src/bootstrap/client.ts`](https://github.com/js2me/mobx-view-model/blob/master/examples/ssr-nextjs/src/bootstrap/client.ts) | `configure`, `enableStaticRendering` |
+| `src/pages/_app.tsx` | Client app shell, `withRootStore` |
+| `src/pages/_document.tsx` | HTML document |
+| `src/stores/root-store/index.ts` | `RootStore`, `RootStoreSnapshot` type |
+| `src/stores/root-store/snapshot.ts` | `getRootStoreSnapshot()` for SSR props |
+| `src/stores/root-store/lib/with-root-store-props.ts` | `withRootStoreProps`, `WithRootStorePageProps` |
+| `src/stores/root-store/components/with-root-store.tsx` | HOC: one `RootStore` per load; example merges snapshot + `router` from `useRouter` |
+| `src/stores/root-store/components/provider.tsx` | `RootStoreProvider` + `ViewModelsProvider` |
+| `src/stores/app-info-store/snapshot.ts` | `getAppInfoStoreSnapshot` for SSR snapshot |
+| `src/shared/lib/vm-store.ts` | `ViewModelStoreBase` subclass |
+| `src/pages/index.tsx` (and `widgets`, `timeline`, `about`) | `getServerSideProps` + demo UI |
 
 ## Note
 
-If **`dist/`** is missing, `pnpm install` in the example may fail or `file:../../dist` may be empty. After each library rebuild, run `pnpm install` again inside the example.
+If **`dist/`** is missing, `pnpm install` in the example may fail. After each library rebuild, run **`pnpm install`** again inside the example.

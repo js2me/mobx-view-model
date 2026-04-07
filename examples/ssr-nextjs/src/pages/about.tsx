@@ -1,20 +1,20 @@
 import Head from 'next/head';
-import type { GetServerSideProps, NextPage } from 'next';
+import type { NextPage } from 'next';
 import {
-  mergeRootStorePageProps,
+  withRootStoreProps,
   type WithRootStorePageProps,
-} from '@/shared/lib/root-store-server-props';
+} from '@/stores/root-store/lib/with-root-store-props';
 
 type AboutProps = WithRootStorePageProps<{ renderedAt: string }>;
 
-export const getServerSideProps: GetServerSideProps<AboutProps> = async () => {
+export const getServerSideProps = withRootStoreProps(async () => {
   await new Promise((r) => setTimeout(r, 25));
   return {
-    props: mergeRootStorePageProps({
+    props: {
       renderedAt: new Date().toISOString(),
-    }),
+    },
   };
-};
+});
 
 const AboutPage: NextPage<AboutProps> = ({ renderedAt }) => (
   <>

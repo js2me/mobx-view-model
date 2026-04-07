@@ -10,10 +10,10 @@ export class AppInfoStore {
   appName: string;
   environment: string;
 
-  constructor(initial: Partial<AppInfoSnapshot> = {}) {
-    this.appName = initial.appName ?? 'Application name';
+  constructor(initial?: Partial<AppInfoSnapshot>) {
+    this.appName = initial?.appName ?? 'Application name';
     this.environment =
-      initial.environment ??
+      initial?.environment ??
       (process.env.NODE_ENV === 'production' ? 'production' : 'development');
 
     makeObservable(this, {
