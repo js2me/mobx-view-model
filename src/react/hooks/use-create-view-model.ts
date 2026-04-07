@@ -110,7 +110,8 @@ const useCreateViewModelBase = (
 ) => {
   const viewModels = useContext(ViewModelsContext);
   const parentViewModel = useContext(ActiveViewModelContext);
-  const initialAttachIdRef = useRef<string | null>(null);
+  /** Last VM this hook instance attached in render; per-hook, not keyed by `instance.id`. */
+  const lastAttachedInstanceRef = useRef<AnyViewModel | null>(null);
 
   const ctx = config?.ctx ?? {};
 
@@ -159,33 +160,33 @@ const useCreateViewModelBase = (
 
   useIsomorphicLayoutEffect(() => {
     const id = instance.id;
+    const vm = instance;
     if (viewModels) {
       return () => {
         void viewModels.detach(id);
-        initialAttachIdRef.current = null;
+        if (lastAttachedInstanceRef.current === vm) {
+          lastAttachedInstanceRef.current = null;
+        }
       };
     }
     return () => {
-      instance.unmount();
-      initialAttachIdRef.current = null;
+      vm.unmount();
+      if (lastAttachedInstanceRef.current === vm) {
+        lastAttachedInstanceRef.current = null;
+      }
     };
   }, [instance]);
-
-  const instanceId = instance.id ?? null;
 
   // Same render pass as attach (SSR + first client frame). `flushPendingMobxReactions` is
   // required when the VM is created under mobx-react `observer`: nested `reaction()` otherwise
   // runs after `mount()` in the same tick.
-  if (
-    initialAttachIdRef.current !== instanceId &&
-    (!viewModels || !viewModels.has(instanceId))
-  ) {
-    initialAttachIdRef.current = instanceId;
+  if (lastAttachedInstanceRef.current !== instance) {
     if (viewModels) {
       void viewModels.attach(instance);
     } else {
       void instance.mount();
     }
+    lastAttachedInstanceRef.current = instance;
   }
 
   instance.setPayload(payload ?? {});
@@ -199,7 +200,8 @@ const useCreateViewModelSimple = (
 ) => {
   const viewModels = useContext(ViewModelsContext);
   const parentViewModel = useContext(ActiveViewModelContext);
-  const initialAttachIdRef = useRef<string | null>(null);
+  /** Last VM this hook instance attached in render; per-hook, not keyed by `instance.id`. */
+  const lastAttachedInstanceRef = useRef<AnyViewModelSimple | null>(null);
 
   const instance = useValue(() => {
     const instance = new VM();
@@ -216,31 +218,30 @@ const useCreateViewModelSimple = (
 
   useIsomorphicLayoutEffect(() => {
     const id = instance.id;
+    const vm = instance;
     if (viewModels) {
       return () => {
         void viewModels.detach(id);
-        initialAttachIdRef.current = null;
+        if (lastAttachedInstanceRef.current === vm) {
+          lastAttachedInstanceRef.current = null;
+        }
       };
     }
     return () => {
-      instance.unmount?.();
-      initialAttachIdRef.current = null;
+      vm.unmount?.();
+      if (lastAttachedInstanceRef.current === vm) {
+        lastAttachedInstanceRef.current = null;
+      }
     };
   }, [instance]);
 
-  const instanceId = instance.id ?? null;
-
-  if (
-    initialAttachIdRef.current !== instanceId &&
-    (!viewModels || !viewModels.has(instanceId))
-  ) {
-    initialAttachIdRef.current = instanceId;
-
+  if (lastAttachedInstanceRef.current !== instance) {
     if (viewModels) {
       void viewModels.attach(instance);
     } else {
       void instance.mount?.();
     }
+    lastAttachedInstanceRef.current = instance;
   }
 
   instance.setPayload?.(payload);

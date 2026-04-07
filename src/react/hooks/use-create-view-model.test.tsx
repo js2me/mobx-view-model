@@ -104,6 +104,55 @@ describe('useCreateViewModel', () => {
     });
   });
 
+  /**
+   * Regression: a `viewModels.has(id)` guard must not skip the second `attach` when another
+   * hook reuses the same store instance — otherwise `detach` underflows and the VM unmounts
+   * while a sibling is still mounted.
+   */
+  describe('shared store instance (per-hook attach, not id/store membership)', () => {
+    test('two consumers with the same id: refcount 2 → 1 → 0, mount path once', async () => {
+      const vmStore = new ViewModelStoreBaseMock();
+      const sharedId = 'shared-refcount-vm';
+
+      class SharedVM extends ViewModelBaseMock {}
+
+      const Consumer = ({ label }: { label: string }) => {
+        const vm = useCreateViewModel(SharedVM, {}, { id: sharedId });
+        return <span data-testid={label}>{vm.id}</span>;
+      };
+
+      const App = ({ showSecond }: { showSecond: boolean }) => (
+        <div>
+          <Consumer label="a" />
+          {showSecond ? <Consumer label="b" /> : null}
+        </div>
+      );
+
+      const { rerender, unmount } = await act(async () =>
+        render(<App showSecond />, {
+          wrapper: createVMStoreWrapper(vmStore),
+        }),
+      );
+
+      const shared = vmStore.get<any>(sharedId);
+      expect(shared).toBeTruthy();
+      expect(vmStore._instanceAttachedCount.get(sharedId)).toBe(2);
+      expect(shared!.spies.willMount).toHaveBeenCalledTimes(1);
+
+      await act(async () => rerender(<App showSecond={false} />));
+
+      expect(vmStore._instanceAttachedCount.get(sharedId)).toBe(1);
+      expect(vmStore.get(sharedId)).toBe(shared);
+
+      await act(async () => {
+        unmount();
+      });
+
+      expect(vmStore._instanceAttachedCount.get(sharedId)).toBeUndefined();
+      expect(vmStore.get(sharedId)).toBe(null);
+    });
+  });
+
   describe('ViewModelSimple', () => {
     test('should create instance', async ({ task }) => {
       const vmStore = new ViewModelStoreBaseMock();
