@@ -44,6 +44,7 @@ If `dist/` is already built (e.g. CI): **`pnpm example:ssr:build:example`** inst
 
 | Path | Role |
 |------|------|
+| `next.config.ts` | `reactStrictMode: false`; **`transpilePackages: ['mobx-view-model']`** only because the example uses **`file:../../dist`** — drop it when you depend on the published npm package. |
 | [`src/bootstrap/client.ts`](https://github.com/js2me/mobx-view-model/blob/master/examples/ssr-nextjs/src/bootstrap/client.ts) | `configure`, `enableStaticRendering` |
 | `src/pages/_app.tsx` | Client app shell, `withRootStore` |
 | `src/pages/_document.tsx` | HTML document |

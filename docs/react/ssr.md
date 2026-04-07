@@ -20,14 +20,12 @@ Below is a **Next.js (Pages Router)** checklist. A working layout lives in [`exa
 
 ## 1. `next.config`
 
-- **`transpilePackages: ['mobx-view-model']`** — so Next compiles the library.
-- **`reactStrictMode: false`** — in dev, Strict Mode remounts components; that can interfere with view-model lifecycle tied to effects. Turn it off if you hit double mount issues while developing SSR.
+- **`reactStrictMode: false`** — in dev, React Strict Mode double-mounts components. This library ties **`attach` / `detach`** to mount and layout effects, so the extra cycle can **surface bugs** (wrong VM instances or counts). Turn Strict Mode off while debugging SSR if you see that.
 
 ```ts
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  transpilePackages: ['mobx-view-model'],
   reactStrictMode: false,
 };
 
