@@ -134,7 +134,7 @@ describe('useCreateViewModel', () => {
         }),
       );
 
-      const shared = vmStore.get<any>(sharedId);
+      const shared = vmStore.get<ViewModelBaseMock>(sharedId);
       expect(shared).toBeTruthy();
       expect(vmStore._instanceAttachedCount.get(sharedId)).toBe(2);
       expect(shared!.spies.willMount).toHaveBeenCalledTimes(1);
