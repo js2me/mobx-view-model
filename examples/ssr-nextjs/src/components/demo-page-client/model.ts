@@ -1,7 +1,9 @@
+import { VM } from '@/shared/lib/vm';
 import { action, makeObservable, observable } from 'mobx';
-import { ViewModelBase, type ViewModelParams } from 'mobx-view-model';
 
 export type DemoPagePayload = {
+  /** Shown above the article; defaults in the client wrapper. */
+  pageTitle?: string;
   headline: string;
   serverRenderedAt: string;
   bumpable?: boolean;
@@ -11,7 +13,9 @@ export type DemoPagePayload = {
  * ViewModel with its own observable state: after hydration, the button
  * increments a counter to verify MobX + observer in the browser.
  */
-export class DemoPageVM extends ViewModelBase<DemoPagePayload> {
+export class DemoPageVM extends VM<DemoPagePayload> {
+  title = `This value received from root store - "${this.rootStore.appInfo.appName}"`;
+
   clientInteractions = 0;
 
   bump(): void {

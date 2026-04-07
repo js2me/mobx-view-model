@@ -52,7 +52,7 @@ Requires [vmLookup](/api/other/view-model-lookup).
 Retrieves the **last** [ViewModel](/api/view-models/interface) instance from the store based on [vmLookup](/api/other/view-model-lookup).  
 
 :::tip
-If you need more than one VM, use [getAll(vmLookup)](#getallvmlookup) method  
+If you need more than one VM, use [getAll(vmLookup)](#getall-vmlookup) method  
 :::    
 
 #### Example

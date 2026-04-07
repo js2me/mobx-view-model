@@ -6,6 +6,8 @@ const monorepoRoot = path.join(path.dirname(fileURLToPath(import.meta.url)), '..
 
 const nextConfig: NextConfig = {
   transpilePackages: ['mobx-view-model'],
+  // It is important!!!
+  reactStrictMode: false,
   /** Silence the “multiple lockfiles” warning when the app lives inside a monorepo. */
   outputFileTracingRoot: monorepoRoot,
 };

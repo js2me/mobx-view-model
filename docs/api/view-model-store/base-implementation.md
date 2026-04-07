@@ -31,3 +31,6 @@ Is needed to get access to view model instance before all initializations happen
 ### `vmConfig` (_protected_)  
 [ViewModelsConfig](/api/view-models/view-models-config)  
 
+### `getOrCreateVmId(model)`  
+Returns the model’s `id`, assigning one with the store’s configured [`generateId`](/api/view-models/view-models-config) when it was missing. Used by `attach`, `mount`, and related flows; override the store only if you extend `ViewModelStoreBase` and need the same behaviour.  
+

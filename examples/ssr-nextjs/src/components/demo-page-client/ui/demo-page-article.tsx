@@ -21,7 +21,7 @@ export const DemoPageArticle = observer(() => {
         type="button"
         className="mt-4 cursor-pointer rounded-full border-0 bg-demo-accent px-4 py-2 font-semibold text-white hover:brightness-110 disabled:cursor-not-allowed disabled:bg-neutral-600 disabled:opacity-90"
         disabled={!model.payload.bumpable}
-        onClick={() => model.bump()}
+        onClick={model.bump}
       >
         +1 on ViewModel
       </button>
