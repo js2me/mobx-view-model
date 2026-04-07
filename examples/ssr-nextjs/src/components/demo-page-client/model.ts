@@ -4,6 +4,7 @@ import { ViewModelBase, type ViewModelParams } from 'mobx-view-model';
 export type DemoPagePayload = {
   headline: string;
   serverRenderedAt: string;
+  bumpable?: boolean;
 };
 
 /**

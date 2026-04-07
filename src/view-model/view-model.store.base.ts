@@ -213,16 +213,69 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
     return viewModelIds.map((id) => this.viewModels.get(id) as T);
   }
 
-  async mount(model: VMBase | AnyViewModelSimple) {
+  /** Removes `modelId` from {@link mountingViews} after a successful mount. */
+  protected finishMount(modelId: string) {
+    runInAction(() => {
+      this.mountingViews.delete(modelId);
+    });
+  }
+
+  /**
+   * Runs the view model's `mount()` and clears {@link mountingViews} when done.
+   * `attach()` uses the same logic inline so synchronous mounts complete before `attach` returns (SSR / first paint).
+   */
+  protected runModelMount(
+    modelId: string,
+    model: VMBase | AnyViewModelSimple,
+  ): void | Promise<void> {
+    try {
+      const maybePromise = model.mount?.() as void | Promise<unknown>;
+
+      if (
+        maybePromise != null &&
+        typeof (maybePromise as Promise<unknown>).then === 'function'
+      ) {
+        if (
+          process.env.NODE_ENV !== 'production' &&
+          typeof window === 'undefined'
+        ) {
+          console.warn(
+            'Warning #2: ViewModel.mount() returned a Promise during server render.\n',
+            'HTML is emitted before the promise settles; the first server string may not reflect post-mount state (e.g. views using isAbleToRenderView).\n',
+            'On the client, async mount() is normal and does not trigger this warning.\n',
+            'More info: https://js2me.github.io/mobx-view-model/warnings/2',
+          );
+        }
+        return Promise.resolve(maybePromise)
+          .then(() => undefined)
+          .finally(() => {
+            this.finishMount(modelId);
+          });
+      }
+
+      this.finishMount(modelId);
+    } catch (error) {
+      this.finishMount(modelId);
+      throw error;
+    }
+  }
+
+  /**
+   * Backward-compatible entry point: same mount lifecycle as inside `attach()`, but as an async API.
+   * Prefer `attach()` when registering the instance with the store.
+   */
+  async mount(model: VMBase | AnyViewModelSimple): Promise<void> {
     const modelId = this.getOrCreateVmId(model);
 
     this.mountingViews.add(modelId);
 
-    await model.mount?.();
-
-    runInAction(() => {
-      this.mountingViews.delete(modelId);
-    });
+    const outcome = this.runModelMount(modelId, model);
+    if (
+      outcome != null &&
+      typeof (outcome as Promise<unknown>).then === 'function'
+    ) {
+      await outcome;
+    }
   }
 
   async unmount(model: VMBase | AnyViewModelSimple) {
@@ -279,7 +332,14 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
     this.attachVMConstructor(model);
   }
 
-  async attach(model: VMBase | AnyViewModelSimple) {
+  /**
+   * Registers the view model and runs `model.mount()` in the same stack when it is synchronous,
+   * so SSR and the first client render can match without a separate API.
+   *
+   * If `mount()` returns a thenable, returns a `Promise` that settles after mount; the first paint
+   * may still show fallback until then. Otherwise returns `void`.
+   */
+  attach(model: VMBase | AnyViewModelSimple): void | Promise<void> {
     const modelId = this.getOrCreateVmId(model);
 
     const attachedCount = this.instanceAttachedCount.get(modelId) ?? 0;
@@ -294,7 +354,23 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
 
     this.attachVMConstructor(model);
 
-    await this.mount(model);
+    this.mountingViews.add(modelId);
+
+    try {
+      const mountResult = this.runModelMount(modelId, model);
+
+      if (
+        mountResult != null &&
+        typeof (mountResult as Promise<unknown>).then === 'function'
+      ) {
+        return Promise.resolve(mountResult).finally(() => {
+          this.viewModelsTempHeap.delete(modelId);
+        });
+      }
+    } catch (error) {
+      this.viewModelsTempHeap.delete(modelId);
+      throw error;
+    }
 
     this.viewModelsTempHeap.delete(modelId);
   }

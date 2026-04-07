@@ -70,9 +70,15 @@ export interface ViewModelStore<VMBase extends AnyViewModel = AnyViewModel> {
   /**
    * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#attachviewmodel)
    * @param model - The view model to attach.
-   * @returns A promise that resolves when the operation is complete.
+   * @returns `void` when `mount()` completed synchronously, otherwise a promise that settles after async `mount()`.
    */
-  attach(model: VMBase | AnyViewModelSimple): Promise<void>;
+  attach(model: VMBase | AnyViewModelSimple): void | Promise<void>;
+
+  /**
+   * Runs the view model's `mount()` and updates internal mount tracking.
+   * Prefer {@link attach} when registering the instance with the store; this method is kept for backward compatibility.
+   */
+  mount(model: VMBase | AnyViewModelSimple): Promise<void>;
 
   /**
    * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#detachviewmodelid)

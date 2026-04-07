@@ -79,6 +79,7 @@ This is the first point where the created instance is passed to the store.
 
 ### `attach(viewModel)`  
 Attaches a [ViewModel](/api/view-models/overview) to the store.  
+[`ViewModelStoreBase`](/api/view-model-store/base-implementation) runs `mount()` in the **same call stack** when it is synchronous (so SSR and the first client frame match); if `mount()` returns a `Promise`, `attach` returns that promise and the first paint may show fallback until it settles.  
 
 ### `detach(viewModelId)`  
 Detaches a [ViewModel](/api/view-models/overview) from the store using its ID.  

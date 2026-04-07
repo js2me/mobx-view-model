@@ -15,6 +15,13 @@ The main requirement is to keep the initial render **identical** on server and c
 `mobx-view-model` works in Next.js **only with `"use client"`**.  
 `"use server"` does not work because Next.js forbids React hooks in server components.  
 
+## SSR and `attach`  
+React does not run `useLayoutEffect` / `useEffect` while rendering on the **server**.  
+`useCreateViewModel` therefore calls **`attach`** during the **first render pass** whenever the VM is not already in the store (and calls `mount()` synchronously when there is no store), so server HTML matches the first client paint after hydration.  
+The layout effect still calls `attach` only when the instance is **not** yet in the store, so reference counting stays correct.
+
+Custom `ViewModelStore` implementations should mirror [`ViewModelStoreBase.attach`](/api/view-model-store/base-implementation): synchronous `mount()` must finish in the same turn, or SSR will not match the main view until the client.
+
 ## Basic SSR with `withViewModel()`  
 Use a shared `ViewModelStore` and pass the same payload on server and client.  
 This guarantees identical HTML for hydration.  

@@ -1,4 +1,4 @@
-import { useContext } from 'react';
+import { useContext, useRef } from 'react';
 import type { Class, IsPartial, Maybe } from 'yummies/types';
 import type { ViewModelsConfig } from '../../config/index.js';
 import { viewModelsConfig } from '../../config/index.js';
@@ -109,6 +109,7 @@ const useCreateViewModelBase = (
 ) => {
   const viewModels = useContext(ViewModelsContext);
   const parentViewModel = useContext(ActiveViewModelContext);
+  const initialAttachIdRef = useRef<string | null>(null);
 
   const ctx = config?.ctx ?? {};
 
@@ -154,18 +155,35 @@ const useCreateViewModelBase = (
   });
 
   useIsomorphicLayoutEffect(() => {
+    const id = instance.id;
     if (viewModels) {
-      viewModels.attach(instance);
       return () => {
-        viewModels.detach(instance.id);
-      };
-    } else {
-      instance.mount();
-      return () => {
-        instance.unmount();
+        void viewModels.detach(id);
+        initialAttachIdRef.current = null;
       };
     }
+    return () => {
+      instance.unmount();
+      initialAttachIdRef.current = null;
+    };
   }, [instance]);
+
+  const instanceId = instance.id ?? null;
+
+  // Not SSR-only: same pass is needed on the client's first render when the VM is
+  // not in the store yet (hydration parity, no fallback flash). `typeof window` would miss that.
+  // Ref is cleared in the layout-effect cleanup (detach/unmount) so Strict Mode remount runs attach again.
+  if (
+    initialAttachIdRef.current !== instanceId &&
+    (!viewModels || !viewModels.has(instanceId))
+  ) {
+    initialAttachIdRef.current = instanceId;
+    if (viewModels) {
+      viewModels.attach(instance);
+    } else {
+      instance.mount();
+    }
+  }
 
   instance.setPayload(payload ?? {});
 
@@ -178,6 +196,7 @@ const useCreateViewModelSimple = (
 ) => {
   const viewModels = useContext(ViewModelsContext);
   const parentViewModel = useContext(ActiveViewModelContext);
+  const initialAttachIdRef = useRef<string | null>(null);
 
   const instance = useValue(() => {
     const instance = new VM();
@@ -190,25 +209,38 @@ const useCreateViewModelSimple = (
     return instance;
   });
 
-  if ('setPayload' in instance) {
-    useIsomorphicLayoutEffect(() => {
-      instance.setPayload!(payload);
-    }, [payload]);
-  }
-
   useIsomorphicLayoutEffect(() => {
+    const id = instance.id;
     if (viewModels) {
-      viewModels.attach(instance);
       return () => {
-        viewModels.detach(instance.id);
-      };
-    } else {
-      instance.mount?.();
-      return () => {
-        instance.unmount?.();
+        void viewModels.detach(id);
+        initialAttachIdRef.current = null;
       };
     }
+    return () => {
+      instance.unmount?.();
+      initialAttachIdRef.current = null;
+    };
   }, [instance]);
+
+  const instanceId = instance.id ?? null;
+
+  // Not SSR-only: first client render when the VM is not in the store yet (hydration, CSR).
+  // Ref cleared in cleanup so Strict Mode remount re-attaches (see useCreateViewModelBase).
+  if (
+    initialAttachIdRef.current !== instanceId &&
+    (!viewModels || !viewModels.has(instanceId))
+  ) {
+    initialAttachIdRef.current = instanceId;
+
+    if (viewModels) {
+      viewModels.attach(instance);
+    } else {
+      instance.mount?.();
+    }
+  }
+
+  instance.setPayload?.(payload);
 
   return instance;
 };

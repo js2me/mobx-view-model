@@ -208,6 +208,10 @@ export default defineDocsVitepressConfig(configs, {
             text: '#1: ViewModelStore not found',
             link: '/warnings/1',
           },
+          {
+            text: '#2: async mount() during SSR',
+            link: '/warnings/2',
+          },
         ]
       }
     ],

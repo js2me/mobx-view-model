@@ -136,6 +136,34 @@ describe('useCreateViewModel', () => {
       );
     });
 
+    test('ViewModelSimple with setPayload: single call on first CSR render (no render+layout duplicate)', async () => {
+      const setPayloadSpy = vi.fn();
+
+      class SimpleWithPayload implements ViewModelSimple<{ n: number }> {
+        id = 'with-payload';
+
+        setPayload(payload: { n: number }): void {
+          setPayloadSpy(payload);
+        }
+      }
+
+      const A = ({ n }: { n: number }) => {
+        // Overloads for ViewModelSimple default payload to EmptyObject; real VM uses a typed payload.
+        useCreateViewModel(SimpleWithPayload as never, { n });
+        return null;
+      };
+
+      const { rerender } = await act(async () => render(<A n={1} />));
+
+      expect(setPayloadSpy).toHaveBeenCalledTimes(1);
+      expect(setPayloadSpy).toHaveBeenCalledWith({ n: 1 });
+
+      await act(async () => rerender(<A n={2} />));
+
+      expect(setPayloadSpy).toHaveBeenCalledTimes(2);
+      expect(setPayloadSpy).toHaveBeenLastCalledWith({ n: 2 });
+    });
+
     test('should call "attachViewModelStore"', async () => {
       const vmStore = new ViewModelStoreBaseMock();
       const attachViewModelStoreSpy = vi.fn();

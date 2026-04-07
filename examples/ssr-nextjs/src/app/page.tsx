@@ -10,6 +10,7 @@ async function loadInitialPayload(): Promise<DemoPagePayload> {
   return {
     headline: 'This text came from the Server Component',
     serverRenderedAt: new Date().toISOString(),
+    bumpable: true,
   };
 }
 
@@ -17,14 +18,16 @@ export default async function HomePage() {
   const initialPayload = await loadInitialPayload();
 
   return (
-    <main>
-      <h1>SSR + mobx-view-model + hydration</h1>
-      <p className="muted">
-        View page source: HTML may show the fallback or full content depending on
-        timing; after hydration the ViewModel attaches to the store as in the
-        docs. The button below only exercises MobX in the browser.
+    <main className="mx-auto max-w-[40rem] px-5 pb-16 pt-8">
+      <h1 className="mb-4 text-2xl font-semibold">
+        SSR + mobx-view-model + hydration
+      </h1>
+      <p className="text-sm text-demo-muted">
+        View page source: the card HTML comes from the same markup as after
+        attach/mount; the button is disabled until the ViewModel is live. After
+        hydration, MobX on the VM handles clicks.
       </p>
-      <DemoPageClient initialPayload={initialPayload} />
+      <DemoPageClient payload={initialPayload} />
     </main>
   );
 }
