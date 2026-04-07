@@ -2,7 +2,7 @@
 
 ## **SSR + Next.js (this repository)**  
 _Links_:  
-  - Source: https://github.com/js2me/mobx-view-model/tree/master/examples/ssr-nextjs — App Router, `ViewModelStore`, hydration, `enableStaticRendering`.
+  - Source: https://github.com/js2me/mobx-view-model/tree/master/examples/ssr-nextjs — Pages Router (`getServerSideProps`), `ViewModelStore`, hydration, `enableStaticRendering`. See [SSR guide](/react/ssr).
 
 ## **GitlabActivityAnalyzer**  
 _Links_:
