@@ -1,6 +1,6 @@
 import { action, computed, observable, runInAction } from 'mobx';
 import type { ObservableAnnotationsArray } from 'yummies/mobx';
-import type { Class, Maybe } from 'yummies/types';
+import type { Class, Maybe, MaybePromise } from 'yummies/types';
 import {
   applyObservable,
   mergeVMConfigs,
@@ -213,28 +213,27 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
     return viewModelIds.map((id) => this.viewModels.get(id) as T);
   }
 
-  /** Removes `modelId` from {@link mountingViews} after a successful mount. */
-  protected finishMount(modelId: string) {
+  protected finalizeMount(modelId: string) {
     runInAction(() => {
       this.mountingViews.delete(modelId);
     });
   }
 
   /**
-   * Runs the view model's `mount()` and clears {@link mountingViews} when done.
-   * `attach()` uses the same logic inline so synchronous mounts complete before `attach` returns (SSR / first paint).
+   * Puts the model in {@link mountingViews}, calls `model.mount()`, then {@link finalizeMount}.
+   * {@link attach} delegates here so sync `mount()` finishes in the same turn as `attach` (SSR / first paint).
+   *
+   * Returns `void` when `model.mount()` is synchronous, otherwise a promise that settles after async mount.
    */
-  protected runModelMount(
-    modelId: string,
-    model: VMBase | AnyViewModelSimple,
-  ): void | Promise<void> {
-    try {
-      const maybePromise = model.mount?.() as void | Promise<unknown>;
+  protected mount(model: VMBase | AnyViewModelSimple): MaybePromise<void> {
+    const modelId = this.getOrCreateVmId(model);
 
-      if (
-        maybePromise != null &&
-        typeof (maybePromise as Promise<unknown>).then === 'function'
-      ) {
+    this.mountingViews.add(modelId);
+
+    try {
+      const maybePromise = model.mount?.();
+
+      if (maybePromise instanceof Promise) {
         if (
           process.env.NODE_ENV !== 'production' &&
           typeof window === 'undefined'
@@ -246,39 +245,21 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
             'More info: https://js2me.github.io/mobx-view-model/warnings/2',
           );
         }
-        return Promise.resolve(maybePromise)
+        return maybePromise
           .then(() => undefined)
           .finally(() => {
-            this.finishMount(modelId);
+            this.finalizeMount(modelId);
           });
       }
 
-      this.finishMount(modelId);
+      this.finalizeMount(modelId);
     } catch (error) {
-      this.finishMount(modelId);
+      this.finalizeMount(modelId);
       throw error;
     }
   }
 
-  /**
-   * Backward-compatible entry point: same mount lifecycle as inside `attach()`, but as an async API.
-   * Prefer `attach()` when registering the instance with the store.
-   */
-  async mount(model: VMBase | AnyViewModelSimple): Promise<void> {
-    const modelId = this.getOrCreateVmId(model);
-
-    this.mountingViews.add(modelId);
-
-    const outcome = this.runModelMount(modelId, model);
-    if (
-      outcome != null &&
-      typeof (outcome as Promise<unknown>).then === 'function'
-    ) {
-      await outcome;
-    }
-  }
-
-  async unmount(model: VMBase | AnyViewModelSimple) {
+  protected async unmount(model: VMBase | AnyViewModelSimple) {
     const modelId = this.getOrCreateVmId(model);
 
     this.unmountingViews.add(modelId);
@@ -339,7 +320,7 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
    * If `mount()` returns a thenable, returns a `Promise` that settles after mount; the first paint
    * may still show fallback until then. Otherwise returns `void`.
    */
-  attach(model: VMBase | AnyViewModelSimple): void | Promise<void> {
+  attach(model: VMBase | AnyViewModelSimple): MaybePromise<void> {
     const modelId = this.getOrCreateVmId(model);
 
     const attachedCount = this.instanceAttachedCount.get(modelId) ?? 0;
@@ -354,16 +335,11 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
 
     this.attachVMConstructor(model);
 
-    this.mountingViews.add(modelId);
-
     try {
-      const mountResult = this.runModelMount(modelId, model);
+      const mount = this.mount(model);
 
-      if (
-        mountResult != null &&
-        typeof (mountResult as Promise<unknown>).then === 'function'
-      ) {
-        return Promise.resolve(mountResult).finally(() => {
+      if (mount instanceof Promise) {
+        return mount.finally(() => {
           this.viewModelsTempHeap.delete(modelId);
         });
       }

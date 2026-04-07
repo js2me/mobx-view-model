@@ -1,4 +1,5 @@
 import { useContext, useRef } from 'react';
+import { flushPendingReactions } from 'yummies/mobx';
 import type { Class, IsPartial, Maybe } from 'yummies/types';
 import type { ViewModelsConfig } from '../../config/index.js';
 import { viewModelsConfig } from '../../config/index.js';
@@ -148,6 +149,8 @@ const useCreateViewModelBase = (
         viewModels?.createViewModel<any>(configCreate) ??
         viewModelsConfig.factory(configCreate);
 
+      flushPendingReactions();
+
       viewModels?.markToBeAttached(instance);
 
       return instance;
@@ -170,18 +173,18 @@ const useCreateViewModelBase = (
 
   const instanceId = instance.id ?? null;
 
-  // Not SSR-only: same pass is needed on the client's first render when the VM is
-  // not in the store yet (hydration parity, no fallback flash). `typeof window` would miss that.
-  // Ref is cleared in the layout-effect cleanup (detach/unmount) so Strict Mode remount runs attach again.
+  // Same render pass as attach (SSR + first client frame). `flushPendingMobxReactions` is
+  // required when the VM is created under mobx-react `observer`: nested `reaction()` otherwise
+  // runs after `mount()` in the same tick.
   if (
     initialAttachIdRef.current !== instanceId &&
     (!viewModels || !viewModels.has(instanceId))
   ) {
     initialAttachIdRef.current = instanceId;
     if (viewModels) {
-      viewModels.attach(instance);
+      void viewModels.attach(instance);
     } else {
-      instance.mount();
+      void instance.mount();
     }
   }
 
@@ -204,6 +207,8 @@ const useCreateViewModelSimple = (
     instance.parentViewModel =
       parentViewModel as unknown as (typeof instance)['parentViewModel'];
 
+    flushPendingReactions();
+
     viewModels?.markToBeAttached(instance);
 
     return instance;
@@ -225,8 +230,6 @@ const useCreateViewModelSimple = (
 
   const instanceId = instance.id ?? null;
 
-  // Not SSR-only: first client render when the VM is not in the store yet (hydration, CSR).
-  // Ref cleared in cleanup so Strict Mode remount re-attaches (see useCreateViewModelBase).
   if (
     initialAttachIdRef.current !== instanceId &&
     (!viewModels || !viewModels.has(instanceId))
@@ -234,9 +237,9 @@ const useCreateViewModelSimple = (
     initialAttachIdRef.current = instanceId;
 
     if (viewModels) {
-      viewModels.attach(instance);
+      void viewModels.attach(instance);
     } else {
-      instance.mount?.();
+      void instance.mount?.();
     }
   }
 

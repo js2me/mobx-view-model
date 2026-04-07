@@ -63,7 +63,7 @@
     "url": "git://github.com/js2me/mobx-view-model"
   },
   "dependencies": {
-    "yummies": "^7.10.0"
+    "yummies": "^7.15.0"
   },
   "peerDependencies": {
     "mobx": "^6.12.4",

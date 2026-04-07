@@ -21,8 +21,8 @@ importers:
         specifier: ^18.0.0 || ^19.0.0
         version: 19.2.4(react@19.2.4)
       yummies:
-        specifier: ^7.10.0
-        version: 7.13.0(mobx@6.15.0)(react@19.2.4)
+        specifier: ^7.15.0
+        version: 7.15.0(mobx@6.15.0)(react@19.2.4)
     devDependencies:
       '@biomejs/biome':
         specifier: 2.2.6
@@ -4089,8 +4089,8 @@ packages:
     resolution: {integrity: sha512-7dSzzRQ++CKnNI/krKnYRV7JKKPUXMEh61soaHKg9mrWEhzFWhFnxPxGl+69cD1Ou63C13NUPCnmIcrvqCuM6w==}
     engines: {node: '>=12'}
 
-  yummies@7.13.0:
-    resolution: {integrity: sha512-Z8/pPArAhw5ESfYXwUV+dL+wrpaGI4jn3yUZHvOSIwim5/qZ3tefSYd04cl4FEkd+1RcHoWX3k8ojvBDKJXyNg==}
+  yummies@7.15.0:
+    resolution: {integrity: sha512-DA7VasFg3BiVi9e9eZowTeZvsr4c8GZSUSDRDKPQ7MyK6HeVQDKlkokkvCvIQ3S3skZY035owxlgaxd2Wgix7g==}
     peerDependencies:
       mobx: ^6.12.4
       react: ^18 || ^19
@@ -8521,7 +8521,7 @@ snapshots:
       y18n: 5.0.8
       yargs-parser: 21.1.1
 
-  yummies@7.13.0(mobx@6.15.0)(react@19.2.4):
+  yummies@7.15.0(mobx@6.15.0)(react@19.2.4):
     dependencies:
       class-variance-authority: 0.7.1
       clsx: 2.1.1

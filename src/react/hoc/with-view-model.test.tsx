@@ -2539,7 +2539,6 @@ describe('withViewModel', () => {
     }
 
     const Component = withViewModel(PageVM, () => null);
-    expect(true).toBe(true);
 
     const store = new ViewModelStoreBase();
 
