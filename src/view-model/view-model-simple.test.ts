@@ -1,10 +1,18 @@
+import type { Mock } from 'vitest';
 import { describe, expect, it, vi } from 'vitest';
 import type { ViewModelStore } from './index.js';
 import { ViewModelStoreBaseMock } from './view-model.store.base.test.js';
 import type { ViewModelSimple } from './view-model-simple.js';
 
+type ViewModelSimpleImplSpies = {
+  mount: Mock<() => void>;
+  attachViewModelStore: Mock<(viewModels: ViewModelStore) => void>;
+  setPayload: Mock<(payload: { test: number }) => void>;
+  unmount: Mock<() => void>;
+};
+
 export class ViewModelSimpleImpl implements ViewModelSimple<{ test: number }> {
-  spies = {
+  spies: ViewModelSimpleImplSpies = {
     mount: vi.fn(),
     attachViewModelStore: vi.fn(),
     setPayload: vi.fn(),

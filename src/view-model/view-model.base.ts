@@ -256,7 +256,7 @@ export class ViewModelBase<
    *
    * The state - "was changed" is determined inside the setPayload method
    */
-  payloadChanged(payload: Payload, prevPayload: Payload) {
+  payloadChanged(_payload: Payload, _prevPayload: Payload) {
     /* Empty method to be overridden */
   }
 

@@ -23,7 +23,8 @@
     "noEmit": false,
     "jsx": "react-jsx",
 		"paths": {
-			"mobx-view-model": ["./src/index.ts"]
+			"mobx-view-model": ["./src/index.ts"],
+			"mobx-view-model/vue": ["./src/vue/index.ts"]
     }
   },
   "include": [

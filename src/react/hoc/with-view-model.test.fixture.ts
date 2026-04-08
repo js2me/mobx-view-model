@@ -60,7 +60,7 @@ const createAllVmConfigScenarios = () => {
         key: JSON.stringify(it),
       };
     })
-    .filter((it, i, arr) => {
+    .filter((it, _i, arr) => {
       return (
         arr.find((l) => l.key === it.key) === it &&
         arr.findLast((l) => l.key === it.key) === it
