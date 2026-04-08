@@ -12,7 +12,10 @@ What you will do:
 - Use `ViewModelProps` to connect props to a generic `ViewModel`
 - Cast the resulting component to preserve the generic call signature
 
-```tsx{3,10,11,20,21,22} 
+```tsx{6,13,14,23,24,25} 
+import { withViewModel, type VMComponentProps } from "mobx-view-model/react";
+import type { ComponentProps, ReactNode } from "react";
+
 // view.tsx
 
 interface UserSelectUIProps<TUser = any> {
@@ -43,6 +46,8 @@ export type UserSelectProps<TUser = any> = ComponentProps<
 ```
 
 ```ts
+import { ViewModelBase } from "mobx-view-model";
+
 // model.ts
 
 export class UserSelectVM<TUser = any> extends ViewModelBase {

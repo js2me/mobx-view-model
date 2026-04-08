@@ -1,10 +1,10 @@
-import { useContext, useRef } from 'react';
-import type { AnyObject } from 'yummies/types';
 import type {
   AnyViewModel,
   AnyViewModelSimple,
   ViewModelLookup,
-} from '../../view-model/index.js';
+} from 'mobx-view-model';
+import { useContext, useRef } from 'react';
+import type { AnyObject } from 'yummies/types';
 import {
   ActiveViewModelContext,
   ViewModelsContext,

@@ -1,4 +1,4 @@
-# Wrap view components in custom HOC   
+# Wrap view components in custom HOC
 
 To achieve this you can use the [`processViewComponent`](/api/view-models/view-models-config.html#processviewcomponent) view model config option.   
 

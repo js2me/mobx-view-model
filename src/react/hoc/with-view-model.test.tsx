@@ -29,6 +29,7 @@ import {
   type ViewModelParams,
   type ViewModelSimple,
   type ViewModelStore,
+  ViewModelStoreBase,
   type ViewModelsRawConfig,
 } from '../../index.js';
 import { ViewModelBaseMock } from '../../view-model/view-model.base.test.js';
@@ -2466,6 +2467,45 @@ describe('withViewModel', () => {
 
       const screen = await act(async () => render(<TestApp />));
       expect(screen.getByText('hello')).toBeDefined();
+    });
+
+    it('get access to another vm using withViewModel fn ref', async () => {
+      class VM1 extends ViewModelBase {
+        vm1 = 1;
+
+        protected willMount(): void {
+          expectTypeOf(this.viewModels.get(VMC2)).toEqualTypeOf<VM2 | null>();
+          expectTypeOf(this.viewModels.get(VM2)).toEqualTypeOf<VM2 | null>();
+        }
+      }
+      class VM2 extends ViewModelBase<{ foo: number }> {
+        vm2 = 2;
+
+        protected willMount(): void {
+          expectTypeOf(this.viewModels.get(VMC1)).toEqualTypeOf<VM1 | null>();
+          expectTypeOf(this.viewModels.get(VM1)).toEqualTypeOf<VM1 | null>();
+        }
+      }
+
+      const VMC2 = withViewModel(VM2, () => <span>vmc2</span>);
+      const VMC1 = withViewModel(VM1, () => <VMC2 payload={{ foo: 1 }} />);
+
+      type SomeReactType<T> = import('react').FunctionComponent<T>;
+
+      VMC1 satisfies SomeReactType<AnyObject>;
+
+      VMC2 satisfies SomeReactType<{ payload: { foo: number } }>;
+
+      const TestApp = () => {
+        return (
+          <ViewModelsProvider value={new ViewModelStoreBase()}>
+            <VMC1 />
+          </ViewModelsProvider>
+        );
+      };
+
+      const screen = await act(async () => render(<TestApp />));
+      expect(screen.getByText('vmc2')).toBeDefined();
     });
   });
 });

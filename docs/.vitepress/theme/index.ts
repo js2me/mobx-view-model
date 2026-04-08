@@ -2,6 +2,9 @@
 import { h } from 'vue'
 import type { Theme } from 'vitepress'
 import DefaultTheme from 'vitepress/theme'
+import ReactErrorTitleLead from './components/ReactErrorTitleLead.vue'
+import ReactImportDeprecationWarning from './components/ReactImportDeprecationWarning.vue'
+import ReactMark from './components/ReactMark.vue'
 import './style.css'
 import 'uno.css'
 
@@ -12,7 +15,9 @@ export default {
       // https://vitepress.dev/guide/extending-default-theme#layout-slots
     })
   },
-  enhanceApp({ app, router, siteData }) {
-    // ...
-  }
+  enhanceApp({ app }) {
+    app.component('ReactMark', ReactMark)
+    app.component('ReactErrorTitleLead', ReactErrorTitleLead)
+    app.component('ReactImportDeprecationWarning', ReactImportDeprecationWarning)
+  },
 } satisfies Theme

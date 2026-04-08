@@ -1,14 +1,14 @@
-import { useContext } from 'react';
-import type { Class, IsPartial, Maybe } from 'yummies/types';
-import type { ViewModelsConfig } from '../../config/index.js';
-import { viewModelsConfig } from '../../config/index.js';
-import { isViewModelClass } from '../../utils/index.js';
 import type {
   AnyViewModel,
   AnyViewModelSimple,
   ViewModelCreateConfig,
   ViewModelSimple,
-} from '../../view-model/index.js';
+  ViewModelsConfig,
+} from 'mobx-view-model';
+import { viewModelsConfig } from 'mobx-view-model';
+import { useContext } from 'react';
+import type { Class, IsPartial, Maybe } from 'yummies/types';
+import { isViewModelClass } from '../../utils/index.js';
 import {
   ActiveViewModelContext,
   ViewModelsContext,

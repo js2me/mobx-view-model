@@ -1,5 +1,7 @@
 # `useViewModel` hook   
 
+<ReactImportDeprecationWarning />
+
 A hook that provides access to an **already created** [ViewModel](/api/view-models/overview) instance within a React component.  
 
 ::: tip If you need to **create** instance of [ViewModel](/api/view-models/overview)   
@@ -24,6 +26,7 @@ Use a generic type (`YourVM`) to define the return type of the [view model insta
 
 ```tsx
 import { observer } from "mobx-react-lite";
+import { useViewModel } from "mobx-view-model/react";
 
 export const YourComponent = observer(() => {
   const yourVM = useViewModel<YourVM>();
@@ -42,6 +45,7 @@ Use the [`vmLookup`](/api/other/view-model-lookup) argument to define a specific
 
 ```tsx
 import { observer } from "mobx-react-lite";
+import { useViewModel } from "mobx-view-model/react";
 
 export const YourComponent = observer(() => {
   const yourVM = useViewModel<YourVM>('view-model-id');
@@ -52,6 +56,9 @@ export const YourComponent = observer(() => {
 When using [anchors](/react/api/with-view-model#anchors) or [connect()](/react/api/with-view-model#connectanchor----method-on-returned-vmcomponent), pass the anchor component as lookup:
 
 ```tsx
+import { observer } from "mobx-react-lite";
+import { useViewModel, withViewModel } from "mobx-view-model/react";
+
 const Anchor = () => null;
 const MainView = withViewModel(VM, View, { anchors: [Anchor] });
 
@@ -75,6 +82,7 @@ export const PageLazy = loadable(
 
 // page.tsx
 import { PageLazy } from './page.lazy';
+import { withViewModel } from 'mobx-view-model/react';
 
 export const Page = withViewModel(PageVM, ({ model }) => (
   <div>
@@ -85,6 +93,8 @@ Page.connect(PageLazy);
 ```
 
 ```tsx
+import { useViewModel } from 'mobx-view-model/react';
+
 // Some child inside the lazy chunk — uses the same VM
 const model = useViewModel<PageVM>(PageLazy);
 ```

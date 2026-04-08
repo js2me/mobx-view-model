@@ -25,7 +25,8 @@ Library for integration [MVVM](https://en.wikipedia.org/wiki/Model%E2%80%93view%
 
 _React's HOC approach_   
 ```tsx
-import { withViewModel, ViewModelBase, ViewModelProps } from "mobx-view-model";
+import { ViewModelBase } from "mobx-view-model";
+import { withViewModel, ViewModelProps } from "mobx-view-model/react";
 import { observer } from "mobx-react-lite";
 import { action, observable } from "mobx";
 
@@ -61,7 +62,8 @@ export const UserBadge = withViewModel(UserBadgeVM, ({ model }) => (
 
 _React's hook approach_  
 ```tsx
-import { ViewModelBase, ViewModelPayload, useCreateViewModel } from "mobx-view-model";
+import { ViewModelBase, ViewModelPayload } from "mobx-view-model";
+import { useCreateViewModel } from "mobx-view-model/react";
 import { observer } from "mobx-react-lite";
 import { action, observable } from "mobx";
 
