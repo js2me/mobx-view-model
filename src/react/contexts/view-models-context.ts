@@ -1,6 +1,5 @@
+import type { ViewModelStore } from 'mobx-view-model';
 import { createContext } from 'react';
-
-import type { ViewModelStore } from '../../view-model/index.js';
 
 /**
  * Context which contains the view models store instance.

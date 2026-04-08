@@ -1,7 +1,13 @@
 import { defineDocsVitepressConfig } from "sborshik/vitepress";
 import { ConfigsManager } from "sborshik/utils/configs-manager";
+import { REACT_LOGO_SVG } from "./shared/react-logo-svg";
 
-const configs = ConfigsManager.create('../'); 
+const configs = ConfigsManager.create('../');
+
+/** React logo + comma before label (errors / warnings related to React integration) */
+function reactPrefixedSidebarItem(rest: string) {
+  return `<span class="vp-sidebar-error-react-item"><span class="vp-sidebar-error-react-lead">${REACT_LOGO_SVG}</span> ${rest}</span>`;
+}
 
 export default defineDocsVitepressConfig(configs, {
   createdYear: '2024',
@@ -122,7 +128,7 @@ export default defineDocsVitepressConfig(configs, {
         ],
       },
       {
-        text: 'React ✨',
+        text: `<span class="vp-sidebar-react-heading">React ${REACT_LOGO_SVG}</span>`,
         link: '/react/integration',
         items: [
           {
@@ -159,19 +165,19 @@ export default defineDocsVitepressConfig(configs, {
               }
             ]
           },
+          {
+            text: 'Recipes 📜',
+            link: '/recipes/all-props-as-payload',
+            items: [
+              { text: 'All props as payload', link: '/recipes/all-props-as-payload' },
+              { text: 'Connect other components to VMComponent', link: '/recipes/connect-components-to-vm-component' },
+              { text: 'Generic ViewModel types in React', link: '/recipes/generic-view-models-in-react' },
+              { text: 'Wrap in observer() all view components', link: '/recipes/observer-wrap-all-view-components' },
+              { text: 'Wrap view components in custom HOC', link: '/recipes/wrap-view-components-in-custom-hoc' },
+              { text: 'Integration with RootStore', link: '/recipes/integration-with-root-store' },
+            ],
+          },
         ],
-      },
-      {
-        text: 'Recipes 📃',
-        link: '/recipes/observer-wrap-all-view-components',
-        items: [
-          { text: 'All props as payload', link: '/recipes/all-props-as-payload' },
-          { text: 'Connect other components to VMComponent', link: '/recipes/connect-components-to-vm-component' },
-          { text: 'Generic ViewModel types in React', link: '/recipes/generic-view-models-in-react' },
-          { text: 'Wrap in observer() all view components', link: '/recipes/observer-wrap-all-view-components' },
-          { text: 'Wrap view components in custom HOC', link: '/recipes/wrap-view-components-in-custom-hoc' },
-          { text: 'Integration with RootStore', link: '/recipes/integration-with-root-store' },
-        ]
       },
       {
         text: 'Other 🛸',
@@ -187,17 +193,17 @@ export default defineDocsVitepressConfig(configs, {
         link: '/errors/1',
         items: [
           {
-            text: '#1: Active ViewModel not found',
+            text: reactPrefixedSidebarItem('#1: Active ViewModel not found'),
             link: '/errors/1',
           },
           {
-            text: '#2: ViewModel not found',
+            text: reactPrefixedSidebarItem('#2: ViewModel not found'),
             link: '/errors/2',
           },
           {
-            text: '#3: No access to ViewModelStore',
+            text: reactPrefixedSidebarItem('#3: No access to ViewModelStore'),
             link: '/errors/3',
-          }
+          },
         ]
       },
       {
@@ -205,7 +211,7 @@ export default defineDocsVitepressConfig(configs, {
         link: '/warnings/1',
         items: [
           {
-            text: '#1: ViewModelStore not found',
+            text: reactPrefixedSidebarItem('#1: ViewModelStore not found'),
             link: '/warnings/1',
           },
           {

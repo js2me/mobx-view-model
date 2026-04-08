@@ -48,6 +48,10 @@ enableStaticRendering(typeof window === 'undefined');
 
 Example: [`examples/ssr-nextjs/src/bootstrap/client.ts`](https://github.com/js2me/mobx-view-model/blob/master/examples/ssr-nextjs/src/bootstrap/client.ts).
 
+::: tip App Router vs Pages Router
+The sample app uses the **Pages** router and imports this bootstrap from a **client** [`_app`](https://github.com/js2me/mobx-view-model/blob/master/examples/ssr-nextjs/src/pages/_app.tsx). With the **App** router, put `configure` / `enableStaticRendering` in a small module marked with **`'use client'`** and import it from your client root layout (or another client entry), so the same code runs during SSR and in the browser.
+:::
+
 ---
 
 ## 3. Root store + `ViewModelsProvider`
@@ -57,7 +61,7 @@ Put a [`ViewModelStoreBase`](/api/view-model-store/base-implementation) (or cust
 Wrap the tree with your context and [`ViewModelsProvider`](/react/api/view-models-provider):
 
 ```tsx
-import { ViewModelsProvider } from 'mobx-view-model';
+import { ViewModelsProvider } from 'mobx-view-model/react';
 
 export function RootStoreProvider({ store, children }: { store: RootStore; children: React.ReactNode }) {
   return (
@@ -108,7 +112,7 @@ The page module can stay without `'use client'`; pass `initialPayload` into a **
 4. If **`mount()`** is **async**, set **`fallback`** so the first server and client paint match ([warning #2](/warnings/2)).
 5. Deep children: [`useViewModel`](/react/api/use-view-model) + **`observer`**.
 
-**Why the first paint matches:** on the server, React does not run `useLayoutEffect` / `useEffect`. [`useCreateViewModel`](/react/api/use-create-view-model) runs **`attach`** during that first render when needed so the VM is ready for the same markup after hydration. Custom stores should follow [`ViewModelStoreBase.attach`](/api/view-model-store/base-implementation): **`mount()` must finish synchronously** in the sync path, or SSR and the main view can diverge.
+**Why the first paint can match:** during the server HTML pass, React does not run `useLayoutEffect` / `useEffect`. [`useCreateViewModel`](/react/api/use-create-view-model) (and [`withViewModel`](/react/api/with-view-model), which uses it) calls [`attach()`](/api/view-model-store/interface#attach-viewmodel) **during render** as `void store.attach(...)` — the promise is **not** awaited. When the VM’s [`mount()`](/api/view-models/interface#mount-void-promise-void) finishes **synchronously**, the store completes `attach` in the same turn, `isMounted` becomes `true`, and the main view can render immediately. If `mount()` returns a **`Promise`**, the render pass continues without waiting; the VM stays in `mountingViews` until it settles, [`isAbleToRenderView`](/api/view-model-store/interface#isabletorenderview-viewmodelid) is `false` in the meantime, and you should use **`fallback`** so server and client output agree ([warning #2](/warnings/2)). Custom [`ViewModelStore`](/api/view-model-store/interface) implementations should keep the same semantics as [`ViewModelStoreBase`](/api/view-model-store/base-implementation) for [`attach(viewModel)`](/api/view-model-store/interface#attach-viewmodel).
 
 ---
 
@@ -117,7 +121,8 @@ The page module can stay without `'use client'`; pass `initialPayload` into a **
 Same store + same payload on server and client:
 
 ```tsx
-import { ViewModelBase, ViewModelsProvider, ViewModelStoreBase, withViewModel } from 'mobx-view-model';
+import { ViewModelBase, ViewModelStoreBase } from 'mobx-view-model';
+import { ViewModelsProvider, withViewModel } from 'mobx-view-model/react';
 
 class PageVM extends ViewModelBase<{ count: number }> {}
 
@@ -136,11 +141,13 @@ export function renderPage(count: number) {
 }
 ```
 
-Hydration on the client (same wiring):
+Hydration on the client (same wiring — use the **same** `Page` component and the **same** `payload` values as on the server so the tree matches):
 
 ```tsx
-import { ViewModelStoreBase, ViewModelsProvider } from 'mobx-view-model';
+import { ViewModelStoreBase } from 'mobx-view-model';
+import { ViewModelsProvider } from 'mobx-view-model/react';
 import { hydrateRoot } from 'react-dom/client';
+// import { Page } from './page';
 
 const vmStore = new ViewModelStoreBase();
 
@@ -159,6 +166,8 @@ hydrateRoot(
 Use **`fallback`** for the initial render on server and client:
 
 ```tsx
+import { sleep } from "yummies/async";
+
 class PageVM extends ViewModelBase {
   async mount() {
     await sleep(100);
@@ -166,6 +175,8 @@ class PageVM extends ViewModelBase {
   }
 }
 ```
+
+Pass a `fallback` component in [`withViewModel` config](/react/api/with-view-model#fallback) (or set [`viewModelsConfig.fallbackComponent`](/api/view-models/view-models-config#fallbackcomponent)) so both server and client render that UI until `mount()` completes.
 
 ::: tip Same data everywhere
 Reuse the same **`payload`** and the same **`ViewModelsProvider`** / store wiring on server and client. Do not depend on `mount()` side effects for the first paint.

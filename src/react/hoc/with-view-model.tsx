@@ -1,4 +1,12 @@
 import { observer } from 'mobx-react-lite';
+import type {
+  AnyViewModel,
+  AnyViewModelSimple,
+  ViewModel,
+  ViewModelSimple,
+  ViewModelStore,
+} from 'mobx-view-model';
+import { viewModelsConfig } from 'mobx-view-model';
 import { type ComponentType, forwardRef, useContext } from 'react';
 import type {
   AnyObject,
@@ -11,15 +19,7 @@ import type {
   IsUnknown,
   Maybe,
 } from 'yummies/types';
-import { viewModelsConfig } from '../../config/index.js';
-import type {
-  AnyViewModel,
-  AnyViewModelSimple,
-  ViewModel,
-  ViewModelSimple,
-  ViewModelStore,
-} from '../../view-model/index.js';
-import { ActiveViewModelProvider } from '../components/active-view-model-provider.js';
+import { ActiveViewModelProvider } from '../components/index.js';
 import { ViewModelsContext } from '../contexts/index.js';
 import {
   type UseCreateViewModelConfig,

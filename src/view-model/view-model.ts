@@ -14,7 +14,7 @@ export interface ViewModel<
 > {
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/interface#id-string) */
   readonly id: string;
-  /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/interface#vmconfig-viewmodelconfig) */
+  /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/interface#vmconfig-viewmodelsconfig) */
   readonly vmConfig: ViewModelsConfig;
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/interface#payload-payload) */
   readonly payload: Payload;

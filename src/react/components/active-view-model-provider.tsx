@@ -1,8 +1,5 @@
+import type { AnyViewModel, AnyViewModelSimple } from 'mobx-view-model';
 import type { ReactNode } from 'react';
-import type {
-  AnyViewModel,
-  AnyViewModelSimple,
-} from '../../view-model/index.js';
 import { ActiveViewModelContext } from '../contexts/index.js';
 
 /**

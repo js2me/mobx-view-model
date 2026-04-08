@@ -32,7 +32,7 @@ Optional, defaults to `null` if not specified.
 Unique identifier for the view model instance.  
 Used for tracking and managing view model lifecycle.
 
-### `vmConfig: ViewModelConfig`  
+### `vmConfig: ViewModelsConfig`  
 Configuration object for the view model.  
 See [ViewModelsConfig](/api/view-models/view-models-config) for detailed configuration options.
 
@@ -126,12 +126,13 @@ Updates the view model's payload data.
 :::
 
 ::: tip
-In custom implementations, ensure to update `this.payload` in this method.
+When extending [`ViewModelBase`](/api/view-models/base-implementation), do not assign to `this.payload` directly (it is a getter): call `super.setPayload(payload)` or override [`payloadChanged()`](#payloadchanged-payload-payload-prevpayload-payload-void).
 :::
 
 #### Example: Payload Update with Validation
 ```ts
 import { ViewModelBase } from "mobx-view-model";
+import { runInAction } from "mobx";
 
 class LightsaberVM extends ViewModelBase<{ jediId: string }> {
   @observable
@@ -139,9 +140,10 @@ class LightsaberVM extends ViewModelBase<{ jediId: string }> {
 
   setPayload(payload: { jediId: string }) {
     if (this.currentJediId !== payload.jediId) {
-      this.currentJediId = payload.jediId;
-      this.payload = payload;
-      this.payloadChanged();
+      runInAction(() => {
+        this.currentJediId = payload.jediId;
+      });
+      super.setPayload(payload);
     }
   }
 }

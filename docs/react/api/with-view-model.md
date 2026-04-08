@@ -1,5 +1,7 @@
 # `withViewModel` HOC  
 
+<ReactImportDeprecationWarning />
+
 A Higher-Order Component that connects React components to their [ViewModels](/api/view-models/overview), providing seamless MobX integration.  
 
 
@@ -116,7 +118,8 @@ This can be helpful for preprocessing input data.
 
 Example:   
 ```tsx
-import { WithViewModelReactHook } from 'mobx-view-model';
+import { ViewModelBase } from "mobx-view-model";
+import { withViewModel, type WithViewModelReactHook } from "mobx-view-model/react";
 
 const useSuperReactHook: WithViewModelReactHook = (props) => {
   props.foo = 1;
@@ -230,11 +233,8 @@ export const YourComponent = withViewModel(VMClass, ViewComponent, {
 #### Examples:  
 
 ```tsx
-import {
-  ViewModelBase,
-  ViewModelProps,
-  withViewModel
-} from "mobx-view-model";
+import { ViewModelBase } from "mobx-view-model";
+import { ViewModelProps, withViewModel } from "mobx-view-model/react";
 import { observer } from "mobx-react-lite";
 import { observable, action } from "mobx";
 

@@ -8,6 +8,21 @@ slug: /react/integration
 
 # Integration with React  
 
+<ReactImportDeprecationWarning />
+
+## Import path `mobx-view-model/react`
+
+React integration APIs — [`withViewModel`](/react/api/with-view-model), [`useCreateViewModel`](/react/api/use-create-view-model), [`useViewModel`](/react/api/use-view-model), [`ViewModelsProvider`](/react/api/view-models-provider), [`OnlyViewModel`](/react/api/only-view-model), and related types such as `ViewModelProps` — are published under the **`mobx-view-model/react`** subpath.
+
+Keep importing view-model classes, stores, and global configuration from **`mobx-view-model`**:
+
+```ts
+import { ViewModelBase, ViewModelStoreBase, viewModelsConfig } from "mobx-view-model";
+import { withViewModel, ViewModelProps } from "mobx-view-model/react";
+```
+
+The root **`mobx-view-model`** package still re-exports these symbols for backward compatibility, but that path is **deprecated**; use **`mobx-view-model/react`** for all React-related imports.
+
 Integration consists of **2-3 steps**.  
 
 ## 1. Connect ViewModel with View 
@@ -22,7 +37,8 @@ To achieve this you can use:
 Then you should render the component returned from this function  
 
 ```tsx
-import { ViewModelBase, ViewModelProps } from "mobx-view-model";
+import { ViewModelBase } from "mobx-view-model";
+import { ViewModelProps, withViewModel } from "mobx-view-model/react";
 import { observer } from "mobx-react-lite";
 
 class YourComponentVM extends ViewModelBase {}
@@ -50,7 +66,8 @@ const YourApp = () => {
 Then you should render your React components using this hook  
 
 ```tsx
-import { ViewModelBase, useCreateViewModel } from "mobx-view-model";
+import { ViewModelBase } from "mobx-view-model";
+import { useCreateViewModel } from "mobx-view-model/react";
 import { observer } from "mobx-react-lite";
 
 class YourComponentVM extends ViewModelBase {}
@@ -80,7 +97,8 @@ To use this store:
   2. Wrap your application into [`ViewModelsProvider`](/react/api/view-models-provider) Context Provider.  
 
 ```tsx
-import { ViewModelsProvider, ViewModelStoreBase } from "mobx-view-model";
+import { ViewModelStoreBase } from "mobx-view-model";
+import { ViewModelsProvider } from "mobx-view-model/react";
 
 const vmStore = new ViewModelStoreBase();
 
