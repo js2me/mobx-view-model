@@ -43,5 +43,8 @@ export type ViewModelLookup<T extends AnyViewModel | AnyViewModelSimple> =
   | AnyViewModel['id']
   | Class<T>
   | (T extends AnyViewModel
-      ? VMComponent<T, any> | ComponentType<any>
+      ?
+          | VMComponent<T, any>
+          | ComponentType<any>
+          | import('mobx-view-model/react').VMComponent<T, any>
       : ComponentType<any>);

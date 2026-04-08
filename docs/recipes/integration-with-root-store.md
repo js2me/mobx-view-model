@@ -1,4 +1,4 @@
-# Integration with `RootStore`   
+# Integration with `RootStore`
 
 This recipe may be helpful if you need access to your `RootStore` inside your `ViewModel` implementations.   
 
@@ -103,7 +103,7 @@ export class RootStoreImpl implements RootStore {
 4. Create a `View` with a `ViewModel`   
 
 ```tsx{2,4,10}
-import { ViewModelProps, withViewModel } from 'mobx-view-model';
+import { ViewModelProps, withViewModel } from 'mobx-view-model/react';
 import { ViewModelImpl } from '@/shared/lib/mobx';
 
 export class MyPageVM extends ViewModelImpl {

@@ -1,4 +1,4 @@
-# Using all props as payload for your `ViewModel`   
+# Using all props as payload for your `ViewModel`
 
 This recipe is helpful if you want to use all props as `payload` (`this.payload`) in your `ViewModel`.   
 
@@ -13,8 +13,8 @@ What you will do:
 - Override type of output React component into fixed type
 
 ```tsx{8,20,22}
-import { withViewModel } from 'mobx-view-model';
 import { ViewModelBase } from 'mobx-view-model';
+import { withViewModel } from 'mobx-view-model/react';
 
 interface ComponentProps {
   foo: number;

@@ -8,6 +8,8 @@ slug: /react/ssr
 
 # Server-Side Rendering  
 
+<ReactImportDeprecationWarning />
+
 SSR is supported with **ViewModelStore** and predictable hydration on the client.  
 The main requirement is to keep the initial render **identical** on server and client.  
 
@@ -20,7 +22,8 @@ Use a shared `ViewModelStore` and pass the same payload on server and client.
 This guarantees identical HTML for hydration.  
 
 ```tsx
-import { ViewModelBase, ViewModelsProvider, ViewModelStoreBase, withViewModel } from "mobx-view-model";
+import { ViewModelBase, ViewModelStoreBase } from "mobx-view-model";
+import { ViewModelsProvider, withViewModel } from "mobx-view-model/react";
 
 class PageVM extends ViewModelBase<{ count: number }> {}
 
@@ -43,7 +46,8 @@ export const renderPage = (count: number) => {
 If you preload data on the server, pass the same payload to the client.  
 
 ```tsx
-import { ViewModelStoreBase, ViewModelsProvider } from "mobx-view-model";
+import { ViewModelStoreBase } from "mobx-view-model";
+import { ViewModelsProvider } from "mobx-view-model/react";
 import { hydrateRoot } from "react-dom/client";
 
 const vmStore = new ViewModelStoreBase();

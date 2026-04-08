@@ -4,15 +4,10 @@ This configuration contains all options for the behavior of [`ViewModel`](/api/v
 The package provides a **global object** with this configuration, but you can also change it for each [`ViewModel`](/api/view-models/overview) and [`ViewModelStore`](/api/view-model-store/overview) separately using the `vmConfig` field.
 
 ```ts
-import {
-  viewModelsConfig,
-  withViewModel,
-  ViewModelStoreBase
-} from "mobx-view-model";
+import { viewModelsConfig, ViewModelStoreBase } from "mobx-view-model";
+import { withViewModel } from "mobx-view-model/react";
 
 viewModelsConfig.comparePayload = false;
-
-import { withViewModel } from "mobx-view-model";
 
 withViewModel(VM, {
   vmConfig: {

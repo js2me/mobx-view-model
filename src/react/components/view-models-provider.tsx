@@ -1,5 +1,5 @@
+import type { ViewModelStore } from 'mobx-view-model';
 import type { ReactNode } from 'react';
-import type { ViewModelStore } from '../../view-model/index.js';
 import { ViewModelsContext } from '../contexts/index.js';
 
 export const ViewModelsProvider =

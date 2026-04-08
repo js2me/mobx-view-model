@@ -46,7 +46,7 @@ class PetCardVM extends ViewModelBase {
 
 ```tsx
 import { observer } from "mobx-react-lite";
-import { withViewModel, ViewModelProps } from "mobx-view-model";
+import { withViewModel, ViewModelProps } from "mobx-view-model/react";
 import { PetCardVM } from "./model";
 
 export const PetCard = withViewModel(PetCardVM, ({ model }) => {

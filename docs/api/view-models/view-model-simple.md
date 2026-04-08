@@ -70,7 +70,7 @@ Because TypeScript throws an error about not implementing at least one property 
 
 ```tsx
 import { observer } from "mobx-react-lite";
-import { withViewModel } from "mobx-view-model";
+import { withViewModel } from "mobx-view-model/react";
 import { FruitViewModel } from "./model";
 
 export const FruitComponent = withViewModel(FruitViewModel, ({ model }) => {
@@ -89,7 +89,7 @@ export const FruitComponent = withViewModel(FruitViewModel, ({ model }) => {
 
 ```tsx
 import { observer } from "mobx-react-lite";
-import { useCreateViewModel } from "mobx-view-model";
+import { useCreateViewModel } from "mobx-view-model/react";
 import { FruitViewModel } from "./model";
 
 export const FruitComponent = observer(() => {
