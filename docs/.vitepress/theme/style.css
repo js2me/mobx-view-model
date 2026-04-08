@@ -85,7 +85,7 @@ html:not(.dark) .vp-sidebar-react-icon {
   line-height: 0;
 }
 
-.vp-error-title-leading__svg :deep(svg) {
+.vp-error-title-leading__svg svg {
   display: block;
   width: 1.05em;
   height: 1.05em;
