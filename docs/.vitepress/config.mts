@@ -7,6 +7,7 @@ export default defineDocsVitepressConfig(configs, {
   createdYear: '2024',
   themeConfig: {
     nav: [
+      { text: 'LLM', 'link': `https://${configs.package.author}.github.io/${configs.package.name}/llms-full.txt` },
       { text: 'Home', link: '/' },
       { text: 'Introduction', link: '/introduction/overview' },
       { text: 'Changelog', link: `https://github.com/${configs.package.author}/${configs.package.name}/releases` },
@@ -165,6 +166,8 @@ export default defineDocsVitepressConfig(configs, {
         link: '/recipes/observer-wrap-all-view-components',
         items: [
           { text: 'All props as payload', link: '/recipes/all-props-as-payload' },
+          { text: 'Connect other components to VMComponent', link: '/recipes/connect-components-to-vm-component' },
+          { text: 'Generic ViewModel types in React', link: '/recipes/generic-view-models-in-react' },
           { text: 'Wrap in observer() all view components', link: '/recipes/observer-wrap-all-view-components' },
           { text: 'Wrap view components in custom HOC', link: '/recipes/wrap-view-components-in-custom-hoc' },
           { text: 'Integration with RootStore', link: '/recipes/integration-with-root-store' },

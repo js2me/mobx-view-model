@@ -1,7 +1,7 @@
 # View Model Lookup
 
 ### `ViewModelLookup`, `vmLookup`  
-This type is declaration of which data is needed to find your [ViewModel](/api/view-models/overview) instance in [`ViewModelStore`](/api/view-model-store/overview)  
+This type declares what data is needed to find your [ViewModel](/api/view-models/overview) instance in [`ViewModelStore`](/api/view-model-store/overview).  
 
 It can be:   
   - [ViewModel id](/api/view-models/interface#id-string)  
@@ -14,7 +14,7 @@ It can be:
 
 # Example   
 
-_This example represents scenario if you are not using [API for integration with React](/react/integration)._  
+_This example represents a scenario where you are not using the [React integration API](/react/integration)._  
 
 ```ts
 import { ViewModelStoreBase, ViewModelBase } from "mobx-view-model"

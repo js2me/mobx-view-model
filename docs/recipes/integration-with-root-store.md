@@ -1,10 +1,10 @@
 # Integration with `RootStore`   
 
-This recipe may be helpful if you need to get access to your `RootStore` inside your `ViewModel` implementations   
+This recipe may be helpful if you need access to your `RootStore` inside your `ViewModel` implementations.   
 
 Follow the steps:   
 
-1. Make your own `ViewModel` implementation with accepting `RootStore` as `constructor` parameter   
+1. Make your own `ViewModel` implementation that accepts `RootStore` as a `constructor` parameter   
 
 ```ts
 // view-model.ts
@@ -49,7 +49,7 @@ export class ViewModelImpl<
 ```
 
 
-1. Make your own `ViewModelStore` implementation with accepting `RootStore` as `constructor` parameter and overriding `createViewModel` method for transfer `rootStore`   
+2. Make your own `ViewModelStore` implementation that accepts `RootStore` as a `constructor` parameter and overrides `createViewModel` to pass `rootStore`   
 
 ```ts{8,9,12,23,24,25}
 // view-model.store.impl.ts
@@ -78,7 +78,7 @@ export class ViewModelStoreImpl extends ViewModelStoreBase {
       return new VM(this.rootStore, config);
     }
 
-    // otherwise it will be default behaviour
+    // otherwise it will be the default behavior
     // of this method
     return super.createViewModel(config);
   }
@@ -100,7 +100,7 @@ export class RootStoreImpl implements RootStore {
 }
 ```  
 
-4. Create `View` with `ViewModel`   
+4. Create a `View` with a `ViewModel`   
 
 ```tsx{2,4,10}
 import { ViewModelProps, withViewModel } from 'mobx-view-model';

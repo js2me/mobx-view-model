@@ -1,17 +1,14 @@
 # With base implementation
 
-Another simplest usage is to work with [base implementation](/api/view-models/base-implementation) of the [`ViewModel` interface](/api/view-models/interface)  
+Another simple usage is to work with the [base implementation](/api/view-models/base-implementation) of the [`ViewModel` interface](/api/view-models/interface).  
 
 Follow the steps:  
 
 ##### **1.** Create your [`ViewModel`](/api/view-models/overview) class using [`ViewModelBase`](/api/view-models/base-implementation) (base implementation of [`ViewModel` package interface](/api/view-models/interface))   
 
 ```tsx
-import {
-  ViewModelProps,
-  ViewModelBase,
-  withViewModel
-} from 'mobx-view-model';
+import { observable } from 'mobx';
+import { ViewModelProps, ViewModelBase, withViewModel } from 'mobx-view-model';
 
 export class MyPageVM extends ViewModelBase<{ payloadA: string }> {
   @observable
@@ -34,7 +31,6 @@ export class MyPageVM extends ViewModelBase<{ payloadA: string }> {
 ##### **2.** Create view component using [HOC `withViewModel()`](/react/api/with-view-model)  
 
 ```tsx
-import { observer } from 'mobx-react-lite';
 import { withViewModel } from 'mobx-view-model';
 
 export const MyPage = withViewModel(MyPageVM, ({ model }) => {
@@ -42,7 +38,7 @@ export const MyPage = withViewModel(MyPageVM, ({ model }) => {
 });
 ```
 
-or you can use [`useCreateViewModel()` hook](/react/api/use-create-view-model)  
+or you can use the [`useCreateViewModel()` hook](/react/api/use-create-view-model)  
 
 ```tsx
 import { observer } from 'mobx-react-lite';
@@ -66,6 +62,6 @@ export const MyPage = observer(
 ```
 
 
-If you need access to all other view models then you need to add [ViewModelStore](/api/view-model-store/overview).  
-This guide you can found [on the next page](/introduction/usage/with-view-model-store)  
+If you need access to other view models, then you need to add a [ViewModelStore](/api/view-model-store/overview).  
+You can find that guide [on the next page](/introduction/usage/with-view-model-store).  
 

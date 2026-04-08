@@ -1,6 +1,8 @@
 # `<OnlyViewModel />` Component  
 
-Component which creates the instance of passed [`ViewModel`](/api/view-models/interface) or [`ViewModelSimple`](/api/view-models/view-model-simple) class and renders nothing or passed `children`.  
+Component that creates an instance of a passed [`ViewModel`](/api/view-models/interface) class and renders nothing or the provided `children`.  
+If `children` is a function, it receives the created model.  
+`ViewModelSimple` is not supported here.  
 
 
 ## Example   

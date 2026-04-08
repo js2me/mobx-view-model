@@ -1,11 +1,11 @@
 # Getting started  
 
-The `mobx-view-model` source code is written in TypeScript and compiled into the NodeNext target.   
+The `mobx-view-model` source code is written in TypeScript and compiled with the `NodeNext` module target.   
 
 ## Requirements  
 
 - [`MobX`](https://mobx.js.org) **^6**  
-- [`React`](https://reactjs.org) **^18|^19** required for now    
+- [`React`](https://reactjs.org) **^18|^19** is required for the React integration    
 
 ## Installation
 
@@ -25,10 +25,10 @@ yarn add {packageJson.name}
 
 :::
 
-## Writing first ViewModels
+## Writing your first ViewModel
 
 ```ts
-import { observable } from 'mobx';
+import { action, observable } from 'mobx';
 import { ViewModelBase } from 'mobx-view-model';
 
 class PetCardVM extends ViewModelBase {

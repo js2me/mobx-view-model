@@ -1,4 +1,5 @@
 import { makeObservable, reaction } from 'mobx';
+import type { Mock } from 'vitest';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { AnyObject, EmptyObject } from 'yummies/types';
@@ -14,11 +15,21 @@ export class ViewModelBaseMock<
   Payload extends AnyObject = EmptyObject,
   ParentViewModel extends AnyViewModel | AnyViewModelSimple | null = null,
 > extends ViewModelBase<Payload, ParentViewModel> {
-  spies = {
+  spies: {
+    mount: Mock<() => void>;
+    unmount: Mock<() => void>;
+    payloadChanged: Mock<(payload: any, prevPayload: any) => void>;
+    willMount: Mock<() => void>;
+    didMount: Mock<() => void>;
+    willUnmount: Mock<() => void>;
+    didUnmount: Mock<() => void>;
+  } = {
     mount: vi.fn(),
     unmount: vi.fn(),
     payloadChanged: vi.fn(),
+    willMount: vi.fn(),
     didMount: vi.fn(),
+    willUnmount: vi.fn(),
     didUnmount: vi.fn(),
   };
 
@@ -35,6 +46,10 @@ export class ViewModelBaseMock<
     this.spies.didMount();
   }
 
+  protected willMount(): void {
+    this.spies.willMount();
+  }
+
   mount(): void {
     this.spies.mount();
     super.mount();
@@ -45,12 +60,16 @@ export class ViewModelBaseMock<
     super.unmount();
   }
 
-  payloadChanged(payload: any): void {
-    this.spies.payloadChanged(payload);
+  payloadChanged(payload: any, prevPayload: any): void {
+    this.spies.payloadChanged(payload, prevPayload);
   }
 
   protected didUnmount(): void {
     this.spies.didUnmount();
+  }
+
+  protected willUnmount(): void {
+    this.spies.willUnmount();
   }
 }
 
@@ -101,6 +120,30 @@ describe('ViewModelBase', () => {
     expect(vm.spies.didMount).toHaveBeenCalledOnce();
   });
 
+  it('willMount should be called before didMount on mount', () => {
+    const vm = new ViewModelBaseMock();
+
+    vm.mount();
+
+    expect(vm.spies.willMount).toHaveBeenCalledOnce();
+    expect(vm.spies.willMount.mock.invocationCallOrder[0]).toBeLessThan(
+      vm.spies.didMount.mock.invocationCallOrder[0],
+    );
+  });
+
+  it('mount should be called before willMount and didMount', () => {
+    const vm = new ViewModelBaseMock();
+
+    vm.mount();
+
+    expect(vm.spies.mount.mock.invocationCallOrder[0]).toBeLessThan(
+      vm.spies.willMount.mock.invocationCallOrder[0],
+    );
+    expect(vm.spies.mount.mock.invocationCallOrder[0]).toBeLessThan(
+      vm.spies.didMount.mock.invocationCallOrder[0],
+    );
+  });
+
   it('isMounted should be true after mount', () => {
     const vm = new ViewModelBaseMock();
     vm.mount();
@@ -121,6 +164,30 @@ describe('ViewModelBase', () => {
     vm.unmount();
 
     expect(vm.spies.didUnmount).toHaveBeenCalledOnce();
+  });
+
+  it('willUnmount should be called before didUnmount on unmount', () => {
+    const vm = new ViewModelBaseMock();
+
+    vm.unmount();
+
+    expect(vm.spies.willUnmount).toHaveBeenCalledOnce();
+    expect(vm.spies.willUnmount.mock.invocationCallOrder[0]).toBeLessThan(
+      vm.spies.didUnmount.mock.invocationCallOrder[0],
+    );
+  });
+
+  it('unmount should be called before willUnmount and didUnmount', () => {
+    const vm = new ViewModelBaseMock();
+
+    vm.unmount();
+
+    expect(vm.spies.unmount.mock.invocationCallOrder[0]).toBeLessThan(
+      vm.spies.willUnmount.mock.invocationCallOrder[0],
+    );
+    expect(vm.spies.unmount.mock.invocationCallOrder[0]).toBeLessThan(
+      vm.spies.didUnmount.mock.invocationCallOrder[0],
+    );
   });
 
   it('isMounted should be false after unmount', () => {
@@ -149,5 +216,129 @@ describe('ViewModelBase', () => {
     expect(spy).nthCalledWith(2, false);
 
     dispose();
+  });
+
+  it('setPayload should respect comparePayload and pass prev payload', () => {
+    const payload1 = { value: 1 };
+    const payload2 = { value: 1 };
+    const payload3 = { value: 2 };
+
+    const vm = new ViewModelBaseMock({
+      payload: payload1,
+      vmConfig: {
+        comparePayload: (current, next) => current?.value === next.value,
+      },
+    });
+
+    vm.setPayload(payload2);
+    expect(vm.payload).toBe(payload1);
+    expect(vm.spies.payloadChanged).not.toHaveBeenCalled();
+
+    vm.setPayload(payload3);
+    expect(vm.payload).toBe(payload3);
+    expect(vm.spies.payloadChanged).toHaveBeenCalledOnce();
+    expect(vm.spies.payloadChanged).toHaveBeenCalledWith(payload3, payload1);
+  });
+
+  it('isUnmounting should be true during willUnmount and false after', () => {
+    class UnmountStateMock extends ViewModelBaseMock {
+      isUnmountingAtWillUnmount: boolean | null = null;
+
+      protected willUnmount(): void {
+        this.isUnmountingAtWillUnmount = this.isUnmounting;
+        super.willUnmount();
+      }
+    }
+
+    const vm = new UnmountStateMock();
+
+    expect(vm.isUnmounting).toBe(false);
+    vm.unmount();
+    expect(vm.isUnmountingAtWillUnmount).toBe(true);
+    expect(vm.isUnmounting).toBe(false);
+  });
+
+  it('unmountSignal should be aborted after unmount', () => {
+    const vm = new ViewModelBaseMock();
+    const spy = vi.fn();
+
+    expect(vm.unmountSignal.aborted).toBe(false);
+    vm.unmountSignal.addEventListener('abort', spy);
+
+    vm.unmount();
+
+    expect(vm.unmountSignal.aborted).toBe(true);
+    expect(spy).toHaveBeenCalledOnce();
+  });
+
+  describe('hasChild / hasParent', () => {
+    class RelationsVM extends ViewModelBaseMock<
+      any,
+      AnyViewModel | AnyViewModelSimple | null
+    > {
+      hasChildPublic(vm: AnyViewModel | AnyViewModelSimple, deep?: boolean) {
+        return this.hasChild(vm, deep);
+      }
+      hasParentPublic(vm: AnyViewModel | AnyViewModelSimple, deep?: boolean) {
+        return this.hasParent(vm, deep);
+      }
+    }
+
+    const createTree = () => {
+      const root = new RelationsVM({ id: 'root' });
+      const child = new RelationsVM({ id: 'child', parentViewModel: root });
+      const grandchild = new RelationsVM({
+        id: 'grandchild',
+        parentViewModel: child,
+      });
+
+      return { root, child, grandchild };
+    };
+
+    it('hasChild: shallow (deep undefined/false)', () => {
+      const { root, child, grandchild } = createTree();
+
+      expect(root.hasChildPublic(child)).toBe(true);
+      expect(root.hasChildPublic(child, false)).toBe(true);
+
+      expect(root.hasChildPublic(grandchild)).toBe(false);
+      expect(root.hasChildPublic(grandchild, false)).toBe(false);
+
+      expect(child.hasChildPublic(grandchild)).toBe(true);
+      expect(child.hasChildPublic(root)).toBe(false);
+    });
+
+    it('hasChild: deep', () => {
+      const { root, child, grandchild } = createTree();
+
+      expect(root.hasChildPublic(child, true)).toBe(true);
+      expect(root.hasChildPublic(grandchild, true)).toBe(true);
+
+      expect(child.hasChildPublic(grandchild, true)).toBe(true);
+      expect(child.hasChildPublic(root, true)).toBe(false);
+
+      expect(root.hasChildPublic(root, true)).toBe(false);
+    });
+
+    it('hasParent: shallow (deep undefined/false)', () => {
+      const { root, child, grandchild } = createTree();
+
+      expect(child.hasParentPublic(root)).toBe(true);
+      expect(child.hasParentPublic(root, false)).toBe(true);
+
+      expect(grandchild.hasParentPublic(child)).toBe(true);
+      expect(grandchild.hasParentPublic(root)).toBe(false);
+    });
+
+    it('hasParent: deep', () => {
+      const { root, child, grandchild } = createTree();
+
+      expect(child.hasParentPublic(root, true)).toBe(true);
+      expect(grandchild.hasParentPublic(child, true)).toBe(true);
+      expect(grandchild.hasParentPublic(root, true)).toBe(true);
+
+      expect(root.hasParentPublic(child, true)).toBe(false);
+      expect(root.hasParentPublic(root, true)).toBe(false);
+    });
   });
 });

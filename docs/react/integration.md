@@ -8,18 +8,18 @@ slug: /react/integration
 
 # Integration with React  
 
-Integration consist of **2-3 steps**.  
+Integration consists of **2-3 steps**.  
 
 ## 1. Connect ViewModel with View 
-Your [ViewModel](/api/view-models/interface) should be connected with React view component  
+Your [ViewModel](/api/view-models/interface) should be connected to a React view component.  
 To achieve this you can use:  
 - [`withViewModel()` HOC](/react/api/with-view-model) - recommended way  
-- [`useCreateViewModel()` hook](/react/api/use-create-view-model) - simplest way, more performant  
+- [`useCreateViewModel()` hook](/react/api/use-create-view-model) - simplest way, more performant in many cases  
 
 ## 2. Render in React tree   
 
 #### use [withViewModel() HOC](/react/api/with-view-model)  
-Then you should render component returned from this function  
+Then you should render the component returned from this function  
 
 ```tsx
 import { ViewModelBase, ViewModelProps } from "mobx-view-model";
@@ -32,7 +32,7 @@ export interface YourComponentProps extends ViewModelProps<YourComponentVM> {
 }
 
 const YourComponent = withViewModel(
-  YourComponent,
+  YourComponentVM,
   ({ model, yourProp }: YourComponentProps) => {
     return <div>{model.id}</div>;
   },
@@ -47,10 +47,10 @@ const YourApp = () => {
 
 
 #### use [`useCreateViewModel()` hook](/react/api/use-create-view-model)  
-Then you should render your React components with using this hook  
+Then you should render your React components using this hook  
 
 ```tsx
-import { ViewModelBase, ViewModelProps, useCreateViewModel } from "mobx-view-model";
+import { ViewModelBase, useCreateViewModel } from "mobx-view-model";
 import { observer } from "mobx-react-lite";
 
 class YourComponentVM extends ViewModelBase {}
@@ -74,7 +74,7 @@ const YourApp = () => {
 
 
 ## 3. _\[Optional\]_ Use [ViewModelStore](/api/view-model-store/interface)  
-[ViewModelStore](/api/view-model-store/interface) is very powerful thing which allows you to lookup and get access to your view model instances everywhere.  
+[ViewModelStore](/api/view-model-store/interface) is a powerful tool that allows you to look up and access your view model instances anywhere.  
 To use this store:
   1. Create instance of `ViewModelStore`
   2. Wrap your application into [`ViewModelsProvider`](/react/api/view-models-provider) Context Provider.  
@@ -92,11 +92,11 @@ const YourApp = () => {
   )
 }
 ```
-With this step you can use [`useViewModel()`](/react/api/use-view-model) hook with first argument  
+With this step you can use the [`useViewModel()`](/react/api/use-view-model) hook with the first argument  
 
 ::: tip [`isMounted`](/api/view-models/interface#ismounted-boolean) state  
-This statement totally based on call [`mount()` method](/api/view-models/interface#mount-void-promise-void) which calls inside [`useCreateViewModel()`](/react/api/use-create-view-model) hook.  
-Because of this on the first render `isMounted` will be `false`, because mounting happens inside `useLayoutEffect\useEffect` react hook.  
+This state is based on calling the [`mount()` method](/api/view-models/interface#mount-void-promise-void), which is triggered inside the [`useCreateViewModel()`](/react/api/use-create-view-model) hook or the store lifecycle.  
+Because of this, on the first render `isMounted` will be `false`, since mounting happens inside a `useLayoutEffect`/`useEffect` hook.  
 :::
 
 ::: warning Do not calls [`mount()`](/api/view-models/interface#mount-void-promise-void), [`unmount()`](/api/view-models/interface#unmount-void-promise-void) manually  

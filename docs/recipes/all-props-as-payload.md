@@ -1,6 +1,6 @@
 # Using all props as payload for your `ViewModel`   
 
-This recipe helpful if you want to use all props as `payload` (`this.payload`) in your `ViewModel`.   
+This recipe is helpful if you want to use all props as `payload` (`this.payload`) in your `ViewModel`.   
 
 
 What you will need:   

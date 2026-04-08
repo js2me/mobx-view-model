@@ -1,5 +1,5 @@
 # Vite plugin   
-This library has a `Vite` plugin that **can** improve DX when using the library.   
+This library has a `Vite` plugin that **can** improve DX when using it.   
     
 
 ## Installation   
@@ -23,7 +23,7 @@ yarn add mobx-view-model-vite-plugin
 
 ## Usage   
 
-Open your `vite.config.ts` and add this plugin  
+Open your `vite.config.ts` and add this plugin.  
 
 ```ts{1,4-6}
 import { mobxViewModel } from "mobx-view-model-vite-plugin";
@@ -40,4 +40,4 @@ import { mobxViewModel } from "mobx-view-model-vite-plugin";
 
 ### `reloadOnChangeViewModel`   
 
-This option enables reload page after your `ViewModel` change    
+This option reloads the page after your `ViewModel` changes.    

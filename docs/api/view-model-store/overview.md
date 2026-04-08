@@ -26,7 +26,7 @@ Consider ViewModelStore when your application requires:
 Integrate with React  
 
 ```tsx 
-import { ViewModelStoreBase, ViewModelsProvider } from "mobx-view-models";
+import { ViewModelStoreBase, ViewModelsProvider } from "mobx-view-model";
 
 const vmStore = new ViewModelStoreBase();
 
@@ -47,7 +47,7 @@ class NotifierVM extends ViewModelBase {
 }
 
 const NotifierView = () => {
-  return <div>hello i am notifier</div>;
+  return <div>Hello, I am a notifier.</div>;
 };
 
 export const Notifier = withViewModel(NotifierVM, { id: 'notifier-id' })(

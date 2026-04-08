@@ -1,14 +1,14 @@
 # Detailed configuration
 
-This way can be helpful when: 
- - if you need to override default factory method of creating view model instances in [ViewModelStore](/api/view-model-store/interface).  
- - if you need to inject root store into [ViewModelStore](/api/view-model-store/interface).  
- - if you need more control of the mounting/unmounting [ViewModels](/api/view-models/overview).  
+This approach can be helpful when: 
+ - you need to override the default factory method for creating view model instances in [ViewModelStore](/api/view-model-store/interface);  
+ - you need to inject a root store into [ViewModelStore](/api/view-model-store/interface);  
+ - you need more control over mounting/unmounting [ViewModels](/api/view-models/overview).  
 
 
 Follow the steps:   
 
-##### 1. Make your own `ViewModel` implementation and interface with some customizations:  
+##### 1. Make your own `ViewModel` interface and implementation with customizations:  
 
 ```ts{9,10}
 // view-model.ts
@@ -66,7 +66,7 @@ export class ViewModelStoreImpl extends ViewModelStoreBase {
   ): VM {
     const VM = config.VM;
 
-    // here is you sending rootStore as
+  // here you send rootStore as
     // first argument into VM (your view model implementation)
     if (ViewModelImpl.isPrototypeOf(VM)) {
       const instance = super.createViewModel(config) as unknown as ViewModelImpl;
@@ -74,14 +74,14 @@ export class ViewModelStoreImpl extends ViewModelStoreBase {
       return instance;
     }
 
-    // otherwise it will be default behaviour
+    // otherwise it will be the default behavior
     // of this method
     return super.createViewModel(config);
   }
 }
 ```
 
-##### 3. Create `View` with `ViewModel`   
+##### 3. Create a `View` with a `ViewModel`   
 
 ```tsx{2,4,10}
 import { ViewModelProps, withViewModel } from 'mobx-view-model';
@@ -111,4 +111,4 @@ export const MyPage = withViewModel(MyPageVM, ({ model }) => {
 });
 ```
 
-Also you may be helpful to read [**this recipe about integration with `RootStore`**](/recipes/integration-with-root-store)   
+You may also find [**this recipe about integrating with `RootStore`**](/recipes/integration-with-root-store) helpful.   

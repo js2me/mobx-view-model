@@ -8,7 +8,7 @@ slug: /api/view-models/base-implementation
 
 # `ViewModelBase` class  
 
-This is base implementation of the [`ViewModel`](/api/view-models/interface) interface  
+This is the base implementation of the [`ViewModel`](/api/view-models/interface) interface.  
 
 [Reference to source code](/src/view-model/view-model.base.ts)  
 
@@ -21,8 +21,8 @@ If you want to read about [`ViewModel`](/api/view-models/interface) interface me
 :::
 
 ### `viewModels`  
-Reference to instance of [`ViewModelStore`](/api/view-model-store/overview).  
-Allows to get access to other [`ViewModels`](/api/view-models/interface).  
+Reference to an instance of [`ViewModelStore`](/api/view-model-store/overview).  
+Allows access to other [`ViewModels`](/api/view-models/interface).  
 
 #### Example   
 
@@ -48,7 +48,7 @@ export class StarWarsBattlefieldVM extends ViewModelBase {
 
 
 ### `unmountSignal`   
-This is [`AbortSignal`](https://developer.mozilla.org/ru/docs/Web/API/AbortSignal) which is signaled when your [`ViewModel`](/api/view-models/interface) is unmounted. It happens after `unmount()` completes in the base implementation.   
+This is an [`AbortSignal`](https://developer.mozilla.org/ru/docs/Web/API/AbortSignal) that is signaled when your [`ViewModel`](/api/view-models/interface) is unmounted. It happens after `unmount()` completes in the base implementation.   
 
 #### Example   
 ```ts
@@ -87,9 +87,9 @@ Executes before the `mount()` method.
 Called when the component is mounted in the React tree.  
 
 This method sets [`isMounted`](/api/view-models/interface#ismounted-boolean) to `true`.   
-If you are overriding this method be sure that you called the [`super.mount()`](/api/view-models/interface#mount-void-promise-void), 
+If you override this method, be sure to call [`super.mount()`](/api/view-models/interface#mount-void-promise-void); 
 otherwise your view component connected to this `ViewModel` will never be rendered
-because inside [`withViewModel`](/react/api/with-view-model) HOC libary comparing the [`isMounted`](/api/view-models/interface#ismounted-boolean) flag with `true` before render the view component  
+because the [`withViewModel`](/react/api/with-view-model) HOC checks the [`isMounted`](/api/view-models/interface#ismounted-boolean) flag before rendering the view component.  
 
 This method can be async. This feature is helpful if you want to load some data or do something before the view component will be rendered  
 
@@ -138,8 +138,8 @@ Executes before the `unmount()` method.
 Called when the component is unmounted from the React tree.  
 
 This method sets [`isMounted`](/api/view-models/interface#ismounted-boolean) to `false`.   
-If you are overriding this method be sure that you called the [`super.unmount()`](/api/view-models/interface#mount-void-promise-void), 
-otherwise your view component connected to this `ViewModel` will never be unmounted  
+If you override this method, be sure to call [`super.unmount()`](/api/view-models/interface#mount-void-promise-void); 
+otherwise your view component connected to this `ViewModel` will never be unmounted.  
 
 ### `didUnmount(): void` <Badge type="info" text="protected" />    
 Called after the view model is fully unmounted.  
@@ -149,11 +149,11 @@ Ideal for final cleanup operations.
 
 Updates the view model's payload data.
 
-Base implementation of this method `strict` comparing current payload and new payload before sets the new  
-This can be overriden using [view models configuration](/api/view-models/view-models-config) or overriding the protected [`isPayloadEqual`](#ispayloadequal-current-payload-next-payload-boolean) method    
+The base implementation of this method compares the current payload and the new payload before setting it.  
+This can be overridden using [view models configuration](/api/view-models/view-models-config) or by overriding the protected [`isPayloadEqual`](#ispayloadequal-current-payload-next-payload-boolean) method.    
 
 #### `isPayloadEqual?.(current: Payload, next: Payload): boolean` <Badge type="danger" text="protected" />   
-This method is needed for comparing current payload and next payload.   
+This method is used for comparing the current and next payloads.   
 
 You can customize payload comparison overriding this method or configure [`viewModelsConfig`](/api/view-models/view-models-config)  
 
@@ -162,6 +162,75 @@ Example:
 class PostcardBox extends ViewModelBase {
   isPayloadEqual() {
     return true;
+  }
+}
+```
+
+### `hasChild(vm, deep?): boolean` <Badge type="info" text="protected" /> {#haschild-vm-anyviewmodel--anyviewmodelsimple-deep-boolean-boolean}
+Checks whether the given view model is a child of the current view model.
+
+- **Shallow** (`deep` is `false`/`undefined`): `vm.parentViewModel === this`
+- **Deep** (`deep` is `true`): checks the whole parent chain of `vm` and returns `true` if it contains `this`
+
+#### Example
+```ts
+class RootVM extends ViewModelBase {}
+class ChildVM extends ViewModelBase {}
+
+const root = new RootVM({ id: "root", payload: {} });
+const child = new ChildVM({ id: "child", payload: {}, parentViewModel: root });
+
+// inside RootVM
+this.hasChild(child) // true
+this.hasChild(child, true) // true
+```
+
+### `hasParent(vm, deep?): boolean` <Badge type="info" text="protected" /> {#hasparent-vm-anyviewmodel--anyviewmodelsimple-deep-boolean-boolean}
+Checks whether the given view model is a parent of the current view model.
+
+- **Shallow** (`deep` is `false`/`undefined`): `this.parentViewModel === vm`
+- **Deep** (`deep` is `true`): checks the whole parent chain of `this` and returns `true` if it contains `vm`
+
+#### Example
+```ts
+class RootVM extends ViewModelBase {}
+class ChildVM extends ViewModelBase {}
+
+const root = new RootVM({ id: "root", payload: {} });
+const child = new ChildVM({ id: "child", payload: {}, parentViewModel: root });
+
+// inside ChildVM
+this.hasParent(root) // true
+this.hasParent(root, true) // true
+```
+
+## Additional utility types  
+
+[Reference to source code](/src/view-model/view-model.base.types.ts)  
+
+### `InferViewModelParams<T>`  
+Utility type that infers constructor params for a `ViewModelBase` subclass.  
+It resolves to `ViewModelParams<Payload, ParentViewModel, ComponentProps>` based on the class generics.  
+
+#### Example  
+```ts
+import {
+  ViewModelBase,
+  InferViewModelParams,
+} from "mobx-view-model";
+
+class UserVM extends ViewModelBase<
+  { userId: string },
+  null,
+  { isAdmin?: boolean }
+> {
+  constructor(params: InferViewModelParams<UserVM>) {
+    params.vmConfig = {
+      ...params.vmConfig,
+      comparePayload: 'strict',
+    };
+
+    super(params);
   }
 }
 ```

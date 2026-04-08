@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { AnyObject, EmptyObject, Maybe } from 'yummies/types';
@@ -17,7 +18,16 @@ import type {
 } from './view-model.types.js';
 
 export class ViewModelStoreBaseMock extends ViewModelStoreBase {
-  spies = {
+  spies: {
+    generateViewModelId: Mock<
+      (config: ViewModelGenerateIdConfig<ViewModel>) => string
+    >;
+    get: Mock<
+      (
+        vmLookup: Maybe<ViewModelLookup<AnyViewModel | AnyViewModelSimple>>,
+      ) => AnyViewModel | AnyViewModelSimple | null
+    >;
+  } = {
     generateViewModelId: vi.fn(),
     get: vi.fn(),
   };
