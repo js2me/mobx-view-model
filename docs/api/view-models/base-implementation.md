@@ -37,7 +37,7 @@ export class SithCardVM extends ViewModelBase {
 
 export class StarWarsBattlefieldVM extends ViewModelBase {
   get jedisCount() {
-    this.viewModels.getAll(JediCardVM).length;
+    return this.viewModels.getAll(JediCardVM).length;
   }
 
   get sithsCount() {
@@ -138,7 +138,7 @@ Executes before the `unmount()` method.
 Called when the component is unmounted from the React tree.  
 
 This method sets [`isMounted`](/api/view-models/interface#ismounted-boolean) to `false`.   
-If you override this method, be sure to call [`super.unmount()`](/api/view-models/interface#mount-void-promise-void); 
+If you override this method, be sure to call [`super.unmount()`](/api/view-models/interface#unmount-void-promise-void); 
 otherwise your view component connected to this `ViewModel` will never be unmounted.  
 
 ### `didUnmount(): void` <Badge type="info" text="protected" />    
