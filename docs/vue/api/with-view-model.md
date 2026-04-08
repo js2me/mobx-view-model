@@ -86,6 +86,22 @@ export const YourComponent = withViewModel(VMClass, ViewComponent, { /* config *
 export const YourComponent = withViewModel(VMClass, { /* config */ })(ViewComponent);
 ```
 
+### Typing `model` without casts
+
+Use **`viewModelProps<YourVM>()`** so `setup(props)` gets `props.model` typed as `YourVM` (via Vue `PropType`):
+
+```ts
+import { viewModelProps, withViewModel } from 'mobx-view-model/vue';
+import { defineComponent, h } from 'vue';
+
+defineComponent({
+  props: viewModelProps<YourVM>(),
+  setup(props) {
+    return () => h('div', props.model.id);
+  },
+});
+```
+
 ### Default slot (no inner component)
 
 If you only pass the VM and config, you can use the **default** scoped slot `{ model }`:
@@ -102,7 +118,7 @@ If you only pass the VM and config, you can use the **default** scoped slot `{ m
 
 ```ts
 import { ViewModelBase } from 'mobx-view-model';
-import { withViewModel } from 'mobx-view-model/vue';
+import { viewModelProps, withViewModel } from 'mobx-view-model/vue';
 import { defineComponent, h } from 'vue';
 import { action, observable } from 'mobx';
 
@@ -116,13 +132,13 @@ class VM extends ViewModelBase {
 }
 
 const View = defineComponent({
-  props: { model: { type: Object, required: true } },
+  props: viewModelProps<VM>(),
   setup(props) {
     return () =>
       h('input', {
-        value: (props.model as VM).value,
+        value: props.model.value,
         onInput: (e: Event) =>
-          (props.model as VM).setValue((e.target as HTMLInputElement).value),
+          props.model.setValue((e.target as HTMLInputElement).value),
       });
   },
 });

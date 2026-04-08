@@ -16,6 +16,36 @@ import { useViewModelsStore } from './use-view-model-store.js';
 
 export type ViewModelProps<VM> = { model: VM };
 
+/**
+ * Runtime props for a view component that receives `model` from {@link withViewModel}.
+ * Use this so `setup(props)` infers `props.model` as `VM` without casting.
+ *
+ * @example
+ * ```ts
+ * defineComponent({
+ *   props: viewModelProps<YourVM>(),
+ *   setup(props) {
+ *     return () => h('div', props.model.id);
+ *   },
+ * });
+ * ```
+ */
+export function viewModelProps<
+  VM extends AnyViewModel | AnyViewModelSimple,
+>(): {
+  model: {
+    type: PropType<VM>;
+    required: true;
+  };
+} {
+  return {
+    model: {
+      type: Object as PropType<VM>,
+      required: true,
+    },
+  };
+}
+
 type VMInputPayloadPropObj<VM> = VM extends ViewModel<infer TPayload, any>
   ? TPayload extends EmptyObject
     ? {}

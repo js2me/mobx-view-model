@@ -27,7 +27,7 @@ Render the component returned from `withViewModel`. Pass `payload` as a prop whe
 ```vue
 <script setup lang="ts">
 import { ViewModelBase } from 'mobx-view-model';
-import { withViewModel } from 'mobx-view-model/vue';
+import { viewModelProps, withViewModel } from 'mobx-view-model/vue';
 import { defineComponent, h } from 'vue';
 
 class YourComponentVM extends ViewModelBase {}
@@ -35,9 +35,9 @@ class YourComponentVM extends ViewModelBase {}
 const YourComponent = withViewModel(
   YourComponentVM,
   defineComponent({
-    props: { model: { type: Object, required: true } },
+    props: viewModelProps<YourComponentVM>(),
     setup(props) {
-      return () => h('div', (props.model as YourComponentVM).id);
+      return () => h('div', props.model.id);
     },
   }),
 );
