@@ -162,6 +162,50 @@ export default defineDocsVitepressConfig(configs, {
         ],
       },
       {
+        text: 'Vue ✨',
+        link: '/vue/integration',
+        items: [
+          {
+            text: 'Integration',
+            link: '/vue/integration',
+          },
+          {
+            text: 'SSR',
+            link: '/vue/ssr',
+          },
+          {
+            text: 'API',
+            link: '/vue/api/with-view-model',
+            items: [
+              {
+                text: 'withViewModel',
+                link: '/vue/api/with-view-model',
+              },
+              {
+                text: 'observer',
+                link: '/vue/api/observer',
+              },
+              {
+                text: 'ViewModelsProvider',
+                link: '/vue/api/view-models-provider',
+              },
+              {
+                text: 'useViewModel',
+                link: '/vue/api/use-view-model',
+              },
+              {
+                text: 'useCreateViewModel',
+                link: '/vue/api/use-create-view-model',
+              },
+              {
+                text: 'OnlyViewModel',
+                link: '/vue/api/only-view-model',
+              },
+            ],
+          },
+        ],
+      },
+      {
         text: 'Recipes 📃',
         link: '/recipes/observer-wrap-all-view-components',
         items: [

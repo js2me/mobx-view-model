@@ -5,7 +5,7 @@
     "prepare": "pnpm dev:install-hooks",
     "clean": "rimraf dist",
     "lint:check": "pnpm exec biome check --write --no-errors-on-unmatched --files-ignore-unknown=true",
-    "ts:check": "tsc --noEmit",
+    "ts:check": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.test.json",
     "check": "npm run lint:check && npm run ts:check",
     "prebuild": "npm run clean && npm run check",
     "build:watch": "pnpm build && nodemon --watch src --ext ts,tsx --exec \"pnpm build\"",

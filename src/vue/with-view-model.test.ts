@@ -150,8 +150,8 @@ describe('vue withViewModel', () => {
     const Anchor = defineComponent({
       name: 'Anchor',
       setup() {
-        const model = useViewModel(Anchor);
-        anchorId = model.id;
+        const model = useViewModel(Anchor as any);
+        anchorId = model.id ?? null;
         return () => h('div', 'anchor');
       },
     });
@@ -193,7 +193,7 @@ describe('vue withViewModel', () => {
 
   it('provides parentViewModel in nested views', async () => {
     class ParentVM extends ViewModelBase<{ name: string }> {}
-    class ChildVM extends ViewModelBase<{ label: string }> {}
+    class ChildVM extends ViewModelBase<{ label: string }, ParentVM> {}
 
     let parentId: string | null = null;
 
@@ -236,18 +236,20 @@ describe('vue withViewModel', () => {
   it('comparePayload strict skips payloadChanged for same payload', async () => {
     const changes: Array<{ count: number }> = [];
 
-    class VM extends ViewModelBase<{ count: number }> {
+    class StrictCompareVm extends ViewModelBase<{ count: number }> {
       payloadChanged(payload: { count: number }) {
         changes.push(payload);
       }
     }
 
-    let instance: VM | null = null;
+    const instance: { current: ViewModelBase<{ count: number }> | null } = {
+      current: null,
+    };
 
     const Root = defineComponent({
       setup() {
-        instance = useCreateViewModel(
-          VM,
+        instance.current = useCreateViewModel(
+          StrictCompareVm,
           { count: 1 },
           {
             vmConfig: { comparePayload: 'strict' },
@@ -260,8 +262,8 @@ describe('vue withViewModel', () => {
     const { unmount } = mount(Root);
     await flush();
 
-    instance?.setPayload({ count: 1 });
-    instance?.setPayload({ count: 2 });
+    instance.current?.setPayload({ count: 1 });
+    instance.current?.setPayload({ count: 2 });
 
     expect(changes).toEqual([{ count: 2 }]);
 
@@ -271,18 +273,20 @@ describe('vue withViewModel', () => {
   it('comparePayload false allows payloadChanged on same payload', async () => {
     const changes: Array<{ count: number }> = [];
 
-    class VM extends ViewModelBase<{ count: number }> {
+    class LooseCompareVm extends ViewModelBase<{ count: number }> {
       payloadChanged(payload: { count: number }) {
         changes.push(payload);
       }
     }
 
-    let instance: VM | null = null;
+    const instance: { current: ViewModelBase<{ count: number }> | null } = {
+      current: null,
+    };
 
     const Root = defineComponent({
       setup() {
-        instance = useCreateViewModel(
-          VM,
+        instance.current = useCreateViewModel(
+          LooseCompareVm,
           { count: 1 },
           {
             vmConfig: { comparePayload: false },
@@ -295,8 +299,8 @@ describe('vue withViewModel', () => {
     const { unmount } = mount(Root);
     await flush();
 
-    instance?.setPayload({ count: 1 });
-    instance?.setPayload({ count: 2 });
+    instance.current?.setPayload({ count: 1 });
+    instance.current?.setPayload({ count: 2 });
 
     expect(changes.length).toBe(3);
 
