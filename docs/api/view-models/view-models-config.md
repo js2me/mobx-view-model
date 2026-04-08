@@ -117,7 +117,7 @@ viewModelsConfig.factory = (config) => {
 }
 ```
 
-## `fallbackComponent`  
+## <ReactMark /> `fallbackComponent`  
 A component that will be rendered while the view model is in a loading or processing state.  
 This is useful for showing loading spinners, skeletons, or placeholder content.
 
@@ -162,7 +162,7 @@ Internal event hooks for view model stores.
 Called when a `ViewModelStore` instance is created.  
 Useful for wiring external listeners or diagnostics.
 
-## `processViewComponent`  
+## <ReactMark /> `processViewComponent`  
 A higher-order function that processes and transforms the view component before it is rendered.   
 This function enables component composition and modification at the ViewModel level, allowing for:
 - Wrapping components with additional functionality (error boundaries, providers, etc.)
@@ -185,7 +185,7 @@ viewModelsConfig.processViewComponent = (Component) => {
 ::: warning It works only for [`withViewModel` HOCs](/react/api/with-view-model)  
 :::
 
-## `wrapViewsInObserver`  
+## <ReactMark /> `wrapViewsInObserver`  
 
 Wrap View components in [`observer()` MobX HOC](https://mobx.js.org/api.html#observer)  
 This property is enabled by default.   
@@ -307,7 +307,7 @@ viewModelsConfig.startViewTransitions = {
 // viewModelsConfig.onUnmount = (vm) => console.log('Unmounted:', vm.id);
 ```
 
-## Possible causes of infinite re-renders due to payload access  
+## <ReactMark /> Possible causes of infinite re-renders due to payload access  
 
 The flexible configuration of the payload reactivity and update behavior can lead to infinite re-renders inside the View component.  
 This happens when the payload is changing every time the component is re-rendered.  
