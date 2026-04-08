@@ -117,6 +117,10 @@ viewModelsConfig.factory = (config) => {
 }
 ```
 
+## `flushPendingReactions`  
+
+How many times the library may run MobX’s pending-reaction drain (before `attach`/`mount`) after a view model instance is created. Default: `100`. Use `0` to skip flushing (no-op).
+
 ## `fallbackComponent`  
 A component that will be rendered while the view model is in a loading or processing state.  
 This is useful for showing loading spinners, skeletons, or placeholder content.
@@ -302,6 +306,7 @@ viewModelsConfig.startViewTransitions = {
 // Optional configurations (uncomment to use)
 // viewModelsConfig.generateId = () => crypto.randomUUID();
 // viewModelsConfig.factory = (config) => new config.VM(rootStore, config);
+// viewModelsConfig.flushPendingReactions = 200;
 // viewModelsConfig.fallbackComponent = () => <LoadingSpinner />;
 // viewModelsConfig.onMount = (vm) => console.log('Mounted:', vm.id);
 // viewModelsConfig.onUnmount = (vm) => console.log('Unmounted:', vm.id);

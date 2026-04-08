@@ -126,7 +126,7 @@ const useCreateViewModelBase = (
       config?.id ??
       viewModelsConfig.generateId(ctx);
 
-    const instanceFromStore = viewModels ? viewModels.get(id) : null;
+    const instanceFromStore = viewModels?.get(id);
 
     if (instanceFromStore) {
       return instanceFromStore as AnyViewModel;
@@ -150,7 +150,7 @@ const useCreateViewModelBase = (
         viewModels?.createViewModel<any>(configCreate) ??
         viewModelsConfig.factory(configCreate);
 
-      flushPendingReactions();
+      flushPendingReactions(viewModelsConfig.flushPendingReactions);
 
       viewModels?.markToBeAttached(instance);
 
@@ -209,7 +209,7 @@ const useCreateViewModelSimple = (
     instance.parentViewModel =
       parentViewModel as unknown as (typeof instance)['parentViewModel'];
 
-    flushPendingReactions();
+    flushPendingReactions(viewModelsConfig.flushPendingReactions);
 
     viewModels?.markToBeAttached(instance);
 
