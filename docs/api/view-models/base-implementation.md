@@ -41,7 +41,7 @@ export class StarWarsBattlefieldVM extends ViewModelBase {
   }
 
   get sithsCount() {
-    this.viewModels.getAll(SithCardVM).length;
+    return this.viewModels.getAll(SithCardVM).length;
   }
 }
 ```
