@@ -2,9 +2,9 @@ import { act, fireEvent, render, screen } from '@testing-library/react';
 import { type ReactNode, useState } from 'react';
 import { beforeEach, describe, expect, test } from 'vitest';
 import { createCounter } from 'yummies/complex';
-import type { ViewModelStore } from '../../view-model/index.js';
-import { ViewModelBaseMock } from '../../view-model/view-model.base.test.js';
-import { ViewModelStoreBaseMock } from '../../view-model/view-model.store.base.test.js';
+import type { ViewModelStore } from 'mobx-view-model';
+import { ViewModelBaseMock } from '../../../core/src/view-model/view-model.base.test.js';
+import { ViewModelStoreBaseMock } from '../../../core/src/view-model/view-model.store.base.test.js';
 import { ViewModelsProvider } from '../components/index.js';
 import { withViewModel } from '../hoc/index.js';
 import { useViewModel } from './use-view-model.js';
@@ -139,7 +139,7 @@ describe('useViewModel', () => {
         );
 
         await expect(container.firstChild).toMatchFileSnapshot(
-          `../../../tests/snapshots/hooks/use-view-model/${getParent ? 'parent-instance' : 'self-instance'}/access-using-${accessUsing}/${withVmStore ? 'with-view-model-store/' : ''}${depth}-depth.html`,
+          `../../../../tests/snapshots/hooks/use-view-model/${getParent ? 'parent-instance' : 'self-instance'}/access-using-${accessUsing}/${withVmStore ? 'with-view-model-store/' : ''}${depth}-depth.html`,
         );
       });
     };
@@ -246,7 +246,7 @@ describe('useViewModel', () => {
       );
 
       await expect(container.firstChild).toMatchFileSnapshot(
-        `../../../tests/snapshots/hooks/use-view-model/scenarios/${task.name}.html`,
+        `../../../../tests/snapshots/hooks/use-view-model/scenarios/${task.name}.html`,
       );
     });
     test('container remounts VM with fixed id and some child with dynamic id', async ({
@@ -301,7 +301,7 @@ describe('useViewModel', () => {
       });
 
       await expect(container.firstChild).toMatchFileSnapshot(
-        `../../../tests/snapshots/hooks/use-view-model/scenarios/${task.name}.html`,
+        `../../../../tests/snapshots/hooks/use-view-model/scenarios/${task.name}.html`,
       );
     });
   });

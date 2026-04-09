@@ -18,7 +18,7 @@ function useCreateViewModel<VM extends AnyViewModel>(
 
 ### 1. Basic Usage (Default Configuration)  
 ```tsx
-import { useCreateViewModel } from "mobx-view-model/react";
+import { useCreateViewModel } from "mobx-view-model-react";
 import { observer } from "mobx-react-lite";
 
 export const YourComponent = observer(() => {
@@ -28,7 +28,7 @@ export const YourComponent = observer(() => {
 
 ### 2. Usage with payload
 ```tsx
-import { useCreateViewModel } from "mobx-view-model/react";
+import { useCreateViewModel } from "mobx-view-model-react";
 import { observer } from "mobx-react-lite";
 
 export const YourComponent = observer(() => {
@@ -38,7 +38,7 @@ export const YourComponent = observer(() => {
 
 ### 3. Custom Configuration
 ```tsx
-import { useCreateViewModel } from "mobx-view-model/react";
+import { useCreateViewModel } from "mobx-view-model-react";
 import { observer } from "mobx-react-lite";
 
 export const YourComponent = observer(() => {
@@ -58,7 +58,7 @@ export const YourComponent = observer(() => {
 
 ```tsx
 import { ViewModelBase } from "mobx-view-model";
-import { useCreateViewModel } from "mobx-view-model/react";
+import { useCreateViewModel } from "mobx-view-model-react";
 import { observer } from "mobx-react-lite";
 import { observable, action } from "mobx";
 

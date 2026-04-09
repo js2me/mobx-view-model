@@ -76,14 +76,17 @@ export class ViewModelBase<
 
     if (this.vmConfig.payloadObservable !== false) {
       annotations.push([
-        observable[this.vmConfig.payloadObservable ?? 'ref'],
+        observable[this.vmConfig.payloadObservable],
         '_payload',
       ]);
     }
 
     if (this.vmConfig.payloadComputed) {
       if (this.vmConfig.payloadComputed === 'struct') {
-        annotations.push([computed.struct, 'payload']);
+        annotations.push([
+          computed({ equals: comparer.structural }),
+          'payload',
+        ]);
       } else {
         annotations.push([
           computed({

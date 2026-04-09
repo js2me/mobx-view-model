@@ -119,7 +119,7 @@ This can be helpful for preprocessing input data.
 Example:   
 ```tsx
 import { ViewModelBase } from "mobx-view-model";
-import { withViewModel, type WithViewModelReactHook } from "mobx-view-model/react";
+import { withViewModel, type WithViewModelReactHook } from "mobx-view-model-react";
 
 const useSuperReactHook: WithViewModelReactHook = (props) => {
   props.foo = 1;
@@ -234,7 +234,7 @@ export const YourComponent = withViewModel(VMClass, ViewComponent, {
 
 ```tsx
 import { ViewModelBase } from "mobx-view-model";
-import { ViewModelProps, withViewModel } from "mobx-view-model/react";
+import { ViewModelProps, withViewModel } from "mobx-view-model-react";
 import { observer } from "mobx-react-lite";
 import { observable, action } from "mobx";
 

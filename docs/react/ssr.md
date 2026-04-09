@@ -23,7 +23,7 @@ This guarantees identical HTML for hydration.
 
 ```tsx
 import { ViewModelBase, ViewModelStoreBase } from "mobx-view-model";
-import { ViewModelsProvider, withViewModel } from "mobx-view-model/react";
+import { ViewModelsProvider, withViewModel } from "mobx-view-model-react";
 
 class PageVM extends ViewModelBase<{ count: number }> {}
 
@@ -47,7 +47,7 @@ If you preload data on the server, pass the same payload to the client.
 
 ```tsx
 import { ViewModelStoreBase } from "mobx-view-model";
-import { ViewModelsProvider } from "mobx-view-model/react";
+import { ViewModelsProvider } from "mobx-view-model-react";
 import { hydrateRoot } from "react-dom/client";
 
 const vmStore = new ViewModelStoreBase();

@@ -1,7 +1,7 @@
+import type * as React from 'react';
 import type { ComponentType } from 'react';
 import type { AnyObject, Class, Maybe } from 'yummies/types';
 import type { ViewModelsRawConfig } from '../config/index.js';
-import type { VMComponent } from '../react/hoc/index.js';
 import type {
   AnyViewModel,
   AnyViewModelSimple,
@@ -27,7 +27,7 @@ export interface ViewModelCreateConfig<VM extends AnyViewModel>
   extends ViewModelParams<VM['payload'], VM['parentViewModel']> {
   VM: Class<VM>;
   fallback?: React.ComponentType;
-  component?: VMComponent<AnyViewModel, any>;
+  component?: import('mobx-view-model-react').VMComponent<AnyViewModel, any>;
   /**
    * Additional component anchors for the same VM instance.
    * useViewModel(AnchorComponent) will return this VM when mounted.
@@ -43,8 +43,5 @@ export type ViewModelLookup<T extends AnyViewModel | AnyViewModelSimple> =
   | AnyViewModel['id']
   | Class<T>
   | (T extends AnyViewModel
-      ?
-          | VMComponent<T, any>
-          | ComponentType<any>
-          | import('mobx-view-model/react').VMComponent<T, any>
+      ? import('mobx-view-model-react').VMComponent<T, any> | ComponentType<any>
       : ComponentType<any>);

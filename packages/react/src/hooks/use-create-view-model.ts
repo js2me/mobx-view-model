@@ -8,7 +8,7 @@ import type {
 import { viewModelsConfig } from 'mobx-view-model';
 import { useContext } from 'react';
 import type { Class, IsPartial, Maybe } from 'yummies/types';
-import { isViewModelClass } from '../../utils/index.js';
+import { isViewModelClass } from 'mobx-view-model';
 import {
   ActiveViewModelContext,
   ViewModelsContext,

@@ -13,7 +13,7 @@ What you will do:
 - Cast the resulting component to preserve the generic call signature
 
 ```tsx{6,13,14,23,24,25} 
-import { withViewModel, type VMComponentProps } from "mobx-view-model/react";
+import { withViewModel, type VMComponentProps } from "mobx-view-model-react";
 import type { ComponentProps, ReactNode } from "react";
 
 // view.tsx

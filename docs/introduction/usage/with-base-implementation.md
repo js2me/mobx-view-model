@@ -9,7 +9,7 @@ Follow the steps:
 ```tsx
 import { observable } from 'mobx';
 import { ViewModelBase } from 'mobx-view-model';
-import { ViewModelProps, withViewModel } from 'mobx-view-model/react';
+import { ViewModelProps, withViewModel } from 'mobx-view-model-react';
 
 export class MyPageVM extends ViewModelBase<{ payloadA: string }> {
   @observable
@@ -32,7 +32,7 @@ export class MyPageVM extends ViewModelBase<{ payloadA: string }> {
 ##### **2.** Create view component using [HOC `withViewModel()`](/react/api/with-view-model)  
 
 ```tsx
-import { withViewModel } from 'mobx-view-model/react';
+import { withViewModel } from 'mobx-view-model-react';
 
 export const MyPage = withViewModel(MyPageVM, ({ model }) => {
   return <div>{model.state}</div>;
@@ -44,7 +44,7 @@ or you can use the [`useCreateViewModel()` hook](/react/api/use-create-view-mode
 ```tsx
 import { observer } from 'mobx-react-lite';
 import { ViewModelPayload } from 'mobx-view-model';
-import { useCreateViewModel } from 'mobx-view-model/react';
+import { useCreateViewModel } from 'mobx-view-model-react';
 
 export const MyPage = observer(
   ({ payload }: { payload: ViewModelPayload<MyPageVM> }) => {

@@ -11,7 +11,7 @@ If `children` is a function, it receives the created model.
 
 ```tsx
 import { ViewModelBase } from "mobx-view-model";
-import { OnlyViewModel } from "mobx-view-model/react";
+import { OnlyViewModel } from "mobx-view-model-react";
 
 class TestVM extends ViewModelBase {
   foo = 100;

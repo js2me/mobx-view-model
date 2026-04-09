@@ -27,7 +27,7 @@ Integrate with React
 
 ```tsx 
 import { ViewModelStoreBase } from "mobx-view-model";
-import { ViewModelsProvider } from "mobx-view-model/react";
+import { ViewModelsProvider } from "mobx-view-model-react";
 
 const vmStore = new ViewModelStoreBase();
 
@@ -42,7 +42,7 @@ const App = () => {
 
 ```tsx
 import { ViewModelBase } from "mobx-view-model";
-import { withViewModel } from "mobx-view-model/react";
+import { withViewModel } from "mobx-view-model-react";
 
 class NotifierVM extends ViewModelBase {
   foo = 'foo';

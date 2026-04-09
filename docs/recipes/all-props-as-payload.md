@@ -14,7 +14,7 @@ What you will do:
 
 ```tsx{8,20,22}
 import { ViewModelBase } from 'mobx-view-model';
-import { withViewModel } from 'mobx-view-model/react';
+import { withViewModel } from 'mobx-view-model-react';
 
 interface ComponentProps {
   foo: number;
