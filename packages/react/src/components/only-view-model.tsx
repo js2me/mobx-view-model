@@ -1,6 +1,5 @@
 import { observer } from 'mobx-react-lite';
 import type { AnyViewModel } from 'mobx-view-model';
-import type { ReactNode } from 'react';
 import type { Class, IsPartial } from 'yummies/types';
 import {
   type UseCreateViewModelConfig,
@@ -9,7 +8,7 @@ import {
 
 export type OnlyViewModelProps<TViewModel extends AnyViewModel> = {
   model: Class<TViewModel>;
-  children?: ReactNode | ((model: TViewModel) => ReactNode);
+  children?: React.ReactNode | ((model: TViewModel) => React.ReactNode);
 } & (IsPartial<TViewModel['payload']> extends true
   ? {
       payload?: TViewModel['payload'];

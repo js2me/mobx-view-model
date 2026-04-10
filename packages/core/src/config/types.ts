@@ -1,4 +1,3 @@
-import type * as React from 'react';
 import type { PubSub } from 'yummies/complex';
 import type { ObservableAnnotationsArray } from 'yummies/mobx';
 import type { AnyObject, Class, DeepPartial, Maybe, PartialKeys } from 'yummies/types';

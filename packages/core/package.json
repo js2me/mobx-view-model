@@ -3,9 +3,9 @@
   "version": "9.3.0",
   "scripts": {
     "clean": "rimraf dist",
-    "lint:check": "pnpm exec biome check --write --no-errors-on-unmatched --files-ignore-unknown=true src",
     "ts:check": "tsc --noEmit",
-    "check": "pnpm run lint:check && pnpm run ts:check",
+    "ts-test-types:check": "tsc --noEmit --project tsconfig.test.json",
+    "check": "pnpm run ts:check && pnpm ts-test-types:check",
     "prebuild": "pnpm run clean && pnpm run check",
     "build:watch": "pnpm build && nodemon --watch src --ext ts,tsx --exec \"pnpm build\"",
     "build": "vite build",

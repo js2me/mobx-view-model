@@ -7,7 +7,7 @@ import type {
   ViewModelStore,
 } from 'mobx-view-model';
 import { viewModelsConfig } from 'mobx-view-model';
-import { type ComponentType, forwardRef, useContext } from 'react';
+import { forwardRef, useContext } from 'react';
 import type {
   AnyObject,
   Class,
@@ -211,7 +211,7 @@ export interface VMComponent<
    * @param anchor - React component to use as lookup key for useViewModel
    */
   connect(
-    anchor: ComponentType<any>,
+    anchor: React.ComponentType<any>,
   ): VMComponent<TViewModel, TComponentOriginProps, TForwardedRef>;
 }
 
