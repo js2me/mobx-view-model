@@ -36,7 +36,8 @@ jobs:
         continue-on-error: false
         id: pub-or-release-pr
         with:
-          version: pnpm changeset version && pnpm install --lockfile-only --no-frozen-lockfile
+          # changesets/action splits this by spaces and uses exec() without a shell — `&&` must live in a package script.
+          version: pnpm run changeset:version
           publish: pnpm pub
         env:
           CI: true
