@@ -1,5 +1,4 @@
 import type { AnyViewModel, AnyViewModelSimple } from 'mobx-view-model';
-import type { ReactNode } from 'react';
 import { ActiveViewModelContext } from '../contexts/index.js';
 
 /**
@@ -10,5 +9,5 @@ import { ActiveViewModelContext } from '../contexts/index.js';
 export const ActiveViewModelProvider =
   ActiveViewModelContext.Provider as unknown as React.ComponentType<{
     value: AnyViewModel | AnyViewModelSimple;
-    children?: ReactNode;
+    children?: React.ReactNode;   
   }>;

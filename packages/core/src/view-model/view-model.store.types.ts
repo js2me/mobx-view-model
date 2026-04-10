@@ -1,5 +1,3 @@
-import type * as React from 'react';
-import type { ComponentType } from 'react';
 import type { AnyObject, Class, Maybe } from 'yummies/types';
 import type { ViewModelsRawConfig } from '../config/index.js';
 import type {
@@ -43,5 +41,5 @@ export type ViewModelLookup<T extends AnyViewModel | AnyViewModelSimple> =
   | AnyViewModel['id']
   | Class<T>
   | (T extends AnyViewModel
-      ? import('mobx-view-model-react').VMComponent<T, any> | ComponentType<any>
-      : ComponentType<any>);
+      ? import('mobx-view-model-react').VMComponent<T, any> | React.ComponentType<any>
+      : React.ComponentType<any>);

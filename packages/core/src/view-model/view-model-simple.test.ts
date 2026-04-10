@@ -3,7 +3,7 @@ import type { ViewModelStore } from './index.js';
 import { ViewModelStoreBaseMock } from './view-model.store.base.test.js';
 import type { ViewModelSimple } from './view-model-simple.js';
 
-export class ViewModelSimpleImpl implements ViewModelSimple<{ test: number }> {
+class ViewModelSimpleImpl implements ViewModelSimple<{ test: number }> {
   spies = {
     mount: vi.fn(),
     attachViewModelStore: vi.fn(),

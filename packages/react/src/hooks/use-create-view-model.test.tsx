@@ -1,5 +1,4 @@
 import { act, render } from '@testing-library/react';
-import type { ReactNode } from 'react';
 import { describe, expect, test, vi } from 'vitest';
 import type { ViewModelSimple, ViewModelStore } from 'mobx-view-model';
 import { ViewModelBaseMock } from '../../../core/src/view-model/view-model.base.test.js';
@@ -9,7 +8,7 @@ import { useCreateViewModel, useViewModel } from '../hooks/index.js';
 
 describe('useCreateViewModel', () => {
   const createVMStoreWrapper = (vmStore: ViewModelStore) => {
-    return ({ children }: { children?: ReactNode }) => {
+    return ({ children }: { children?: React.ReactNode }) => {
       return (
         <ViewModelsProvider value={vmStore}>{children}</ViewModelsProvider>
       );

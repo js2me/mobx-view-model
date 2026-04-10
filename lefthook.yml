@@ -10,5 +10,5 @@ prepare-commit-msg:
       run: pnpm exec commitfmt
 pre-push:
   commands:
-    check-typings:
-      run: pnpm run ts:check
+    check:
+      run: pnpm run check
