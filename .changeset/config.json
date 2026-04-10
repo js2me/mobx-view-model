@@ -10,5 +10,10 @@
   "access": "restricted",
   "baseBranch": "master",
   "updateInternalDependencies": "patch",
-  "ignore": []
+  "ignore": [
+    "mobx-view-model-example-ssr-expressjs",
+    "mobx-view-model-example-csr-react18",
+    "mobx-view-model-example-csr-react19",
+    "mobx-view-model-example-ssr-nextjs"
+  ]
 }
