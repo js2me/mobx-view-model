@@ -64,9 +64,9 @@ export class FruitViewModel {
 Because TypeScript throws an error about not implementing at least one property or method of the `ViewModelSimple` interface.
 :::
 
-## Usage in React  
+## <ReactMark /> Usage in React  
 
-### Usage with [`withViewModel`](/react/api/with-view-model) HOC   
+### <ReactMark /> Usage with [`withViewModel`](/react/api/with-view-model) HOC   
 
 ```tsx
 import { observer } from "mobx-react-lite";
@@ -85,7 +85,7 @@ export const FruitComponent = withViewModel(FruitViewModel, ({ model }) => {
 });
 ```
 
-### Usage with [`useCreateViewModel`](/react/api/use-create-view-model) hook   
+### <ReactMark /> Usage with [`useCreateViewModel`](/react/api/use-create-view-model) hook   
 
 ```tsx
 import { observer } from "mobx-react-lite";
@@ -109,7 +109,7 @@ export const FruitComponent = observer(() => {
 
 
 
-### Accessing Instances  
+### <ReactMark /> Accessing Instances  
 To retrieve an existing instance elsewhere in your app:  
 1. Use the [`useViewModel`](/react/api/use-view-model) hook.  
 2. Ensure the instance is registered in a [`ViewModelStore`](/api/view-model-store/overview)  

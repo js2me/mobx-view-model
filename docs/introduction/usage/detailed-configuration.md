@@ -81,7 +81,7 @@ export class ViewModelStoreImpl extends ViewModelStoreBase {
 }
 ```
 
-##### 3. Create a `View` with a `ViewModel`   
+##### <ReactMark /> 3. Create a `View` with a `ViewModel`   
 
 ```tsx{2,4,10}
 import { ViewModelProps, withViewModel } from 'mobx-view-model-react';

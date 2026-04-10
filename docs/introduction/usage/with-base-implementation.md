@@ -29,7 +29,7 @@ export class MyPageVM extends ViewModelBase<{ payloadA: string }> {
 }
 ```
 
-##### **2.** Create view component using [HOC `withViewModel()`](/react/api/with-view-model)  
+##### <ReactMark /> **2.** Create view component using [HOC `withViewModel()`](/react/api/with-view-model)  
 
 ```tsx
 import { withViewModel } from 'mobx-view-model-react';
