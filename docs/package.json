@@ -1,4 +1,5 @@
 {
+  "name": "mobx-view-model-docs",
   "private": true,
   "type": "module",
   "devDependencies": {
