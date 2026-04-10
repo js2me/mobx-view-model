@@ -1,6 +1,8 @@
 .PHONY: clean
 clean:
-	rm -rf node_modules
+	rm -rf node_modules && \
+	rm -rf ./examples/**/node_modules && \
+	rm -rf ./packages/**/node_modules
 
 .PHONY: install
 install:

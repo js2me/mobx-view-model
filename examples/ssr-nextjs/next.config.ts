@@ -5,7 +5,7 @@ import type { NextConfig } from 'next';
 const monorepoRoot = path.join(path.dirname(fileURLToPath(import.meta.url)), '../..');
 
 const nextConfig: NextConfig = {
-  /** Needed because this example depends on `mobx-view-model` via `file:../../dist`. */
+  /** Workspace-linked `mobx-view-model` resolves to `packages/core`; transpile for Next. */
   transpilePackages: ['mobx-view-model'],
   reactStrictMode: false,
   /** Silence the “multiple lockfiles” warning when the app lives inside a monorepo. */

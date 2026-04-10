@@ -51,8 +51,8 @@ importers:
         specifier: ^4.1.1
         version: 4.1.1(mobx@6.15.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       mobx-view-model:
-        specifier: file:../../dist
-        version: file:dist(mobx-react-lite@4.1.1(mobx@6.15.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(mobx@6.15.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
+        specifier: workspace:*
+        version: link:../../packages/core
       next:
         specifier: ^15.5.4
         version: 15.5.15(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
@@ -3637,21 +3637,6 @@ packages:
       react-dom:
         optional: true
       react-native:
-        optional: true
-
-  mobx-view-model@file:dist:
-    resolution: {directory: dist, type: directory}
-    peerDependencies:
-      mobx: ^6.12.4
-      mobx-react-lite: ^4.0.7
-      react: ^18.0.0 || ^19.0.0
-      react-dom: ^18.0.0 || ^19.0.0
-    peerDependenciesMeta:
-      mobx-react-lite:
-        optional: true
-      react:
-        optional: true
-      react-dom:
         optional: true
 
   mobx@6.15.0:
@@ -8557,15 +8542,6 @@ snapshots:
       react: 19.2.5
       use-sync-external-store: 1.6.0(react@19.2.5)
     optionalDependencies:
-      react-dom: 19.2.5(react@19.2.5)
-
-  mobx-view-model@file:dist(mobx-react-lite@4.1.1(mobx@6.15.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(mobx@6.15.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5):
-    dependencies:
-      mobx: 6.15.0
-      yummies: 7.16.2(mobx@6.15.0)(react@19.2.5)
-    optionalDependencies:
-      mobx-react-lite: 4.1.1(mobx@6.15.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
-      react: 19.2.5
       react-dom: 19.2.5(react@19.2.5)
 
   mobx@6.15.0: {}
