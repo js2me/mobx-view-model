@@ -1,5 +1,5 @@
 import type { AnyObject } from 'yummies/types';
-import type { ViewModelsConfig } from '../../config/types.js';
+import type { ViewModelsConfig } from 'mobx-view-model';
 
 export type CircularVmPayloadDependencyTestCase = {
   vmConfig: Partial<ViewModelsConfig>;

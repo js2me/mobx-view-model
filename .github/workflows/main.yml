@@ -27,8 +27,6 @@ jobs:
 
       - run: pnpm i
 
-      - run: pnpm docs:install
-
       - run: pnpm check
 
       - run: pnpm build

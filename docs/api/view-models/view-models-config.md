@@ -5,7 +5,7 @@ The package provides a **global object** with this configuration, but you can al
 
 ```ts
 import { viewModelsConfig, ViewModelStoreBase } from "mobx-view-model";
-import { withViewModel } from "mobx-view-model/react";
+import { withViewModel } from "mobx-view-model-react";
 
 viewModelsConfig.comparePayload = false;
 

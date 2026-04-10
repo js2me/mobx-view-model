@@ -1,9 +1,9 @@
 import { act, render } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { describe, expect, test, vi } from 'vitest';
-import type { ViewModelSimple, ViewModelStore } from '../../index.js';
-import { ViewModelBaseMock } from '../../view-model/view-model.base.test.js';
-import { ViewModelStoreBaseMock } from '../../view-model/view-model.store.base.test.js';
+import type { ViewModelSimple, ViewModelStore } from 'mobx-view-model';
+import { ViewModelBaseMock } from '../../../core/src/view-model/view-model.base.test.js';
+import { ViewModelStoreBaseMock } from '../../../core/src/view-model/view-model.store.base.test.js';
 import { ViewModelsProvider } from '../components/index.js';
 import { useCreateViewModel, useViewModel } from '../hooks/index.js';
 
@@ -51,7 +51,7 @@ describe('useCreateViewModel', () => {
       );
 
       await expect(container.firstChild).toMatchFileSnapshot(
-        `../../../tests/snapshots/hooks/use-create-view-model/scenarios/${task.name}.html`,
+        `../../../../tests/snapshots/hooks/use-create-view-model/scenarios/${task.name}.html`,
       );
     });
     test('accessing to the parent VM', async ({ task }) => {
@@ -99,7 +99,7 @@ describe('useCreateViewModel', () => {
       );
 
       await expect(container.firstChild).toMatchFileSnapshot(
-        `../../../tests/snapshots/hooks/use-create-view-model/scenarios/${task.name}.html`,
+        `../../../../tests/snapshots/hooks/use-create-view-model/scenarios/${task.name}.html`,
       );
     });
   });
@@ -181,7 +181,7 @@ describe('useCreateViewModel', () => {
       );
 
       await expect(container.firstChild).toMatchFileSnapshot(
-        `../../../tests/snapshots/hooks/use-create-view-model/ViewModelSimple/${task.name}.html`,
+        `../../../../tests/snapshots/hooks/use-create-view-model/ViewModelSimple/${task.name}.html`,
       );
     });
 
@@ -344,7 +344,7 @@ describe('useCreateViewModel', () => {
         );
 
         await expect(container.firstChild).toMatchFileSnapshot(
-          `../../../tests/snapshots/hooks/use-create-view-model/ViewModelSimple/without-id/${task.name}.html`,
+          `../../../../tests/snapshots/hooks/use-create-view-model/ViewModelSimple/without-id/${task.name}.html`,
         );
       });
 

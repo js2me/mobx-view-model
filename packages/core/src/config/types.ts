@@ -1,7 +1,7 @@
+import type * as React from 'react';
 import type { PubSub } from 'yummies/complex';
 import type { ObservableAnnotationsArray } from 'yummies/mobx';
-import type { AnyObject, Class, DeepPartial, Maybe } from 'yummies/types';
-import type { ViewModelHocConfig } from '../react/hoc/with-view-model.js';
+import type { AnyObject, Class, DeepPartial, Maybe, PartialKeys } from 'yummies/types';
 import type {
   AnyViewModel,
   PayloadCompareFn,
@@ -49,9 +49,9 @@ export interface ViewModelsConfig<
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#comparepayload) */
   comparePayload?: PayloadCompareFn | 'strict' | 'shallow' | false;
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#payloadobservable) */
-  payloadObservable?: 'ref' | 'deep' | 'shallow' | 'struct' | false;
+  payloadObservable: 'ref' | 'deep' | 'shallow' | 'struct' | false;
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#payloadcomputed) */
-  payloadComputed?: 'struct' | boolean | ((a: any, b: any) => boolean);
+  payloadComputed: 'struct' | boolean | ((a: any, b: any) => boolean);
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#generateid) */
   generateId: GenerateViewModelIdFn;
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#factory) */
@@ -75,7 +75,8 @@ export interface ViewModelsConfig<
   processViewComponent?: (
     component: React.ComponentType<any> | undefined,
     VM: Class<TViewModel>,
-    config: ViewModelHocConfig<any>,
+    /** Полный тип HOC — `ViewModelHocConfig` в `mobx-view-model-react`. */
+    config: AnyObject,
   ) => Maybe<React.ComponentType<any>>;
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#wrapviewsinobserver) */
   wrapViewsInObserver?: boolean;
@@ -91,20 +92,14 @@ export interface ViewModelsConfig<
  */
 export type ViewModelsRawConfig<
   TViewModel extends AnyViewModel = AnyViewModel,
-> = Omit<
-  ViewModelsConfig<TViewModel>,
-  | 'startViewTransitions'
-  | 'observable'
-  | 'factory'
-  | 'generateId'
-  | 'hooks'
-  | 'flushPendingReactions'
-> & {
+> = PartialKeys<Omit<
+ViewModelsConfig<TViewModel>,
+'startViewTransitions' | 'observable' | 'factory' | 'generateId' | 'hooks'
+>, 'payloadObservable' | 'payloadComputed' | 'flushPendingReactions'> & {
   startViewTransitions?:
     | DeepPartial<ViewModelsConfig['startViewTransitions']>
     | boolean;
   observable?: DeepPartial<ViewModelsConfig['observable']>;
   factory?: ViewModelsConfig['factory'];
   generateId?: ViewModelsConfig['generateId'];
-  flushPendingReactions?: ViewModelsConfig['flushPendingReactions'];
 };

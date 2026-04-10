@@ -36,7 +36,7 @@ jobs:
         continue-on-error: false
         id: pub-or-release-pr
         with:
-          version: pnpm changeset version
+          version: pnpm changeset version && pnpm install --lockfile-only --no-frozen-lockfile
           publish: pnpm pub
         env:
           CI: true

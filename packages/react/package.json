@@ -1,0 +1,76 @@
+{
+  "name": "mobx-view-model-react",
+  "version": "9.3.0",
+  "scripts": {
+    "clean": "rimraf dist",
+    "lint:check": "pnpm exec biome check --write --no-errors-on-unmatched --files-ignore-unknown=true src",
+    "ts:check": "tsc --noEmit",
+    "check": "pnpm run lint:check && pnpm run ts:check",
+    "prebuild": "pnpm run clean && pnpm run check",
+    "build:watch": "pnpm build && nodemon --watch src --ext ts,tsx --exec \"pnpm build\"",
+    "build": "vite build && node ./scripts/patch-dist-package-json.mjs",
+    "pub": "pnpm build && sborshik publish --useDistDir",
+    "pub:patch": "PUBLISH_VERSION=patch pnpm pub",
+    "pub:minor": "PUBLISH_VERSION=minor pnpm pub",
+    "pub:major": "PUBLISH_VERSION=major pnpm pub",
+    "test": "vitest run --config vitest.config.ts",
+    "test:watch": "vitest watch --config vitest.config.ts",
+    "test:coverage": "vitest run --config vitest.config.ts --coverage"
+  },
+  "keywords": [
+    "mobx",
+    "react",
+    "view-model",
+    "mvvm"
+  ],
+  "author": "js2me",
+  "license": "MIT",
+  "description": "React bindings for mobx-view-model",
+  "bugs": {
+    "url": "https://github.com/js2me/mobx-view-model/issues"
+  },
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs",
+      "default": "./dist/index.js"
+    }
+  },
+  "homepage": "https://github.com/js2me/mobx-view-model",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/js2me/mobx-view-model"
+  },
+  "dependencies": {
+    "mobx-view-model": "workspace:*"
+  },
+  "peerDependencies": {
+    "mobx": "^6.12.4",
+    "mobx-react-lite": "^4.0.7",
+    "react": "^18.0.0 || ^19.0.0",
+    "react-dom": "^18.0.0 || ^19.0.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.2.6",
+    "@testing-library/react": "^16.3.2",
+    "@types/node": "^25.3.3",
+    "@types/react": "^18.3.28",
+    "@vitejs/plugin-react-swc": "^4.2.3",
+    "@vitest/coverage-istanbul": "^4.0.18",
+    "js2me-biome-config": "^1.1.0",
+    "jsdom": "^26.1.0",
+    "mobx": "^6.12.4",
+    "mobx-react-lite": "^4.0.7",
+    "nodemon": "^3.1.14",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "rimraf": "^6.1.3",
+    "sborshik": "^3.0.7",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.1",
+    "vitest": "^4.0.18",
+    "yummies": "^7.10.0"
+  }
+}

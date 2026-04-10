@@ -6,7 +6,7 @@
 
 - [#61](https://github.com/js2me/mobx-view-model/pull/61) [`7ad857e`](https://github.com/js2me/mobx-view-model/commit/7ad857e5c099f61ce0b33711874b4f709f82d3a3) Thanks [@js2me](https://github.com/js2me)! - Deprecate re-exports of all React integration APIs from the `mobx-view-model` root entry. They remain available there for backward compatibility but will be removed in a future major version.
 
-  Use the **`mobx-view-model/react`** subpath instead. It is the dedicated export for:
+  Use the **`mobx-view-model-react`** subpath instead. It is the dedicated export for:
 
   - **`withViewModel`** HOC and related types (`ViewModelProps`, `VMComponent`, `VMComponentProps`, `ViewModelHocConfig`, `ViewModelSimpleHocConfig`, `WithViewModelReactHook`, etc.)
   - Hooks **`useCreateViewModel`** (with **`UseCreateViewModelConfig`**) and **`useViewModel`**

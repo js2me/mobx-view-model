@@ -1,9 +1,9 @@
 import { ConfigsManager } from 'sborshik/utils/configs-manager';
 import { defineDocsBuildConfig } from "sborshik/vitepress";
 
-import { circularVmPayloadDependencyTestCases } from '../src/react/hoc/with-view-model.test.fixture';
+import { circularVmPayloadDependencyTestCases } from '../packages/react/src/hoc/with-view-model.test.fixture';
 
-const configs = ConfigsManager.create('../'); 
+const configs = ConfigsManager.create('../packages/core'); 
 
 export default defineDocsBuildConfig(configs, {
   base: `/${configs.package.name}/`,

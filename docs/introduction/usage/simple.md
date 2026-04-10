@@ -24,10 +24,10 @@ export class MyPageVM {
 }
 ```
 
-##### 2. Create an instance of your `ViewModel` using [`withViewModel()` HOC](/react/api/with-view-model)   
+##### <ReactMark /> 2. Create an instance of your `ViewModel` using [`withViewModel()` HOC](/react/api/with-view-model)   
 
 ```tsx
-import { withViewModel } from 'mobx-view-model/react';
+import { withViewModel } from 'mobx-view-model-react';
 
 const MyPage = withViewModel(MyPageVM, ({ model }) => {
   return <div>{model.state}</div>;

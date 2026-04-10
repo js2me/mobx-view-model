@@ -61,7 +61,7 @@ Put a [`ViewModelStoreBase`](/api/view-model-store/base-implementation) (or cust
 Wrap the tree with your context and [`ViewModelsProvider`](/react/api/view-models-provider):
 
 ```tsx
-import { ViewModelsProvider } from 'mobx-view-model/react';
+import { ViewModelsProvider } from 'mobx-view-model-react';
 
 export function RootStoreProvider({ store, children }: { store: RootStore; children: React.ReactNode }) {
   return (
@@ -122,7 +122,7 @@ Same store + same payload on server and client:
 
 ```tsx
 import { ViewModelBase, ViewModelStoreBase } from 'mobx-view-model';
-import { ViewModelsProvider, withViewModel } from 'mobx-view-model/react';
+import { ViewModelsProvider, withViewModel } from 'mobx-view-model-react';
 
 class PageVM extends ViewModelBase<{ count: number }> {}
 
@@ -145,7 +145,7 @@ Hydration on the client (same wiring — use the **same** `Page` component and t
 
 ```tsx
 import { ViewModelStoreBase } from 'mobx-view-model';
-import { ViewModelsProvider } from 'mobx-view-model/react';
+import { ViewModelsProvider } from 'mobx-view-model-react';
 import { hydrateRoot } from 'react-dom/client';
 // import { Page } from './page';
 

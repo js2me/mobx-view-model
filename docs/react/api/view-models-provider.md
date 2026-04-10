@@ -14,7 +14,7 @@ function ViewModelsProvider(props: { children: ReactNode; value: ViewModelStore 
 
 ```tsx
 import { ViewModelStoreBase } from "mobx-view-model";
-import { ViewModelsProvider } from "mobx-view-model/react";
+import { ViewModelsProvider } from "mobx-view-model-react";
 
 const vmStore = new ViewModelStoreBase();
 

@@ -17,7 +17,7 @@ class MyViewModelStore extends ViewModelStoreBase {}
 const viewModelStore = new MyViewModelStore() // or new ViewModelStoreBase
 ```
 
-##### **3.** Integrate with [React](https://react.dev/) using [`ViewModelsProvider`](/react/api/view-models-provider) at the root of your application  
+##### <ReactMark /> **3.** Integrate with [React](https://react.dev/) using [`ViewModelsProvider`](/react/api/view-models-provider) at the root of your application  
 
 ```tsx
 <ViewModelsProvider value={viewModelStore}>

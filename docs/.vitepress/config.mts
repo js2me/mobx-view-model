@@ -2,7 +2,7 @@ import { defineDocsVitepressConfig } from "sborshik/vitepress";
 import { ConfigsManager } from "sborshik/utils/configs-manager";
 import { REACT_LOGO_SVG } from "./shared/react-logo-svg";
 
-const configs = ConfigsManager.create('../');
+const configs = ConfigsManager.create('../packages/core');
 
 /** React logo + comma before label (errors / warnings related to React integration) */
 function reactPrefixedSidebarItem(rest: string) {

@@ -1,12 +1,12 @@
 {
   "compilerOptions": {
-    "types": ["vitest"],
+    "types": ["node"],
     "target": "ESNext",
     "outDir": "dist",
     "declaration": true,
     "declarationMap": true,
     "useDefineForClassFields": true,
-    "lib": ["DOM", "DOM.Iterable", "ESNext"],
+    "lib": ["ESNext", "DOM"],
     "allowJs": false,
     "skipLibCheck": true,
     "esModuleInterop": false,
@@ -17,19 +17,13 @@
     "moduleResolution": "nodenext",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "typeRoots": [
-      "./node_modules/@types/", "./types", "./node_modules"
-    ],
+    "typeRoots": ["./node_modules/@types/", "./types", "./node_modules"],
     "noEmit": false,
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
+    "paths": {
+      "mobx-view-model-react": ["./src/index.ts"]
+    }
   },
-  "include": [
-    "src/**/*.test.ts",
-    "src/**/*.fixture.ts",
-    "tests",
-    "src/lib",
-    "src/**/*.test.tsx",
-    "node_modules"
-  ],
-  "exclude": []
+  "include": ["src"],
+  "exclude": ["src/**/*.test.ts", "src/**/*.test.tsx", "src/**/*.fixture.ts"]
 }

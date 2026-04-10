@@ -40,9 +40,9 @@ import {
   type ViewModelStore,
   ViewModelStoreBase,
   type ViewModelsRawConfig,
-} from '../../index.js';
-import { ViewModelBaseMock } from '../../view-model/view-model.base.test.js';
-import { ViewModelStoreBaseMock } from '../../view-model/view-model.store.base.test.js';
+} from 'mobx-view-model';
+import { ViewModelBaseMock } from '../../../core/src/view-model/view-model.base.test.js';
+import { ViewModelStoreBaseMock } from '../../../core/src/view-model/view-model.store.base.test.js';
 import { ViewModelsProvider } from '../components/index.js';
 import { useViewModel } from '../hooks/use-view-model.js';
 import { type ViewModelProps, withViewModel } from './with-view-model.js';
@@ -1466,7 +1466,7 @@ describe('withViewModel', () => {
     );
 
     await expect(container.firstChild).toMatchFileSnapshot(
-      `../../../tests/snapshots/hoc/with-view-model/${task.name}.html`,
+      `../../../../tests/snapshots/hoc/with-view-model/${task.name}.html`,
     );
   });
 
@@ -1601,7 +1601,7 @@ describe('withViewModel', () => {
       );
 
       await expect(container.firstChild).toMatchFileSnapshot(
-        `../../../tests/snapshots/hoc/with-view-model/view-model-store/${task.name}.html`,
+        `../../../../tests/snapshots/hoc/with-view-model/view-model-store/${task.name}.html`,
       );
       expect(vmStore.spies.get).toHaveBeenCalledTimes(3);
       expect(vmStore._instanceAttachedCount.size).toBe(3);
@@ -1700,7 +1700,7 @@ describe('withViewModel', () => {
       });
 
       await expect(container).toMatchFileSnapshot(
-        `../../../tests/snapshots/hoc/with-view-model/view-model-store/${task.name}.html`,
+        `../../../../tests/snapshots/hoc/with-view-model/view-model-store/${task.name}.html`,
       );
     });
 
@@ -1816,7 +1816,7 @@ describe('withViewModel', () => {
       });
 
       await expect(container).toMatchFileSnapshot(
-        `../../../tests/snapshots/hoc/with-view-model/view-model-store/${task.name}.html`,
+        `../../../../tests/snapshots/hoc/with-view-model/view-model-store/${task.name}.html`,
       );
     });
 
