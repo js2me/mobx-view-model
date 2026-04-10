@@ -40,5 +40,8 @@ jobs:
       - name: Docs build
         run: pnpm docs:build
 
-      - name: Tests
+      - name: Tests (unit)
         run: pnpm test:coverage
+
+      - name: Tests (examples snapshots)
+        run: pnpm test:examples

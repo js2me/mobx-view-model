@@ -14,6 +14,7 @@
     "pub:minor": "pnpm -r --filter './packages/*' run pub:minor",
     "pub:major": "pnpm -r --filter './packages/*' run pub:major",
     "test": "pnpm -r --filter './packages/*' run test",
+    "test:examples": "pnpm -r --filter './examples/*' run test",
     "test:watch": "pnpm -r --filter './packages/*' run test:watch",
     "test:coverage": "pnpm -r --filter './packages/*' run test:coverage",
     "docs": "pnpm build && cd docs && pnpm dev",

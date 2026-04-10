@@ -7,7 +7,8 @@
     "dev": "esbuild src/main.tsx --bundle --format=esm --platform=browser --outfile=public/app.js --servedir=public --serve=3013",
     "build": "esbuild src/main.tsx --bundle --format=esm --platform=browser --outfile=public/app.js",
     "check": "tsc --noEmit",
-    "start": "pnpm build && esbuild src/main.tsx --bundle --format=esm --platform=browser --outfile=public/app.js --servedir=public --serve=3013"
+    "start": "pnpm build && esbuild src/main.tsx --bundle --format=esm --platform=browser --outfile=public/app.js --servedir=public --serve=3013",
+    "test": "vitest run --config vitest.config.ts"
   },
   "dependencies": {
     "mobx": "^6.13.7",
@@ -17,10 +18,14 @@
     "react-dom": "^19.1.0"
   },
   "devDependencies": {
+    "@testing-library/react": "^16.3.2",
     "@types/node": "^22.15.21",
     "@types/react": "^19.1.6",
     "@types/react-dom": "^19.1.5",
+    "@vitejs/plugin-react-swc": "^4.2.3",
     "esbuild": "^0.25.10",
-    "typescript": "^5.9.3"
+    "jsdom": "^26.1.0",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.18"
   }
 }
