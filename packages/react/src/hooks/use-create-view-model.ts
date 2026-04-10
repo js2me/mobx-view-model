@@ -8,7 +8,7 @@ import type {
 import { viewModelsConfig } from 'mobx-view-model';
 import { useContext, useRef } from 'react';
 import { flushPendingReactions } from 'yummies/mobx';
-import type { Class, IsPartial, Maybe } from 'yummies/types';
+import type { AnyObject, Class, IsPartial, Maybe } from 'yummies/types';
 import { isViewModelClass } from 'mobx-view-model';
 import {
   ActiveViewModelContext,
@@ -66,13 +66,14 @@ export function useCreateViewModel<TViewModel extends AnyViewModel>(
  *
  * [**Documentation**](https://js2me.github.io/mobx-view-model/react/api/use-create-view-model.html)
  */
-export function useCreateViewModel<TViewModelSimple extends ViewModelSimple>(
+export function useCreateViewModel<
+  TPayload extends AnyObject,
+  TViewModelSimple extends ViewModelSimple<TPayload>,
+>(
   VM: Class<TViewModelSimple>,
-  ...args: TViewModelSimple extends ViewModelSimple<infer TPayload>
-    ? IsPartial<TPayload> extends true
-      ? [payload?: TPayload]
-      : [payload: TPayload]
-    : []
+  ...args: IsPartial<TPayload> extends true
+    ? [payload?: TPayload]
+    : [payload: TPayload]
 ): TViewModelSimple;
 
 /**

@@ -1,5 +1,5 @@
 import { act, render } from '@testing-library/react';
-import { describe, expect, test, vi } from 'vitest';
+import { describe, expect, expectTypeOf, test, vi } from 'vitest';
 import type { ViewModelSimple, ViewModelStore } from 'mobx-view-model';
 import { ViewModelBaseMock } from '../../../core/src/view-model/view-model.base.test.js';
 import { ViewModelStoreBaseMock } from '../../../core/src/view-model/view-model.store.base.test.js';
@@ -196,10 +196,18 @@ describe('useCreateViewModel', () => {
       }
 
       const A = ({ n }: { n: number }) => {
-        // Overloads for ViewModelSimple default payload to EmptyObject; real VM uses a typed payload.
-        useCreateViewModel(SimpleWithPayload as never, { n });
+        const vm = useCreateViewModel(SimpleWithPayload, { n });
+        expectTypeOf(vm).toEqualTypeOf<SimpleWithPayload>();
         return null;
       };
+
+      const InvalidPayload = () => {
+        // @ts-expect-error payload.n must be a number
+        useCreateViewModel(SimpleWithPayload, { n: '1' });
+        return null;
+      };
+
+      expect(InvalidPayload).toBeTypeOf('function');
 
       const { rerender } = await act(async () => render(<A n={1} />));
 
