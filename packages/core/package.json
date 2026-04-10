@@ -1,6 +1,6 @@
 {
   "name": "mobx-view-model",
-  "version": "9.2.0",
+  "version": "9.3.0",
   "scripts": {
     "clean": "rimraf dist",
     "lint:check": "pnpm exec biome check --write --no-errors-on-unmatched --files-ignore-unknown=true src",
@@ -57,7 +57,7 @@
   },
   "dependencies": {
     "yummies": "^7.10.0",
-    "mobx-view-model-react": "^9.2.0"
+    "mobx-view-model-react": "^9.3.0"
   },
   "peerDependencies": {
     "mobx": "^6.12.4",
