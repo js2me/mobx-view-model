@@ -27,7 +27,7 @@ export const useViewModel = <T extends AnyViewModel | AnyViewModelSimple>(
   let devModeModelRef = undefined as unknown as React.MutableRefObject<any>;
 
   if (process.env.NODE_ENV !== 'production') {
-    devModeModelRef = useRef<any>();
+    devModeModelRef = useRef<any>(undefined);
   }
 
   if (vmLookup == null || !viewModels) {

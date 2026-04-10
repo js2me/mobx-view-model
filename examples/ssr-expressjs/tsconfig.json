@@ -4,13 +4,17 @@
     "lib": ["DOM", "ES2022"],
     "strict": true,
     "noEmit": true,
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "jsx": "react-jsx",
-    "types": ["node"]
+    "types": ["node"],
+    "paths": {
+      "react": ["./node_modules/@types/react"],
+      "react/*": ["./node_modules/@types/react/*"]
+    }
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"]
 }
