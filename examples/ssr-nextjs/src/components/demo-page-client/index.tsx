@@ -3,6 +3,7 @@
 import { withViewModel } from 'mobx-view-model';
 import { DemoPageFallback } from './ui/demo-page-fallback';
 import { DemoPageArticle } from './ui/demo-page-article';
+import { VMComponent } from './ui/nested-vm-component';
 import { DemoPageVM } from './model';
 
 /** Home route — distinct VM id so each page keeps its own MobX state. */
@@ -17,6 +18,12 @@ export const DemoPageClient = withViewModel(
         {model.title}
       </h1>
       <DemoPageArticle />
+      <VMComponent
+        payload={{
+          title: 'VMComponent with static id',
+          note: 'This VMComponent renders another VMComponent with a dynamic id inside.',
+        }}
+      />
     </div>
   ),
   {
