@@ -1,8 +1,8 @@
 import {
   type AnyViewModel,
   type AnyViewModelSimple,
-  type ViewModelParams,
   ViewModelBase,
+  type ViewModelParams,
 } from 'mobx-view-model';
 import type { AnyObject, EmptyObject } from 'yummies/types';
 import type { Globals } from '../../../globals';
@@ -16,7 +16,7 @@ export class VM<
     public globals: Globals,
     params: ViewModelParams<Payload, ParentViewModel, ComponentProps>,
   ) {
-    // @ts-ignore
+    // @ts-expect-error
     super(params);
   }
 }

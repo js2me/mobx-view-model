@@ -1,23 +1,26 @@
-import { computed, makeObservable, observable } from "mobx";
-import { VM } from "../../../shared/lib/view-models/vm";
-import { BoxIcon, CartIcon, UserIcon } from "../../../shared/assets/icons";
-import { LayoutNavItem, LayoutQuickLink } from "./types";
-import { House } from "lucide-react";
-import { createRef } from "yummies/mobx";
+import { House } from 'lucide-react';
+import { computed, makeObservable, observable } from 'mobx';
+import { createRef } from 'yummies/mobx';
+import { BoxIcon, CartIcon, UserIcon } from '../../../shared/assets/icons';
+import { VM } from '../../../shared/lib/view-models/vm';
+import type { LayoutNavItem, LayoutQuickLink } from './types';
 
 export class LayoutVM extends VM {
   isHeaderCompact = false;
 
   headerRef = createRef<HTMLDivElement>({
     onSet: () => {
-      globalThis.addEventListener('scroll', this.handleWindowScroll, { passive: true, signal: this.unmountSignal })
+      globalThis.addEventListener('scroll', this.handleWindowScroll, {
+        passive: true,
+        signal: this.unmountSignal,
+      });
     },
     onUnset: () => {
-      globalThis.removeEventListener('scroll', this.handleWindowScroll)
-    }
+      globalThis.removeEventListener('scroll', this.handleWindowScroll);
+    },
   });
 
-  appNameLink = '/'
+  appNameLink = '/';
 
   get navItems(): LayoutNavItem[] {
     return [
@@ -27,63 +30,62 @@ export class LayoutVM extends VM {
         label: 'Главная',
       },
       {
-        href: "/profile",
+        href: '/profile',
         icon: UserIcon,
-        label: "Профиль",
+        label: 'Профиль',
       },
       {
-        href: "/orders",
+        href: '/orders',
         icon: BoxIcon,
-        label: "Заказы",
+        label: 'Заказы',
       },
       {
-        href: "/cart",
+        href: '/cart',
         icon: CartIcon,
-        label: "Корзина",
+        label: 'Корзина',
       },
-    ]
+    ];
   }
 
   get quickLinks(): LayoutQuickLink[] {
     return [
       {
-        href: "/fresh",
-        label: "GOZ0N fresh",
+        href: '/fresh',
+        label: 'GOZ0N fresh',
       },
       {
-        href: "/bank",
-        label: "GOZ0N Банк",
+        href: '/bank',
+        label: 'GOZ0N Банк',
       },
       {
-        href: "/travel",
-        label: "Билеты, отели",
+        href: '/travel',
+        label: 'Билеты, отели',
       },
       {
-        href: "/business",
-        label: "Для бизнеса",
+        href: '/business',
+        label: 'Для бизнеса',
       },
       {
-        href: "/fashion",
-        label: "Одежда",
+        href: '/fashion',
+        label: 'Одежда',
       },
       {
-        href: "/electronics",
-        label: "Электроника",
+        href: '/electronics',
+        label: 'Электроника',
       },
       {
-        href: "/home",
-        label: "Дом и сад",
+        href: '/home',
+        label: 'Дом и сад',
       },
-    ]
+    ];
   }
 
   handleWindowScroll = () => {
     this.isHeaderCompact = globalThis.scrollY > 120;
-  }
-
+  };
 
   protected willMount(): void {
-    makeObservable(this, { 
+    makeObservable(this, {
       navItems: computed.struct,
       quickLinks: computed.struct,
       isHeaderCompact: observable.ref,

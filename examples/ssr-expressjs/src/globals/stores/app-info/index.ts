@@ -1,5 +1,5 @@
-import { action, computed, makeObservable, observable } from 'mobx';
-import { Router } from '../../router';
+import { action, makeObservable, observable } from 'mobx';
+import type { Router } from '../../router';
 
 export type AppInfoSnapshot = {
   appName: string;
@@ -16,11 +16,11 @@ export class AppInfoStore {
     makeObservable(this, {
       appName: observable,
       patch: action,
-      title: observable
+      title: observable,
     });
   }
 
-  setTitle(title: string  ) {
+  setTitle(title: string) {
     if (typeof window === 'undefined') {
       this.title = title;
     } else {

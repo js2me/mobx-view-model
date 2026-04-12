@@ -4,11 +4,12 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "pnpm build:styles && pnpm build:client && tsx src/server.tsx",
+    "dev": "pnpm build:styles && pnpm build:client && tsx watch --clear-screen=false src/server.tsx",
     "build:styles": "tailwindcss -i src/app/styles.css -o dist/styles.css",
     "build:client": "esbuild src/client.tsx --bundle --format=esm --platform=browser --outfile=dist/client.js",
     "build": "pnpm build:styles && pnpm build:client && tsc --noEmit",
-    "check": "tsc --noEmit",
+    "lint:check": "pnpm exec biome check --write --no-errors-on-unmatched --files-ignore-unknown=true src",
+    "check": "pnpm run lint:check && tsc --noEmit",
     "start": "NODE_ENV=production pnpm build:styles && pnpm build:client && tsx src/server.tsx",
     "test": "vitest run --config vitest.config.ts"
   },

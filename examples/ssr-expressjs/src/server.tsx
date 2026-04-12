@@ -1,9 +1,10 @@
-import "./app/bootstrap/client";
+import './app/bootstrap/server';
 
 import express from 'express';
 import ReactDOMServer from 'react-dom/server';
-import { Globals } from './globals';
 import { App } from './app';
+import { Globals } from './globals';
+import productsData from './shared/api/db/products.json';
 
 const app = express();
 const port = Number(process.env.PORT ?? 6473);
@@ -12,16 +13,24 @@ app.use('/dist', express.static('dist'));
 app.use('/public', express.static('public'));
 
 app.get('*', async (req, res) => {
+  if (req.path === '/api/products') {
+    res.status(200).send(JSON.stringify(productsData));
+    return;
+  }
+
   const globals = new Globals({
     router: {
       history: {
-        initialEntries: [req.path]
-      }
-    }
-  })
+        initialEntries: [req.path],
+      },
+    },
+  });
 
   const appHtml = ReactDOMServer.renderToString(<App globals={globals} />);
-  const dataJson = JSON.stringify(globals.toSnapshot()).replace(/</g, '\\u003c');
+  const dataJson = JSON.stringify(globals.toSnapshot()).replace(
+    /</g,
+    '\\u003c',
+  );
 
   res.status(200).send(`<!doctype html>
 <html lang="en">

@@ -1,8 +1,8 @@
-import "./app/bootstrap/client";
+import './app/bootstrap/client';
 
 import { hydrateRoot } from 'react-dom/client';
-import { Globals } from './globals';
 import { App } from './app';
+import { Globals } from './globals';
 
 const ssrData = (globalThis as any).__SSR_DATA__;
 

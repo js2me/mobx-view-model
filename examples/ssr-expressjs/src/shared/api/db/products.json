@@ -1,0 +1,330 @@
+[
+  {
+    "id": 1,
+    "title": "Аквашуз KERNA",
+    "price": 1665,
+    "originalPrice": 22617,
+    "rating": 4.2,
+    "reviewsCount": 483,
+    "slidesCount": 6
+  },
+  {
+    "id": 2,
+    "title": "Защитное стекло iPhone 16 Pro Max с автоматической установкой",
+    "price": 557,
+    "originalPrice": 3500,
+    "rating": 4.9,
+    "reviewsCount": 92715
+  },
+  {
+    "id": 3,
+    "title": "Коврик для сушки посуды, 40 см x 30 см, 1 шт",
+    "price": 258,
+    "originalPrice": 1200,
+    "rating": 4.9,
+    "reviewsCount": 1172
+  },
+  {
+    "id": 4,
+    "title": "Низкокалорийный джем без сахара Mr.Djemius ZERO",
+    "price": 362,
+    "originalPrice": 781,
+    "rating": 4.9,
+    "reviewsCount": 20421
+  },
+  {
+    "id": 5,
+    "title": "Филе цыпленка в собственном соку 180 гр. Perva Fitness",
+    "price": 1154,
+    "originalPrice": 2204,
+    "rating": 4.9,
+    "reviewsCount": 15713
+  },
+  {
+    "id": 6,
+    "title": "Беспроводные наушники TWS с шумоподавлением SoundMax Pro",
+    "price": 2390,
+    "originalPrice": 7990,
+    "rating": 4.8,
+    "reviewsCount": 34501
+  },
+  {
+    "id": 7,
+    "title": "Рюкзак городской водонепроницаемый с USB-портом, 25 л",
+    "price": 1870,
+    "originalPrice": 5400,
+    "rating": 4.7,
+    "reviewsCount": 8934
+  },
+  {
+    "id": 8,
+    "title": "Набор кухонных ножей из дамасской стали, 5 шт",
+    "price": 3450,
+    "originalPrice": 12900,
+    "rating": 4.9,
+    "reviewsCount": 6218,
+    "slidesCount": 4
+  },
+  {
+    "id": 9,
+    "title": "Портативная колонка Bluetooth 40 Вт с подсветкой",
+    "price": 2780,
+    "originalPrice": 8500,
+    "rating": 4.6,
+    "reviewsCount": 11402
+  },
+  {
+    "id": 10,
+    "title": "Электрическая зубная щетка Sonic Clean с 4 насадками",
+    "price": 890,
+    "originalPrice": 3200,
+    "rating": 4.8,
+    "reviewsCount": 45392
+  },
+  {
+    "id": 11,
+    "title": "Термокружка из нержавеющей стали 500 мл",
+    "price": 645,
+    "originalPrice": 1890,
+    "rating": 4.7,
+    "reviewsCount": 27841
+  },
+  {
+    "id": 12,
+    "title": "Фитнес-браслет с измерением давления и пульса",
+    "price": 1290,
+    "originalPrice": 4500,
+    "rating": 4.5,
+    "reviewsCount": 53107
+  },
+  {
+    "id": 13,
+    "title": "Автомобильный держатель для телефона с беспроводной зарядкой",
+    "price": 1120,
+    "originalPrice": 3750,
+    "rating": 4.6,
+    "reviewsCount": 9563
+  },
+  {
+    "id": 14,
+    "title": "Ортопедическая подушка с эффектом памяти 60x40 см",
+    "price": 1580,
+    "originalPrice": 4200,
+    "rating": 4.8,
+    "reviewsCount": 31290
+  },
+  {
+    "id": 15,
+    "title": "Светодиодная гирлянда-штора 3x3 м теплый свет",
+    "price": 430,
+    "originalPrice": 1600,
+    "rating": 4.7,
+    "reviewsCount": 14678
+  },
+  {
+    "id": 16,
+    "title": "Набор резинок для фитнеса 5 шт с чехлом",
+    "price": 340,
+    "originalPrice": 1100,
+    "rating": 4.8,
+    "reviewsCount": 68923
+  },
+  {
+    "id": 17,
+    "title": "Массажный пистолет 6 насадок 30 скоростей",
+    "price": 2950,
+    "originalPrice": 9800,
+    "rating": 4.7,
+    "reviewsCount": 22156,
+    "slidesCount": 5
+  },
+  {
+    "id": 18,
+    "title": "Кофемолка электрическая 200 Вт с контейнером из нержавеющей стали",
+    "price": 780,
+    "originalPrice": 2400,
+    "rating": 4.6,
+    "reviewsCount": 5841
+  },
+  {
+    "id": 19,
+    "title": "Робот-пылесос с влажной уборкой и навигацией LiDAR",
+    "price": 8990,
+    "originalPrice": 24900,
+    "rating": 4.8,
+    "reviewsCount": 12430,
+    "slidesCount": 8
+  },
+  {
+    "id": 20,
+    "title": "Складной столик для ноутбука с охлаждением",
+    "price": 1340,
+    "originalPrice": 3800,
+    "rating": 4.5,
+    "reviewsCount": 7291
+  },
+  {
+    "id": 21,
+    "title": "Силиконовые формы для выпечки, набор 12 шт",
+    "price": 290,
+    "originalPrice": 950,
+    "rating": 4.9,
+    "reviewsCount": 41205
+  },
+  {
+    "id": 22,
+    "title": "Увлажнитель воздуха ультразвуковой с подсветкой 2.5 л",
+    "price": 1490,
+    "originalPrice": 4300,
+    "rating": 4.7,
+    "reviewsCount": 18764
+  },
+  {
+    "id": 23,
+    "title": "Чехол-книжка для Samsung Galaxy S24 Ultra с магнитной застёжкой",
+    "price": 420,
+    "originalPrice": 1800,
+    "rating": 4.6,
+    "reviewsCount": 3894
+  },
+  {
+    "id": 24,
+    "title": "Настольная LED-лампа с беспроводной зарядкой и регулировкой яркости",
+    "price": 1750,
+    "originalPrice": 5200,
+    "rating": 4.8,
+    "reviewsCount": 10582
+  },
+  {
+    "id": 25,
+    "title": "Дождевик-пончо универсальный с капюшоном",
+    "price": 180,
+    "originalPrice": 750,
+    "rating": 4.4,
+    "reviewsCount": 2347
+  },
+  {
+    "id": 26,
+    "title": "Контейнеры для еды с крышками, набор 10 шт, 1 л",
+    "price": 520,
+    "originalPrice": 1700,
+    "rating": 4.8,
+    "reviewsCount": 29310
+  },
+  {
+    "id": 27,
+    "title": "Кроссовки мужские беговые UltraRun Mesh, размеры 40-45",
+    "price": 2190,
+    "originalPrice": 6900,
+    "rating": 4.7,
+    "reviewsCount": 16088,
+    "slidesCount": 4
+  },
+  {
+    "id": 28,
+    "title": "Ароматическая свеча соевый воск Лаванда и ваниль 200 г",
+    "price": 390,
+    "originalPrice": 1250,
+    "rating": 4.9,
+    "reviewsCount": 7623
+  },
+  {
+    "id": 29,
+    "title": "Гамак подвесной туристический с москитной сеткой",
+    "price": 1630,
+    "originalPrice": 4800,
+    "rating": 4.6,
+    "reviewsCount": 4517
+  },
+  {
+    "id": 30,
+    "title": "Механическая клавиатура с RGB подсветкой 87 клавиш",
+    "price": 2450,
+    "originalPrice": 6500,
+    "rating": 4.8,
+    "reviewsCount": 38947,
+    "slidesCount": 3
+  },
+  {
+    "id": 31,
+    "title": "Солнцезащитный крем SPF 50+ для лица и тела 100 мл",
+    "price": 310,
+    "originalPrice": 890,
+    "rating": 4.7,
+    "reviewsCount": 55182
+  },
+  {
+    "id": 32,
+    "title": "Органайзер для косметики вращающийся на 360°",
+    "price": 670,
+    "originalPrice": 2100,
+    "rating": 4.6,
+    "reviewsCount": 13429
+  },
+  {
+    "id": 33,
+    "title": "Вакуумная бутылка для воды 750 мл с индикатором температуры",
+    "price": 840,
+    "originalPrice": 2600,
+    "rating": 4.8,
+    "reviewsCount": 19756
+  },
+  {
+    "id": 34,
+    "title": "Планшет для рисования LCD 12 дюймов для детей",
+    "price": 490,
+    "originalPrice": 1500,
+    "rating": 4.7,
+    "reviewsCount": 24801
+  },
+  {
+    "id": 35,
+    "title": "Компрессионные гольфы для бега и спорта, пара",
+    "price": 350,
+    "originalPrice": 1200,
+    "rating": 4.5,
+    "reviewsCount": 6370
+  },
+  {
+    "id": 36,
+    "title": "Многоразовые восковые салфетки для хранения продуктов, 3 шт",
+    "price": 270,
+    "originalPrice": 900,
+    "rating": 4.6,
+    "reviewsCount": 3218
+  },
+  {
+    "id": 37,
+    "title": "Кольцевая лампа 26 см с пультом и штативом 2.1 м",
+    "price": 1190,
+    "originalPrice": 3900,
+    "rating": 4.7,
+    "reviewsCount": 42563,
+    "slidesCount": 3
+  },
+  {
+    "id": 38,
+    "title": "Набор для суши и роллов на 2 персоны",
+    "price": 580,
+    "originalPrice": 1800,
+    "rating": 4.5,
+    "reviewsCount": 8102
+  },
+  {
+    "id": 39,
+    "title": "Автоматический дозатор мыла сенсорный 350 мл",
+    "price": 720,
+    "originalPrice": 2300,
+    "rating": 4.6,
+    "reviewsCount": 17945
+  },
+  {
+    "id": 40,
+    "title": "Мини-проектор портативный Full HD с Wi-Fi",
+    "price": 5490,
+    "originalPrice": 15900,
+    "rating": 4.7,
+    "reviewsCount": 9874,
+    "slidesCount": 5
+  }
+]

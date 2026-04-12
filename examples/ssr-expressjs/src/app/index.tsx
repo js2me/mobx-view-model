@@ -1,8 +1,7 @@
-import { Globals } from '../globals';
-
 import { ViewModelsProvider } from 'mobx-view-model';
-import { Routing } from './routing.js';
+import type { Globals } from '../globals';
 import { Layout } from '../widgets/layout';
+import { Routing } from './routing.js';
 
 export function App({ globals }: { globals: Globals }) {
   return (
