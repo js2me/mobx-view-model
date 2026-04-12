@@ -16,6 +16,7 @@
     "@heroui/react": "^3.0.2",
     "@heroui/styles": "^3.0.2",
     "express": "^4.21.2",
+    "lucide-react": "^1.8.0",
     "mobx": "^6.13.7",
     "mobx-location-history": "9.3.1",
     "mobx-react-lite": "^4.1.1",
