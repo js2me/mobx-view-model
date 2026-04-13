@@ -1,12 +1,11 @@
 import type { Mock } from 'vitest';
 import { describe, expect, it, vi } from 'vitest';
 
-import type { AnyObject, EmptyObject, Maybe } from 'yummies/types';
+import type { Maybe } from 'yummies/types';
 import type { ViewModelsConfig } from '../config/types.js';
 import { ViewModelBaseMock } from './view-model.base.test.js';
 import type { ViewModel } from './view-model.js';
 import { ViewModelStoreBase } from './view-model.store.base.js';
-import type { ViewModelStore } from './view-model.store.js';
 import type {
   ViewModelGenerateIdConfig,
   ViewModelLookup,
@@ -14,7 +13,6 @@ import type {
 import type {
   AnyViewModel,
   AnyViewModelSimple,
-  ViewModelParams,
 } from './view-model.types.js';
 
 export class ViewModelStoreBaseMock extends ViewModelStoreBase {
@@ -116,39 +114,22 @@ describe('ViewModelStoreBase', () => {
   });
 
   it('accessing to parent view models using store [using parentViewModelId and vmStore]', async () => {
-    class TestViewModelImpl1<
-      Payload extends AnyObject = EmptyObject,
-      ParentViewModel extends AnyViewModel | AnyViewModelSimple | null = null,
-    > extends ViewModelBaseMock<Payload, ParentViewModel> {
-      constructor(
-        private vmStore: ViewModelStore,
-        params?: Partial<ViewModelParams<Payload>>,
-      ) {
-        super(params);
-      }
-
-      protected getParentViewModel(
-        parentViewModelId: Maybe<string>,
-      ): ParentViewModel {
-        return this.vmStore.get(parentViewModelId)! as ParentViewModel;
-      }
-    }
-
-    class VMParent extends TestViewModelImpl1 {}
-    class VMChild extends TestViewModelImpl1<any, VMParent> {}
+    class VMParent extends ViewModelBaseMock {}
+    class VMChild extends ViewModelBaseMock<any, VMParent> {}
 
     const vmStore = new ViewModelStoreBaseMock();
 
-    const parentVM = new VMParent(vmStore, { id: 'parent' });
+    const parentVM = new VMParent({ id: 'parent' });
 
     await vmStore.attach(parentVM);
 
-    const childVM = new VMChild(vmStore, {
+    const childVM = new VMChild({
       id: 'child',
       parentViewModelId: 'parent',
+      viewModels: vmStore,
     });
 
-    await vmStore.attach(parentVM);
+    await vmStore.attach(childVM);
 
     expect(childVM.parentViewModel.id).toBe('parent');
   });
