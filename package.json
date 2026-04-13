@@ -10,7 +10,7 @@
     "build": "pnpm --filter mobx-view-model-react run build && pnpm --filter mobx-view-model run build",
     "build:watch": "pnpm -r --filter './packages/*' run build:watch",
     "pub": "pnpm -r --filter './packages/*' run pub",
-    "pub:ci": "pnpm exec sborshik ci --github-releases",
+    "pub:ci": "pnpm run build && pnpm exec sborshik ci --github-releases",
     "pub:patch": "pnpm -r --filter './packages/*' run pub:patch",
     "pub:minor": "pnpm -r --filter './packages/*' run pub:minor",
     "pub:major": "pnpm -r --filter './packages/*' run pub:major",

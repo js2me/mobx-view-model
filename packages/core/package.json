@@ -44,6 +44,9 @@
     "type": "git",
     "url": "git://github.com/js2me/mobx-view-model"
   },
+  "publishConfig": {
+    "directory": "dist"
+  },
   "dependencies": {
     "mobx-view-model-react": "^9.3.2",
     "yummies": "^7.10.0"

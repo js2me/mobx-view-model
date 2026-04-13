@@ -38,6 +38,9 @@
     "type": "git",
     "url": "git://github.com/js2me/mobx-view-model"
   },
+  "publishConfig": {
+    "directory": "dist"
+  },
   "dependencies": {
     "mobx-view-model": "workspace:*"
   },
