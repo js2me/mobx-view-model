@@ -1,4 +1,4 @@
-import type { Class, Maybe } from 'yummies/types';
+import type { Class, Maybe, MaybePromise } from 'yummies/types';
 import type {
   ViewModelCreateConfig,
   ViewModelGenerateIdConfig,
@@ -10,7 +10,7 @@ import type { ViewModelSimple } from './view-model-simple.js';
 /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface) */
 export interface ViewModelStore<VMBase extends AnyViewModel = AnyViewModel> {
   /**
-   * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#getidsvmlookup)
+   * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#getids-vmlookup)
    * @param vmLookup - The ID or class type of the view model. See {@link ViewModelLookup}.
    * @returns The IDs of the view models
    */
@@ -19,7 +19,7 @@ export interface ViewModelStore<VMBase extends AnyViewModel = AnyViewModel> {
   ): string[];
 
   /**
-   * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#getidvmlookup)
+   * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#getid-vmlookup)
    * @param vmLookup - The ID or class type of the view model. See {@link ViewModelLookup}.
    * @returns The ID of the view model, or null if not found.
    */
@@ -33,7 +33,7 @@ export interface ViewModelStore<VMBase extends AnyViewModel = AnyViewModel> {
   mountedViewsCount: number;
 
   /**
-   * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#hasvmlookup)
+   * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#has-vmlookup)
    * @param vmLookup - The ID or class type of the view model. See {@link ViewModelLookup}.
    * @returns True if the instance exists, false otherwise.
    */
@@ -42,7 +42,7 @@ export interface ViewModelStore<VMBase extends AnyViewModel = AnyViewModel> {
   ): boolean;
 
   /**
-   * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#getvmlookup)
+   * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#get-vmlookup)
    * @param vmLookup - The ID or class type of the view model. See {@link ViewModelLookup}.
    * @returns The view model instance, or null if not found.
    */
@@ -51,7 +51,7 @@ export interface ViewModelStore<VMBase extends AnyViewModel = AnyViewModel> {
   ): T | null;
 
   /**
-   * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#getallvmlookup)
+   * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#getall-vmlookup)
    * @param vmLookup - The ID or class type of the view model. See {@link ViewModelLookup}.
    * @returns The view model instance, or null if not found.
    */
@@ -63,26 +63,26 @@ export interface ViewModelStore<VMBase extends AnyViewModel = AnyViewModel> {
    * This is specific method to be called when a view model is about to be attached to view.
    * This method is the first method where the created view model instance is passed to the view model store.
    *
-   * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#marktobeattachedviewmodel)
+   * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#marktobeattached-viewmodel)
    */
   markToBeAttached(model: VMBase | AnyViewModelSimple): void;
 
   /**
-   * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#attachviewmodel)
+   * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#attach-viewmodel)
    * @param model - The view model to attach.
-   * @returns A promise that resolves when the operation is complete.
+   * @returns `void` when `mount()` completed synchronously, otherwise a promise that settles after async `mount()`.
    */
-  attach(model: VMBase | AnyViewModelSimple): Promise<void>;
+  attach(model: VMBase | AnyViewModelSimple): MaybePromise<void>;
 
   /**
-   * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#detachviewmodelid)
+   * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#detach-viewmodelid)
    * @param id - The ID of the view model to detach.
    * @returns A promise that resolves when the operation is complete.
    */
   detach(id: VMBase['id'] | ViewModelSimple['id']): Promise<void>;
 
   /**
-   * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#isabletorenderviewviewmodelid)
+   * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#isabletorenderview-viewmodelid)
    * Determines if a view model is able to render based on its ID.
    * @param id - The ID of the view model.
    * @returns True if the view model can render, false otherwise.
@@ -90,7 +90,7 @@ export interface ViewModelStore<VMBase extends AnyViewModel = AnyViewModel> {
   isAbleToRenderView(id: Maybe<VMBase['id']>): boolean;
 
   /**
-   * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#createviewmodelconfig)
+   * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#createviewmodel-config)
    * Creates a new view model instance based on the provided configuration.
    * @param config - The configuration for creating the view model.
    * @returns The newly created view model instance.
@@ -98,7 +98,7 @@ export interface ViewModelStore<VMBase extends AnyViewModel = AnyViewModel> {
   createViewModel<VM extends VMBase>(config: ViewModelCreateConfig<VM>): VM;
 
   /**
-   * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#processcreateconfigconfig)
+   * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#processcreateconfig-config)
    * Process the configuration for creating a view model.
    * This method is called just before creating a new view model instance.
    * It's useful for initializing the configuration, like linking anchors to the view model class.
@@ -124,7 +124,7 @@ export interface ViewModelStore<VMBase extends AnyViewModel = AnyViewModel> {
   unlink(...anchors: Maybe<unknown>[]): void;
 
   /**
-   * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#generateviewmodelidconfig)
+   * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#generateviewmodelid-config)
    * Generates a unique ID for a view model based on the provided configuration.
    * @param config - The configuration for generating the ID.
    * @returns The generated unique ID.

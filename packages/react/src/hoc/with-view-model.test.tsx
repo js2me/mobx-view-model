@@ -5,7 +5,15 @@ import {
   screen,
   waitFor,
 } from '@testing-library/react';
-import { comparer, makeObservable, observable, runInAction } from 'mobx';
+import {
+  action,
+  comparer,
+  computed,
+  makeObservable,
+  observable,
+  reaction,
+  runInAction,
+} from 'mobx';
 import { observer } from 'mobx-react-lite';
 import {
   type ComponentProps,
@@ -22,6 +30,7 @@ import { hydrateRoot } from 'react-dom/client';
 import { renderToString } from 'react-dom/server';
 import { describe, expect, expectTypeOf, it, test, vi } from 'vitest';
 import { sleep } from 'yummies/async';
+import { callFunction } from 'yummies/common';
 import { createCounter } from 'yummies/complex';
 import type { AnyObject, EmptyObject, Maybe } from 'yummies/types';
 import {
@@ -84,7 +93,7 @@ describe('withViewModel', () => {
       }
     };
 
-    test('renders fallback without store when VM is not mounted', () => {
+    test('renders view on SSR without store (sync mount)', () => {
       class VM extends ViewModelBaseMock {}
       const View = ({ model }: ViewModelProps<VM>) => {
         return <div data-testid={'view'}>{`hello ${model.id}`}</div>;
@@ -95,10 +104,11 @@ describe('withViewModel', () => {
       })(View);
 
       const html = renderOnServer(<VMChargedComponent />);
-      expect(html).toContain('fallback-ssr');
+      expect(html).toContain('hello VM_1');
+      expect(html).not.toContain('fallback-ssr');
     });
 
-    test('uses getPayload to build payload during SSR fallback', () => {
+    test('uses getPayload for SSR main view (sync mount)', () => {
       class VM extends ViewModelBaseMock<{ value: string }> {}
       const View = ({ model }: ViewModelProps<VM>) => {
         return <div>{`payload ${model.payload.value}`}</div>;
@@ -115,10 +125,11 @@ describe('withViewModel', () => {
       const html = renderOnServer(
         <VMChargedComponent payload={{ value: 'x' }} />,
       );
-      expect(html).toContain('fallback server-x');
+      expect(html).toContain('payload server-x');
+      expect(html).not.toContain('fallback');
     });
 
-    test('renders fallback when store blocks render on server', () => {
+    test('renders view on SSR with store (sync attach)', () => {
       class VM extends ViewModelBaseMock {}
       const View = ({ model }: ViewModelProps<VM>) => {
         return <div>{`hello ${model.id}`}</div>;
@@ -134,7 +145,8 @@ describe('withViewModel', () => {
           <Component />
         </ViewModelsProvider>,
       );
-      expect(html).toContain('fallback-ssr');
+      expect(html).toContain('hello VM_1');
+      expect(html).not.toContain('fallback-ssr');
     });
 
     test('renders view when store already has VM attached', async () => {
@@ -192,6 +204,8 @@ describe('withViewModel', () => {
       })(View);
 
       const html = renderOnServer(<Component payload={{ value: 'next' }} />);
+      expect(html).toContain('hello ssr-hydration next');
+      expect(html).not.toContain('loading');
 
       const container = document.createElement('div');
       container.innerHTML = html;
@@ -204,9 +218,7 @@ describe('withViewModel', () => {
         );
       });
 
-      await waitFor(() =>
-        expect(container.textContent).toContain('hello ssr-hydration next'),
-      );
+      expect(container.textContent).toContain('hello ssr-hydration next');
       root?.unmount();
     });
 
@@ -703,7 +715,7 @@ describe('withViewModel', () => {
     expect(spyFallbackRender).toHaveBeenCalledTimes(1);
   });
 
-  test('renders fallback before render REAL COMPONENT (times)', async () => {
+  test('does not render fallback on first paint when mount() completes synchronously', async () => {
     class VM extends ViewModelBaseMock {}
     const View = ({ model }: ViewModelProps<VM>) => {
       return <div data-testid={'view'}>{`hello ${model.id}`}</div>;
@@ -718,7 +730,7 @@ describe('withViewModel', () => {
 
     await act(async () => render(<Component />));
 
-    expect(spyFallbackRender).toHaveBeenCalledTimes(1);
+    expect(spyFallbackRender).toHaveBeenCalledTimes(0);
   });
 
   test('renders nesting', () => {
@@ -902,7 +914,7 @@ describe('withViewModel', () => {
     expect(screen.getByText('second-VM_1')).toBeDefined();
   });
 
-  test('withViewModel wrapper should by only mounted (renders 2 times)', () => {
+  test('withViewModel reactHook runs once per initial paint (sync attach)', () => {
     class VM extends ViewModelBaseMock {}
     const View = vi.fn(({ model }: ViewModelProps<VM>) => {
       return <div>{`hello ${model.id}`}</div>;
@@ -912,11 +924,11 @@ describe('withViewModel', () => {
 
     const Component = withViewModel(VM, {
       generateId: createIdGenerator(),
-      reactHook: useHookSpy, // the save renders count as withViewModel wrapper
+      reactHook: useHookSpy,
     })(View);
 
     render(<Component />);
-    expect(useHookSpy).toHaveBeenCalledTimes(2);
+    expect(useHookSpy).toHaveBeenCalledTimes(1);
   });
 
   describe('payload manipulations', () => {
@@ -1399,7 +1411,7 @@ describe('withViewModel', () => {
 
       await sleep(200);
 
-      expect(setPayloadSpy).toHaveBeenCalledTimes(2);
+      expect(setPayloadSpy).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -2507,5 +2519,79 @@ describe('withViewModel', () => {
       const screen = await act(async () => render(<TestApp />));
       expect(screen.getByText('vmc2')).toBeDefined();
     });
+  });
+
+  it('complex test with predefined values and inheritence', async () => {
+    const value = 1000;
+
+    class DataStore {
+      @observable.ref
+      requestingId: Maybe<number> = null;
+
+      @observable.ref
+      loadedId: Maybe<number> = null;
+
+      @computed
+      get id() {
+        // Временный костыль
+        if (this.loadedId != null) {
+          return this.loadedId;
+        }
+
+        return this.requestingId;
+      }
+
+      constructor(params: { getValue?: () => Maybe<number> }) {
+        makeObservable(this);
+
+        if (params.getValue) {
+          reaction(
+            () => callFunction(params.getValue),
+            action((id) => {
+              this.requestingId = id;
+            }),
+            {
+              fireImmediately: true,
+            },
+          );
+        }
+      }
+    }
+
+    const missingCallSpy = vi.fn();
+    const okCallSpy = vi.fn();
+
+    class PageVM extends ViewModelBase {
+      data = new DataStore({
+        getValue: () => value,
+      });
+
+      mount(): void {
+        if (this.data.id == null) {
+          missingCallSpy();
+          return;
+        }
+
+        okCallSpy();
+        super.mount();
+      }
+    }
+
+    const Component = withViewModel(PageVM, () => null);
+
+    const store = new ViewModelStoreBase();
+
+    const TestApp = () => {
+      return (
+        <ViewModelsProvider value={store}>
+          <Component />
+        </ViewModelsProvider>
+      );
+    };
+
+    await act(async () => render(<TestApp />));
+
+    expect(missingCallSpy).toHaveBeenCalledTimes(0);
+    expect(okCallSpy).toHaveBeenCalledTimes(1);
   });
 });

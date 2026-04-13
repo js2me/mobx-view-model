@@ -1,0 +1,11 @@
+{
+  "root": false,
+  "extends": ["js2me-biome-config/base.json"],
+  "linter": {
+    "rules": {
+      "nursery": {
+        "noFloatingPromises": "off"
+      }
+    }
+  }
+}

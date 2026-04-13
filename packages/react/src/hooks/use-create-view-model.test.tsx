@@ -1,5 +1,5 @@
 import { act, render } from '@testing-library/react';
-import { describe, expect, test, vi } from 'vitest';
+import { describe, expect, expectTypeOf, test, vi } from 'vitest';
 import type { ViewModelSimple, ViewModelStore } from 'mobx-view-model';
 import { ViewModelBaseMock } from '../../../core/src/view-model/view-model.base.test.js';
 import { ViewModelStoreBaseMock } from '../../../core/src/view-model/view-model.store.base.test.js';
@@ -103,6 +103,55 @@ describe('useCreateViewModel', () => {
     });
   });
 
+  /**
+   * Regression: a `viewModels.has(id)` guard must not skip the second `attach` when another
+   * hook reuses the same store instance — otherwise `detach` underflows and the VM unmounts
+   * while a sibling is still mounted.
+   */
+  describe('shared store instance (per-hook attach, not id/store membership)', () => {
+    test('two consumers with the same id: refcount 2 → 1 → 0, mount path once', async () => {
+      const vmStore = new ViewModelStoreBaseMock();
+      const sharedId = 'shared-refcount-vm';
+
+      class SharedVM extends ViewModelBaseMock {}
+
+      const Consumer = ({ label }: { label: string }) => {
+        const vm = useCreateViewModel(SharedVM, {}, { id: sharedId });
+        return <span data-testid={label}>{vm.id}</span>;
+      };
+
+      const App = ({ showSecond }: { showSecond: boolean }) => (
+        <div>
+          <Consumer label="a" />
+          {showSecond ? <Consumer label="b" /> : null}
+        </div>
+      );
+
+      const { rerender, unmount } = await act(async () =>
+        render(<App showSecond />, {
+          wrapper: createVMStoreWrapper(vmStore),
+        }),
+      );
+
+      const shared = vmStore.get<ViewModelBaseMock>(sharedId);
+      expect(shared).toBeTruthy();
+      expect(vmStore._instanceAttachedCount.get(sharedId)).toBe(2);
+      expect(shared!.spies.willMount).toHaveBeenCalledTimes(1);
+
+      await act(async () => rerender(<App showSecond={false} />));
+
+      expect(vmStore._instanceAttachedCount.get(sharedId)).toBe(1);
+      expect(vmStore.get(sharedId)).toBe(shared);
+
+      await act(async () => {
+        unmount();
+      });
+
+      expect(vmStore._instanceAttachedCount.get(sharedId)).toBeUndefined();
+      expect(vmStore.get(sharedId)).toBe(null);
+    });
+  });
+
   describe('ViewModelSimple', () => {
     test('should create instance', async ({ task }) => {
       const vmStore = new ViewModelStoreBaseMock();
@@ -133,6 +182,42 @@ describe('useCreateViewModel', () => {
       await expect(container.firstChild).toMatchFileSnapshot(
         `../../../../tests/snapshots/hooks/use-create-view-model/ViewModelSimple/${task.name}.html`,
       );
+    });
+
+    test('ViewModelSimple with setPayload: single call on first CSR render (no render+layout duplicate)', async () => {
+      const setPayloadSpy = vi.fn();
+
+      class SimpleWithPayload implements ViewModelSimple<{ n: number }> {
+        id = 'with-payload';
+
+        setPayload(payload: { n: number }): void {
+          setPayloadSpy(payload);
+        }
+      }
+
+      const A = ({ n }: { n: number }) => {
+        const vm = useCreateViewModel(SimpleWithPayload, { n });
+        expectTypeOf(vm).toEqualTypeOf<SimpleWithPayload>();
+        return null;
+      };
+
+      const InvalidPayload = () => {
+        // @ts-expect-error payload.n must be a number
+        useCreateViewModel(SimpleWithPayload, { n: '1' });
+        return null;
+      };
+
+      expect(InvalidPayload).toBeTypeOf('function');
+
+      const { rerender } = await act(async () => render(<A n={1} />));
+
+      expect(setPayloadSpy).toHaveBeenCalledTimes(1);
+      expect(setPayloadSpy).toHaveBeenCalledWith({ n: 1 });
+
+      await act(async () => rerender(<A n={2} />));
+
+      expect(setPayloadSpy).toHaveBeenCalledTimes(2);
+      expect(setPayloadSpy).toHaveBeenLastCalledWith({ n: 2 });
     });
 
     test('should call "attachViewModelStore"', async () => {

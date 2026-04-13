@@ -1,4 +1,4 @@
-import type { AnyObject, EmptyObject } from 'yummies/types';
+import type { AnyObject, EmptyObject, MaybePromise } from 'yummies/types';
 import type { ViewModelsConfig } from '../config/types.js';
 
 import type { AnyViewModel, AnyViewModelSimple } from './view-model.types.js';
@@ -25,10 +25,16 @@ export interface ViewModel<
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/interface#parentviewmodel-parentviewmodel-null) */
   readonly parentViewModel: ParentViewModel;
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/interface#mount-void-promise-void) */
-  mount(): void | Promise<void>;
+  mount(): MaybePromise<void>;
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/interface#unmount-void-promise-void) */
-  unmount(): void | Promise<void>;
-  /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/interface#setpayload-payload-payload-void) */
+  unmount(): MaybePromise<void>;
+  /**
+   * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/interface#setpayload-payload-payload-void)
+   *
+   * The React integration may call this on **every render** while the component is mounted in the tree,
+   * including **before** `mount()` has finished (and while `isMounted` is still `false`), so `payloadChanged`
+   * and side effects should not assume a fully mounted view model.
+   */
   setPayload(payload: Payload): void;
   /**
    * **NOTE** - this method will be moved to `ViewModelBase` in next major version

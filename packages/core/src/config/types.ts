@@ -55,6 +55,8 @@ export interface ViewModelsConfig<
   generateId: GenerateViewModelIdFn;
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#factory) */
   factory: CreateViewModelFactoryFn<TViewModel>;
+  /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#flushpendingreactions) */
+  flushPendingReactions: number;
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#fallbackcomponent) */
   fallbackComponent?: React.ComponentType;
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#onmount) */
@@ -92,7 +94,7 @@ export type ViewModelsRawConfig<
 > = PartialKeys<Omit<
 ViewModelsConfig<TViewModel>,
 'startViewTransitions' | 'observable' | 'factory' | 'generateId' | 'hooks'
->, 'payloadObservable' | 'payloadComputed'> & {
+>, 'payloadObservable' | 'payloadComputed' | 'flushPendingReactions'> & {
   startViewTransitions?:
     | DeepPartial<ViewModelsConfig['startViewTransitions']>
     | boolean;

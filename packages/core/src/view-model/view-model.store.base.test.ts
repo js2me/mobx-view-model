@@ -102,6 +102,21 @@ describe('ViewModelStoreBase', () => {
     expect(vmStore._instanceAttachedCount.get('1')).toBe(undefined);
   });
 
+  it('re-attach after detach: second mount/willMount on the same instance', async () => {
+    const vmStore = new ViewModelStoreBaseMock();
+    const vm = new ViewModelBaseMock({ id: 'demo-widgets-vm' });
+
+    await vmStore.attach(vm);
+    expect(vm.spies.willMount).toHaveBeenCalledTimes(1);
+
+    await vmStore.detach('demo-widgets-vm');
+    expect(vmStore.get('demo-widgets-vm')).toBe(null);
+
+    await vmStore.attach(vm);
+    expect(vm.spies.willMount).toHaveBeenCalledTimes(2);
+    expect(vmStore.get('demo-widgets-vm')).toBe(vm);
+  });
+
   it('is able to get total mounted views count', async () => {
     const vmStore = new ViewModelStoreBaseMock();
     await vmStore.attach(new ViewModelBaseMock({ id: '1' }));

@@ -25,12 +25,23 @@ jobs:
 
       - run: corepack enable
 
-      - run: pnpm i
+      - name: Install deps
+        run: pnpm i
 
-      - run: pnpm check
+      - name: Lint + Typings Check
+        run: pnpm check
 
-      - run: pnpm build
+      - name: Build
+        run: pnpm build
 
-      - run: pnpm docs:build
+      - name: Next.js SSR example (production build)
+        run: pnpm example:ssr:build:example
 
-      - run: pnpm test:coverage
+      - name: Docs build
+        run: pnpm docs:build
+
+      - name: Tests (unit)
+        run: pnpm test:coverage
+
+      - name: Tests (examples snapshots)
+        run: pnpm test:examples

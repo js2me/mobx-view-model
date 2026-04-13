@@ -121,6 +121,10 @@ Can return a Promise for asynchronous cleanup operations.
 ### `setPayload(payload: Payload): void`  
 Updates the view model's payload data.  
 
+::: warning React integration
+[`useCreateViewModel`](/react/api/use-create-view-model) and [`withViewModel`](/react/api/with-view-model) can call `setPayload` on **every render** while the component is in the tree. That includes moments **before** [`mount()`](#mount-void-promise-void) has run or finished — so `isMounted` may still be `false`. Do not assume a fully mounted view model inside `setPayload`, [`payloadChanged`](#payloadchanged-payload-payload-prevpayload-payload-void), or logic they trigger (e.g. avoid starting work that must only run after `mount()` unless you guard on `isMounted`).
+:::
+
 ::: tip
 When extending [`ViewModelBase`](/api/view-models/base-implementation), do not assign to `this.payload` directly (it is a getter): call `super.setPayload(payload)` or override [`payloadChanged()`](#payloadchanged-payload-payload-prevpayload-payload-void).
 :::

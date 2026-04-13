@@ -1,0 +1,34 @@
+{
+  "name": "mobx-view-model-example-ssr-nextjs",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --port 3010",
+    "build": "next build",
+    "check": "tsc --noEmit",
+    "start": "next start --port 3010",
+    "test": "vitest run --config vitest.config.ts"
+  },
+  "dependencies": {
+    "mobx": "^6.13.7",
+    "mobx-react-lite": "^4.1.1",
+    "mobx-view-model": "workspace:*",
+    "next": "^15.5.4",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "yummies": "^7.14.2"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.2.2",
+    "@testing-library/react": "^16.3.2",
+    "@types/node": "^22.15.21",
+    "@types/react": "^19.1.6",
+    "@types/react-dom": "^19.1.5",
+    "@vitejs/plugin-react-swc": "^4.2.3",
+    "jsdom": "^26.1.0",
+    "postcss": "^8.5.8",
+    "tailwindcss": "^4.2.2",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.18"
+  }
+}

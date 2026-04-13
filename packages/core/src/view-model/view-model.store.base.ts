@@ -1,6 +1,6 @@
 import { action, computed, observable, runInAction } from 'mobx';
 import type { ObservableAnnotationsArray } from 'yummies/mobx';
-import type { Class, Maybe } from 'yummies/types';
+import type { Class, Maybe, MaybePromise } from 'yummies/types';
 import {
   applyObservable,
   mergeVMConfigs,
@@ -88,6 +88,13 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
     );
   }
 
+  /**
+   * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#processcreateconfig-config)
+   * Process the configuration for creating a view model.
+   * This method is called just before creating a new view model instance.
+   * It's useful for initializing the configuration, like linking anchors to the view model class.
+   * @param config - The configuration for creating the view model.
+   */
   processCreateConfig<VM extends VMBase>(
     config: ViewModelCreateConfig<VM>,
   ): void {
@@ -96,6 +103,12 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
     this.link(config.VM, config.component, ...fromConfig);
   }
 
+  /**
+   * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#createviewmodel-config)
+   * Creates a new view model instance based on the provided configuration.
+   * @param config - The configuration for creating the view model.
+   * @returns The newly created view model instance.
+   */
   createViewModel<VM extends VMBase>(config: ViewModelCreateConfig<VM>): VM {
     const VMConstructor = config.VM as unknown as typeof ViewModelBase;
     const vmConfig = mergeVMConfigs(this.vmConfig, config.vmConfig);
@@ -111,6 +124,12 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
     return new VMConstructor(vmParams) as unknown as VM;
   }
 
+  /**
+   * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#generateviewmodelid-config)
+   * Generates a unique ID for a view model based on the provided configuration.
+   * @param config - The configuration for generating the ID.
+   * @returns The generated unique ID.
+   */
   generateViewModelId<VM extends VMBase>(
     config: ViewModelGenerateIdConfig<VM>,
   ): string {
@@ -121,6 +140,12 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
     }
   }
 
+  /**
+   * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#link)
+   * Link anchors (React components) with view model class.
+   * @param VM - The view model class to link to.
+   * @param anchors - The anchors to link.
+   */
   link(VM: Class<VMBase>, ...anchors: Maybe<unknown>[]): void {
     anchors.forEach((anchor) => {
       if (anchor && !this.linkedAnchorVMClasses.has(anchor)) {
@@ -129,6 +154,11 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
     });
   }
 
+  /**
+   * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#unlink)
+   * Unlink anchors (React components) with view model class.
+   * @param anchors - The anchors to unlink.
+   */
   unlink(...anchors: Maybe<unknown>[]): void {
     anchors.forEach((anchor) => {
       if (anchor && this.linkedAnchorVMClasses.has(anchor)) {
@@ -137,6 +167,11 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
     });
   }
 
+  /**
+   * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#getids-vmlookup)
+   * @param vmLookup - The ID or class type of the view model. See {@link ViewModelLookup}.
+   * @returns The IDs of the view models
+   */
   getIds<T extends VMBase | AnyViewModelSimple>(
     vmLookup: Maybe<ViewModelLookup<T>>,
   ): string[] {
@@ -154,6 +189,11 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
     return viewModelIds;
   }
 
+  /**
+   * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#getid-vmlookup)
+   * @param vmLookup - The ID or class type of the view model. See {@link ViewModelLookup}.
+   * @returns The ID of the view model, or null if not found.
+   */
   getId<T extends VMBase | AnyViewModelSimple>(
     vmLookup: Maybe<ViewModelLookup<T>>,
   ): string | null {
@@ -170,6 +210,11 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
     return viewModelIds.at(-1)!;
   }
 
+  /**
+   * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#has-vmlookup)
+   * @param vmLookup - The ID or class type of the view model. See {@link ViewModelLookup}.
+   * @returns True if the instance exists, false otherwise.
+   */
   has<T extends VMBase | AnyViewModelSimple>(
     vmLookup: Maybe<ViewModelLookup<T>>,
   ): boolean {
@@ -180,6 +225,11 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
     return this.viewModels.has(id);
   }
 
+  /**
+   * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#get-vmlookup)
+   * @param vmLookup - The ID or class type of the view model. See {@link ViewModelLookup}.
+   * @returns The view model instance, or null if not found.
+   */
   get<T extends VMBase | AnyViewModelSimple>(
     vmLookup: Maybe<ViewModelLookup<T>>,
   ): T | null {
@@ -195,6 +245,11 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
     return observedVM ?? (this.viewModelsTempHeap.get(id) as Maybe<T>) ?? null;
   }
 
+  /**
+   * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/base-implementation#getorcreatevmid-model)
+   * @param model - View model instance whose `id` should be defined.
+   * @returns Stable id for the instance (existing or newly generated).
+   */
   getOrCreateVmId(model: VMBase | AnyViewModelSimple): string {
     if (!model.id) {
       (model as AnyViewModelSimple).id = this.vmConfig.generateId({
@@ -205,6 +260,11 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
     return model.id!;
   }
 
+  /**
+   * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#getall-vmlookup)
+   * @param vmLookup - The ID or class type of the view model. See {@link ViewModelLookup}.
+   * @returns All view model instances matching the lookup.
+   */
   getAll<T extends VMBase | AnyViewModelSimple>(
     vmLookup: Maybe<ViewModelLookup<T>>,
   ): T[] {
@@ -213,19 +273,53 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
     return viewModelIds.map((id) => this.viewModels.get(id) as T);
   }
 
-  async mount(model: VMBase | AnyViewModelSimple) {
-    const modelId = this.getOrCreateVmId(model);
-
-    this.mountingViews.add(modelId);
-
-    await model.mount?.();
-
+  protected finalizeMount(modelId: string) {
     runInAction(() => {
       this.mountingViews.delete(modelId);
     });
   }
 
-  async unmount(model: VMBase | AnyViewModelSimple) {
+  /**
+   * Puts the model in {@link mountingViews}, calls `model.mount()`, then {@link finalizeMount}.
+   * {@link attach} delegates here so sync `mount()` finishes in the same turn as `attach` (SSR / first paint).
+   *
+   * Returns `void` when `model.mount()` is synchronous, otherwise a promise that settles after async mount.
+   */
+  protected mount(model: VMBase | AnyViewModelSimple): MaybePromise<void> {
+    const modelId = this.getOrCreateVmId(model);
+
+    this.mountingViews.add(modelId);
+
+    try {
+      const maybePromise = model.mount?.();
+
+      if (maybePromise instanceof Promise) {
+        if (
+          process.env.NODE_ENV !== 'production' &&
+          typeof window === 'undefined'
+        ) {
+          console.warn(
+            'Warning #2: ViewModel.mount() returned a Promise during server render.\n',
+            'HTML is emitted before the promise settles; the first server string may not reflect post-mount state (e.g. views using isAbleToRenderView).\n',
+            'On the client, async mount() is normal and does not trigger this warning.\n',
+            'More info: https://js2me.github.io/mobx-view-model/warnings/2',
+          );
+        }
+        return maybePromise
+          .then(() => undefined)
+          .finally(() => {
+            this.finalizeMount(modelId);
+          });
+      }
+
+      this.finalizeMount(modelId);
+    } catch (error) {
+      this.finalizeMount(modelId);
+      throw error;
+    }
+  }
+
+  protected async unmount(model: VMBase | AnyViewModelSimple) {
     const modelId = this.getOrCreateVmId(model);
 
     this.unmountingViews.add(modelId);
@@ -279,7 +373,14 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
     this.attachVMConstructor(model);
   }
 
-  async attach(model: VMBase | AnyViewModelSimple) {
+  /**
+   * Registers the view model and runs `model.mount()` in the same stack when it is synchronous,
+   * so SSR and the first client render can match without a separate API.
+   *
+   * If `mount()` returns a thenable, returns a `Promise` that settles after mount; the first paint
+   * may still show fallback until then. Otherwise returns `void`.
+   */
+  attach(model: VMBase | AnyViewModelSimple): MaybePromise<void> {
     const modelId = this.getOrCreateVmId(model);
 
     const attachedCount = this.instanceAttachedCount.get(modelId) ?? 0;
@@ -294,7 +395,18 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
 
     this.attachVMConstructor(model);
 
-    await this.mount(model);
+    try {
+      const mount = this.mount(model);
+
+      if (mount instanceof Promise) {
+        return mount.finally(() => {
+          this.viewModelsTempHeap.delete(modelId);
+        });
+      }
+    } catch (error) {
+      this.viewModelsTempHeap.delete(modelId);
+      throw error;
+    }
 
     this.viewModelsTempHeap.delete(modelId);
   }
