@@ -1,5 +1,8 @@
 import './app/bootstrap/server';
 
+import { readdirSync } from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { fakerRU as faker } from '@faker-js/faker';
 import express from 'express';
 import ReactDOMServer from 'react-dom/server';
@@ -11,30 +14,62 @@ faker.seed(120);
 
 const app = express();
 const port = Number(process.env.PORT ?? 6473);
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const publicDir = path.resolve(__dirname, 'public');
+const productImagesDir = path.resolve(publicDir, 'assets/product-images');
+const productImageUrls = readdirSync(productImagesDir)
+  .filter((filename) => filename.endsWith('.webp'))
+  .map((filename) => `/public/assets/product-images/${filename}`);
+
+function getRandomProductImages(): string[] | undefined {
+  if (productImageUrls.length === 0) {
+    return undefined;
+  }
+
+  const count = faker.number.int({
+    min: 1,
+    max: Math.min(4, productImageUrls.length),
+  });
+  return faker.helpers.shuffle(productImageUrls).slice(0, count);
+}
 
 const allProducts = faker.helpers.multiple(
-  (): ProductDC => ({
-    id: faker.number.int(),
+  (_, id): ProductDC => ({
+    id,
     originalPrice: +faker.commerce.price({ min: 1, max: 10000 }),
     price: +faker.commerce.price({ min: 1, max: 10000 }),
     rating: faker.number.float({ min: 1, max: 5, fractionDigits: 1 }),
     title: faker.commerce.productDescription(),
     reviewsCount: faker.number.int({ min: 0, max: 9999999 }),
-    images: faker.helpers.maybe(() =>
-      faker.helpers.multiple(() => faker.image.urlPicsumPhotos()),
-    ),
+    images: faker.helpers.maybe(getRandomProductImages),
   }),
   {
-    count: { min: 10, max: 200 },
+    count: { min: 2000, max: 5000 },
   },
 );
 
-app.use('/dist', express.static('dist'));
-app.use('/public', express.static('public'));
+app.use('/dist', express.static(path.resolve(process.cwd(), 'dist')));
+app.use('/public', express.static(publicDir));
 
 app.get('*', async (req, res) => {
   if (req.path === '/api/products') {
-    res.status(200).send(JSON.stringify(allProducts));
+    const rawLimit = Number(req.query.limit);
+    const rawOffset = Number(req.query.offset);
+    const limit = Number.isFinite(rawLimit)
+      ? Math.max(1, Math.min(Math.trunc(rawLimit), 100))
+      : 20;
+    const offset = Number.isFinite(rawOffset)
+      ? Math.max(0, Math.trunc(rawOffset))
+      : 0;
+
+    const items = allProducts.slice(offset, offset + limit);
+    const hasMore = offset + items.length < allProducts.length;
+    res.status(200).send(
+      JSON.stringify({
+        items,
+        hasMore,
+      }),
+    );
     return;
   }
 

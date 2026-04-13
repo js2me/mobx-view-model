@@ -25,6 +25,7 @@
     "mobx-view-model": "workspace:*",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
+    "react-virtuoso": "^4.15.0",
     "yummies": "^7.17.0"
   },
   "devDependencies": {

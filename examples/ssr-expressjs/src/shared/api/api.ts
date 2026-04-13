@@ -8,7 +8,24 @@ export interface ProductDC {
   images?: string[];
 }
 
-export const loadProducts = async (): Promise<ProductDC[]> => {
-  const response = await fetch('/api/products');
+export interface LoadProductsParams {
+  limit: number;
+  offset: number;
+}
+
+export interface ProductsChunkDC {
+  items: ProductDC[];
+  hasMore: boolean;
+}
+
+export const loadProducts = async ({
+  limit,
+  offset,
+}: LoadProductsParams): Promise<ProductsChunkDC> => {
+  const searchParams = new URLSearchParams({
+    limit: String(limit),
+    offset: String(offset),
+  });
+  const response = await fetch(`/api/products?${searchParams.toString()}`);
   return response.json();
 };

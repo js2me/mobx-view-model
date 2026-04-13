@@ -1,73 +1,82 @@
 import { makeObservable, observable } from 'mobx';
-import type { ProductDC } from '../../../shared/api/api';
 import { loadProducts } from '../../../shared/api/api';
 import { VM } from '../../../shared/lib/view-models/vm';
+import { mapProductToCard } from './map-product-to-card';
 import type { ProductCardInfo } from './types';
 
-function formatPrice(value: number): string {
-  return `${value.toLocaleString('ru-RU')} ₽`;
-}
-
-function formatCount(value: number): string {
-  return value.toLocaleString('ru-RU');
-}
-
-function getReviewsLabel(count: number): string {
-  const mod10 = count % 10;
-  const mod100 = count % 100;
-
-  if (mod100 >= 11 && mod100 <= 19) return 'отзывов';
-  if (mod10 === 1) return 'отзыв';
-  if (mod10 >= 2 && mod10 <= 4) return 'отзыва';
-  return 'отзывов';
-}
-
-function mapProductToCard(product: ProductDC): ProductCardInfo {
-  const discountPercent = Math.round(
-    ((product.originalPrice - product.price) / product.originalPrice) * 100,
-  );
-
-  return {
-    title: product.title,
-    price: formatPrice(product.price),
-    originalPrice: formatPrice(product.originalPrice),
-    discount: discountPercent > 0 ? `-${discountPercent}%` : undefined,
-    badge:
-      discountPercent >= 50
-        ? { label: 'Распродажа' }
-        : discountPercent >= 30
-          ? { label: 'Хит продаж' }
-          : null,
-    priceMeta:
-      discountPercent >= 70
-        ? { label: 'Стало дешевле', tone: 'success' }
-        : undefined,
-    rating: String(product.rating),
-    reviewsCount: formatCount(product.reviewsCount),
-    reviewsLabel: getReviewsLabel(product.reviewsCount),
-  };
-}
+const PAGE_SIZE = 100;
 
 export class HomePageVM extends VM {
   isProductsLoaded = false;
 
-  products: ProductCardInfo[] = [];
+  isLoadingMore = false;
 
-  protected willMount(): void {
-    if (this.globals.isClient) {
-      loadProducts()
-        .then((products) => {
-          this.products = products.map(mapProductToCard);
-        })
-        .finally(() => {
-          this.isProductsLoaded = true;
-        });
+  hasMoreProducts = true;
+
+  offset = 0;
+
+  products: ProductCardInfo[] = [];
+  firstPageProducts: ProductCardInfo[] = [];
+  firstPageHasMoreProducts = true;
+
+  loadProductsChunk = async () => {
+    if (this.isLoadingMore || !this.hasMoreProducts) {
+      return;
     }
 
+    this.isLoadingMore = true;
+
+    try {
+      const { items, hasMore } = await loadProducts({
+        limit: PAGE_SIZE,
+        offset: this.offset,
+      });
+      const mappedProducts = items.map(mapProductToCard);
+
+      if (this.offset === 0) {
+        this.firstPageProducts = mappedProducts;
+        this.firstPageHasMoreProducts = hasMore;
+      }
+
+      this.products = [...this.products, ...mappedProducts];
+      this.offset += mappedProducts.length;
+      this.hasMoreProducts = hasMore;
+    } finally {
+      this.isLoadingMore = false;
+      this.isProductsLoaded = true;
+    }
+  };
+
+  handleProductsEndReached = () => {
+    void this.loadProductsChunk();
+  };
+
+  handleProductsTopReached = (isTop: boolean) => {
+    if (!isTop || this.firstPageProducts.length === 0) {
+      return;
+    }
+
+    if (this.products.length <= this.firstPageProducts.length) {
+      return;
+    }
+
+    this.products = this.firstPageProducts;
+    this.offset = this.firstPageProducts.length;
+    this.hasMoreProducts = this.firstPageHasMoreProducts;
+  };
+
+  protected willMount(): void {
     makeObservable(this, {
       products: observable.ref,
       isProductsLoaded: observable.ref,
+      isLoadingMore: observable.ref,
+      hasMoreProducts: observable.ref,
+      offset: observable.ref,
     });
+
+    if (this.globals.isClient) {
+      void this.loadProductsChunk();
+    }
 
     this.globals.stores.appInfo.setTitle(
       `${this.globals.stores.appInfo.appName} маркетплейс – миллионы товаров по выгодным ценам`,

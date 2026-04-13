@@ -62,7 +62,9 @@ export const Header = observer(() => {
         </div>
       </header>
       <div
-        className={'-mt-7 mx-auto flex w-full max-w-[1416px] items-center gap-4 overflow-x-auto rounded-b-[32px] bg-contrast-bg px-4 py-4 pt-9 text-slate-500 text-xs'}
+        className={
+          '-mt-7 mx-auto flex w-full max-w-[1416px] items-center gap-4 overflow-x-auto rounded-b-[32px] bg-contrast-bg px-4 py-4 pt-9 text-slate-500 text-xs'
+        }
       >
         {model.quickLinks.map(({ href, label }) => (
           <Link

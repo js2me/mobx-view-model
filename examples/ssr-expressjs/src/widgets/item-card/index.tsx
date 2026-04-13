@@ -1,6 +1,6 @@
+import { Skeleton } from '@heroui/react';
 import { Flame, Heart, MessageCircle, Star, TrendingDown } from 'lucide-react';
 import type { CSSProperties, ReactNode } from 'react';
-import { Skeleton } from '@heroui/react';
 import { cva, cx } from 'yummies/css';
 
 type ItemCardTone = 'accent' | 'success' | 'warning' | 'neutral';
@@ -163,7 +163,10 @@ export const ItemCard = ({
         )}
       >
         <div className="relative overflow-hidden rounded-[18px] bg-slate-100">
-          <Skeleton className="h-full w-full rounded-[18px]" style={{ aspectRatio: imageAspectRatio }} />
+          <Skeleton
+            className="h-full w-full rounded-[18px]"
+            style={{ aspectRatio: imageAspectRatio }}
+          />
         </div>
 
         <div className="flex min-h-0 flex-1 flex-col gap-2 px-2 pt-2 pb-2">
