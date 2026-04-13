@@ -8,4 +8,4 @@ packalink.config.mjs
 .pnpm-store/
 .pnpm-store
 examples/ssr-expressjs/public/client.js
-examples/ssr-expressjs/public/styles.js
+examples/ssr-expressjs/public/styles.css

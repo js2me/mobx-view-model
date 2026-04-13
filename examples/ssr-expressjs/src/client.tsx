@@ -1,11 +1,16 @@
-import './app/bootstrap/client';
-
 import { hydrateRoot } from 'react-dom/client';
-import { App } from './app';
-import { Globals } from './globals';
+import { App } from './app.js';
+import type { AppRouteData } from './routes.js';
 
-const ssrData = (globalThis as any).__SSR_DATA__;
+declare global {
+  interface Window {
+    __SSR_DATA__?: AppRouteData;
+  }
+}
 
-const globals = Globals.fromSnapshot(ssrData);
+const route = window.__SSR_DATA__;
+if (!route) {
+  throw new Error('Missing SSR payload');
+}
 
-hydrateRoot(document.getElementById('root')!, <App globals={globals} />);
+hydrateRoot(document.getElementById('root')!, <App route={route} />);

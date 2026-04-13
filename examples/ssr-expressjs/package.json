@@ -4,29 +4,22 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "pnpm build:styles && pnpm build:client && tsx watch --clear-screen=false src/server.tsx",
-    "build:styles": "tailwindcss -i src/app/styles.css -o dist/styles.css",
-    "build:client": "esbuild src/client.tsx --bundle --format=esm --platform=browser --outfile=dist/client.js",
+    "dev": "pnpm build:styles && pnpm build:client && tsx src/server.tsx",
+    "build:styles": "tailwindcss -i src/styles.css -o public/styles.css",
+    "build:client": "esbuild src/client.tsx --bundle --format=esm --platform=browser --outfile=public/client.js",
     "build": "pnpm build:styles && pnpm build:client && tsc --noEmit",
-    "lint:check": "pnpm exec biome check --write --no-errors-on-unmatched --files-ignore-unknown=true src",
-    "check": "pnpm run lint:check && tsc --noEmit",
+    "check": "tsc --noEmit",
     "start": "NODE_ENV=production pnpm build:styles && pnpm build:client && tsx src/server.tsx",
     "test": "vitest run --config vitest.config.ts"
   },
   "dependencies": {
-    "@faker-js/faker": "^10.4.0",
-    "@heroui/react": "^3.0.2",
-    "@heroui/styles": "^3.0.2",
     "express": "^4.21.2",
-    "lucide-react": "^1.8.0",
     "mobx": "^6.13.7",
-    "mobx-location-history": "9.3.1",
     "mobx-react-lite": "^4.1.1",
     "mobx-view-model": "workspace:*",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
-    "react-virtuoso": "^4.15.0",
-    "yummies": "^7.17.0"
+    "yummies": "^7.14.2"
   },
   "devDependencies": {
     "@tailwindcss/cli": "^4.1.14",

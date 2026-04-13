@@ -14,7 +14,7 @@ describe('Main page', () => {
           serverRenderedAt: '2024-01-01T00:00:00.000Z',
           bumpable: true,
         },
-        globals: {
+        rootStoreSnapshot: {
           appInfo: { appName: 'Test App' },
         },
       },
