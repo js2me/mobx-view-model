@@ -1,6 +1,6 @@
 {
   "name": "mobx-view-model",
-  "version": "9.3.1",
+  "version": "10.0.0",
   "scripts": {
     "clean": "rimraf dist",
     "ts:check": "tsc --noEmit",
@@ -56,7 +56,7 @@
     "url": "git://github.com/js2me/mobx-view-model"
   },
   "dependencies": {
-    "mobx-view-model-react": "^9.3.1",
+    "mobx-view-model-react": "^9.3.2",
     "yummies": "^7.10.0"
   },
   "peerDependencies": {
