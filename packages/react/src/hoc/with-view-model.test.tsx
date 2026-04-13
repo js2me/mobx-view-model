@@ -2486,7 +2486,8 @@ describe('withViewModel', () => {
         vm1 = 1;
 
         protected willMount(): void {
-          expectTypeOf(this.viewModels.get(VMC2)).toEqualTypeOf<VM2 | null>();
+          const vmFromComponentRef: VM2 | null = this.viewModels.get(VMC2);
+          expectTypeOf(vmFromComponentRef).toEqualTypeOf<VM2 | null>();
           expectTypeOf(this.viewModels.get(VM2)).toEqualTypeOf<VM2 | null>();
         }
       }
@@ -2494,7 +2495,8 @@ describe('withViewModel', () => {
         vm2 = 2;
 
         protected willMount(): void {
-          expectTypeOf(this.viewModels.get(VMC1)).toEqualTypeOf<VM1 | null>();
+          const vmFromComponentRef: VM1 | null = this.viewModels.get(VMC1);
+          expectTypeOf(vmFromComponentRef).toEqualTypeOf<VM1 | null>();
           expectTypeOf(this.viewModels.get(VM1)).toEqualTypeOf<VM1 | null>();
         }
       }
