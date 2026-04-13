@@ -5,4 +5,5 @@ export default defineLibViteConfig(ConfigsManager.create(), {
   omitStrangeExportEntries: true,
   distExtraFilesRoot: '../..',
   distExtraFilesNames: ['LICENSE', 'README.md'],
+  rewritePackagePaths: true,
 });

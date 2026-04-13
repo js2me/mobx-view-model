@@ -5,6 +5,7 @@ export default defineLibViteConfig(ConfigsManager.create(), {
   omitStrangeExportEntries: true,
   distExtraFilesRoot: '../..',
   distExtraFilesNames: ['LICENSE', 'README.md'],
+  rewritePackagePaths: true,
   build: {
     rollupOptions: {
       external: ['mobx-view-model/react', 'mobx-view-model-react'],
