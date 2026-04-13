@@ -1,0 +1,9 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "paths": {
+      "mobx-view-model": ["../core/src/index.ts"],
+      "mobx-view-model-react": ["./src/index.ts"]
+    }
+  }
+}

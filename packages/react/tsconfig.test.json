@@ -23,7 +23,7 @@
     "baseUrl": ".",
     "paths": {
       "mobx-view-model": ["../core/src/index.ts"],
-      "mobx-view-model/*": ["../core/src/*"]
+      "mobx-view-model-react": ["./src/index.ts"]
     }
   },
   "include": ["src/**/*.test.ts", "src/**/*.test.tsx", "src/**/*.fixture.ts"]

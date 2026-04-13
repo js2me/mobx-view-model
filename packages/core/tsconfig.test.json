@@ -20,9 +20,11 @@
     "typeRoots": ["./node_modules/@types/", "./types", "./node_modules"],
     "noEmit": false,
     "jsx": "react-jsx",
+    "baseUrl": ".",
     "paths": {
       "mobx-view-model": ["./src/index.ts"],
-      "mobx-view-model/react": ["./src/react-subpath.ts"]
+      "mobx-view-model/react": ["./src/react-subpath.ts"],
+      "mobx-view-model-react": ["../react/src/index.ts"]
     }
   },
   "include": ["src/**/*.test.ts", "src/**/*.fixture.ts"]

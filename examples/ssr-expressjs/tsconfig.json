@@ -11,7 +11,11 @@
     "skipLibCheck": true,
     "jsx": "react-jsx",
     "types": ["node"],
+    "baseUrl": ".",
     "paths": {
+      "mobx-view-model": ["../../packages/core/src/index.ts"],
+      "mobx-view-model/*": ["../../packages/core/src/*"],
+      "mobx-view-model-react": ["../../packages/react/src/index.ts"],
       "react": ["./node_modules/@types/react"],
       "react/*": ["./node_modules/@types/react/*"]
     }

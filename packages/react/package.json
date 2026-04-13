@@ -3,7 +3,7 @@
   "version": "9.3.2",
   "scripts": {
     "clean": "rimraf dist",
-    "ts:check": "tsc --noEmit",
+    "ts:check": "tsc --noEmit --project tsconfig.check.json",
     "ts-test-types:check": "tsc --noEmit --project tsconfig.test.json",
     "check": "pnpm run ts:check && pnpm ts-test-types:check",
     "prebuild": "pnpm run clean && pnpm run check",

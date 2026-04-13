@@ -10,7 +10,13 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "jsx": "react-jsx",
-    "types": ["node"]
+    "types": ["node"],
+    "baseUrl": ".",
+    "paths": {
+      "mobx-view-model": ["../../packages/core/src/index.ts"],
+      "mobx-view-model/*": ["../../packages/core/src/*"],
+      "mobx-view-model-react": ["../../packages/react/src/index.ts"]
+    }
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],
   "exclude": ["src/__tests__"]
