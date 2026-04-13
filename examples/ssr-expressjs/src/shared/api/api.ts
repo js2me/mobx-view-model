@@ -5,7 +5,7 @@ export interface ProductDC {
   originalPrice: number;
   rating: number;
   reviewsCount: number;
-  slidesCount?: number;
+  images?: string[];
 }
 
 export const loadProducts = async (): Promise<ProductDC[]> => {

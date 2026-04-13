@@ -31,7 +31,7 @@ function mapProductToCard(product: ProductDC): ProductCardInfo {
     title: product.title,
     price: formatPrice(product.price),
     originalPrice: formatPrice(product.originalPrice),
-    discount: `-${discountPercent}%`,
+    discount: discountPercent > 0 ? `-${discountPercent}%` : undefined,
     badge:
       discountPercent >= 50
         ? { label: 'Распродажа' }
@@ -45,23 +45,28 @@ function mapProductToCard(product: ProductDC): ProductCardInfo {
     rating: String(product.rating),
     reviewsCount: formatCount(product.reviewsCount),
     reviewsLabel: getReviewsLabel(product.reviewsCount),
-    slidesCount: product.slidesCount,
-    activeSlide: product.slidesCount ? 0 : undefined,
   };
 }
 
 export class HomePageVM extends VM {
+  isProductsLoaded = false;
+
   products: ProductCardInfo[] = [];
 
   protected willMount(): void {
     if (this.globals.isClient) {
-      loadProducts().then((products) => {
-        this.products = products.map(mapProductToCard);
-      });
+      loadProducts()
+        .then((products) => {
+          this.products = products.map(mapProductToCard);
+        })
+        .finally(() => {
+          this.isProductsLoaded = true;
+        });
     }
 
     makeObservable(this, {
       products: observable.ref,
+      isProductsLoaded: observable.ref,
     });
 
     this.globals.stores.appInfo.setTitle(

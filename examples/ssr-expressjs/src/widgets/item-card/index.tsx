@@ -1,5 +1,6 @@
 import { Flame, Heart, MessageCircle, Star, TrendingDown } from 'lucide-react';
 import type { CSSProperties, ReactNode } from 'react';
+import { Skeleton } from '@heroui/react';
 import { cva, cx } from 'yummies/css';
 
 type ItemCardTone = 'accent' | 'success' | 'warning' | 'neutral';
@@ -17,10 +18,10 @@ export interface ItemCardMeta {
 }
 
 export interface ItemCardProps {
-  title: ReactNode;
-  imageSrc: string;
+  title?: ReactNode;
+  imageSrc?: string;
   imageAlt?: string;
-  price: ReactNode;
+  price?: ReactNode;
   className?: string;
   href?: string;
   badge?: ItemCardBadge | null;
@@ -39,6 +40,7 @@ export interface ItemCardProps {
   activeSlide?: number;
   slidesCount?: number;
   titleLines?: number;
+  loading?: boolean;
 }
 
 const badgeCx = cva(
@@ -138,6 +140,7 @@ export const ItemCard = ({
   activeSlide = 0,
   slidesCount = 0,
   titleLines = 2,
+  loading = false,
 }: ItemCardProps) => {
   const LinkTag = href ? 'a' : 'div';
   const hasImage = Boolean(imageSrc);
@@ -150,6 +153,29 @@ export const ItemCard = ({
     display: '-webkit-box',
     overflow: 'hidden',
   } satisfies CSSProperties;
+
+  if (loading) {
+    return (
+      <article
+        className={cx(
+          'flex shrink-0 flex-col overflow-hidden rounded-[20px] bg-white p-2',
+          className,
+        )}
+      >
+        <div className="relative overflow-hidden rounded-[18px] bg-slate-100">
+          <Skeleton className="h-full w-full rounded-[18px]" style={{ aspectRatio: imageAspectRatio }} />
+        </div>
+
+        <div className="flex min-h-0 flex-1 flex-col gap-2 px-2 pt-2 pb-2">
+          <Skeleton className="h-9 w-1/2 rounded-xl" />
+          <Skeleton className="h-6 w-1/3 rounded-xl" />
+          <Skeleton className="h-5 w-full rounded-xl" />
+          <Skeleton className="h-5 w-4/5 rounded-xl" />
+          <Skeleton className="mt-auto h-5 w-2/5 rounded-xl" />
+        </div>
+      </article>
+    );
+  }
 
   return (
     <article
