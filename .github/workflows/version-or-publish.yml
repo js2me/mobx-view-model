@@ -21,6 +21,8 @@ jobs:
     steps:
       - name: Checkout tree
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set-up Node.js
         uses: actions/setup-node@v4
@@ -38,7 +40,7 @@ jobs:
         with:
           # changesets/action splits this by spaces and uses exec() without a shell — `&&` must live in a package script.
           version: pnpm run changeset:version
-          publish: pnpm pub
+          publish: pnpm run pub:ci
         env:
           CI: true
           GITHUB_TOKEN: ${{ github.token }}

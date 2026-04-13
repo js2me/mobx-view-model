@@ -10,6 +10,7 @@
     "build": "pnpm --filter mobx-view-model-react run build && pnpm --filter mobx-view-model run build",
     "build:watch": "pnpm -r --filter './packages/*' run build:watch",
     "pub": "pnpm -r --filter './packages/*' run pub",
+    "pub:ci": "pnpm exec sborshik ci --github-releases",
     "pub:patch": "pnpm -r --filter './packages/*' run pub:patch",
     "pub:minor": "pnpm -r --filter './packages/*' run pub:minor",
     "pub:major": "pnpm -r --filter './packages/*' run pub:major",
@@ -39,6 +40,7 @@
     "commitfmt": "^1.0.4",
     "js2me-biome-config": "^1.1.0",
     "lefthook": "^1.13.6",
+    "sborshik": "^3.1.0",
     "tsx": "^4.21.0"
   },
   "packageManager": "pnpm@9.5.0+sha512.140036830124618d624a2187b50d04289d5a087f326c9edfc0ccd733d76c4f52c3a313d4fc148794a2a9d81553016004e6742e8cf850670268a7387fc220c903"

@@ -26,6 +26,9 @@ importers:
       lefthook:
         specifier: ^1.13.6
         version: 1.13.6
+      sborshik:
+        specifier: ^3.1.0
+        version: 3.1.0(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)(@types/react@18.3.28)(esbuild@0.27.7)(jiti@2.6.1)(lightningcss@1.32.0)(postcss@8.5.9)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(tsx@4.21.0)(typescript@5.9.3)
       tsx:
         specifier: ^4.21.0
         version: 4.21.0
@@ -296,8 +299,8 @@ importers:
         specifier: ^6.1.3
         version: 6.1.3
       sborshik:
-        specifier: ^3.0.7
-        version: 3.0.7(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)(@types/react@18.3.28)(esbuild@0.27.7)(jiti@2.6.1)(lightningcss@1.32.0)(postcss@8.5.9)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(tsx@4.21.0)(typescript@5.9.3)
+        specifier: ^3.1.0
+        version: 3.1.0(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)(@types/react@18.3.28)(esbuild@0.27.7)(jiti@2.6.1)(lightningcss@1.32.0)(postcss@8.5.9)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(tsx@4.21.0)(typescript@5.9.3)
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -357,8 +360,8 @@ importers:
         specifier: ^6.1.3
         version: 6.1.3
       sborshik:
-        specifier: ^3.0.7
-        version: 3.0.7(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)(@types/react@18.3.28)(esbuild@0.27.7)(jiti@2.6.1)(lightningcss@1.32.0)(postcss@8.5.9)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(tsx@4.21.0)(typescript@5.9.3)
+        specifier: ^3.1.0
+        version: 3.1.0(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)(@types/react@18.3.28)(esbuild@0.27.7)(jiti@2.6.1)(lightningcss@1.32.0)(postcss@8.5.9)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(tsx@4.21.0)(typescript@5.9.3)
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -4759,8 +4762,8 @@ packages:
     resolution: {integrity: sha512-Ek8+G9DK3BMDuTQ44ZnVRfeZB9Xd9/nNppfxOJ2zhJAMVy+gyh5RF8XFLR6WtirlnAPDZqPdOC0NEeRODvqm/A==}
     hasBin: true
 
-  sborshik@3.0.7:
-    resolution: {integrity: sha512-gg/JiQm26CNZhvnGDekIF1RpmqPUQTdznAVILOFvde73zXynMrDU/j9t4ygyqD7D7SpFjHM2qXwHUFM+tRRv6w==}
+  sborshik@3.1.0:
+    resolution: {integrity: sha512-n/1NjCsL23NR4aB9UKiR+vqtxGpYsETKtK95gu9AkeXksgLMcrcGweV8OHNHSZ/Jh6aHkx5oPrKxEf2TwFjg/w==}
     hasBin: true
 
   scheduler@0.23.2:
@@ -7706,7 +7709,7 @@ snapshots:
       magicast: 0.5.2
       obug: 2.1.1
       tinyrainbow: 3.1.0
-      vitest: 4.1.4(@types/node@22.19.17)(@vitest/coverage-istanbul@4.1.4)(jsdom@26.1.0)(vite@8.0.8(@types/node@22.19.17)(esbuild@0.25.12)(jiti@2.6.1)(terser@5.46.1)(tsx@4.21.0))
+      vitest: 4.1.4(@types/node@25.6.0)(@vitest/coverage-istanbul@4.1.4)(jsdom@26.1.0)(vite@7.3.2(@types/node@25.6.0)(jiti@2.6.1)(lightningcss@1.32.0)(terser@5.46.1)(tsx@4.21.0))
     transitivePeerDependencies:
       - supports-color
 
@@ -10384,7 +10387,7 @@ snapshots:
       - utf-8-validate
       - yaml
 
-  sborshik@3.0.7(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)(@types/react@18.3.28)(esbuild@0.27.7)(jiti@2.6.1)(lightningcss@1.32.0)(postcss@8.5.9)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(tsx@4.21.0)(typescript@5.9.3):
+  sborshik@3.1.0(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)(@types/react@18.3.28)(esbuild@0.27.7)(jiti@2.6.1)(lightningcss@1.32.0)(postcss@8.5.9)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(tsx@4.21.0)(typescript@5.9.3):
     dependencies:
       '@iconify-json/logos': 1.2.11
       '@types/jsdom': 28.0.1
