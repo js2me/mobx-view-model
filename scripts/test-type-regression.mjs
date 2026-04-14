@@ -1,0 +1,207 @@
+import { cpSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { dirname, isAbsolute, join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { spawnSync } from 'node:child_process';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const rootDir = resolve(__dirname, '..');
+const fixtureDir = resolve(rootDir, 'tests/type-regressions/consumer');
+const reactDistDir = resolve(rootDir, 'packages/react/dist');
+const coreDistDir = resolve(rootDir, 'packages/core/dist');
+const mode = process.env.TYPE_REGRESSION_MODE === 'regression'
+  ? 'regression'
+  : 'fixed';
+
+function run(command, args, options = {}) {
+  const result = spawnSync(command, args, {
+    cwd: options.cwd ?? rootDir,
+    encoding: 'utf8',
+    shell: false,
+  });
+  const output = `${result.stdout ?? ''}${result.stderr ?? ''}`;
+
+  if (!options.allowFailure && result.status !== 0) {
+    throw new Error(
+      `Command failed: ${command} ${args.join(' ')}\n${output}`.trim(),
+    );
+  }
+
+  return { ...result, output };
+}
+
+function parsePackedFileName(packOutput) {
+  const lines = packOutput
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  for (let i = lines.length - 1; i >= 0; i -= 1) {
+    if (lines[i].endsWith('.tgz')) {
+      return lines[i];
+    }
+  }
+
+  throw new Error(`Unable to resolve packed file name:\n${packOutput}`);
+}
+
+const expectedErrorCodes = ['TS2312', 'TS2339', 'TS2322'];
+
+console.log('1/5 Build workspace packages');
+run('pnpm', ['build'], { cwd: rootDir });
+
+console.log('2/5 Prepare temporary packed artifacts from dist');
+const tempRoot = mkdtempSync(join(tmpdir(), 'mobx-vm-regression-'));
+const tempReactDir = join(tempRoot, 'react-dist');
+const tempCoreDir = join(tempRoot, 'core-dist');
+cpSync(reactDistDir, tempReactDir, { recursive: true });
+cpSync(coreDistDir, tempCoreDir, { recursive: true });
+
+const reactPackageJsonPath = join(tempReactDir, 'package.json');
+const corePackageJsonPath = join(tempCoreDir, 'package.json');
+const reactPackageJson = JSON.parse(readFileSync(reactPackageJsonPath, 'utf8'));
+const corePackageJson = JSON.parse(readFileSync(corePackageJsonPath, 'utf8'));
+
+if (
+  reactPackageJson.publishConfig?.directory &&
+  reactPackageJson.publishConfig.directory === 'dist'
+) {
+  delete reactPackageJson.publishConfig.directory;
+  writeFileSync(
+    reactPackageJsonPath,
+    `${JSON.stringify(reactPackageJson, null, 2)}\n`,
+  );
+}
+
+if (corePackageJson.dependencies?.['mobx-view-model-react'] === 'workspace:*') {
+  corePackageJson.dependencies['mobx-view-model-react'] =
+    `^${reactPackageJson.version}`;
+}
+
+if (
+  corePackageJson.publishConfig?.directory &&
+  corePackageJson.publishConfig.directory === 'dist'
+) {
+  delete corePackageJson.publishConfig.directory;
+}
+
+writeFileSync(corePackageJsonPath, `${JSON.stringify(corePackageJson, null, 2)}\n`);
+if (!corePackageJson.dependencies?.['mobx-view-model-react']) {
+  throw new Error('Expected mobx-view-model-react dependency in core package.');
+}
+
+const reactPack = run(
+  'pnpm',
+  ['pack', '--pack-destination', tempRoot],
+  { cwd: tempReactDir },
+);
+const corePack = run(
+  'pnpm',
+  ['pack', '--pack-destination', tempRoot],
+  { cwd: tempCoreDir },
+);
+const packedReactFile = parsePackedFileName(reactPack.output);
+const packedCoreFile = parsePackedFileName(corePack.output);
+const reactTarball = isAbsolute(packedReactFile)
+  ? packedReactFile
+  : join(tempRoot, packedReactFile);
+const coreTarball = isAbsolute(packedCoreFile)
+  ? packedCoreFile
+  : join(tempRoot, packedCoreFile);
+
+console.log('3/5 Install fixture dependencies');
+rmSync(join(fixtureDir, 'node_modules'), { recursive: true, force: true });
+rmSync(join(fixtureDir, 'pnpm-lock.yaml'), { force: true });
+
+const fixturePackageJsonPath = join(fixtureDir, 'package.json');
+const fixturePackageJsonSource = readFileSync(fixturePackageJsonPath, 'utf8');
+const fixturePackageJson = JSON.parse(fixturePackageJsonSource);
+fixturePackageJson.dependencies = {
+  ...(fixturePackageJson.dependencies ?? {}),
+  'mobx-view-model': coreTarball,
+  'mobx-view-model-react': reactTarball,
+};
+fixturePackageJson.pnpm = {
+  ...(fixturePackageJson.pnpm ?? {}),
+  overrides: {
+    ...(fixturePackageJson.pnpm?.overrides ?? {}),
+    'mobx-view-model-react': reactTarball,
+  },
+};
+writeFileSync(
+  fixturePackageJsonPath,
+  `${JSON.stringify(fixturePackageJson, null, 2)}\n`,
+);
+
+try {
+  run('pnpm', ['install', '--ignore-workspace', '--no-frozen-lockfile'], {
+    cwd: fixtureDir,
+  });
+
+  console.log('4/5 Run consumer typecheck and collect diagnostics');
+  const tscResult = run(
+    'pnpm',
+    [
+      '--ignore-workspace',
+      'exec',
+      'tsc',
+      '--noEmit',
+      '--pretty',
+      'false',
+      '--project',
+      'tsconfig.json',
+    ],
+    { cwd: fixtureDir, allowFailure: true },
+  );
+  const diagnostics = tscResult.output;
+  const missingCodes = expectedErrorCodes.filter(
+    (code) => !new RegExp(`\\b${code}\\b`).test(diagnostics),
+  );
+
+  console.log('5/5 Assert expected regression errors');
+  if (mode === 'regression') {
+    if (missingCodes.length > 0) {
+      throw new Error(
+        [
+          'Type regression was not reproduced as expected.',
+          `Missing error codes: ${missingCodes.join(', ')}`,
+          '',
+          diagnostics,
+        ].join('\n'),
+      );
+    }
+
+    console.error(diagnostics.trim());
+    throw new Error(
+      [
+        `Regression reproduced (expected red-state): ${expectedErrorCodes.join(', ')}`,
+        '',
+        diagnostics,
+      ].join('\n'),
+    );
+  }
+
+  if (tscResult.status !== 0) {
+    throw new Error(
+      ['Consumer typecheck failed (expected green-state):', '', diagnostics].join(
+        '\n',
+      ),
+    );
+  }
+
+  if (missingCodes.length !== expectedErrorCodes.length) {
+    throw new Error(
+      [
+        `Found historical regression diagnostics in fixed mode: ${expectedErrorCodes
+          .filter((code) => !missingCodes.includes(code))
+          .join(', ')}`,
+        '',
+        diagnostics,
+      ].join('\n'),
+    );
+  }
+
+  console.log('Consumer type regression check passed (green-state)');
+} finally {
+  writeFileSync(fixturePackageJsonPath, fixturePackageJsonSource);
+}

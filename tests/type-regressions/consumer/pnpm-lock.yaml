@@ -1,0 +1,247 @@
+lockfileVersion: '9.0'
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
+overrides:
+  mobx-view-model-react: /tmp/mobx-vm-regression-6v8hON/mobx-view-model-react-10.0.1.tgz
+
+importers:
+
+  .:
+    dependencies:
+      mobx-view-model:
+        specifier: /tmp/mobx-vm-regression-6v8hON/mobx-view-model-10.0.1.tgz
+        version: file:../../../../../../../../tmp/mobx-vm-regression-6v8hON/mobx-view-model-10.0.1.tgz(mobx-react-lite@4.1.1(mobx@6.15.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(mobx@6.15.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
+      mobx-view-model-react:
+        specifier: /tmp/mobx-vm-regression-6v8hON/mobx-view-model-react-10.0.1.tgz
+        version: file:../../../../../../../../tmp/mobx-vm-regression-6v8hON/mobx-view-model-react-10.0.1.tgz(mobx-react-lite@4.1.1(mobx@6.15.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(mobx@6.15.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
+    devDependencies:
+      '@types/react':
+        specifier: ^19.2.14
+        version: 19.2.14
+      '@types/react-dom':
+        specifier: ^19.2.3
+        version: 19.2.3(@types/react@19.2.14)
+      react:
+        specifier: ^19.2.0
+        version: 19.2.5
+      react-dom:
+        specifier: ^19.2.0
+        version: 19.2.5(react@19.2.5)
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+
+packages:
+
+  '@types/react-dom@19.2.3':
+    resolution: {integrity: sha512-jp2L/eY6fn+KgVVQAOqYItbF0VY/YApe5Mz2F0aykSO8gx31bYCZyvSeYxCHKvzHG5eZjc+zyaS5BrBWya2+kQ==}
+    peerDependencies:
+      '@types/react': ^19.2.0
+
+  '@types/react@19.2.14':
+    resolution: {integrity: sha512-ilcTH/UniCkMdtexkoCN0bI7pMcJDvmQFPvuPvmEaYA/NSfFTAgdUSLAoVjaRJm7+6PvcM+q1zYOwS4wTYMF9w==}
+
+  '@types/trusted-types@2.0.7':
+    resolution: {integrity: sha512-ScaPdn1dQczgbl0QFTeTOmVHFULt394XJgOQNoyVhZ6r2vLnMLJfBPd53SB52T/3G36VI1/g2MZaX0cwDuXsfw==}
+
+  class-variance-authority@0.7.1:
+    resolution: {integrity: sha512-Ka+9Trutv7G8M6WT6SeiRWz792K5qEqIGEGzXKhAE6xOWAY6pPH8U+9IY3oCMv6kqTmLsv7Xh/2w2RigkePMsg==}
+
+  clsx@2.1.1:
+    resolution: {integrity: sha512-eYm0QWBtUrBWZWG0d386OGAw16Z995PiOVo2B7bjWSbHedGl5e0ZWaq65kOGgUSNesEIDkB9ISbTg/JK9dhCZA==}
+    engines: {node: '>=6'}
+
+  csstype@3.2.3:
+    resolution: {integrity: sha512-z1HGKcYy2xA8AGQfwrn0PAy+PB7X/GSj3UVJW9qKyn43xWa+gl5nXmU4qqLMRzWVLFC8KusUX8T/0kCiOYpAIQ==}
+
+  dayjs@1.11.20:
+    resolution: {integrity: sha512-YbwwqR/uYpeoP4pu043q+LTDLFBLApUP6VxRihdfNTqu4ubqMlGDLd6ErXhEgsyvY0K6nCs7nggYumAN+9uEuQ==}
+
+  dompurify@3.4.0:
+    resolution: {integrity: sha512-nolgK9JcaUXMSmW+j1yaSvaEaoXYHwWyGJlkoCTghc97KgGDDSnpoU/PlEnw63Ah+TGKFOyY+X5LnxaWbCSfXg==}
+
+  mobx-react-lite@4.1.1:
+    resolution: {integrity: sha512-iUxiMpsvNraCKXU+yPotsOncNNmyeS2B5DKL+TL6Tar/xm+wwNJAubJmtRSeAoYawdZqwv8Z/+5nPRHeQxTiXg==}
+    peerDependencies:
+      mobx: ^6.9.0
+      react: ^16.8.0 || ^17 || ^18 || ^19
+      react-dom: '*'
+      react-native: '*'
+    peerDependenciesMeta:
+      react-dom:
+        optional: true
+      react-native:
+        optional: true
+
+  mobx-view-model-react@file:../../../../../../../../tmp/mobx-vm-regression-6v8hON/mobx-view-model-react-10.0.1.tgz:
+    resolution: {integrity: sha512-9cIgVI1mzdpdS8FCohuMj2ze1SPFGxUF+Q5cIVl/KGKjODikkKvrfW1oCGWOFYCxtpratt/t3XP4mFm8wNiMTA==, tarball: file:../../../../../../../../tmp/mobx-vm-regression-6v8hON/mobx-view-model-react-10.0.1.tgz}
+    version: 10.0.1
+    peerDependencies:
+      mobx: ^6.12.4
+      mobx-react-lite: ^4.0.7
+      react: ^18.0.0 || ^19.0.0
+      react-dom: ^18.0.0 || ^19.0.0
+
+  mobx-view-model@10.0.1:
+    resolution: {integrity: sha512-bqsKHtQA1DwpbyXy+hxNbkuJTzzfc7oyCQ8Z+PLhlcILcgEZRW5AAjCANfIL9XxSwCpr0+VhLVr4TuKG21qCsQ==}
+    peerDependencies:
+      mobx: ^6.12.4
+      react: ^18.0.0 || ^19.0.0
+    peerDependenciesMeta:
+      react:
+        optional: true
+
+  mobx-view-model@file:../../../../../../../../tmp/mobx-vm-regression-6v8hON/mobx-view-model-10.0.1.tgz:
+    resolution: {integrity: sha512-CtGdQZYoNtP0eglu0sBAzgcNc4yFqFvBFvjzqWLbeH+OzvTlQNhD2Vuy8awCGrMRfAod3rIkvyvnyLvF2O2DiA==, tarball: file:../../../../../../../../tmp/mobx-vm-regression-6v8hON/mobx-view-model-10.0.1.tgz}
+    version: 10.0.1
+    peerDependencies:
+      mobx: ^6.12.4
+      react: ^18.0.0 || ^19.0.0
+    peerDependenciesMeta:
+      react:
+        optional: true
+
+  mobx@6.15.0:
+    resolution: {integrity: sha512-UczzB+0nnwGotYSgllfARAqWCJ5e/skuV2K/l+Zyck/H6pJIhLXuBnz+6vn2i211o7DtbE78HQtsYEKICHGI+g==}
+
+  nanoid@5.1.7:
+    resolution: {integrity: sha512-ua3NDgISf6jdwezAheMOk4mbE1LXjm1DfMUDMuJf4AqxLFK3ccGpgWizwa5YV7Yz9EpXwEaWoRXSb/BnV0t5dQ==}
+    engines: {node: ^18 || >=20}
+    hasBin: true
+
+  react-dom@19.2.5:
+    resolution: {integrity: sha512-J5bAZz+DXMMwW/wV3xzKke59Af6CHY7G4uYLN1OvBcKEsWOs4pQExj86BBKamxl/Ik5bx9whOrvBlSDfWzgSag==}
+    peerDependencies:
+      react: ^19.2.5
+
+  react@19.2.5:
+    resolution: {integrity: sha512-llUJLzz1zTUBrskt2pwZgLq59AemifIftw4aB7JxOqf1HY2FDaGDxgwpAPVzHU1kdWabH7FauP4i1oEeer2WCA==}
+    engines: {node: '>=0.10.0'}
+
+  scheduler@0.27.0:
+    resolution: {integrity: sha512-eNv+WrVbKu1f3vbYJT/xtiF5syA5HPIMtf9IgY/nKg0sWqzAUEvqY/xm7OcZc/qafLx/iO9FgOmeSAp4v5ti/Q==}
+
+  tailwind-merge@3.5.0:
+    resolution: {integrity: sha512-I8K9wewnVDkL1NTGoqWmVEIlUcB9gFriAEkXkfCjX5ib8ezGxtR3xD7iZIxrfArjEsH7F1CHD4RFUtxefdqV/A==}
+
+  typescript@5.9.3:
+    resolution: {integrity: sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw==}
+    engines: {node: '>=14.17'}
+    hasBin: true
+
+  use-sync-external-store@1.6.0:
+    resolution: {integrity: sha512-Pp6GSwGP/NrPIrxVFAIkOQeyw8lFenOHijQWkUTrDvrF4ALqylP2C/KCkeS9dpUM3KvYRQhna5vt7IL95+ZQ9w==}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+
+  yummies@7.17.0:
+    resolution: {integrity: sha512-xtUF3ekwQJPCBYaELZN4PBg/1aYUuK3AzIDh1p0ySg6DGeF+bk0qtODaxZnbUHLR0kb7E0KRkh8AA9/aOHP2tg==}
+    peerDependencies:
+      mobx: ^6.12.4
+      react: ^18 || ^19
+    peerDependenciesMeta:
+      mobx:
+        optional: true
+      react:
+        optional: true
+
+snapshots:
+
+  '@types/react-dom@19.2.3(@types/react@19.2.14)':
+    dependencies:
+      '@types/react': 19.2.14
+
+  '@types/react@19.2.14':
+    dependencies:
+      csstype: 3.2.3
+
+  '@types/trusted-types@2.0.7':
+    optional: true
+
+  class-variance-authority@0.7.1:
+    dependencies:
+      clsx: 2.1.1
+
+  clsx@2.1.1: {}
+
+  csstype@3.2.3: {}
+
+  dayjs@1.11.20: {}
+
+  dompurify@3.4.0:
+    optionalDependencies:
+      '@types/trusted-types': 2.0.7
+
+  mobx-react-lite@4.1.1(mobx@6.15.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5):
+    dependencies:
+      mobx: 6.15.0
+      react: 19.2.5
+      use-sync-external-store: 1.6.0(react@19.2.5)
+    optionalDependencies:
+      react-dom: 19.2.5(react@19.2.5)
+
+  mobx-view-model-react@file:../../../../../../../../tmp/mobx-vm-regression-6v8hON/mobx-view-model-react-10.0.1.tgz(mobx-react-lite@4.1.1(mobx@6.15.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(mobx@6.15.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5):
+    dependencies:
+      mobx: 6.15.0
+      mobx-react-lite: 4.1.1(mobx@6.15.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
+      mobx-view-model: 10.0.1(mobx-react-lite@4.1.1(mobx@6.15.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(mobx@6.15.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
+      react: 19.2.5
+      react-dom: 19.2.5(react@19.2.5)
+
+  mobx-view-model@10.0.1(mobx-react-lite@4.1.1(mobx@6.15.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(mobx@6.15.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5):
+    dependencies:
+      mobx: 6.15.0
+      mobx-view-model-react: file:../../../../../../../../tmp/mobx-vm-regression-6v8hON/mobx-view-model-react-10.0.1.tgz(mobx-react-lite@4.1.1(mobx@6.15.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(mobx@6.15.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
+      yummies: 7.17.0(mobx@6.15.0)(react@19.2.5)
+    optionalDependencies:
+      react: 19.2.5
+    transitivePeerDependencies:
+      - mobx-react-lite
+      - react-dom
+
+  mobx-view-model@file:../../../../../../../../tmp/mobx-vm-regression-6v8hON/mobx-view-model-10.0.1.tgz(mobx-react-lite@4.1.1(mobx@6.15.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(mobx@6.15.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5):
+    dependencies:
+      mobx: 6.15.0
+      mobx-view-model-react: file:../../../../../../../../tmp/mobx-vm-regression-6v8hON/mobx-view-model-react-10.0.1.tgz(mobx-react-lite@4.1.1(mobx@6.15.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(mobx@6.15.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
+      yummies: 7.17.0(mobx@6.15.0)(react@19.2.5)
+    optionalDependencies:
+      react: 19.2.5
+    transitivePeerDependencies:
+      - mobx-react-lite
+      - react-dom
+
+  mobx@6.15.0: {}
+
+  nanoid@5.1.7: {}
+
+  react-dom@19.2.5(react@19.2.5):
+    dependencies:
+      react: 19.2.5
+      scheduler: 0.27.0
+
+  react@19.2.5: {}
+
+  scheduler@0.27.0: {}
+
+  tailwind-merge@3.5.0: {}
+
+  typescript@5.9.3: {}
+
+  use-sync-external-store@1.6.0(react@19.2.5):
+    dependencies:
+      react: 19.2.5
+
+  yummies@7.17.0(mobx@6.15.0)(react@19.2.5):
+    dependencies:
+      class-variance-authority: 0.7.1
+      clsx: 2.1.1
+      dayjs: 1.11.20
+      dompurify: 3.4.0
+      nanoid: 5.1.7
+      tailwind-merge: 3.5.0
+    optionalDependencies:
+      mobx: 6.15.0
+      react: 19.2.5
