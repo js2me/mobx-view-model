@@ -1,5 +1,16 @@
 # mobx-view-model-react
 
+## 10.0.0
+
+### Major Changes
+
+- [`378e48b`](https://github.com/js2me/mobx-view-model/commit/378e48b6d9ae696dd069429b3320d03263e7c560) Thanks [@js2me](https://github.com/js2me)! - major update after release `mobx-view-model@10.0.0`
+
+### Patch Changes
+
+- Updated dependencies [[`378e48b`](https://github.com/js2me/mobx-view-model/commit/378e48b6d9ae696dd069429b3320d03263e7c560)]:
+  - mobx-view-model@10.0.1
+
 ## 9.3.2
 
 ### Patch Changes
