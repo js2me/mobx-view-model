@@ -7,3 +7,7 @@ docs/.vitepress/cache
 packalink.config.mjs
 .pnpm-store/
 .pnpm-store
+examples/*/public/client.js
+examples/*/public/styles.css
+examples/*/public/app.js
+examples/*/public/app.css
