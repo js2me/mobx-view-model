@@ -54,7 +54,7 @@
     "@biomejs/biome": "2.2.6",
     "@testing-library/react": "^16.3.2",
     "@types/node": "^25.3.3",
-    "@types/react": "^18.3.28",
+    "@types/react": "^19.2.14",
     "@vitejs/plugin-react-swc": "^4.2.3",
     "@vitest/coverage-istanbul": "^4.0.18",
     "js2me-biome-config": "^1.1.0",

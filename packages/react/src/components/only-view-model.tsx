@@ -5,10 +5,11 @@ import {
   type UseCreateViewModelConfig,
   useCreateViewModel,
 } from '../hooks/index.js';
+import { RReactNode } from "../lib/react-types.js";
 
 export type OnlyViewModelProps<TViewModel extends AnyViewModel> = {
   model: Class<TViewModel>;
-  children?: React.ReactNode | ((model: TViewModel) => React.ReactNode);
+  children?: RReactNode | ((model: TViewModel) => RReactNode);
 } & (IsPartial<TViewModel['payload']> extends true
   ? {
       payload?: TViewModel['payload'];

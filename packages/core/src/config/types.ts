@@ -1,6 +1,7 @@
 import type { PubSub } from 'yummies/complex';
 import type { ObservableAnnotationsArray } from 'yummies/mobx';
 import type { AnyObject, Class, DeepPartial, Maybe, PartialKeys } from 'yummies/types';
+import type * as React from 'react';
 import type {
   AnyViewModel,
   PayloadCompareFn,
@@ -58,7 +59,7 @@ export interface ViewModelsConfig<
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#flushpendingreactions) */
   flushPendingReactions: number;
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#fallbackcomponent) */
-  fallbackComponent?: React.ComponentType;
+  fallbackComponent?: import('mobx-view-model-react').RComponentType;
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#onmount) */
   onMount?: (viewModel: TViewModel) => void;
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#onunmount) */
@@ -72,11 +73,11 @@ export interface ViewModelsConfig<
   };
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#processviewcomponent) */
   processViewComponent?: (
-    component: React.ComponentType<any> | undefined,
+    component: import('mobx-view-model-react').RComponentType<any> | undefined,
     VM: Class<TViewModel>,
     /** Полный тип HOC — `ViewModelHocConfig` в `mobx-view-model-react`. */
     config: AnyObject,
-  ) => Maybe<React.ComponentType<any>>;
+  ) => Maybe<import('mobx-view-model-react').RComponentType<any>>;
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#wrapviewsinobserver) */
   wrapViewsInObserver?: boolean;
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#observable) */

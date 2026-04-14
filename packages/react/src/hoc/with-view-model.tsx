@@ -25,20 +25,21 @@ import {
   type UseCreateViewModelConfig,
   useCreateViewModel,
 } from '../hooks/index.js';
+import { RComponentClass, RComponentType, RForwardedRef, RLegacyRef, RReactNode } from 'src/lib/react-types.js';
 
 type FixedComponentType<P extends AnyObject = {}> =
   /**
    * Fixes typings loss with use `withViewModel` with inline function component
    */
-  ((props: P) => React.ReactNode) | React.ComponentClass<P>;
+  ((props: P) => RReactNode) | RComponentClass<P>;
 
 declare const process: { env: { NODE_ENV?: string } };
 
-export type ExtractReactRef<T> = Defined<T> extends React.ForwardedRef<
+export type ExtractReactRef<T> = Defined<T> extends RForwardedRef<
   infer TForwardedRef
 >
   ? TForwardedRef
-  : Defined<T> extends React.LegacyRef<infer TRef>
+  : Defined<T> extends RLegacyRef<infer TRef>
     ? TRef
     : T;
 
@@ -51,10 +52,10 @@ export type ViewModelProps<
   VM,
   TForwardedRef = unknown,
 > = IsAny<TForwardedRef> extends true
-  ? { model: VM; forwardedRef?: React.ForwardedRef<TForwardedRef> }
+  ? { model: VM; forwardedRef?: RForwardedRef<TForwardedRef> }
   : IsUnknown<TForwardedRef> extends true
     ? { model: VM }
-    : { model: VM; forwardedRef?: React.ForwardedRef<TForwardedRef> };
+    : { model: VM; forwardedRef?: RForwardedRef<TForwardedRef> };
 
 type ViewModelPropsChargedProps<
   TComponentOriginProps extends AnyObject,
@@ -107,7 +108,7 @@ export interface ViewModelHocConfig<VM extends AnyViewModel>
    *
    * [**Documentation**](https://js2me.github.io/mobx-view-model/react/api/with-view-model.html#fallback)
    */
-  fallback?: React.ComponentType;
+  fallback?: RComponentType;
 
   /**
    * Function to invoke additional React hooks in the resulting component
@@ -125,7 +126,7 @@ export interface ViewModelHocConfig<VM extends AnyViewModel>
   getPayload?: (allProps: any) => any;
 
   /**
-   * Forwards ref using `React.forwardRef` but pass it to props as prop `ref`
+   * Forwards ref using `RforwardRef` but pass it to props as prop `ref`
    *
    * [**Documentation**](https://js2me.github.io/mobx-view-model/react/api/with-view-model.html#forwardref)
    */
@@ -135,7 +136,7 @@ export interface ViewModelHocConfig<VM extends AnyViewModel>
    * Additional component anchors for the same VM instance.
    * useViewModel(AnchorComponent) will return this VM when the connected component is mounted.
    */
-  anchors?: React.ComponentType[];
+  anchors?: RComponentType[];
 }
 
 export interface ViewModelSimpleHocConfig<_VM> {
@@ -144,7 +145,7 @@ export interface ViewModelSimpleHocConfig<_VM> {
    *
    * [**Documentation**](https://js2me.github.io/mobx-view-model/react/api/with-view-model.html#fallback)
    */
-  fallback?: React.ComponentType;
+  fallback?: RComponentType;
 
   /**
    * Function to invoke additional React hooks in the resulting component
@@ -162,7 +163,7 @@ export interface ViewModelSimpleHocConfig<_VM> {
   getPayload?: (allProps: any) => any;
 
   /**
-   * Forwards ref using `React.forwardRef` but pass it to props as prop `ref`
+   * Forwards ref using `RforwardRef` but pass it to props as prop `ref`
    *
    * [**Documentation**](https://js2me.github.io/mobx-view-model/react/api/with-view-model.html#forwardref)
    */
@@ -172,7 +173,7 @@ export interface ViewModelSimpleHocConfig<_VM> {
    * Additional component anchors for the same VM instance.
    * useViewModel(AnchorComponent) will return this VM when the connected component is mounted.
    */
-  anchors?: React.ComponentType[];
+  anchors?: RComponentType[];
 }
 
 export type AllViewModelPropsKeys = keyof Required<ViewModelProps<any, any>>;
@@ -186,14 +187,14 @@ export type VMComponentProps<
   (HasKey<TComponentOriginProps, 'ref'> extends true
     ? {}
     : HasKey<TComponentOriginProps, 'forwardedRef'> extends true
-      ? Required<TComponentOriginProps>['forwardedRef'] extends React.LegacyRef<any>
+      ? Required<TComponentOriginProps>['forwardedRef'] extends RLegacyRef<any>
         ? {
             ref?: TComponentOriginProps['forwardedRef'];
           }
         : Pick<TComponentOriginProps, 'forwardedRef'>
       : IsUnknown<TForwardedRef> extends true
         ? {}
-        : { ref?: React.LegacyRef<TForwardedRef> });
+        : { ref?: RLegacyRef<TForwardedRef> });
 
 export interface VMComponent<
   TViewModel,
@@ -202,7 +203,7 @@ export interface VMComponent<
 > {
   (
     props: VMComponentProps<TViewModel, TComponentOriginProps, TForwardedRef>,
-  ): React.ReactNode;
+  ): RReactNode;
 
   /**
    * Registers an anchor component for the same VM instance.
@@ -211,7 +212,7 @@ export interface VMComponent<
    * @param anchor - React component to use as lookup key for useViewModel
    */
   connect(
-    anchor: React.ComponentType<any>,
+    anchor: RComponentType<any>,
   ): VMComponent<TViewModel, TComponentOriginProps, TForwardedRef>;
 }
 
@@ -226,7 +227,7 @@ export function withViewModel<
   TForwardedRef = unknown,
 >(
   model: Class<TViewModel>,
-  component: React.ComponentType<
+  component: RComponentType<
     ViewModelPropsChargedProps<TComponentOriginProps, TViewModel, TForwardedRef>
   >,
   config?: ViewModelHocConfig<TViewModel>,
@@ -244,7 +245,7 @@ export function withViewModel<
   model: Class<TViewModel>,
   config?: ViewModelHocConfig<TViewModel>,
 ): <TComponentOriginProps extends AnyObject = ViewModelProps<TViewModel>>(
-  Component?: React.ComponentType<
+  Component?: RComponentType<
     ViewModelPropsChargedProps<TComponentOriginProps, TViewModel, TForwardedRef>
   >,
 ) => VMComponent<TViewModel, TComponentOriginProps, TForwardedRef>;
@@ -335,7 +336,7 @@ export function withViewModel(
       },
     };
 
-    return (Component: React.ComponentType<any>) =>
+    return (Component: RComponentType<any>) =>
       withViewModelWrapper(VM, finalConfig, Component);
   }
 }
@@ -345,7 +346,7 @@ const REACT_MEMO_SYMBOL = Symbol.for('react.memo');
 const withViewModelWrapper = (
   VM: Class<any>,
   config: ViewModelHocConfig<any>,
-  OriginalComponent?: React.ComponentType<any>,
+  OriginalComponent?: RComponentType<any>,
 ) => {
   const processViewComponent =
     config.vmConfig?.processViewComponent ??
@@ -419,7 +420,7 @@ const withViewModelWrapper = (
   ConnectedViewModel = observer(ConnectedViewModel);
 
   if (process.env.NODE_ENV !== 'production') {
-    (ConnectedViewModel as React.ComponentType).displayName =
+    (ConnectedViewModel as RComponentType).displayName =
       `ConnectedViewModel(${VM.name}->Component)`;
   }
 
@@ -437,13 +438,13 @@ const withViewModelWrapper = (
 
   const ConnectedWithConnect =
     ConnectedViewModel as typeof ConnectedViewModel & {
-      connect: (anchor: React.ComponentType) => typeof ConnectedWithConnect;
+      connect: (anchor: RComponentType) => typeof ConnectedWithConnect;
     };
   /**
    * Registers an anchor component for the same VM instance.
    * Adds the anchor to config.anchors — useViewModel(anchor) will return this VM when mounted.
    */
-  ConnectedWithConnect.connect = (anchor: React.ComponentType) => {
+  ConnectedWithConnect.connect = (anchor: RComponentType) => {
     if (!anchors.includes(anchor)) {
       anchors.push(anchor);
     }

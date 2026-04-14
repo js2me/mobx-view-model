@@ -44,5 +44,13 @@
     "sborshik": "^3.3.0",
     "tsx": "^4.21.0"
   },
+  "pnpm": {
+    "overrides": {
+      "@types/react": "19.2.14",
+      "@types/react-dom": "19.2.3",
+      "mobx-view-model": "file:packages/core/dist",
+      "mobx-view-model-react": "file:packages/react/dist"
+    }
+  },
   "packageManager": "pnpm@9.5.0+sha512.140036830124618d624a2187b50d04289d5a087f326c9edfc0ccd733d76c4f52c3a313d4fc148794a2a9d81553016004e6742e8cf850670268a7387fc220c903"
 }
