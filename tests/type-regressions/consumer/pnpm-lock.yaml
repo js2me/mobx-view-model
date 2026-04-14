@@ -5,18 +5,18 @@ settings:
   excludeLinksFromLockfile: false
 
 overrides:
-  mobx-view-model-react: /tmp/mobx-vm-regression-6v8hON/mobx-view-model-react-10.0.1.tgz
+  mobx-view-model-react: /tmp/mobx-vm-regression-ogs4HY/mobx-view-model-react-10.0.2.tgz
 
 importers:
 
   .:
     dependencies:
       mobx-view-model:
-        specifier: /tmp/mobx-vm-regression-6v8hON/mobx-view-model-10.0.1.tgz
-        version: file:../../../../../../../../tmp/mobx-vm-regression-6v8hON/mobx-view-model-10.0.1.tgz(mobx-react-lite@4.1.1(mobx@6.15.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(mobx@6.15.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
+        specifier: /tmp/mobx-vm-regression-ogs4HY/mobx-view-model-10.0.2.tgz
+        version: file:../../../../../../../../tmp/mobx-vm-regression-ogs4HY/mobx-view-model-10.0.2.tgz(mobx-react-lite@4.1.1(mobx@6.15.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(mobx@6.15.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       mobx-view-model-react:
-        specifier: /tmp/mobx-vm-regression-6v8hON/mobx-view-model-react-10.0.1.tgz
-        version: file:../../../../../../../../tmp/mobx-vm-regression-6v8hON/mobx-view-model-react-10.0.1.tgz(mobx-react-lite@4.1.1(mobx@6.15.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(mobx@6.15.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
+        specifier: /tmp/mobx-vm-regression-ogs4HY/mobx-view-model-react-10.0.2.tgz
+        version: file:../../../../../../../../tmp/mobx-vm-regression-ogs4HY/mobx-view-model-react-10.0.2.tgz(mobx-react-lite@4.1.1(mobx@6.15.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(mobx@6.15.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
     devDependencies:
       '@types/react':
         specifier: ^19.2.14
@@ -76,17 +76,17 @@ packages:
       react-native:
         optional: true
 
-  mobx-view-model-react@file:../../../../../../../../tmp/mobx-vm-regression-6v8hON/mobx-view-model-react-10.0.1.tgz:
-    resolution: {integrity: sha512-9cIgVI1mzdpdS8FCohuMj2ze1SPFGxUF+Q5cIVl/KGKjODikkKvrfW1oCGWOFYCxtpratt/t3XP4mFm8wNiMTA==, tarball: file:../../../../../../../../tmp/mobx-vm-regression-6v8hON/mobx-view-model-react-10.0.1.tgz}
-    version: 10.0.1
+  mobx-view-model-react@file:../../../../../../../../tmp/mobx-vm-regression-ogs4HY/mobx-view-model-react-10.0.2.tgz:
+    resolution: {integrity: sha512-GiB01pdfWwukF0uduVMvkTmZ3x1e7f3ToG+OOpwKw4KLQvX83uj0v9xGXiWRwpkmlgIaz078W1vtB1Hq5bzaGg==, tarball: file:../../../../../../../../tmp/mobx-vm-regression-ogs4HY/mobx-view-model-react-10.0.2.tgz}
+    version: 10.0.2
     peerDependencies:
       mobx: ^6.12.4
       mobx-react-lite: ^4.0.7
       react: ^18.0.0 || ^19.0.0
       react-dom: ^18.0.0 || ^19.0.0
 
-  mobx-view-model@10.0.1:
-    resolution: {integrity: sha512-bqsKHtQA1DwpbyXy+hxNbkuJTzzfc7oyCQ8Z+PLhlcILcgEZRW5AAjCANfIL9XxSwCpr0+VhLVr4TuKG21qCsQ==}
+  mobx-view-model@10.0.2:
+    resolution: {integrity: sha512-vJNdXi9fT7CA1OvMpQ/3EHJ0r0/pM8QiaTmjbfubqDUTSJXS0UMiKoRi1z92rP0i23aECmLAUP5hnzJ3luHNRw==}
     peerDependencies:
       mobx: ^6.12.4
       react: ^18.0.0 || ^19.0.0
@@ -94,9 +94,9 @@ packages:
       react:
         optional: true
 
-  mobx-view-model@file:../../../../../../../../tmp/mobx-vm-regression-6v8hON/mobx-view-model-10.0.1.tgz:
-    resolution: {integrity: sha512-CtGdQZYoNtP0eglu0sBAzgcNc4yFqFvBFvjzqWLbeH+OzvTlQNhD2Vuy8awCGrMRfAod3rIkvyvnyLvF2O2DiA==, tarball: file:../../../../../../../../tmp/mobx-vm-regression-6v8hON/mobx-view-model-10.0.1.tgz}
-    version: 10.0.1
+  mobx-view-model@file:../../../../../../../../tmp/mobx-vm-regression-ogs4HY/mobx-view-model-10.0.2.tgz:
+    resolution: {integrity: sha512-DZRfWIVy3AcIjyz6JEaAu9yXoQJ3aYwJY4AlkVTd/uW16EqtTh95FoHDjQol6Y+nzAjAyZyMAkoGdVcJTuXCFQ==, tarball: file:../../../../../../../../tmp/mobx-vm-regression-ogs4HY/mobx-view-model-10.0.2.tgz}
+    version: 10.0.2
     peerDependencies:
       mobx: ^6.12.4
       react: ^18.0.0 || ^19.0.0
@@ -183,18 +183,18 @@ snapshots:
     optionalDependencies:
       react-dom: 19.2.5(react@19.2.5)
 
-  mobx-view-model-react@file:../../../../../../../../tmp/mobx-vm-regression-6v8hON/mobx-view-model-react-10.0.1.tgz(mobx-react-lite@4.1.1(mobx@6.15.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(mobx@6.15.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5):
+  mobx-view-model-react@file:../../../../../../../../tmp/mobx-vm-regression-ogs4HY/mobx-view-model-react-10.0.2.tgz(mobx-react-lite@4.1.1(mobx@6.15.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(mobx@6.15.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5):
     dependencies:
       mobx: 6.15.0
       mobx-react-lite: 4.1.1(mobx@6.15.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
-      mobx-view-model: 10.0.1(mobx-react-lite@4.1.1(mobx@6.15.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(mobx@6.15.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
+      mobx-view-model: 10.0.2(mobx-react-lite@4.1.1(mobx@6.15.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(mobx@6.15.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       react: 19.2.5
       react-dom: 19.2.5(react@19.2.5)
 
-  mobx-view-model@10.0.1(mobx-react-lite@4.1.1(mobx@6.15.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(mobx@6.15.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5):
+  mobx-view-model@10.0.2(mobx-react-lite@4.1.1(mobx@6.15.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(mobx@6.15.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5):
     dependencies:
       mobx: 6.15.0
-      mobx-view-model-react: file:../../../../../../../../tmp/mobx-vm-regression-6v8hON/mobx-view-model-react-10.0.1.tgz(mobx-react-lite@4.1.1(mobx@6.15.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(mobx@6.15.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
+      mobx-view-model-react: file:../../../../../../../../tmp/mobx-vm-regression-ogs4HY/mobx-view-model-react-10.0.2.tgz(mobx-react-lite@4.1.1(mobx@6.15.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(mobx@6.15.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       yummies: 7.17.0(mobx@6.15.0)(react@19.2.5)
     optionalDependencies:
       react: 19.2.5
@@ -202,10 +202,10 @@ snapshots:
       - mobx-react-lite
       - react-dom
 
-  mobx-view-model@file:../../../../../../../../tmp/mobx-vm-regression-6v8hON/mobx-view-model-10.0.1.tgz(mobx-react-lite@4.1.1(mobx@6.15.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(mobx@6.15.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5):
+  mobx-view-model@file:../../../../../../../../tmp/mobx-vm-regression-ogs4HY/mobx-view-model-10.0.2.tgz(mobx-react-lite@4.1.1(mobx@6.15.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(mobx@6.15.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5):
     dependencies:
       mobx: 6.15.0
-      mobx-view-model-react: file:../../../../../../../../tmp/mobx-vm-regression-6v8hON/mobx-view-model-react-10.0.1.tgz(mobx-react-lite@4.1.1(mobx@6.15.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(mobx@6.15.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
+      mobx-view-model-react: file:../../../../../../../../tmp/mobx-vm-regression-ogs4HY/mobx-view-model-react-10.0.2.tgz(mobx-react-lite@4.1.1(mobx@6.15.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(mobx@6.15.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       yummies: 7.17.0(mobx@6.15.0)(react@19.2.5)
     optionalDependencies:
       react: 19.2.5

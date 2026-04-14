@@ -59,3 +59,13 @@ build: reinstall
 .PHONY: check
 check: reinstall
 	pnpm check
+
+.PHONY: gh-actions-test
+gh-actions-test: reinstall
+	pnpm check && \
+	pnpm build && \
+	pnpm test:type-regression && \
+	pnpm examples:build && \
+	pnpm docs:build && \
+	pnpm test:coverage && \
+	pnpm test:examples

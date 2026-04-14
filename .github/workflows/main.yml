@@ -34,6 +34,9 @@ jobs:
       - name: Build
         run: pnpm build
 
+      - name: Type regression
+        run: pnpm test:type-regression
+
       - name: Examples build
         run: pnpm examples:build
 
