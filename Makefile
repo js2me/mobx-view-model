@@ -2,7 +2,12 @@
 clean:
 	rm -rf node_modules && \
 	rm -rf ./examples/**/node_modules && \
-	rm -rf ./packages/**/node_modules
+	rm -rf ./packages/**/node_modules && \
+	rm -rf ./examples/**/dist && \
+	rm -rf ./packages/**/dist && \
+	rm -rf ./docs/.vitepress/dist && \
+	rm -rf ./docs/.vitepress/cache && \
+	rm -rf ./docs/node_modules
 
 .PHONY: install
 install:

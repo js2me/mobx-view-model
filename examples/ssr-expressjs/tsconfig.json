@@ -12,7 +12,9 @@
     "jsx": "react-jsx",
     "types": ["node"],
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "mobx-view-model": ["../../packages/core/src/index.ts"],
+      "mobx-view-model-react": ["../../packages/react/src/index.ts"]
     }
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"]
