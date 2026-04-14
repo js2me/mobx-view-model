@@ -1,5 +1,14 @@
 # mobx-view-model-react
 
+## 10.0.2
+
+### Patch Changes
+
+- [`6a326a8`](https://github.com/js2me/mobx-view-model/commit/6a326a8ff3ad099fcc8d5eab24d9f378e81099cd) Thanks [@js2me](https://github.com/js2me)! - fixed typings for react lib integration
+
+- Updated dependencies [[`fa0b390`](https://github.com/js2me/mobx-view-model/commit/fa0b3901a63da250ed16a476bb33a8ac18cee4bd)]:
+  - mobx-view-model@10.0.2
+
 ## 10.0.0
 
 ### Major Changes
