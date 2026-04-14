@@ -34,8 +34,8 @@ jobs:
       - name: Build
         run: pnpm build
 
-      - name: Next.js SSR example (production build)
-        run: pnpm example:ssr:build:example
+      - name: Examples build
+        run: pnpm examples:build
 
       - name: Docs build
         run: pnpm docs:build

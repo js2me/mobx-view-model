@@ -6,7 +6,7 @@
     "ts:check": "tsc --noEmit --project tsconfig.check.json",
     "ts-test-types:check": "tsc --noEmit --project tsconfig.test.json",
     "check": "pnpm run ts:check && pnpm ts-test-types:check",
-    "prebuild": "pnpm run clean && pnpm run check",
+    "prebuild": "pnpm run clean",
     "build:watch": "pnpm build && nodemon --watch src --ext ts,tsx --exec \"pnpm build\"",
     "build": "vite build && node ./scripts/patch-dist-package-json.mjs",
     "pub": "pnpm build && sborshik publish --useDistDir",

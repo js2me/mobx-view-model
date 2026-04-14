@@ -14,14 +14,8 @@
     "jsx": "preserve",
     "incremental": true,
     "plugins": [{ "name": "next" }],
-    "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"],
-      "mobx-view-model": ["../../packages/core/src/index.ts"],
-      "mobx-view-model/*": ["../../packages/core/src/*"],
-      "mobx-view-model-react": ["../../packages/react/src/index.ts"],
-      "react": ["./node_modules/@types/react"],
-      "react/*": ["./node_modules/@types/react/*"]
+      "@/*": ["./src/*"]
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],

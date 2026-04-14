@@ -34,7 +34,8 @@ jobs:
 
       - run: corepack enable
 
-      - run: pnpm i
+      - name: Install deps
+        run: pnpm i
 
       - run: pnpm docs:build
 
