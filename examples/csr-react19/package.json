@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "esbuild src/main.tsx --bundle --format=esm --platform=browser --outfile=public/app.js --servedir=public --serve=3013",
     "build": "esbuild src/main.tsx --bundle --format=esm --platform=browser --outfile=public/app.js",
-    "check": "tsc --noEmit",
+    "check": "tsc --noEmit --project tsconfig.check.json",
     "start": "pnpm build && esbuild src/main.tsx --bundle --format=esm --platform=browser --outfile=public/app.js --servedir=public --serve=3013",
     "test": "vitest run --config vitest.config.ts"
   },

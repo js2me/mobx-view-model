@@ -8,7 +8,7 @@
     "build:styles": "tailwindcss -i src/styles.css -o public/styles.css",
     "build:client": "esbuild src/client.tsx --bundle --format=esm --platform=browser --outfile=public/client.js",
     "build": "pnpm build:styles && pnpm build:client && tsc --noEmit",
-    "check": "tsc --noEmit",
+    "check": "tsc --noEmit --project tsconfig.check.json",
     "start": "NODE_ENV=production pnpm build:styles && pnpm build:client && tsx src/server.tsx",
     "test": "vitest run --config vitest.config.ts"
   },
