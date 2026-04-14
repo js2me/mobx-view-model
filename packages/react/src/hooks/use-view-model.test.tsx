@@ -1,5 +1,5 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { beforeEach, describe, expect, test } from 'vitest';
 import { createCounter } from 'yummies/complex';
 import type { ViewModelStore } from 'mobx-view-model';
@@ -35,7 +35,7 @@ describe('useViewModel', () => {
     const Component = withViewModel(VM1, {
       id: accessUsing === 'id' ? `depth-${depth}` : undefined,
       generateId,
-    })(({ children }: { children?: React.ReactNode }) => {
+    })(({ children }: { children?: ReactNode }) => {
       let model!: VM1;
 
       if (accessUsing) {
@@ -86,7 +86,7 @@ describe('useViewModel', () => {
   };
 
   const createVMStoreWrapper = (vmStore: ViewModelStore) => {
-    return ({ children }: { children?: React.ReactNode }) => {
+    return ({ children }: { children?: ReactNode }) => {
       return (
         <ViewModelsProvider value={vmStore}>{children}</ViewModelsProvider>
       );
@@ -223,7 +223,7 @@ describe('useViewModel', () => {
 
       const Layout = withViewModel(LayoutVM, {
         id: 'layout',
-      })(({ children }: { children?: React.ReactNode }) => (
+      })(({ children }: { children?: ReactNode }) => (
         <div data-testid={'layout'}>{children}</div>
       ));
 
@@ -259,7 +259,7 @@ describe('useViewModel', () => {
       const Layout = withViewModel(LayoutVM, {
         id: 'layout',
         fallback: () => <div data-testid={'layout-fallback'}> </div>,
-      })(({ children }: { children?: React.ReactNode }) => (
+      })(({ children }: { children?: ReactNode }) => (
         <div data-testid={'layout'}>{children}</div>
       ));
 

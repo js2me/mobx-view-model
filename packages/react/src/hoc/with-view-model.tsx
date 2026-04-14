@@ -25,7 +25,13 @@ import {
   type UseCreateViewModelConfig,
   useCreateViewModel,
 } from '../hooks/index.js';
-import { RComponentClass, RComponentType, RForwardedRef, RLegacyRef, RReactNode } from 'src/lib/react-types.js';
+import {
+  RComponentClass,
+  RComponentType,
+  RForwardedRef,
+  RLegacyRef,
+  RReactNode,
+} from '../lib/react-types.js';
 
 type FixedComponentType<P extends AnyObject = {}> =
   /**
@@ -364,8 +370,9 @@ const withViewModelWrapper = (
     Component &&
     (Component as any).$$typeof !== REACT_MEMO_SYMBOL
   ) {
-    // @ts-expect-error
-    Component = observer(Component);
+    // `observer` плохо выводит типы для union (FunctionComponent | ComponentClass),
+    // поэтому здесь используем безопасный runtime-cast, чтобы не ломать `tsc`.
+    Component = observer(Component as any) as any;
   }
 
   const reactHook = config.reactHook;
