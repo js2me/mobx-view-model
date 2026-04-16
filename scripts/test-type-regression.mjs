@@ -150,6 +150,9 @@ for (const { dir: fixtureDir, label } of consumerFixtures) {
     ...(fixturePackageJson.pnpm ?? {}),
     overrides: {
       ...(fixturePackageJson.pnpm?.overrides ?? {}),
+      // Transitive dep from packed mobx-view-model-react (semver ^x.y.z) must not
+      // hit the registry — CI often runs before that version is published.
+      'mobx-view-model': coreTarball,
       'mobx-view-model-react': reactTarball,
     },
   };
