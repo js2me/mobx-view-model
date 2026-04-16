@@ -1,5 +1,14 @@
 # mobx-view-model
 
+## 10.0.3
+
+### Patch Changes
+
+- [`8b35ea4`](https://github.com/js2me/mobx-view-model/commit/8b35ea432994803d9f0824769f54c9f1e16d1f2e) Thanks [@js2me](https://github.com/js2me)! - remove warning [#2](https://github.com/js2me/mobx-view-model/issues/2) about async mount (reason: there is no problem to use async mount)
+
+- Updated dependencies [[`58de2dd`](https://github.com/js2me/mobx-view-model/commit/58de2dd0071e762a968c39796316ae91ebe50f39)]:
+  - mobx-view-model-react@10.0.3
+
 ## 10.0.2
 
 ### Patch Changes

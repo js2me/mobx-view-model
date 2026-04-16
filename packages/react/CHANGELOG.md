@@ -1,5 +1,14 @@
 # mobx-view-model-react
 
+## 10.0.3
+
+### Patch Changes
+
+- [`58de2dd`](https://github.com/js2me/mobx-view-model/commit/58de2dd0071e762a968c39796316ae91ebe50f39) Thanks [@js2me](https://github.com/js2me)! - fixed typings in product build (rollup plugin problem dts)
+
+- Updated dependencies [[`8b35ea4`](https://github.com/js2me/mobx-view-model/commit/8b35ea432994803d9f0824769f54c9f1e16d1f2e)]:
+  - mobx-view-model@10.0.3
+
 ## 10.0.2
 
 ### Patch Changes
