@@ -291,8 +291,17 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
     this.mountingViews.add(modelId);
 
     try {
-      model.mount?.();
-      this.finalizeMount(modelId);
+      const maybePromise = model.mount?.();
+
+      if (maybePromise instanceof Promise) {
+        return maybePromise
+          .then(() => undefined)
+          .finally(() => {
+            this.finalizeMount(modelId);
+          });
+      } else {
+        this.finalizeMount(modelId);
+      }
     } catch (error) {
       this.finalizeMount(modelId);
       throw error;
