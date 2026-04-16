@@ -34,7 +34,7 @@ jobs:
       - name: Build
         run: pnpm build
 
-      - name: Type regression
+      - name: Type regression (React 18-19)
         run: pnpm test:type-regression
 
       - name: Examples build

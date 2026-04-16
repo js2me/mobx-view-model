@@ -1,0 +1,16 @@
+{
+  "name": "consumer-type-regression-react18",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check": "tsc --noEmit --pretty false --project tsconfig.json"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.18",
+    "@types/react-dom": "^18.3.5",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {}
+}
