@@ -42,7 +42,7 @@
     "commitfmt": "^1.0.4",
     "js2me-biome-config": "^1.1.0",
     "lefthook": "^1.13.6",
-    "sborshik": "^3.4.0",
+    "sborshik": "^3.5.0",
     "tsx": "^4.21.0"
   },
   "pnpm": {
