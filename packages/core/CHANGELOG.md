@@ -1,5 +1,14 @@
 # mobx-view-model
 
+## 10.0.4
+
+### Patch Changes
+
+- [`2cae23d`](https://github.com/js2me/mobx-view-model/commit/2cae23d1163fd70e3636ae85354ce7285cbf162f) Thanks [@js2me](https://github.com/js2me)! - fixed async promise behabiour for vm base mount
+
+- Updated dependencies []:
+  - mobx-view-model-react@10.0.4
+
 ## 10.0.3
 
 ### Patch Changes
