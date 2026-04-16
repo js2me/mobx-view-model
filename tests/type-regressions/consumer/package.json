@@ -12,8 +12,5 @@
     "react-dom": "^19.2.0",
     "typescript": "^5.9.3"
   },
-  "dependencies": {
-    "mobx-view-model": "file:/tmp/mobx-vm-regression-2mjVmf/mobx-view-model-10.0.1.tgz",
-    "mobx-view-model-react": "file:/tmp/mobx-vm-regression-2mjVmf/mobx-view-model-react-10.0.0.tgz"
-  }
+  "dependencies": {}
 }

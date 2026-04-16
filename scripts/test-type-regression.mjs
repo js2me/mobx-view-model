@@ -30,6 +30,20 @@ function run(command, args, options = {}) {
   return { ...result, output };
 }
 
+function isPackTarballFileName(line) {
+  const trimmed = line.trim();
+  if (!trimmed.endsWith('.tgz')) {
+    return false;
+  }
+  // `pnpm pack` prints a bare tarball name. Corepack may print a line that also
+  // ends with ".tgz" (e.g. a download URL) — reject URLs, banners, and paths.
+  if (/\s/.test(trimmed) || /:\/\//.test(trimmed) || /^[!?]/.test(trimmed)) {
+    return false;
+  }
+  const base = trimmed.split(/[/\\]/).pop() ?? trimmed;
+  return base === trimmed || trimmed.endsWith(`/${base}`);
+}
+
 function parsePackedFileName(packOutput) {
   const lines = packOutput
     .split(/\r?\n/)
@@ -37,8 +51,8 @@ function parsePackedFileName(packOutput) {
     .filter(Boolean);
 
   for (let i = lines.length - 1; i >= 0; i -= 1) {
-    if (lines[i].endsWith('.tgz')) {
-      return lines[i];
+    if (isPackTarballFileName(lines[i])) {
+      return lines[i].split(/[/\\]/).pop();
     }
   }
 
@@ -100,8 +114,8 @@ const corePack = run(
   ['pack', '--pack-destination', tempRoot],
   { cwd: tempCoreDir },
 );
-const packedReactFile = parsePackedFileName(reactPack.output);
-const packedCoreFile = parsePackedFileName(corePack.output);
+const packedReactFile = parsePackedFileName(reactPack.stdout ?? '');
+const packedCoreFile = parsePackedFileName(corePack.stdout ?? '');
 const reactTarball = isAbsolute(packedReactFile)
   ? packedReactFile
   : join(tempRoot, packedReactFile);
