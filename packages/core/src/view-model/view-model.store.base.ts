@@ -291,27 +291,7 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
     this.mountingViews.add(modelId);
 
     try {
-      const maybePromise = model.mount?.();
-
-      if (maybePromise instanceof Promise) {
-        if (
-          process.env.NODE_ENV !== 'production' &&
-          typeof window === 'undefined'
-        ) {
-          console.warn(
-            'Warning #2: ViewModel.mount() returned a Promise during server render.\n',
-            'HTML is emitted before the promise settles; the first server string may not reflect post-mount state (e.g. views using isAbleToRenderView).\n',
-            'On the client, async mount() is normal and does not trigger this warning.\n',
-            'More info: https://js2me.github.io/mobx-view-model/warnings/2',
-          );
-        }
-        return maybePromise
-          .then(() => undefined)
-          .finally(() => {
-            this.finalizeMount(modelId);
-          });
-      }
-
+      model.mount?.();
       this.finalizeMount(modelId);
     } catch (error) {
       this.finalizeMount(modelId);
