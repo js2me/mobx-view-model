@@ -1,5 +1,14 @@
 # mobx-view-model-react
 
+## 10.0.5
+
+### Patch Changes
+
+- [`e79697a`](https://github.com/js2me/mobx-view-model/commit/e79697a1b50fa1c65e96ed3336156a309ab15257) Thanks [@js2me](https://github.com/js2me)! - [internal] updated ci/cd to improve gh workflows
+
+- Updated dependencies [[`e79697a`](https://github.com/js2me/mobx-view-model/commit/e79697a1b50fa1c65e96ed3336156a309ab15257)]:
+  - mobx-view-model@10.0.5
+
 ## 10.0.4
 
 ### Patch Changes
