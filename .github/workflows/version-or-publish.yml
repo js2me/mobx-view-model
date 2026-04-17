@@ -20,12 +20,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout tree
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
       - name: Set-up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           check-latest: true
           node-version-file: .nvmrc
@@ -38,9 +38,9 @@ jobs:
         continue-on-error: false
         id: pub-or-release-pr
         with:
-          # changesets/action splits this by spaces and uses exec() without a shell — `&&` must live in a package script.
           version: pnpm run changeset:version
-          publish: pnpm run pub:ci
+          publish: pnpm exec sborshik ci
+          createGithubReleases: true
         env:
           CI: true
           GITHUB_TOKEN: ${{ github.token }}

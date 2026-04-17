@@ -9,10 +9,6 @@
     "prebuild": "pnpm run clean",
     "build:watch": "pnpm build && nodemon --watch src --ext ts,tsx --exec \"pnpm build\"",
     "build": "vite build && node ./scripts/normalize-dist-dts-imports.mjs && node ./scripts/validate-dist-dts-imports.mjs && node ./scripts/patch-dist-package-json.mjs",
-    "pub": "pnpm build && sborshik publish --useDistDir",
-    "pub:patch": "PUBLISH_VERSION=patch pnpm pub",
-    "pub:minor": "PUBLISH_VERSION=minor pnpm pub",
-    "pub:major": "PUBLISH_VERSION=major pnpm pub",
     "test": "vitest run --config vitest.config.ts",
     "test:watch": "vitest watch --config vitest.config.ts",
     "test:coverage": "vitest run --config vitest.config.ts --coverage"
