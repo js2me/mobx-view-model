@@ -13,6 +13,7 @@ export const viewModelsConfig = createGlobalConfig<ViewModelsConfig>(
     payloadComputed: 'struct',
     payloadObservable: 'ref',
     wrapViewsInObserver: true,
+    useReactIds: false,
     startViewTransitions: {
       mount: false,
       payloadChange: false,

@@ -14,6 +14,20 @@ function useCreateViewModel<VM extends AnyViewModel>(
 ): VM;
 ```
 
+## <ReactMark /> `vmConfig.useReactIds` {#usereactids}  
+Optional flag on merged [`vmConfig`](/api/view-models/view-models-config) (same shape as [`viewModelsConfig`](/api/view-models/view-models-config)): when `true`, this hook always calls React [`useId()`](https://react.dev/reference/react/useId) and passes the result into view-model id generation as `renderId`. The same switch exists on global [`viewModelsConfig`](/api/view-models/view-models-config#usereactids).  
+
+::: tip SSR  
+Stable ids across server render and client hydration matter for SSR apps. Because `useId()` is matched between server and client for the same component tree, enabling `useReactIds` can help keep generated [`ViewModel`](/api/view-models/overview) ids consistent where you rely on that alignment.  
+:::
+
+#### Example
+```tsx
+const model = useCreateViewModel(YourVM, payload, {
+  vmConfig: { useReactIds: true },
+});
+```
+
 ##  Usage  
 
 ### 1. Basic Usage (Default Configuration)  
@@ -43,7 +57,7 @@ import { observer } from "mobx-react-lite";
 
 export const YourComponent = observer(() => {
   const model = useCreateViewModel(YourVM, {}, {
-    vmConfig: {}, // vmConfig
+    vmConfig: { useReactIds: false }, // optional: pass React useId into VM id generation (see #usereactids)
     ctx: {}, // internal object used as cache key source inside this hook
     factory: (config) => new config.VM(config), // factory method for creating VM instances
     generateId, // custom fn for generating ids for VM instances

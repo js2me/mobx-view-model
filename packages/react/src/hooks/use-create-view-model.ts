@@ -6,7 +6,7 @@ import type {
   ViewModelsConfig,
 } from 'mobx-view-model';
 import { viewModelsConfig } from 'mobx-view-model';
-import { useContext, useRef } from 'react';
+import { useContext, useId, useRef } from 'react';
 import { flushPendingReactions } from 'yummies/mobx';
 import type { AnyObject, Class, IsPartial, Maybe } from 'yummies/types';
 import { isViewModelClass } from 'mobx-view-model';
@@ -116,16 +116,24 @@ const useCreateViewModelBase = (
 
   const ctx = config?.ctx ?? {};
 
+  const useReactIds =
+    config?.vmConfig?.useReactIds ?? viewModelsConfig.useReactIds;
+  const renderId = useReactIds ? useId() : undefined;
+
   const instance = useValue(() => {
     const id =
       viewModels?.generateViewModelId({
         ...config,
         ctx,
         VM,
+        renderId,
         parentViewModelId: parentViewModel?.id ?? null,
       }) ??
       config?.id ??
-      viewModelsConfig.generateId(ctx);
+      viewModelsConfig.generateId({
+        ...ctx,
+        renderId,
+      });
 
     const instanceFromStore = viewModels?.get(id);
 

@@ -17,15 +17,17 @@ export const generateVmId: GenerateViewModelIdFn = (ctx: AnyObject) => {
       `${staticId}_${counter().toString().padStart(5, '0')}`;
   }
 
+  const dynamicId = ctx.renderId ?? ctx.generateId();
+
   if (process.env.NODE_ENV === 'production') {
-    return ctx.generateId();
+    return dynamicId;
   } else {
     const viewModelName = ctx.VM?.name ?? '';
 
     if (viewModelName) {
-      return `${viewModelName}_${ctx.generateId()}`;
+      return `${viewModelName}_${dynamicId}`;
     } else {
-      return ctx.generateId();
+      return dynamicId;
     }
   }
 };

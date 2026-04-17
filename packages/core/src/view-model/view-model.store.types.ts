@@ -19,6 +19,7 @@ export interface ViewModelGenerateIdConfig<VM extends AnyViewModel> {
   ctx: AnyObject;
   parentViewModelId: string | null;
   fallback?: import('mobx-view-model-react').RComponentType;
+  renderId?: string;
 }
 
 export interface ViewModelCreateConfig<VM extends AnyViewModel>

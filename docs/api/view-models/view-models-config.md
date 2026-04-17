@@ -137,6 +137,30 @@ viewModelsConfig.fallbackComponent = () => (
 ## <ReactMark /> `reactHook` {#reacthook}  
 Optional default for the [`reactHook`](/react/api/with-view-model.html#reacthook) option on [`withViewModel`](/react/api/with-view-model): used when the HOC config does not set `reactHook` (resolved as `config.reactHook ?? viewModelsConfig.reactHook`).  
 
+## <ReactMark /> `useReactIds` {#usereactids}  
+When `true`, [`useCreateViewModel`](/react/api/use-create-view-model) forwards React’s [`useId()`](https://react.dev/reference/react/useId) value into the view-model id pipeline as `renderId`. That id participates in [`generateId`](/api/view-models/view-models-config#generateid) / [`generateVmId`](/src/utils/generate-vm-id.ts) so instance ids can align with React’s stable per-component ids.  
+
+Default: `false`.  
+
+::: tip SSR and hydration  
+Matching server and client markup depends on consistent ids. Enabling `useReactIds` ties VM ids to React’s `useId()` output for that component instance, which is designed to match between SSR and the first client render when the component tree is the same—useful if VM ids must stay stable across hydration or line up with DOM `id` attributes derived from `useId()`.  
+:::
+
+#### Example
+```ts
+import { viewModelsConfig } from 'mobx-view-model';
+
+viewModelsConfig.useReactIds = true;
+```
+
+Per-call override via [`useCreateViewModel`](/react/api/use-create-view-model#usereactids) / [`withViewModel`](/react/api/with-view-model) `vmConfig`:
+
+```tsx
+useCreateViewModel(YourVM, payload, {
+  vmConfig: { useReactIds: true },
+});
+```
+
 ## `onMount`  
 A lifecycle hook that is called when a view model is mounted.  
 Useful for tracking component mounting, initializing external services, or setting up subscriptions.
