@@ -1,6 +1,7 @@
-import { act, render } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import { describe, expect, expectTypeOf, test, vi } from 'vitest';
 import type { ViewModelSimple, ViewModelStore } from 'mobx-view-model';
+import { viewModelsConfig } from 'mobx-view-model';
 import type { ReactNode } from 'react';
 import { ViewModelBaseMock } from '../../../core/src/view-model/view-model.base.test.js';
 import { ViewModelStoreBaseMock } from '../../../core/src/view-model/view-model.store.base.test.js';
@@ -456,6 +457,51 @@ describe('useCreateViewModel', () => {
 
         expect(unmountSpy).toHaveBeenCalledTimes(1);
       });
+    });
+  });
+
+  /**
+   * No `ViewModelsProvider`: id comes from `viewModelsConfig.generateId` so `renderId` from
+   * `useId()` is observable (store `generateViewModelId` only forwards `ctx` today).
+   */
+  describe('useReactIds', () => {
+    test('feeds React useId into vm id when vmConfig.useReactIds is true', async () => {
+      class Vm extends ViewModelBaseMock {}
+
+      let id = '';
+      const A = () => {
+        const vm = useCreateViewModel(Vm, {}, { vmConfig: { useReactIds: true } });
+        id = vm.id;
+        return <span data-testid="id">{vm.id}</span>;
+      };
+
+      await act(async () => render(<A />));
+
+      // `useId()` in tests yields a stable token (e.g. `_r_0_`), folded into `generateVmId` as `renderId`.
+      expect(id).toMatch(/_r_/);
+      expect(screen.getByTestId('id').textContent).toBe(id);
+    });
+
+    test('feeds React useId into vm id when viewModelsConfig.useReactIds is true', async () => {
+      const prev = viewModelsConfig.useReactIds;
+      viewModelsConfig.useReactIds = true;
+
+      try {
+        class Vm extends ViewModelBaseMock {}
+
+        let id = '';
+        const A = () => {
+          const vm = useCreateViewModel(Vm, {});
+          id = vm.id;
+          return null;
+        };
+
+        await act(async () => render(<A />));
+
+        expect(id).toMatch(/_r_/);
+      } finally {
+        viewModelsConfig.useReactIds = prev;
+      }
     });
   });
 });
