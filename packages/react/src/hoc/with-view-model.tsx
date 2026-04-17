@@ -375,7 +375,7 @@ const withViewModelWrapper = (
     Component = observer(Component as any) as any;
   }
 
-  const reactHook = config.reactHook;
+  const reactHook = config.reactHook ?? viewModelsConfig.reactHook;
   const getPayload = config.getPayload;
   const FallbackComponent =
     config.fallback ?? viewModelsConfig.fallbackComponent;

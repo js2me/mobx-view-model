@@ -134,6 +134,9 @@ viewModelsConfig.fallbackComponent = () => (
 );
 ```
 
+## <ReactMark /> `reactHook` {#reacthook}  
+Optional default for the [`reactHook`](/react/api/with-view-model.html#reacthook) option on [`withViewModel`](/react/api/with-view-model): used when the HOC config does not set `reactHook` (resolved as `config.reactHook ?? viewModelsConfig.reactHook`).  
+
 ## `onMount`  
 A lifecycle hook that is called when a view model is mounted.  
 Useful for tracking component mounting, initializing external services, or setting up subscriptions.
