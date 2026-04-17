@@ -30,10 +30,16 @@ jobs:
           check-latest: true
           node-version-file: .nvmrc
 
-      - run: corepack enable
-      - run: pnpm i
+      - name: Enabling Corepack!
+        run: corepack enable
 
-      - name: Create Release Pull Request
+      - name: Installing Deps
+        run: pnpm i
+
+      - name: Building packages
+        run: pnpm run build
+
+      - name: Create Release Pull Request Or Publish
         uses: changesets/action@v1
         continue-on-error: false
         id: pub-or-release-pr
