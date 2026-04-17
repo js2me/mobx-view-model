@@ -1,5 +1,18 @@
 # mobx-view-model
 
+## 10.1.0
+
+### Minor Changes
+
+- [`e984775`](https://github.com/js2me/mobx-view-model/commit/e984775812f5276c87620fbf492bf39546f9d19e) Thanks [@js2me](https://github.com/js2me)! - added `useReactIds` option to `viewModelsConfig`
+
+### Patch Changes
+
+- [`706d6fa`](https://github.com/js2me/mobx-view-model/commit/706d6fabd2b33e3b1813d232a55381c9d54295e3) Thanks [@js2me](https://github.com/js2me)! - add reactHook to `viewModelsConfig`
+
+- Updated dependencies [[`706d6fa`](https://github.com/js2me/mobx-view-model/commit/706d6fabd2b33e3b1813d232a55381c9d54295e3), [`e984775`](https://github.com/js2me/mobx-view-model/commit/e984775812f5276c87620fbf492bf39546f9d19e)]:
+  - mobx-view-model-react@10.1.0
+
 ## 10.0.5
 
 ### Patch Changes
