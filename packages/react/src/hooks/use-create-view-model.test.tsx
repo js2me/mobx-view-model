@@ -461,24 +461,64 @@ describe('useCreateViewModel', () => {
   });
 
   describe('useReactIds', () => {
-    test('feeds React useId into vm id when vmConfig.useReactIds is true', async () => {
-      class Vm extends ViewModelBaseMock {}
+    test('uses config.vmConfig.useReactIds when it is defined', async () => {
+      const prev = viewModelsConfig.useReactIds;
+      viewModelsConfig.useReactIds = false;
 
-      let id = '';
-      const A = () => {
-        const vm = useCreateViewModel(Vm, {}, { vmConfig: { useReactIds: true } });
-        id = vm.id;
-        return <span data-testid="id">{vm.id}</span>;
-      };
+      try {
+        const vmStore = new ViewModelStoreBaseMock({
+          vmConfig: { useReactIds: false },
+        });
 
-      await act(async () => render(<A />));
+        class Vm extends ViewModelBaseMock {}
 
-      // `useId()` in tests yields a stable token (e.g. `_r_0_`), folded into `generateVmId` as `renderId`.
-      expect(id).toMatch(/_r_/);
-      expect(screen.getByTestId('id').textContent).toBe(id);
+        let id = '';
+        const A = () => {
+          const vm = useCreateViewModel(Vm, {}, { vmConfig: { useReactIds: true } });
+          id = vm.id;
+          return <span data-testid="id">{vm.id}</span>;
+        };
+
+        await act(async () =>
+          render(<A />, { wrapper: createVMStoreWrapper(vmStore) }),
+        );
+
+        expect(id).toMatch(/_r_/);
+        expect(screen.getByTestId('id').textContent).toBe(id);
+      } finally {
+        viewModelsConfig.useReactIds = prev;
+      }
     });
 
-    test('feeds React useId into vm id when viewModelsConfig.useReactIds is true', async () => {
+    test('uses viewModels.vmConfig.useReactIds when config.vmConfig.useReactIds is undefined', async () => {
+      const prev = viewModelsConfig.useReactIds;
+      viewModelsConfig.useReactIds = false;
+
+      try {
+        const vmStore = new ViewModelStoreBaseMock({
+          vmConfig: { useReactIds: true },
+        });
+
+        class Vm extends ViewModelBaseMock {}
+
+        let id = '';
+        const A = () => {
+          const vm = useCreateViewModel(Vm, {});
+          id = vm.id;
+          return null;
+        };
+
+        await act(async () =>
+          render(<A />, { wrapper: createVMStoreWrapper(vmStore) }),
+        );
+
+        expect(id).toMatch(/_r_/);
+      } finally {
+        viewModelsConfig.useReactIds = prev;
+      }
+    });
+
+    test('uses global viewModelsConfig.useReactIds when config and store are absent', async () => {
       const prev = viewModelsConfig.useReactIds;
       viewModelsConfig.useReactIds = true;
 
@@ -495,54 +535,6 @@ describe('useCreateViewModel', () => {
         await act(async () => render(<A />));
 
         expect(id).toMatch(/_r_/);
-      } finally {
-        viewModelsConfig.useReactIds = prev;
-      }
-    });
-
-    test('with ViewModelStore: vmConfig.useReactIds feeds useId into vm id', async () => {
-      const vmStore = new ViewModelStoreBaseMock();
-
-      class Vm extends ViewModelBaseMock {}
-
-      let id = '';
-      const A = () => {
-        const vm = useCreateViewModel(Vm, {}, { vmConfig: { useReactIds: true } });
-        id = vm.id;
-        return <span data-testid="id">{vm.id}</span>;
-      };
-
-      await act(async () =>
-        render(<A />, { wrapper: createVMStoreWrapper(vmStore) }),
-      );
-
-      expect(id).toMatch(/_r_/);
-      expect(screen.getByTestId('id').textContent).toBe(id);
-      expect(vmStore.spies.generateViewModelId).toHaveBeenCalled();
-    });
-
-    test('with ViewModelStore: viewModelsConfig.useReactIds feeds useId into vm id', async () => {
-      const prev = viewModelsConfig.useReactIds;
-      viewModelsConfig.useReactIds = true;
-
-      try {
-        const vmStore = new ViewModelStoreBaseMock();
-
-        class Vm extends ViewModelBaseMock {}
-
-        let id = '';
-        const A = () => {
-          const vm = useCreateViewModel(Vm, {});
-          id = vm.id;
-          return null;
-        };
-
-        await act(async () =>
-          render(<A />, { wrapper: createVMStoreWrapper(vmStore) }),
-        );
-
-        expect(id).toMatch(/_r_/);
-        expect(vmStore.spies.generateViewModelId).toHaveBeenCalled();
       } finally {
         viewModelsConfig.useReactIds = prev;
       }

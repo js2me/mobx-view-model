@@ -6,7 +6,7 @@ import type {
 } from './view-model.store.types.js';
 import type { AnyViewModel, AnyViewModelSimple } from './view-model.types.js';
 import type { ViewModelSimple } from './view-model-simple.js';
-import { ViewModelsConfig } from 'src/config/types.js';
+import type { ViewModelsConfig } from '../config/types.js';
 
 /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface) */
 export interface ViewModelStore<VMBase extends AnyViewModel = AnyViewModel> {

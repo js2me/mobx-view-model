@@ -60,7 +60,7 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
    */
   protected unmountingViews: Set<string>;
 
-  protected vmConfig: ViewModelsConfig;
+  public vmConfig: ViewModelsConfig;
 
   constructor(protected config?: ViewModelStoreConfig) {
     this.viewModels = observable.map([], { deep: false });
