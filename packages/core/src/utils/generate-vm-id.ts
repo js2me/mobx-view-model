@@ -14,10 +14,10 @@ export const generateVmId: GenerateViewModelIdFn = (ctx: AnyObject) => {
     );
 
     ctx.generateId = () =>
-      ctx.renderId ?? `${staticId}_${counter().toString().padStart(5, '0')}`;
+      `${staticId}_${counter().toString().padStart(5, '0')}`;
   }
 
-  const dynamicId = ctx.generateId();
+  const dynamicId = ctx.renderId ?? ctx.generateId();
 
   if (process.env.NODE_ENV === 'production') {
     return dynamicId;

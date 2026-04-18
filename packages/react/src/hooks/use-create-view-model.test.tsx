@@ -460,10 +460,6 @@ describe('useCreateViewModel', () => {
     });
   });
 
-  /**
-   * No `ViewModelsProvider`: id comes from `viewModelsConfig.generateId` so `renderId` from
-   * `useId()` is observable (store `generateViewModelId` only forwards `ctx` today).
-   */
   describe('useReactIds', () => {
     test('feeds React useId into vm id when vmConfig.useReactIds is true', async () => {
       class Vm extends ViewModelBaseMock {}
@@ -499,6 +495,54 @@ describe('useCreateViewModel', () => {
         await act(async () => render(<A />));
 
         expect(id).toMatch(/_r_/);
+      } finally {
+        viewModelsConfig.useReactIds = prev;
+      }
+    });
+
+    test('with ViewModelStore: vmConfig.useReactIds feeds useId into vm id', async () => {
+      const vmStore = new ViewModelStoreBaseMock();
+
+      class Vm extends ViewModelBaseMock {}
+
+      let id = '';
+      const A = () => {
+        const vm = useCreateViewModel(Vm, {}, { vmConfig: { useReactIds: true } });
+        id = vm.id;
+        return <span data-testid="id">{vm.id}</span>;
+      };
+
+      await act(async () =>
+        render(<A />, { wrapper: createVMStoreWrapper(vmStore) }),
+      );
+
+      expect(id).toMatch(/_r_/);
+      expect(screen.getByTestId('id').textContent).toBe(id);
+      expect(vmStore.spies.generateViewModelId).toHaveBeenCalled();
+    });
+
+    test('with ViewModelStore: viewModelsConfig.useReactIds feeds useId into vm id', async () => {
+      const prev = viewModelsConfig.useReactIds;
+      viewModelsConfig.useReactIds = true;
+
+      try {
+        const vmStore = new ViewModelStoreBaseMock();
+
+        class Vm extends ViewModelBaseMock {}
+
+        let id = '';
+        const A = () => {
+          const vm = useCreateViewModel(Vm, {});
+          id = vm.id;
+          return null;
+        };
+
+        await act(async () =>
+          render(<A />, { wrapper: createVMStoreWrapper(vmStore) }),
+        );
+
+        expect(id).toMatch(/_r_/);
+        expect(vmStore.spies.generateViewModelId).toHaveBeenCalled();
       } finally {
         viewModelsConfig.useReactIds = prev;
       }
