@@ -1,5 +1,14 @@
 # mobx-view-model
 
+## 10.1.1
+
+### Patch Changes
+
+- [`43181f7`](https://github.com/js2me/mobx-view-model/commit/43181f760c85a5ed3714db033af8cd8d730063db) Thanks [@js2me](https://github.com/js2me)! - fixed `useReactIds`
+
+- Updated dependencies [[`43181f7`](https://github.com/js2me/mobx-view-model/commit/43181f760c85a5ed3714db033af8cd8d730063db)]:
+  - mobx-view-model-react@10.1.1
+
 ## 10.1.0
 
 ### Minor Changes
