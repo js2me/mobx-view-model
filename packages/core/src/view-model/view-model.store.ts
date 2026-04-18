@@ -6,9 +6,18 @@ import type {
 } from './view-model.store.types.js';
 import type { AnyViewModel, AnyViewModelSimple } from './view-model.types.js';
 import type { ViewModelSimple } from './view-model-simple.js';
+import { ViewModelsConfig } from 'src/config/types.js';
 
 /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface) */
 export interface ViewModelStore<VMBase extends AnyViewModel = AnyViewModel> {
+  /**
+   * Effective merged `ViewModelsConfig` for this store: values from the store constructor are layered over the global defaults (see `ViewModelStoreBase` / `mergeVMConfigs`).
+   * Drives `generateId`, `factory`, lifecycle hooks, and other behavior for view models owned by this store.
+   *
+   * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config)
+   */
+  vmConfig?: ViewModelsConfig;
+
   /**
    * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#getids-vmlookup)
    * @param vmLookup - The ID or class type of the view model. See {@link ViewModelLookup}.

@@ -116,8 +116,7 @@ const useCreateViewModelBase = (
 
   const ctx = config?.ctx ?? {};
 
-  const useReactIds =
-    config?.vmConfig?.useReactIds ?? viewModelsConfig.useReactIds;
+  const useReactIds = config?.vmConfig?.useReactIds ?? viewModels?.vmConfig?.useReactIds ?? viewModelsConfig.useReactIds;
   const renderId = useReactIds ? useId() : undefined;
 
   const instance = useValue(() => {
