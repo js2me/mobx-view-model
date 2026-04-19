@@ -278,7 +278,7 @@ importers:
         specifier: ^6.12.4
         version: 6.15.0
       mobx-view-model-react:
-        specifier: workspace:^10.1.2
+        specifier: workspace:^10.2.0
         version: link:../react/dist
       react:
         specifier: ^18.0.0 || ^19.0.0
