@@ -161,6 +161,38 @@ useCreateViewModel(YourVM, payload, {
 });
 ```
 
+## <ReactMark /> `suspendUntil` {#suspenduntil}  
+Lets the tree **wait** until your condition is ready before it keeps rendering—**SSR** is a typical use case. Configure it through `vmConfig` the same way as other options on this page.  
+
+You can **return nothing** from the function (`undefined` / `null`) for a given instance or render—then no wait happens and the view continues as usual. Use that when suspension only applies in some cases (for example only on the server, or only until a flag exists).  
+
+::: tip  
+A promise that resolves when you’re ready is enough (MobX [`when()`](https://mobx.js.org/refguide/when.html) is a common choice). Add [**`Suspense`**](https://react.dev/reference/react/Suspense) if you want a loading or placeholder UI.  
+:::
+
+#### Example (global)
+
+```ts
+import { when } from 'mobx';
+import { viewModelsConfig } from 'mobx-view-model';
+
+viewModelsConfig.suspendUntil = (vm) =>
+  when(() => Boolean(vm.someReadyFlag));
+```
+
+#### Example (store)
+
+```ts
+import { when } from 'mobx';
+import { ViewModelStoreBase } from 'mobx-view-model';
+
+new ViewModelStoreBase({
+  vmConfig: {
+    suspendUntil: (vm) => when(() => Boolean(vm.ctx)),
+  },
+});
+```
+
 ## `onMount`  
 A lifecycle hook that is called when a view model is mounted.  
 Useful for tracking component mounting, initializing external services, or setting up subscriptions.

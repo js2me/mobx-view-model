@@ -28,6 +28,21 @@ const model = useCreateViewModel(YourVM, payload, {
 });
 ```
 
+## <ReactMark /> `vmConfig.suspendUntil` {#suspenduntil}  
+Same idea as [`suspendUntil` on `viewModelsConfig`](/api/view-models/view-models-config#suspenduntil); set it on `vmConfig` here when you need it only for this hook (with a [`ViewModel`](/api/view-models/overview), not [`ViewModelSimple`](/api/view-models/view-model-simple)). You may **return nothing** to skip waiting—see the main [`suspendUntil`](/api/view-models/view-models-config#suspenduntil) section.
+
+#### Example
+
+```tsx
+import { when } from 'mobx';
+
+const model = useCreateViewModel(YourVM, payload, {
+  vmConfig: {
+    suspendUntil: (vm) => when(() => Boolean(vm.ctx)),
+  },
+});
+```
+
 ##  Usage  
 
 ### 1. Basic Usage (Default Configuration)  
@@ -58,6 +73,7 @@ import { observer } from "mobx-react-lite";
 export const YourComponent = observer(() => {
   const model = useCreateViewModel(YourVM, {}, {
     vmConfig: { useReactIds: false }, // optional: pass React useId into VM id generation (see #usereactids)
+    // vmConfig: { suspendUntil: ... }, // see #suspenduntil
     ctx: {}, // internal object used as cache key source inside this hook
     factory: (config) => new config.VM(config), // factory method for creating VM instances
     generateId, // custom fn for generating ids for VM instances

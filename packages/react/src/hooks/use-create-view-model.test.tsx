@@ -3,6 +3,9 @@ import { describe, expect, expectTypeOf, test, vi } from 'vitest';
 import type { ViewModelSimple, ViewModelStore } from 'mobx-view-model';
 import { viewModelsConfig } from 'mobx-view-model';
 import type { ReactNode } from 'react';
+import { Suspense } from 'react';
+// @ts-expect-error — types ship with react-dom
+import { renderToReadableStream } from 'react-dom/server';
 import { ViewModelBaseMock } from '../../../core/src/view-model/view-model.base.test.js';
 import { ViewModelStoreBaseMock } from '../../../core/src/view-model/view-model.store.base.test.js';
 import { ViewModelsProvider } from '../components/index.js';
@@ -538,6 +541,246 @@ describe('useCreateViewModel', () => {
       } finally {
         viewModelsConfig.useReactIds = prev;
       }
+    });
+  });
+
+  describe('suspendUntil', () => {
+    test('ViewModelBase: uses config.vmConfig.suspendUntil and passes instance', async () => {
+      const suspendUntil = vi.fn(() => Promise.resolve());
+      const vmStore = new ViewModelStoreBaseMock();
+
+      class Vm extends ViewModelBaseMock {}
+
+      const A = () => {
+        useCreateViewModel(Vm, {}, { vmConfig: { suspendUntil } });
+        return null;
+      };
+
+      await act(async () =>
+        render(
+          <Suspense fallback={null}>
+            <A />
+          </Suspense>,
+          { wrapper: createVMStoreWrapper(vmStore) },
+        ),
+      );
+
+      expect(suspendUntil).toHaveBeenCalled();
+      for (const call of suspendUntil.mock.calls as unknown[][]) {
+        expect(call[0]).toBeInstanceOf(Vm);
+      }
+    });
+
+    test('ViewModelBase: config.vmConfig.suspendUntil overrides store vmConfig', async () => {
+      const storeFn = vi.fn(() => Promise.resolve());
+      const configFn = vi.fn(() => Promise.resolve());
+      const vmStore = new ViewModelStoreBaseMock({
+        vmConfig: { suspendUntil: storeFn },
+      });
+
+      class Vm extends ViewModelBaseMock {}
+
+      const A = () => {
+        useCreateViewModel(Vm, {}, { vmConfig: { suspendUntil: configFn } });
+        return null;
+      };
+
+      await act(async () =>
+        render(
+          <Suspense fallback={null}>
+            <A />
+          </Suspense>,
+          { wrapper: createVMStoreWrapper(vmStore) },
+        ),
+      );
+
+      expect(configFn).toHaveBeenCalled();
+      expect(storeFn).not.toHaveBeenCalled();
+    });
+
+    test('ViewModelBase: uses viewModels.vmConfig.suspendUntil when hook vmConfig omits it', async () => {
+      const suspendUntil = vi.fn(() => Promise.resolve());
+      const prev = viewModelsConfig.suspendUntil;
+      viewModelsConfig.suspendUntil = undefined;
+
+      try {
+        const vmStore = new ViewModelStoreBaseMock({
+          vmConfig: { suspendUntil },
+        });
+
+        class Vm extends ViewModelBaseMock {}
+
+        const A = () => {
+          useCreateViewModel(Vm, {});
+          return null;
+        };
+
+        await act(async () =>
+          render(
+            <Suspense fallback={null}>
+              <A />
+            </Suspense>,
+            { wrapper: createVMStoreWrapper(vmStore) },
+          ),
+        );
+
+        expect(suspendUntil).toHaveBeenCalled();
+        for (const call of suspendUntil.mock.calls as unknown[][]) {
+          expect(call[0]).toBeInstanceOf(Vm);
+        }
+      } finally {
+        viewModelsConfig.suspendUntil = prev;
+      }
+    });
+
+    test('ViewModelBase: uses global viewModelsConfig.suspendUntil when store omits it', async () => {
+      const suspendUntil = vi.fn(() => Promise.resolve());
+      const prev = viewModelsConfig.suspendUntil;
+      viewModelsConfig.suspendUntil = suspendUntil;
+
+      try {
+        class Vm extends ViewModelBaseMock {}
+
+        const A = () => {
+          useCreateViewModel(Vm, {});
+          return null;
+        };
+
+        await act(async () =>
+          render(
+            <Suspense fallback={null}>
+              <A />
+            </Suspense>,
+          ),
+        );
+
+        expect(suspendUntil).toHaveBeenCalled();
+        for (const call of suspendUntil.mock.calls as unknown[][]) {
+          expect(call[0]).toBeInstanceOf(Vm);
+        }
+      } finally {
+        viewModelsConfig.suspendUntil = prev;
+      }
+    });
+
+    test('ViewModelSimple: uses viewModels.vmConfig.suspendUntil', async () => {
+      const suspendUntil = vi.fn(() => Promise.resolve());
+      const vmStore = new ViewModelStoreBaseMock({
+        vmConfig: { suspendUntil },
+      });
+
+      class SimpleVm implements ViewModelSimple {
+        id = 'simple-suspend';
+        bar = 'bar';
+      }
+
+      const A = () => {
+        useCreateViewModel(SimpleVm);
+        return null;
+      };
+
+      await act(async () =>
+        render(
+          <Suspense fallback={null}>
+            <A />
+          </Suspense>,
+          { wrapper: createVMStoreWrapper(vmStore) },
+        ),
+      );
+
+      expect(suspendUntil).toHaveBeenCalled();
+      for (const call of suspendUntil.mock.calls as unknown[][]) {
+        expect(call[0]).toBeInstanceOf(SimpleVm);
+      }
+    });
+
+    describe('SSR', () => {
+      const readableStreamToHtml = async (stream: ReadableStream<Uint8Array>) => {
+        const reader = stream.getReader();
+        const decoder = new TextDecoder();
+        let html = '';
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) {
+              break;
+            }
+            html += decoder.decode(value, { stream: true });
+          }
+          html += decoder.decode();
+        } finally {
+          reader.releaseLock();
+        }
+        return html;
+      };
+
+      const renderOnServer = async (node: ReactNode) => {
+        vi.stubGlobal('window', undefined);
+        try {
+          const stream = await renderToReadableStream(<>{node}</>);
+          return readableStreamToHtml(stream);
+        } finally {
+          vi.unstubAllGlobals();
+        }
+      };
+
+      test('server stream invokes suspendUntil and includes the view markup', async () => {
+        const ready = Promise.resolve();
+        const suspendUntil = vi.fn(() => ready);
+        const vmStore = new ViewModelStoreBaseMock();
+
+        class Vm extends ViewModelBaseMock {}
+
+        const Page = () => {
+          const vm = useCreateViewModel(Vm, {}, {
+            vmConfig: { suspendUntil },
+          });
+          return <span data-testid="ssr-out">{vm.id}</span>;
+        };
+
+        const html = await renderOnServer(
+          <Suspense fallback={<span data-testid="ssr-fb">loading</span>}>
+            <ViewModelsProvider value={vmStore}>
+              <Page />
+            </ViewModelsProvider>
+          </Suspense>,
+        );
+
+        expect(suspendUntil).toHaveBeenCalled();
+        expect(html).toContain('data-testid="ssr-out"');
+        expect(html).not.toContain('data-testid="ssr-fb"');
+      });
+    });
+
+    describe('CSR', () => {
+      test('client render resolves suspendUntil and shows the view', async () => {
+        const ready = Promise.resolve();
+        const suspendUntil = vi.fn(() => ready);
+        const vmStore = new ViewModelStoreBaseMock();
+
+        class Vm extends ViewModelBaseMock {}
+
+        const Page = () => {
+          const vm = useCreateViewModel(Vm, {}, {
+            vmConfig: { suspendUntil },
+          });
+          return <span data-testid="csr-out">{vm.id}</span>;
+        };
+
+        await act(async () =>
+          render(
+            <Suspense fallback={<span data-testid="csr-fb">loading</span>}>
+              <ViewModelsProvider value={vmStore}>
+                <Page />
+              </ViewModelsProvider>
+            </Suspense>,
+          ),
+        );
+
+        expect(suspendUntil).toHaveBeenCalled();
+        expect(screen.getByTestId('csr-out').textContent).toMatch(/.+/);
+        expect(screen.queryByTestId('csr-fb')).toBeNull();
+      });
     });
   });
 });

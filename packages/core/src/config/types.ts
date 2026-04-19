@@ -1,9 +1,9 @@
 import type { PubSub } from 'yummies/complex';
 import type { ObservableAnnotationsArray } from 'yummies/mobx';
 import type { AnyObject, Class, DeepPartial, Maybe, PartialKeys } from 'yummies/types';
-import type * as React from 'react';
 import type {
   AnyViewModel,
+  AnyViewModelSimple,
   PayloadCompareFn,
   ViewModelCreateConfig,
   ViewModelStore,
@@ -64,6 +64,15 @@ export interface ViewModelsConfig<
   reactHook?: import('mobx-view-model-react').WithViewModelReactHook;
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#usereactids) */
   useReactIds?: boolean;
+  /**
+   * Wait until the returned value is ready before continuing render.
+   * Return nothing to skip waiting for this call (e.g. when suspension is not needed).
+   *
+   * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#suspenduntil)
+   */
+  suspendUntil?: (
+    instance: TViewModel | AnyViewModelSimple,
+  ) => Maybe<import('mobx-view-model-react').RUsable<unknown>>;
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#onmount) */
   onMount?: (viewModel: TViewModel) => void;
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#onunmount) */

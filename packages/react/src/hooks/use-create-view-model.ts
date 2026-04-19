@@ -6,7 +6,7 @@ import type {
   ViewModelsConfig,
 } from 'mobx-view-model';
 import { viewModelsConfig } from 'mobx-view-model';
-import { useContext, useId, useRef } from 'react';
+import { use, useContext, useId, useRef } from 'react';
 import { flushPendingReactions } from 'yummies/mobx';
 import type { AnyObject, Class, IsPartial, Maybe } from 'yummies/types';
 import { isViewModelClass } from 'mobx-view-model';
@@ -199,6 +199,18 @@ const useCreateViewModelBase = (
 
   instance.setPayload(payload ?? {});
 
+  const suspendUntil =
+    config?.vmConfig?.suspendUntil ??
+    viewModels?.vmConfig?.suspendUntil ??
+    viewModelsConfig.suspendUntil;
+
+  if (suspendUntil != null) {
+    const usable = suspendUntil(instance);
+    if (usable) {
+      use(usable);
+    }
+  }
+
   return instance;
 };
 
@@ -253,6 +265,16 @@ const useCreateViewModelSimple = (
   }
 
   instance.setPayload?.(payload);
+
+  const suspendUntil =
+    viewModels?.vmConfig?.suspendUntil ?? viewModelsConfig.suspendUntil;
+
+  if (suspendUntil != null) {
+    const usable = suspendUntil(instance);
+    if (usable) {
+      use(usable);
+    }
+  }
 
   return instance;
 };
