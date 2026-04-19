@@ -1,5 +1,16 @@
 # mobx-view-model-react
 
+## 10.2.0
+
+### Minor Changes
+
+- [`f9f9096`](https://github.com/js2me/mobx-view-model/commit/f9f9096c1a01925826c4d4fe79fffb370279328c) Thanks [@js2me](https://github.com/js2me)! - added `suspendUntil` feature for `viewModelsConfig`
+
+### Patch Changes
+
+- Updated dependencies [[`f9f9096`](https://github.com/js2me/mobx-view-model/commit/f9f9096c1a01925826c4d4fe79fffb370279328c)]:
+  - mobx-view-model@10.2.0
+
 ## 10.1.2
 
 ### Patch Changes
