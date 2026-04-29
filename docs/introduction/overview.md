@@ -26,3 +26,8 @@ Cons:
 [MVVM](https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93viewmodel) is an architectural pattern in computer software that facilitates the separation of the development of a graphical user interface (GUI; the view)—be it via a markup language or GUI code—from the development of the business logic or back-end logic (the model). This ensures the view is not dependent on any specific model platform.  
 
 ![](./assets/mvvm.png)  
+
+In MVVM, the `ViewModel` acts as a dedicated adaptation layer between the UI and domain logic. It exposes state and actions in a UI-friendly form, so components can focus on rendering and user interactions instead of orchestrating business rules.  
+
+This pattern is especially useful for medium and large applications, where the same business behavior must be reused across multiple screens. By moving decision-making into `ViewModels`, teams get a more predictable architecture, simpler unit testing, and easier long-term maintenance because presentation code evolves independently from domain code.  
+
