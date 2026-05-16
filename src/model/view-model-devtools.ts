@@ -136,7 +136,10 @@ export class ViewModelDevtools {
   }
 
   isExpandable(vmItem: VMListItem): boolean | undefined {
-    return vmItem.isExpandable && this.presentationMode !== 'list';
+    if (this.presentationMode === 'list') {
+      return vmItem.children.some((c) => !(c instanceof VMListItem));
+    }
+    return vmItem.isExpandable;
   }
 
   private getVmParams(vm: AnyVM): null | ViewModelParams {
@@ -260,6 +263,7 @@ export class ViewModelDevtools {
       getItemOffset: (index) => this.scrollListRef.current?.getItemOffset(index) ?? 0,
       scrollToOffset: (offset) => this.scrollListRef.current?.scrollTo(offset),
       getRootItems: () => this.searchRootItems,
+      getPresentationMode: () => this.presentationMode,
     });
 
     makeObservable<typeof this, 'rootVmListItems' | 'extraListItems'>(this, {

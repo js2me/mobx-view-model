@@ -25,6 +25,7 @@ interface SearchEngineConfig {
   getItemOffset: (index: number) => number;
   scrollToOffset: (offset: number) => void;
   getRootItems: () => ListItem<any>[];
+  getPresentationMode: () => 'tree' | 'list';
 }
 
 export class SearchEngine {
@@ -213,8 +214,48 @@ export class SearchEngine {
     return result;
   }
 
+  /**
+   * Плоский список для режима 'list': все VM показываются независимо,
+   * сворачивание VM скрывает только его свойства, но не дочерние VM.
+   */
+  private getFlatListItems(rootItems: ListItem<any>[]): ListItem<any>[] {
+    const result: ListItem<any>[] = [];
+
+    const collectItem = (item: ListItem<any>) => {
+      if (item instanceof VMListItem) {
+        result.push(item);
+        if (item.isExpanded) {
+          for (const child of item.children) {
+            if (!(child instanceof VMListItem)) {
+              result.push(...child.expandedChildrenWithSelf);
+            }
+          }
+        }
+        for (const child of item.children) {
+          if (child instanceof VMListItem) {
+            collectItem(child);
+          }
+        }
+      } else {
+        result.push(item);
+        if (item.isExpanded) {
+          result.push(...item.expandedChildren);
+        }
+      }
+    };
+
+    for (const item of rootItems) {
+      collectItem(item);
+    }
+
+    return result;
+  }
+
   getListItems(rootItems: ListItem<any>[]): ListItem<any>[] {
     if (!this.isActive) {
+      if (this.config.getPresentationMode() === 'list') {
+        return this.getFlatListItems(rootItems);
+      }
       return rootItems.flatMap((item) => item.expandedChildrenWithSelf);
     }
     return rootItems.flatMap((item) => this.getFilteredItemsForSearch(item));
