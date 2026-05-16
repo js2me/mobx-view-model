@@ -259,6 +259,7 @@ export class ViewModelDevtools {
       getIsActive: () => this.isActive,
       getItemOffset: (index) => this.scrollListRef.current?.getItemOffset(index) ?? 0,
       scrollToOffset: (offset) => this.scrollListRef.current?.scrollTo(offset),
+      getRootItems: () => this.searchRootItems,
     });
 
     makeObservable<typeof this, 'rootVmListItems' | 'extraListItems'>(this, {

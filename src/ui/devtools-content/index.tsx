@@ -80,15 +80,27 @@ export const VmDevtoolsContent = withViewModel(
               />
             </div>
             <div
-              className={`${css.vmContentInput} ${devtools.searchEngine.isActive && css.filled}`}
+              className={cx(css.vmContentInput, devtools.searchEngine.isActive && css.filled)}
             >
               <Magnifier />
+              {devtools.searchEngine.suggestionSuffix && (
+                <div className={css.inputGhost} aria-hidden="true">
+                  <span className={css.inputGhostTyped}>
+                    {devtools.searchEngine.searchText}
+                  </span>
+                  <span className={css.inputGhostSuggestion}>
+                    {devtools.searchEngine.suggestionSuffix}
+                  </span>
+                </div>
+              )}
               <input
                 ref={devtools.searchEngine.searchInputRef}
                 autoFocus
                 value={devtools.searchEngine.searchText}
                 onChange={devtools.searchEngine.handleSearchInput}
-                placeholder="search by property path or ViewModel name"
+                onKeyDown={devtools.searchEngine.handleKeyDown}
+                placeholder={devtools.searchEngine.suggestionSuffix ? '' : 'search by property path or ViewModel name'}
+                className={devtools.searchEngine.suggestionSuffix ? css.inputWithSuggestion : undefined}
               />
               <button onClick={devtools.searchEngine.resetSearch}>
                 <Xmark />
