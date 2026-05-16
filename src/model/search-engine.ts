@@ -97,6 +97,25 @@ export class SearchEngine {
   };
 
   /**
+   * Рекурсивно собирает все VMListItem из дерева (включая вложенные).
+   */
+  private collectAllVMs(rootItems: ListItem<any>[]): VMListItem[] {
+    const result: VMListItem[] = [];
+    const traverse = (item: ListItem<any>) => {
+      if (item instanceof VMListItem) {
+        result.push(item);
+        for (const child of item.children) {
+          traverse(child);
+        }
+      }
+    };
+    for (const item of rootItems) {
+      traverse(item);
+    }
+    return result;
+  }
+
+  /**
    * Возвращает PropertyListItem на целевой глубине для получения подсказки.
    * pathSegments — все сегменты кроме последнего (путь навигации).
    */
@@ -104,14 +123,13 @@ export class SearchEngine {
     rootItems: ListItem<any>[],
     pathSegments: string[],
   ): PropertyListItem[] {
-    const vms = rootItems.filter(
-      (item): item is VMListItem => item instanceof VMListItem,
-    );
+    // Собираем ВСЕ VM рекурсивно (включая вложенные)
+    const allVMs = this.collectAllVMs(rootItems);
 
     if (pathSegments.length === 0) {
-      // Нет навигации — прямые свойства всех VM
+      // Нет навигации — прямые свойства ВСЕХ VM на любой глубине
       const props: PropertyListItem[] = [];
-      for (const vm of vms) {
+      for (const vm of allVMs) {
         props.push(
           ...vm.children.filter(
             (c): c is PropertyListItem => c instanceof PropertyListItem,
@@ -124,7 +142,7 @@ export class SearchEngine {
     const firstSeg = pathSegments[0];
     const result: PropertyListItem[] = [];
 
-    for (const vm of vms) {
+    for (const vm of allVMs) {
       const directProps = vm.children.filter(
         (c): c is PropertyListItem => c instanceof PropertyListItem,
       );
@@ -290,10 +308,13 @@ export class SearchEngine {
         !currentSeg || prop.searchData.property.includes(currentSeg);
 
       if (matches && isNotLastSeg) {
-        // Автораскрытие: рекурсивно включаем дочерние свойства
+        // Автораскрытие по пути поиска: рекурсивно включаем дочерние свойства
         result.push(
           ...this.getPropertySearchItems(prop.children, propSegments.slice(1)),
         );
+      } else if (prop.isExpanded) {
+        // Ручное раскрытие пользователем (клик) — уважаем кеш раскрытия
+        result.push(...prop.expandedChildren);
       }
     }
 
@@ -339,7 +360,10 @@ export class SearchEngine {
    * или «затемнённо» (false — серым).
    *
    * Для PropertyListItem: проходим вверх по цепочке parentListItem,
-   * чтобы определить уровень вложенности и соответствующий сегмент фильтра.
+   * собирая предков и вычисляя уровень вложенности.
+   * Затем проверяем, что вся цепочка предков соответствует сегментам поиска:
+   * если хотя бы один предок не совпадает с нужным сегментом —
+   * элемент находится в «несовпадающей ветке» и тоже должен быть серым.
    */
   isItemFitted(item: ListItem<any>): boolean {
     if (!this.isActive) return true;
@@ -348,11 +372,13 @@ export class SearchEngine {
       const { segments } = this;
       if (segments.length === 0) return true;
 
-      // Считаем глубину вложенности свойства внутри цепочки PropertyListItem
+      // Собираем цепочку PropertyListItem-предков (от ближайшего к VM)
       let parent: ListItem<any> = item.parentListItem;
       let propLevel = 0;
+      const ancestors: PropertyListItem[] = [];
 
       while (parent instanceof PropertyListItem) {
+        ancestors.push(parent);
         propLevel++;
         parent = parent.parentListItem;
       }
@@ -365,11 +391,26 @@ export class SearchEngine {
         parent.searchData.name.includes(firstSeg) ||
         parent.searchData.id.includes(firstSeg);
 
-      // Определяем какие сегменты относятся к свойствам
       const propSegments = vmMatchesByName ? segments.slice(1) : segments;
 
-      // Глубже последнего сегмента — всё отображается нормально
-      if (propLevel >= propSegments.length) return true;
+      // Проверяем цепочку предков: каждый должен совпадать с нужным сегментом.
+      // ancestors хранятся в обратном порядке: [ближайший к item, ..., ближайший к VM].
+      // Предок на глубине i от VM → ancestors[propLevel - 1 - i].
+      const depthToCheck = Math.min(propLevel, propSegments.length);
+      for (let i = 0; i < depthToCheck; i++) {
+        const ancestor = ancestors[propLevel - 1 - i]; // предок на глубине i от VM
+        const seg = propSegments[i];
+        if (seg && !ancestor.searchData.property.includes(seg)) {
+          // Предок не совпадает — весь дочерний узел в «несовпадающей ветке»
+          return false;
+        }
+      }
+
+      // Предки все совпали. Теперь проверяем сам элемент.
+      if (propLevel >= propSegments.length) {
+        // Мы глубже последнего сегмента — все предки совпали, показываем нормально
+        return true;
+      }
 
       const seg = propSegments[propLevel];
       return !seg || item.searchData.property.includes(seg);
