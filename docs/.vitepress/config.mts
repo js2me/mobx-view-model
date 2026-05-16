@@ -185,6 +185,7 @@ export default defineDocsVitepressConfig(configs, {
         items: [
           { text: 'Project examples', link: '/other/project-examples' },
           { text: 'Dependent packages', link: '/other/dependent-packages' },
+          { text: 'DevTools', link: '/other/dev-tools' },
           { text: 'Vite plugin', link: '/other/vite-plugin' },
         ],
       },
