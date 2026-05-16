@@ -6,7 +6,7 @@ import type { ReactNode } from 'react';
 import { Suspense } from 'react';
 // @ts-expect-error — types ship with react-dom
 import { renderToReadableStream } from 'react-dom/server';
-import { ViewModelBaseMock } from '../../../core/src/view-model/view-model.base.test.js';
+import { ViewModelBaseMock } from '../../../core/src/view-model/view-model.base.mock.js';
 import { ViewModelStoreBaseMock } from '../../../core/src/view-model/view-model.store.base.test.js';
 import { ViewModelsProvider } from '../components/index.js';
 import { useCreateViewModel, useViewModel } from '../hooks/index.js';

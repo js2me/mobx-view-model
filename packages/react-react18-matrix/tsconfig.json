@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "types": ["vitest", "node"],
+    "lib": ["DOM", "DOM.Iterable", "ESNext"]
+  },
+  "include": ["vitest.config.ts"]
+}

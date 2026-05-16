@@ -3,7 +3,7 @@ import { useState, type ReactNode } from 'react';
 import { beforeEach, describe, expect, test } from 'vitest';
 import { createCounter } from 'yummies/complex';
 import type { ViewModelStore } from 'mobx-view-model';
-import { ViewModelBaseMock } from '../../../core/src/view-model/view-model.base.test.js';
+import { ViewModelBaseMock } from '../../../core/src/view-model/view-model.base.mock.js';
 import { ViewModelStoreBaseMock } from '../../../core/src/view-model/view-model.store.base.test.js';
 import { ViewModelsProvider } from '../components/index.js';
 import { withViewModel } from '../hoc/index.js';

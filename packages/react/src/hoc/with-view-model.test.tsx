@@ -22,7 +22,6 @@ import {
   useEffect,
   useRef,
   useState,
-  version,
 } from 'react';
 // @ts-expect-error react-dom/client types are not in dev deps
 import { hydrateRoot } from 'react-dom/client';
@@ -39,13 +38,13 @@ import {
   type ViewModelSimple,
   type ViewModelStore,
   ViewModelStoreBase,
-  type ViewModelsRawConfig,
 } from 'mobx-view-model';
-import { ViewModelBaseMock } from '../../../core/src/view-model/view-model.base.test.js';
+import { ViewModelBaseMock } from '../../../core/src/view-model/view-model.base.mock.js';
 import { ViewModelStoreBaseMock } from '../../../core/src/view-model/view-model.store.base.test.js';
 import { ViewModelsProvider } from '../components/index.js';
 import { useViewModel } from '../hooks/use-view-model.js';
 import { type ViewModelProps, withViewModel } from './with-view-model.js';
+import { createTestPayloadChanges } from './with-view-model.payload-manipulations.shared.js';
 import {
   type CircularVmPayloadDependencyTestCase,
   circularVmPayloadDependencyTestCases,
@@ -59,11 +58,6 @@ const createVMStoreWrapper = (vmStore: ViewModelStore) => {
     return <ViewModelsProvider value={vmStore}>{children}</ViewModelsProvider>;
   };
 };
-
-function getBasedReactVersion<T>(values: { 18: T; 19: T }): T {
-  const reactMajorVersion = +version.split('.')[0] as 19;
-  return values[reactMajorVersion] ?? values[18];
-}
 
 describe('withViewModel', () => {
   test('renders', async () => {
@@ -967,138 +961,6 @@ describe('withViewModel', () => {
 
       expect(View).toHaveBeenCalledTimes(1);
     });
-    test('View should be updated when payload is changed (touching payload in View)', async () => {
-      class VM extends ViewModelBaseMock<{ counter: number }> {}
-      const View = vi.fn(({ model }: ViewModelProps<VM>) => {
-        return <div>{`hello ${model.id} ${model.payload.counter}`}</div>;
-      });
-      const Component = withViewModel(VM, { generateId: createIdGenerator() })(
-        View,
-      );
-
-      const SuperContainer = () => {
-        const [counter, setCounter] = useState(0);
-
-        return (
-          <>
-            <button
-              data-testid={'increment'}
-              onClick={() => setCounter(counter + 1)}
-            >
-              increment
-            </button>
-            <Component payload={{ counter }} />
-          </>
-        );
-      };
-
-      await act(() => render(<SuperContainer />));
-
-      const incrementButton = screen.getByTestId('increment');
-
-      fireEvent.click(incrementButton);
-      fireEvent.click(incrementButton);
-      fireEvent.click(incrementButton);
-
-      expect(View).toHaveBeenCalledTimes(
-        getBasedReactVersion({
-          18: 4,
-          19: 7,
-        }),
-      );
-    });
-
-    const createTestPayloadChanges = async ({
-      vmConfig,
-      wrapViewInObserver,
-      renderPayloadInView,
-      expectedCounterInPayload,
-      expectedRerendersCountInVMComponentView,
-    }: {
-      vmConfig?: ViewModelsRawConfig;
-      wrapViewInObserver?: boolean;
-      renderPayloadInView?: boolean;
-      expectedCounterInPayload: number;
-      expectedRerendersCountInVMComponentView: number;
-    }) => {
-      let vm: ViewModelBaseMock<{ counter: number }> | null;
-
-      class VM extends ViewModelBaseMock<{ counter: number }> {
-        constructor(...args: any[]) {
-          super(...args);
-          vm = this;
-        }
-      }
-
-      const vmConnectedComponentViewRenderSpy = vi.fn();
-
-      let VMConnectedComponentView: React.ComponentType<ViewModelProps<VM>> = ({
-        model,
-      }: ViewModelProps<VM>) => {
-        vmConnectedComponentViewRenderSpy();
-        return renderPayloadInView ? (
-          <div>{`hello ${model.id} ${model.payload.counter}`}</div>
-        ) : (
-          <div>{`hello ${model.id}`}</div>
-        );
-      };
-
-      if (wrapViewInObserver) {
-        VMConnectedComponentView = observer(VMConnectedComponentView);
-      }
-
-      const Component = withViewModel(VM, {
-        generateId: createIdGenerator(),
-        vmConfig,
-      })(VMConnectedComponentView);
-
-      const SuperContainer = () => {
-        const [counter, setCounter] = useState(0);
-        const [, forceUpdate] = useState({});
-
-        return (
-          <>
-            <button
-              data-testid={'increment'}
-              onClick={() => {
-                setCounter(counter + 1);
-              }}
-            >
-              increment
-            </button>
-            <button
-              data-testid={'forceUpdate'}
-              onClick={() => {
-                forceUpdate({});
-              }}
-            >
-              forceUpdate
-            </button>
-            <Component payload={{ counter }} />
-          </>
-        );
-      };
-
-      await act(() => render(<SuperContainer />));
-
-      const incrementButton = screen.getByTestId('increment');
-      const forceUpdateButton = screen.getByTestId('forceUpdate');
-
-      fireEvent.click(incrementButton);
-      fireEvent.click(incrementButton);
-      fireEvent.click(incrementButton);
-
-      // @ts-expect-error
-      expect(vm?.payload).toEqual({ counter: expectedCounterInPayload });
-
-      fireEvent.click(forceUpdateButton);
-      fireEvent.click(forceUpdateButton);
-      fireEvent.click(forceUpdateButton);
-
-      expect(vmConnectedComponentViewRenderSpy).toHaveBeenCalledTimes(
-        expectedRerendersCountInVMComponentView,
-      );
-    };
 
     test('View should have actual payload state (default isPayloadEqual)', async () => {
       await createTestPayloadChanges({
@@ -1112,18 +974,6 @@ describe('withViewModel', () => {
         expectedCounterInPayload: 3,
         expectedRerendersCountInVMComponentView: 1,
         wrapViewInObserver: true,
-      });
-    });
-
-    test('View should have actual payload state (default isPayloadEqual + observer view wrap() + render payload in view)', async () => {
-      await createTestPayloadChanges({
-        expectedCounterInPayload: 3,
-        expectedRerendersCountInVMComponentView: getBasedReactVersion({
-          18: 4,
-          19: 7,
-        }),
-        wrapViewInObserver: true,
-        renderPayloadInView: true,
       });
     });
 
@@ -1144,19 +994,6 @@ describe('withViewModel', () => {
       });
     });
 
-    test('View should have actual payload state (comparePayload: strict + observer view wrap() + render payload in view)', async () => {
-      await createTestPayloadChanges({
-        vmConfig: { comparePayload: 'strict' },
-        expectedCounterInPayload: 3,
-        expectedRerendersCountInVMComponentView: getBasedReactVersion({
-          18: 4,
-          19: 7,
-        }),
-        wrapViewInObserver: true,
-        renderPayloadInView: true,
-      });
-    });
-
     test('View should have actual payload state (comparePayload: shallow)', async () => {
       await createTestPayloadChanges({
         vmConfig: { comparePayload: 'shallow' },
@@ -1171,19 +1008,6 @@ describe('withViewModel', () => {
         expectedCounterInPayload: 3,
         expectedRerendersCountInVMComponentView: 1,
         wrapViewInObserver: true,
-      });
-    });
-
-    test('View should have actual payload state (comparePayload: shallow + observer view wrap() + render payload in view)', async () => {
-      await createTestPayloadChanges({
-        vmConfig: { comparePayload: 'shallow' },
-        expectedCounterInPayload: 3,
-        expectedRerendersCountInVMComponentView: getBasedReactVersion({
-          18: 4,
-          19: 7,
-        }),
-        wrapViewInObserver: true,
-        renderPayloadInView: true,
       });
     });
 
@@ -1204,19 +1028,6 @@ describe('withViewModel', () => {
       });
     });
 
-    test('View should have actual payload state (comparePayload: false + observer view wrap() + render payload in view)', async () => {
-      await createTestPayloadChanges({
-        vmConfig: { comparePayload: false },
-        expectedCounterInPayload: 3,
-        expectedRerendersCountInVMComponentView: getBasedReactVersion({
-          18: 4,
-          19: 7,
-        }),
-        wrapViewInObserver: true,
-        renderPayloadInView: true,
-      });
-    });
-
     test('View should have actual payload state (comparePayload: comparer.shallow)', async () => {
       await createTestPayloadChanges({
         vmConfig: { comparePayload: comparer.shallow },
@@ -1231,19 +1042,6 @@ describe('withViewModel', () => {
         expectedCounterInPayload: 3,
         expectedRerendersCountInVMComponentView: 1,
         wrapViewInObserver: true,
-      });
-    });
-
-    test('View should have actual payload state (comparePayload: comparer.shallow + observer view wrap() + render payload in view)', async () => {
-      await createTestPayloadChanges({
-        vmConfig: { comparePayload: comparer.shallow },
-        expectedCounterInPayload: 3,
-        expectedRerendersCountInVMComponentView: getBasedReactVersion({
-          18: 4,
-          19: 7,
-        }),
-        wrapViewInObserver: true,
-        renderPayloadInView: true,
       });
     });
 
@@ -1264,19 +1062,6 @@ describe('withViewModel', () => {
       });
     });
 
-    test('View should have actual payload state (comparePayload: comparer.structural + observer view wrap() + render payload in view)', async () => {
-      await createTestPayloadChanges({
-        vmConfig: { comparePayload: comparer.structural },
-        expectedCounterInPayload: 3,
-        expectedRerendersCountInVMComponentView: getBasedReactVersion({
-          18: 4,
-          19: 7,
-        }),
-        wrapViewInObserver: true,
-        renderPayloadInView: true,
-      });
-    });
-
     test('View should have actual payload state (comparePayload: comparer.identity)', async () => {
       await createTestPayloadChanges({
         vmConfig: { comparePayload: comparer.identity },
@@ -1294,19 +1079,6 @@ describe('withViewModel', () => {
       });
     });
 
-    test('View should have actual payload state (comparePayload: comparer.identity + observer view wrap() + render payload in view)', async () => {
-      await createTestPayloadChanges({
-        vmConfig: { comparePayload: comparer.identity },
-        expectedCounterInPayload: 3,
-        expectedRerendersCountInVMComponentView: getBasedReactVersion({
-          18: 4,
-          19: 7,
-        }),
-        wrapViewInObserver: true,
-        renderPayloadInView: true,
-      });
-    });
-
     test('View should have actual payload state (comparePayload: comparer.default)', async () => {
       await createTestPayloadChanges({
         vmConfig: { comparePayload: comparer.default },
@@ -1321,19 +1093,6 @@ describe('withViewModel', () => {
         expectedCounterInPayload: 3,
         expectedRerendersCountInVMComponentView: 1,
         wrapViewInObserver: true,
-      });
-    });
-
-    test('View should have actual payload state (comparePayload: comparer.default + observer view wrap() + render payload in view)', async () => {
-      await createTestPayloadChanges({
-        vmConfig: { comparePayload: comparer.default },
-        expectedCounterInPayload: 3,
-        expectedRerendersCountInVMComponentView: getBasedReactVersion({
-          18: 4,
-          19: 7,
-        }),
-        wrapViewInObserver: true,
-        renderPayloadInView: true,
       });
     });
 

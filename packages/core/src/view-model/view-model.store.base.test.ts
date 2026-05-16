@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import type { Maybe } from 'yummies/types';
 import type { ViewModelsConfig } from '../config/types.js';
-import { ViewModelBaseMock } from './view-model.base.test.js';
+import { ViewModelBaseMock } from './view-model.base.mock.js';
 import type { ViewModel } from './view-model.js';
 import { ViewModelStoreBase } from './view-model.store.base.js';
 import type {
