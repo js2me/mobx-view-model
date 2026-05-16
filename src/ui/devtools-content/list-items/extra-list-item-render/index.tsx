@@ -14,7 +14,10 @@ export const ExtraListItemRender = observer(
         data-depth={item.depthLine}
         style={{ '--level': item.depth } as CSSProperties}
       >
-        <header className={css.treeItemHeader}>
+        <header
+          className={css.treeItemHeader}
+          onClick={() => item.toggleExpand()}
+        >
           <ExpandButton
             showIconAnyway={item.devtools.presentationMode === 'tree'}
             expandable={item.isExpandable}

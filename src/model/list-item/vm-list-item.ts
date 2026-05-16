@@ -84,7 +84,7 @@ export class VMListItem extends ListItem<AnyVM> {
     const displayName = vm.constructor.name;
     const key = `${displayName}-${vm.id}`;
 
-    super(devtools, key, vm, undefined, new Map());
+    super(devtools, key, vm);
 
     this.displayName = displayName;
     this.searchData = {
@@ -97,7 +97,9 @@ export class VMListItem extends ListItem<AnyVM> {
     makeObservable(this);
 
     untracked(() => {
-      this.expand();
+      if (!this.cache.has(this.expandKey)) {
+        this.expand();
+      }
     });
   }
 }

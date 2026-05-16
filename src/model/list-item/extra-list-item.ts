@@ -51,7 +51,7 @@ export class ExtraListItem extends ListItem<AnyVM> {
     const displayName = 'Extras';
     const key = `extra$$$-${displayName}-`;
 
-    super(devtools, key, extras, undefined, new Map());
+    super(devtools, key, extras);
 
     this.displayName = displayName;
     this.searchData = {
@@ -62,7 +62,9 @@ export class ExtraListItem extends ListItem<AnyVM> {
     makeObservable(this);
 
     untracked(() => {
-      this.expand();
+      if (!this.cache.has(this.expandKey)) {
+        this.expand();
+      }
     });
   }
 }
