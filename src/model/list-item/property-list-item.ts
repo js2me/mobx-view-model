@@ -325,6 +325,10 @@ export class PropertyListItem extends ListItem<any> {
     return `Property value "${this.property}" saved into ${tempVarName}`;
   }
 
+  get parentListItem(): ListItem<any> {
+    return this.parent;
+  }
+
   protected constructor(
     devtools: ViewModelDevtools,
     public property: Maybe<string>,

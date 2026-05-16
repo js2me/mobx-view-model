@@ -86,6 +86,8 @@ export const VmDevtoolsContent = withViewModel(
               <input
                 ref={devtools.searchEngine.searchInputRef}
                 autoFocus
+                value={devtools.searchEngine.searchText}
+                onChange={devtools.searchEngine.handleSearchInput}
                 placeholder="search by property path or ViewModel name"
               />
               <button onClick={devtools.searchEngine.resetSearch}>
