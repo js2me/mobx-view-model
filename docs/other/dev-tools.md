@@ -42,6 +42,44 @@ Use this approach when you need finer control over when the script is loaded (e.
 </script>
 ```
 
+### Option 3 — package dependency
+
+Install the devtools package with your package manager:
+
+::: code-group
+
+```bash [npm]
+npm install mobx-view-model-devtools
+```
+
+```bash [pnpm]
+pnpm add mobx-view-model-devtools
+```
+
+```bash [yarn]
+yarn add mobx-view-model-devtools
+```
+
+:::
+
+Then import and connect it directly from your application code:
+
+```ts
+import { ViewModelDevtools } from 'mobx-view-model-devtools';
+
+ViewModelDevtools.connect(viewModelStore, extra);
+```
+
+To keep the devtools out of production bundles, load the package only in development:
+
+```ts
+if (process.env.NODE_ENV === 'development') {
+  import('mobx-view-model-devtools').then(({ ViewModelDevtools }) => {
+    ViewModelDevtools.connect(viewModelStore, extra);
+  });
+}
+```
+
 ---
 
 ## Connecting to a ViewModelStore
