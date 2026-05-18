@@ -44,7 +44,9 @@ export const VmDevtoolsContent = withViewModel(
             </span>
             {headerContent}
           </div>
-          <div className={css.vmContentControlPanel}>
+          <div className={cx(css.vmContentControlPanel, {
+            [css.searchIsActive]: devtools.searchEngine.isActive,
+          })}>
             <div className={css.vmContentControlPanelActions}>
               <IconToggleButton
                 onUpdate={devtools.handleChangePresentationMode}

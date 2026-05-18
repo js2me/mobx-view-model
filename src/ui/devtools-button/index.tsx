@@ -21,7 +21,8 @@ export const VmDevtoolsButton = withViewModel(
       >
         <img src={model.devtools.logoUrl} />
         <div />
-        <span>{model.devtools.allVms.length}</span>
+        <span className={css.vmsCount}>{model.devtools.allVms.length}</span>
+        <span className={css.keyboardHint}>{`Ctrl+F12`}</span>
       </button>
     );
   },

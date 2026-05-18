@@ -35,6 +35,10 @@ export class SearchEngine {
 
   searchCacheKey = '';
   isSearching = false;
+  private scrollToSearchMatchTimeout: ReturnType<typeof setTimeout> | null =
+    null;
+
+  private static readonly itemHeight = 22;
 
   get formattedSearchText(): string {
     return this.searchText.toLowerCase().trim();
@@ -68,18 +72,24 @@ export class SearchEngine {
     const { segments } = this;
     if (segments.length === 0) return '';
 
-    const lastSeg = segments[segments.length - 1];
-    if (!lastSeg) return '';
+    const completingSegment = this.endsWithDot
+      ? ''
+      : segments[segments.length - 1];
+    if (!this.endsWithDot && !completingSegment) return '';
 
     const rootItems = this.config.getRootItems();
-    const candidates = this.getCandidatePropsAtDepth(rootItems, segments.slice(0, -1));
+    const pathSegments = this.endsWithDot ? segments : segments.slice(0, -1);
+    const candidates = this.getCandidatePropsAtDepth(rootItems, pathSegments);
 
     for (const prop of candidates) {
       const nameLower = prop.searchData.property;
       const nameOriginal = prop.property ?? '';
 
-      if (nameLower.startsWith(lastSeg) && nameLower.length > lastSeg.length) {
-        return nameOriginal.slice(lastSeg.length);
+      if (
+        nameLower.startsWith(completingSegment) &&
+        nameLower.length > completingSegment.length
+      ) {
+        return nameOriginal.slice(completingSegment.length);
       }
     }
 
@@ -88,14 +98,56 @@ export class SearchEngine {
 
   handleSearchInput = (e: ChangeEvent<HTMLInputElement>) => {
     this.searchText = e.target.value;
+    this.scheduleScrollToFirstSearchMatch();
   };
 
   handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Tab' && this.suggestionSuffix) {
       e.preventDefault();
       this.searchText += this.suggestionSuffix;
+      this.scheduleScrollToFirstSearchMatch();
     }
   };
+
+  private scheduleScrollToFirstSearchMatch() {
+    if (this.scrollToSearchMatchTimeout) {
+      clearTimeout(this.scrollToSearchMatchTimeout);
+    }
+
+    this.scrollToSearchMatchTimeout = setTimeout(() => {
+      this.scrollToSearchMatchTimeout = null;
+      this.scrollToFirstSearchMatch();
+    }, 0);
+  }
+
+  private scrollToFirstSearchMatch() {
+    if (!this.isActive) return;
+
+    const listItems = this.getListItems(this.config.getRootItems());
+    const index = listItems.findIndex((item) => this.isSearchTargetMatched(item));
+
+    if (index < 0) return;
+
+    const virtualizerOffset = this.config.getItemOffset(index);
+    const offset =
+      virtualizerOffset > 0
+        ? virtualizerOffset
+        : index * SearchEngine.itemHeight;
+
+    this.config.scrollToOffset(offset);
+    this.scrollSimpleBarToOffset(offset);
+  }
+
+  private scrollSimpleBarToOffset(offset: number) {
+    if (typeof document === 'undefined') return;
+
+    const container = document.getElementById(this.config.getContainerId());
+    const scrollElement = container?.querySelector<HTMLElement>(
+      '.simplebar-content-wrapper',
+    );
+
+    scrollElement?.scrollTo({ top: offset });
+  }
 
   /**
    * Рекурсивно собирает все VMListItem из дерева (включая вложенные).
@@ -147,9 +199,13 @@ export class SearchEngine {
       const directProps = vm.children.filter(
         (c): c is PropertyListItem => c instanceof PropertyListItem,
       );
+      const firstSegmentIsExactProperty = directProps.some(
+        (prop) => prop.searchData.property === firstSeg,
+      );
       const vmNameMatch =
-        vm.searchData.name.includes(firstSeg) ||
-        vm.searchData.id.includes(firstSeg);
+        !firstSegmentIsExactProperty &&
+        (vm.searchData.name.includes(firstSeg) ||
+          vm.searchData.id.includes(firstSeg));
 
       if (vmNameMatch) {
         // VM совпал по имени — следующий уровень это прямые свойства VM
@@ -160,11 +216,9 @@ export class SearchEngine {
             ...this.navigatePropertyPath(directProps, pathSegments.slice(1)),
           );
         }
-      } else {
+      } else if (firstSegmentIsExactProperty) {
         // Совпадение через свойство — заходим в совпадающие свойства
-        const matchingProps = directProps.filter((p) =>
-          p.searchData.property.includes(firstSeg),
-        );
+        const matchingProps = this.getPathMatchingProps(directProps, firstSeg);
 
         if (pathSegments.length === 1) {
           // Нужны дети совпадающих свойств
@@ -185,6 +239,18 @@ export class SearchEngine {
   }
 
   /**
+   * Уже введённый path-сегмент должен совпадать строго:
+   * `product.` заходит только в `product`, а не в `productAsyncTasks`
+   * или `serviceAndProductSearch`.
+   */
+  private getPathMatchingProps(
+    props: PropertyListItem[],
+    segment: string,
+  ): PropertyListItem[] {
+    return props.filter((p) => p.searchData.property === segment);
+  }
+
+  /**
    * Навигация вглубь по цепочке свойств.
    * Возвращает свойства на нужной глубине.
    */
@@ -195,9 +261,7 @@ export class SearchEngine {
     if (segments.length === 0) return props;
 
     const [seg, ...rest] = segments;
-    const matchingProps = props.filter((p) =>
-      p.searchData.property.includes(seg),
-    );
+    const matchingProps = this.getPathMatchingProps(props, seg);
 
     if (rest.length === 0) {
       const result: PropertyListItem[] = [];
@@ -287,21 +351,26 @@ export class SearchEngine {
 
     const { segments } = this;
     const firstSeg = segments[0] ?? '';
-    const vmMatchesByName =
-      vmItem.searchData.name.includes(firstSeg) ||
-      vmItem.searchData.id.includes(firstSeg);
-
-    // Если VM совпал по имени/id — первый сегмент «израсходован» на VM,
-    // остальные сегменты фильтруют свойства.
-    // Если VM совпал через свойство — все сегменты фильтруют свойства.
-    const propSegments = vmMatchesByName ? segments.slice(1) : segments;
-
     const directProps = vmItem.children.filter(
       (c): c is PropertyListItem => c instanceof PropertyListItem,
     );
     const nestedVMs = vmItem.children.filter(
       (c): c is VMListItem => c instanceof VMListItem,
     );
+    const hasPathSyntax = this.endsWithDot || segments.length > 1;
+    const firstSegmentIsExactProperty =
+      hasPathSyntax &&
+      directProps.some((prop) => prop.searchData.property === firstSeg);
+    const vmMatchesByName =
+      !firstSegmentIsExactProperty &&
+      (vmItem.searchData.name.includes(firstSeg) ||
+        vmItem.searchData.id.includes(firstSeg));
+
+    // Если VM совпал по имени/id — первый сегмент «израсходован» на VM,
+    // остальные сегменты фильтруют свойства.
+    // Если в path-синтаксисе есть exact-свойство с таким именем, сегмент
+    // относится к свойству, даже когда VM name тоже содержит этот текст.
+    const propSegments = vmMatchesByName ? segments.slice(1) : segments;
 
     result.push(...this.getPropertySearchItems(directProps, propSegments));
 
@@ -341,12 +410,14 @@ export class SearchEngine {
     // Не последний сегмент → автораскрытие совпадающих свойств.
     // endsWithDot означает, что даже последний сегмент раскрывает потомков.
     const isNotLastSeg = propSegments.length > 1 || this.endsWithDot;
+    const autoExpandProps = isNotLastSeg
+      ? this.getPathMatchingProps(properties, currentSeg)
+      : [];
 
     for (const prop of properties) {
       result.push(prop);
 
-      const matches =
-        !currentSeg || prop.searchData.property.includes(currentSeg);
+      const matches = autoExpandProps.includes(prop);
 
       if (matches && isNotLastSeg) {
         // Автораскрытие по пути поиска: рекурсивно включаем дочерние свойства
@@ -396,6 +467,94 @@ export class SearchEngine {
     return item.isExpanded;
   }
 
+  private isSearchTargetMatched(item: ListItem<any>): boolean {
+    if (!this.isActive) return false;
+
+    if (item instanceof VMListItem) {
+      return this.isVMSearchTargetMatched(item);
+    }
+
+    if (item instanceof PropertyListItem) {
+      return this.isPropertySearchTargetMatched(item);
+    }
+
+    return false;
+  }
+
+  private isVMSearchTargetMatched(item: VMListItem): boolean {
+    const { segments } = this;
+    if (segments.length === 0) return false;
+
+    const firstSeg = segments[0];
+    const hasPathSyntax = this.endsWithDot || segments.length > 1;
+    const firstSegmentIsExactProperty =
+      hasPathSyntax &&
+      item.children.some(
+        (child) =>
+          child instanceof PropertyListItem &&
+          child.searchData.property === firstSeg,
+      );
+
+    return (
+      !firstSegmentIsExactProperty &&
+      (item.searchData.name.includes(firstSeg) ||
+        item.searchData.id.includes(firstSeg))
+    );
+  }
+
+  private isPropertySearchTargetMatched(item: PropertyListItem): boolean {
+    const { segments } = this;
+    if (segments.length === 0) return false;
+
+    let parent: ListItem<any> = item.parentListItem;
+    let propLevel = 0;
+    const ancestors: PropertyListItem[] = [];
+
+    while (parent instanceof PropertyListItem) {
+      ancestors.push(parent);
+      propLevel++;
+      parent = parent.parentListItem;
+    }
+
+    if (!(parent instanceof VMListItem)) return false;
+
+    const firstSeg = segments[0];
+    const hasPathSyntax = this.endsWithDot || segments.length > 1;
+    const parentDirectProps = parent.children.filter(
+      (child): child is PropertyListItem => child instanceof PropertyListItem,
+    );
+    const firstSegmentIsExactProperty =
+      hasPathSyntax &&
+      parentDirectProps.some((prop) => prop.searchData.property === firstSeg);
+    const vmMatchesByName =
+      !firstSegmentIsExactProperty &&
+      (parent.searchData.name.includes(firstSeg) ||
+        parent.searchData.id.includes(firstSeg));
+
+    const propSegments = vmMatchesByName ? segments.slice(1) : segments;
+    if (propSegments.length === 0) return false;
+
+    const targetLevel = propSegments.length - 1;
+
+    // Сначала проверяем path-предков до целевого сегмента.
+    const depthToCheck = Math.min(propLevel, targetLevel);
+    for (let i = 0; i < depthToCheck; i++) {
+      const ancestor = ancestors[propLevel - 1 - i];
+      if (!this.isPropertyFittedToSegment(ancestor, propSegments[i], true)) {
+        return false;
+      }
+    }
+
+    if (propLevel !== targetLevel) return false;
+
+    const isPathSegment = this.endsWithDot || propLevel < propSegments.length - 1;
+    return this.isPropertyFittedToSegment(
+      item,
+      propSegments[targetLevel],
+      isPathSegment,
+    );
+  }
+
   /**
    * Определяет, должен ли элемент отображаться «нормально» (true)
    * или «затемнённо» (false — серым).
@@ -428,9 +587,17 @@ export class SearchEngine {
       if (!(parent instanceof VMListItem)) return true;
 
       const firstSeg = segments[0];
+      const hasPathSyntax = this.endsWithDot || segments.length > 1;
+      const parentDirectProps = parent.children.filter(
+        (child): child is PropertyListItem => child instanceof PropertyListItem,
+      );
+      const firstSegmentIsExactProperty =
+        hasPathSyntax &&
+        parentDirectProps.some((prop) => prop.searchData.property === firstSeg);
       const vmMatchesByName =
-        parent.searchData.name.includes(firstSeg) ||
-        parent.searchData.id.includes(firstSeg);
+        !firstSegmentIsExactProperty &&
+        (parent.searchData.name.includes(firstSeg) ||
+          parent.searchData.id.includes(firstSeg));
 
       const propSegments = vmMatchesByName ? segments.slice(1) : segments;
 
@@ -441,7 +608,7 @@ export class SearchEngine {
       for (let i = 0; i < depthToCheck; i++) {
         const ancestor = ancestors[propLevel - 1 - i]; // предок на глубине i от VM
         const seg = propSegments[i];
-        if (seg && !ancestor.searchData.property.includes(seg)) {
+        if (!this.isPropertyFittedToSegment(ancestor, seg, true)) {
           // Предок не совпадает — весь дочерний узел в «несовпадающей ветке»
           return false;
         }
@@ -454,13 +621,35 @@ export class SearchEngine {
       }
 
       const seg = propSegments[propLevel];
-      return !seg || item.searchData.property.includes(seg);
+      const isPathSegment =
+        this.endsWithDot || propLevel < propSegments.length - 1;
+      return this.isPropertyFittedToSegment(item, seg, isPathSegment);
     }
 
     return true;
   }
 
+  /**
+   * Для path-сегмента exact-match важнее includes.
+   * Если среди соседей есть `product`, то `product.` должен подсветить только
+   * `product`, а не `serviceAndProductSearch`.
+   */
+  private isPropertyFittedToSegment(
+    item: PropertyListItem,
+    segment: string | undefined,
+    preferExact: boolean,
+  ): boolean {
+    if (!segment) return true;
+    if (!preferExact) return item.searchData.property.includes(segment);
+
+    return item.searchData.property === segment;
+  }
+
   resetSearch = () => {
+    if (this.scrollToSearchMatchTimeout) {
+      clearTimeout(this.scrollToSearchMatchTimeout);
+      this.scrollToSearchMatchTimeout = null;
+    }
     this.searchText = '';
     this.searchInputRef.current?.focus();
   };

@@ -2,17 +2,20 @@ import {
   type KeyboardHandlerAction,
   KeyboardHandler as KeyboardHandlerLib,
 } from 'mobx-swiss-knife';
+import { typeGuard } from 'yummies/type-guard';
 import type { ViewModelDevtools } from './view-model-devtools';
-import { typeGuard } from "yummies/type-guard";
 
 export class KeyboardHandler extends KeyboardHandlerLib<KeyboardHandlerAction> {
   constructor(devtools: ViewModelDevtools) {
     super({
       actions: [
         {
-          shortcuts: ['Ctrl+F12'],
+          shortcuts: ['Ctrl+F12', 'Meta+F12'],
           action: (e) => {
-            if (typeGuard.isElement(e.target) && e.target.dataset.ignoreGlobalKeys) {
+            if (
+              typeGuard.isElement(e.target) &&
+              e.target.dataset.ignoreGlobalKeys
+            ) {
               return;
             }
             if (devtools.isPopupOpened) {
@@ -25,7 +28,10 @@ export class KeyboardHandler extends KeyboardHandlerLib<KeyboardHandlerAction> {
         {
           shortcuts: ['Escape'],
           action: (e) => {
-            if (typeGuard.isElement(e.target) && e.target.dataset.ignoreGlobalKeys) {
+            if (
+              typeGuard.isElement(e.target) &&
+              e.target.dataset.ignoreGlobalKeys
+            ) {
               return;
             }
             devtools.hidePopup();
@@ -34,7 +40,10 @@ export class KeyboardHandler extends KeyboardHandlerLib<KeyboardHandlerAction> {
         {
           shortcuts: ['Ctrl+ArrowLeft'],
           action: (e) => {
-            if (typeGuard.isElement(e.target) && e.target.dataset.ignoreGlobalKeys) {
+            if (
+              typeGuard.isElement(e.target) &&
+              e.target.dataset.ignoreGlobalKeys
+            ) {
               return;
             }
             devtools.collapseAllVms();
@@ -43,7 +52,10 @@ export class KeyboardHandler extends KeyboardHandlerLib<KeyboardHandlerAction> {
         {
           shortcuts: ['Ctrl+ArrowRight'],
           action: (e) => {
-            if (typeGuard.isElement(e.target) && e.target.dataset.ignoreGlobalKeys) {
+            if (
+              typeGuard.isElement(e.target) &&
+              e.target.dataset.ignoreGlobalKeys
+            ) {
               return;
             }
             devtools.expandAllVMs();
@@ -52,7 +64,10 @@ export class KeyboardHandler extends KeyboardHandlerLib<KeyboardHandlerAction> {
         {
           shortcuts: ['Tab'],
           action: (e) => {
-            if (typeGuard.isElement(e.target) && e.target.dataset.ignoreGlobalKeys) {
+            if (
+              typeGuard.isElement(e.target) &&
+              e.target.dataset.ignoreGlobalKeys
+            ) {
               return;
             }
             if (devtools.searchEngine.searchInputRef.meta.focused) {
@@ -63,7 +78,10 @@ export class KeyboardHandler extends KeyboardHandlerLib<KeyboardHandlerAction> {
         {
           shortcuts: ['Ctrl+ArrowDown', 'PageDown'],
           action: (e) => {
-            if (typeGuard.isElement(e.target) && e.target.dataset.ignoreGlobalKeys) {
+            if (
+              typeGuard.isElement(e.target) &&
+              e.target.dataset.ignoreGlobalKeys
+            ) {
               return;
             }
             if (!devtools.scrollListRef.current) return;
@@ -81,7 +99,10 @@ export class KeyboardHandler extends KeyboardHandlerLib<KeyboardHandlerAction> {
         {
           shortcuts: ['Ctrl+ArrowUp', 'PageUp'],
           action: (e) => {
-            if (typeGuard.isElement(e.target) && e.target.dataset.ignoreGlobalKeys) {
+            if (
+              typeGuard.isElement(e.target) &&
+              e.target.dataset.ignoreGlobalKeys
+            ) {
               return;
             }
             if (!devtools.scrollListRef.current) return;

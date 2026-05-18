@@ -57,7 +57,11 @@
     border: 2px solid #00000057;
   }
 
-  > span {
+  &:not(.isConnected) {
+    filter: grayscale(1);
+  }
+
+  > .vmsCount {
     left: -4px;
     top: -4px;
     pointer-events: none;
@@ -72,8 +76,19 @@
     color: #2aff0a;
   }
 
-  &:not(.isConnected) {
-    filter: grayscale(1);
+  > .keyboardHint {
+    position: absolute;
+    bottom: -3px;
+    left: -2px;
+    z-index: 99999;
+    font-family: monospace;
+    font-weight: 700 !important;
+    font-size: 10px;
+    line-height: 10px;
+    background: #1b3b00bf;
+    color: #73ff00d4;
+    letter-spacing: -1px;
+    border-radius: 2px;
   }
 }
 

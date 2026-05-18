@@ -298,7 +298,7 @@
   padding-right: 6px;
 }
 
-.vmContentControlPanel:has(.vmContentInput input:focus) > .vmContentControlPanelActions {
+.vmContentControlPanel.searchIsActive > .vmContentControlPanelActions {
   margin-left: -106px;
 }
 

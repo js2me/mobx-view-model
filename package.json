@@ -46,21 +46,13 @@
     "@gravity-ui/icons": "^2.16.0",
     "mobx": "^6.15.0",
     "mobx-react-lite": "^4.1.1",
-    "mobx-swiss-knife": "^1.12.0",
-    "mobx-view-model": "^8.9.1",
-    "mobx-web-api": "^1.9.1",
+    "mobx-swiss-knife": "^1.15.0",
+    "mobx-view-model": "^10.2.0",
+    "mobx-web-api": "^1.13.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "simplebar": "^6.3.3",
-    "virtua": "^0.46.7",
+    "virtua": "^0.49.1",
     "yummies": "^6.5.0"
-  },
-  "peerDependencies": {
-    "mobx-view-model": "^8.8.1"
-  },
-  "peerDependenciesMeta": {
-    "mobx-view-model": {
-      "optional": true
-    }
   }
 }
