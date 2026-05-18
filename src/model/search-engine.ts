@@ -651,6 +651,10 @@ export class SearchEngine {
       this.scrollToSearchMatchTimeout = null;
     }
     this.searchText = '';
+    this.focusInput();
+  };
+
+  focusInput = () => {
     this.searchInputRef.current?.focus();
   };
 

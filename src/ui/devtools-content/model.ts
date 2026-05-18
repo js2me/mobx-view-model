@@ -78,6 +78,10 @@ export class DevtoolsContentVM extends ViewModelImpl<{
       );
 
       scrollElement.addEventListener('scroll', this.handleRefreshItems);
+
+      requestAnimationFrame(() => {
+        this.payload.devtools.searchEngine.focusInput();
+      });
     },
   });
 
