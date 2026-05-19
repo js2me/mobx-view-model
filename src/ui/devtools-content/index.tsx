@@ -110,7 +110,7 @@ export const VmDevtoolsContent = withViewModel(
                 <Xmark />
               </button>
             </div>
-              {devtools.searchEngine.isSearchInputFocused &&
+              {
                 devtools.searchEngine.suggestionItems.length > 0 && (
                 <div className={css.inputSuggestions} aria-hidden="true">
                   <span className={css.inputGhostTyped}>
@@ -119,13 +119,22 @@ export const VmDevtoolsContent = withViewModel(
                   <div className={css.inputSuggestionsList}>
                     {devtools.searchEngine.suggestionItems.map((suggestion, index) => (
                       <div
-                        key={suggestion.value}
+                        key={`${suggestion.vmName}/${suggestion.value}`}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          devtools.searchEngine.applySuggestion(suggestion);
+                        }}
                         className={cx(
                           css.inputSuggestionItem,
                           index === devtools.searchEngine.selectedSuggestionIndex && css.selected,
                         )}
                       >
-                        {suggestion.value}
+                        <span className={css.inputSuggestionOwner}>
+                          {suggestion.vmName}
+                        </span>
+                        <span className={css.inputSuggestionValue}>
+                          {suggestion.value}
+                        </span>
                       </div>
                     ))}
                   </div>

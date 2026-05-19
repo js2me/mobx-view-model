@@ -387,7 +387,7 @@
 
 .inputSuggestionsList {
   min-width: 120px;
-  max-width: 260px;
+  max-width: 320px;
   padding: 3px;
   border: 1px solid var(--vmd-control-border);
   border-radius: 5px;
@@ -398,12 +398,36 @@
 }
 
 .inputSuggestionItem {
+  display: flex;
+  align-items: baseline;
+  cursor: pointer;
+  gap: 6px;
   padding: 1px 2px;
   border-radius: 3px;
   color: var(--vmd-control-active-text-input-placeholder-color);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.inputSuggestionOwner {
+  flex: none;
+  max-width: 90px;
+  font-size: 10px;
+  line-height: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  background: var(--vmd-primary-bg);
+  color: #fff;
+  padding: 2px 2px;
+  direction: rtl;
+  border-radius: 3px;
+  opacity: 0.85;
+}
+
+.inputSuggestionValue {
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .inputSuggestionItem.selected {

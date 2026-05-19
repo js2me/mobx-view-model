@@ -31,6 +31,7 @@ interface SearchEngineConfig {
 export interface SearchSuggestion {
   value: string;
   suffix: string;
+  vmName: string;
 }
 
 export class SearchEngine {
@@ -82,28 +83,53 @@ export class SearchEngine {
     const rootItems = this.config.getRootItems();
     const pathSegments = this.endsWithDot ? segments : segments.slice(0, -1);
     const candidates = this.getCandidatePropsAtDepth(rootItems, pathSegments);
+    const suggestionsByVM = new Map<string, SearchSuggestion[]>();
     const seen = new Set<string>();
-    const result: SearchSuggestion[] = [];
 
     for (const prop of candidates) {
       const nameLower = prop.searchData.property;
       const nameOriginal = prop.property ?? '';
+      const vmName = this.getOwnerVMName(prop);
+      const uniqueKey = `${vmName}/${nameLower}`;
 
       if (
         nameLower.startsWith(completingSegment) &&
         nameLower.length > completingSegment.length
       ) {
-        if (seen.has(nameLower)) continue;
-        seen.add(nameLower);
-        result.push({
+        if (seen.has(uniqueKey)) continue;
+        seen.add(uniqueKey);
+
+        const suggestions = suggestionsByVM.get(vmName) ?? [];
+        suggestions.push({
           value: nameOriginal,
           suffix: nameOriginal.slice(completingSegment.length),
+          vmName,
         });
+        suggestionsByVM.set(vmName, suggestions);
+      }
+    }
+
+    const result: SearchSuggestion[] = [];
+    const groups = [...suggestionsByVM.values()];
+    let offset = 0;
+
+    while (result.length < 5) {
+      let hasSuggestion = false;
+
+      for (const group of groups) {
+        const suggestion = group[offset];
+        if (!suggestion) continue;
+
+        result.push(suggestion);
+        hasSuggestion = true;
 
         if (result.length >= 5) {
           return result;
         }
       }
+
+      if (!hasSuggestion) break;
+      offset++;
     }
 
     return result;
@@ -126,6 +152,13 @@ export class SearchEngine {
   get suggestionSuffix(): string {
     return this.selectedSuggestion?.suffix ?? '';
   }
+
+  applySuggestion = (suggestion: SearchSuggestion) => {
+    this.searchText += suggestion.suffix;
+    this.selectedSuggestionIndex = 0;
+    this.searchInputRef.current?.focus();
+    this.scheduleScrollToFirstSearchMatch();
+  };
 
   handleSearchInput = (e: ChangeEvent<HTMLInputElement>) => {
     this.searchText = e.target.value;
@@ -159,9 +192,7 @@ export class SearchEngine {
 
     if (e.key === 'Tab' && this.suggestionSuffix) {
       e.preventDefault();
-      this.searchText += this.suggestionSuffix;
-      this.selectedSuggestionIndex = 0;
-      this.scheduleScrollToFirstSearchMatch();
+      this.applySuggestion(this.selectedSuggestion!);
     }
   };
 
@@ -304,6 +335,24 @@ export class SearchEngine {
     segment: string,
   ): PropertyListItem[] {
     return props.filter((p) => p.searchData.property === segment);
+  }
+
+  private getOwnerVMName(item: PropertyListItem): string {
+    let parent: ListItem<any> = item.parentListItem;
+
+    while (parent instanceof PropertyListItem) {
+      parent = parent.parentListItem;
+    }
+
+    if (parent instanceof VMListItem) {
+      return parent.displayName;
+    }
+
+    if (parent instanceof ExtraListItem) {
+      return parent.displayName;
+    }
+
+    return '';
   }
 
   /**
@@ -729,6 +778,7 @@ export class SearchEngine {
       suggestionItems: computed.struct,
       selectedSuggestion: computed,
       suggestionSuffix: computed,
+      applySuggestion: action,
       handleSearchInput: action,
       handleSearchInputFocus: action,
       handleSearchInputBlur: action,

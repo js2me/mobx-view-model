@@ -18,7 +18,8 @@
     --vmd-control-blur: 2px;
     --vmd-bg-transparent: #1f1c2600;
     --vmd-content-bg: transparent;
-    --vmd-content-highlight-bg: #ffffff0a;
+    /* --vmd-content-highlight-bg: #ffffff0a; */
+    --vmd-content-highlight-bg: #ffffff1c;
     --vmd-scrollbar-track-size: 8px;
     --vmd-scrollbar-bg-base: #81818170;
     --vmd-scrollbar-bg-active: #818181;
