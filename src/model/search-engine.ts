@@ -196,26 +196,47 @@ export class SearchEngine {
     return this.selectedSuggestion?.suffix ?? '';
   }
 
-  applySuggestion = (suggestion: SearchSuggestion) => {
+  selectSuggestionAtIndex = (index: number) => {
+    if (index < 0 || index >= this.suggestionItems.length) return;
+
+    this.selectedSuggestionIndex = index;
+    this.isSuggestionsDismissed = false;
+  };
+
+  applySuggestion = (
+    suggestion: SearchSuggestion,
+    options?: { commitOwner?: boolean; dismissSuggestions?: boolean },
+  ) => {
     this.clearSearchDebounce();
     const hadPathSyntax = this.searchText.includes('.');
     const nextSearchText = this.searchText + suggestion.suffix;
     this.searchText = nextSearchText;
     this.searchTextToSearch = nextSearchText;
     this.selectedSuggestionIndex = 0;
-    this.isSuggestionsDismissed = false;
+    this.isSuggestionsDismissed = options?.dismissSuggestions ?? false;
 
-    if (!hadPathSyntax) {
+    const lockedSegment = hadPathSyntax
+      ? this.getFirstPathSegment(nextSearchText)
+      : undefined;
+
+    if (options?.commitOwner) {
+      this.commitSuggestionOwner(suggestion, lockedSegment);
+    } else if (!hadPathSyntax) {
       this.commitSuggestionOwner(suggestion);
     } else if (!this.selectedPathOwnerKey) {
-      this.commitSuggestionOwner(
-        suggestion,
-        this.getFirstPathSegment(nextSearchText),
-      );
+      this.commitSuggestionOwner(suggestion, lockedSegment);
     }
 
     this.searchInputRef.current?.focus();
     this.scheduleScrollToFirstSearchMatch();
+  };
+
+  applySuggestionFromClick = (
+    suggestion: SearchSuggestion,
+    index: number,
+  ) => {
+    this.selectSuggestionAtIndex(index);
+    this.applySuggestion(suggestion, { commitOwner: true });
   };
 
   handleSearchInput = (e: ChangeEvent<HTMLInputElement>) => {
@@ -264,9 +285,14 @@ export class SearchEngine {
       return;
     }
 
-    if (e.key === 'Tab' && this.selectedSuggestion) {
+    if (
+      (e.key === 'Tab' || e.key === 'Enter') &&
+      this.selectedSuggestion
+    ) {
       e.preventDefault();
-      this.applySuggestion(this.selectedSuggestion);
+      this.applySuggestion(this.selectedSuggestion, {
+        dismissSuggestions: e.key === 'Enter',
+      });
     }
   };
 
@@ -1067,7 +1093,9 @@ export class SearchEngine {
       suggestionItems: computed.struct,
       selectedSuggestion: computed,
       suggestionSuffix: computed,
+      selectSuggestionAtIndex: action,
       applySuggestion: action,
+      applySuggestionFromClick: action,
       handleSearchInput: action,
       handleSearchInputFocus: action,
       handleSearchInputBlur: action,

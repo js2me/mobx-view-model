@@ -118,10 +118,16 @@ export const VmDevtoolsContent = withViewModel(
                   <div className={css.inputSuggestionsList}>
                     {devtools.searchEngine.suggestionItems.map((suggestion, index) => (
                       <div
-                        key={`${suggestion.vmName}/${suggestion.value}`}
-                        onClick={(e) => {
+                        key={`${suggestion.ownerKey}/${suggestion.value}`}
+                        onMouseEnter={() => {
+                          devtools.searchEngine.selectSuggestionAtIndex(index);
+                        }}
+                        onMouseDown={(e) => {
                           e.preventDefault();
-                          devtools.searchEngine.applySuggestion(suggestion);
+                          devtools.searchEngine.applySuggestionFromClick(
+                            suggestion,
+                            index,
+                          );
                         }}
                         className={cx(
                           css.inputSuggestionItem,
