@@ -3,6 +3,7 @@ import {
   computed,
   makeObservable,
   observable,
+  runInAction,
 } from 'mobx';
 import type { ChangeEvent, FocusEvent, KeyboardEvent } from 'react';
 import type { AnyObject } from 'yummies/types';
@@ -38,18 +39,23 @@ export class SearchEngine {
   searchInputRef: FocusableRef<HTMLInputElement>;
 
   searchText = '';
+  searchTextToSearch = '';
   selectedSuggestionIndex = 0;
   isSearchInputFocused = false;
+  isSuggestionsDismissed = false;
 
   searchCacheKey = '';
   isSearching = false;
+  private searchTextToSearchTimeout: ReturnType<typeof setTimeout> | null =
+    null;
   private scrollToSearchMatchTimeout: ReturnType<typeof setTimeout> | null =
     null;
 
+  private static readonly searchDebounceMs = 150;
   private static readonly itemHeight = 22;
 
   get formattedSearchText(): string {
-    return this.searchText.toLowerCase().trim();
+    return this.searchTextToSearch.toLowerCase().trim();
   }
 
   /**
@@ -63,14 +69,31 @@ export class SearchEngine {
   }
 
   get endsWithDot(): boolean {
-    return this.searchText.trim().endsWith('.');
+    return this.searchTextToSearch.trim().endsWith('.');
+  }
+
+  get isNestedSearch(): boolean {
+    return this.endsWithDot || this.segments.length > 1;
   }
 
   get isActive(): boolean {
     return this.formattedSearchText.length > 0;
   }
 
+  get isSearchTextDebouncing(): boolean {
+    return this.searchText !== this.searchTextToSearch;
+  }
+
+  get shouldShowSuggestions(): boolean {
+    return (
+      this.isSearchInputFocused &&
+      !this.isSuggestionsDismissed &&
+      this.suggestionItems.length > 0
+    );
+  }
+
   get suggestionItems(): SearchSuggestion[] {
+    if (this.isSearchTextDebouncing) return [];
     if (!this.isActive) return [];
     const { segments } = this;
     if (segments.length === 0) return [];
@@ -94,7 +117,7 @@ export class SearchEngine {
 
       if (
         nameLower.startsWith(completingSegment) &&
-        nameLower.length > completingSegment.length
+        nameLower.length >= completingSegment.length
       ) {
         if (seen.has(uniqueKey)) continue;
         seen.add(uniqueKey);
@@ -113,7 +136,7 @@ export class SearchEngine {
     const groups = [...suggestionsByVM.values()];
     let offset = 0;
 
-    while (result.length < 5) {
+    while (result.length < 10) {
       let hasSuggestion = false;
 
       for (const group of groups) {
@@ -123,7 +146,7 @@ export class SearchEngine {
         result.push(suggestion);
         hasSuggestion = true;
 
-        if (result.length >= 5) {
+        if (result.length >= 10) {
           return result;
         }
       }
@@ -154,8 +177,12 @@ export class SearchEngine {
   }
 
   applySuggestion = (suggestion: SearchSuggestion) => {
-    this.searchText += suggestion.suffix;
+    this.clearSearchDebounce();
+    const nextSearchText = this.searchText + suggestion.suffix;
+    this.searchText = nextSearchText;
+    this.searchTextToSearch = nextSearchText;
     this.selectedSuggestionIndex = 0;
+    this.isSuggestionsDismissed = false;
     this.searchInputRef.current?.focus();
     this.scheduleScrollToFirstSearchMatch();
   };
@@ -163,11 +190,13 @@ export class SearchEngine {
   handleSearchInput = (e: ChangeEvent<HTMLInputElement>) => {
     this.searchText = e.target.value;
     this.selectedSuggestionIndex = 0;
-    this.scheduleScrollToFirstSearchMatch();
+    this.isSuggestionsDismissed = false;
+    this.scheduleSearchTextDebounce();
   };
 
   handleSearchInputFocus = (_e: FocusEvent<HTMLInputElement>) => {
     this.isSearchInputFocused = true;
+    this.isSuggestionsDismissed = false;
   };
 
   handleSearchInputBlur = (_e: FocusEvent<HTMLInputElement>) => {
@@ -175,6 +204,13 @@ export class SearchEngine {
   };
 
   handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      e.stopPropagation();
+      this.isSuggestionsDismissed = true;
+      return;
+    }
+
     if (e.key === 'ArrowDown' && this.suggestionItems.length > 0) {
       e.preventDefault();
       this.selectedSuggestionIndex =
@@ -195,6 +231,30 @@ export class SearchEngine {
       this.applySuggestion(this.selectedSuggestion!);
     }
   };
+
+  private clearSearchDebounce() {
+    if (this.searchTextToSearchTimeout) {
+      clearTimeout(this.searchTextToSearchTimeout);
+      this.searchTextToSearchTimeout = null;
+    }
+  }
+
+  private scheduleSearchTextDebounce() {
+    this.clearSearchDebounce();
+
+    if (!this.searchText.trim()) {
+      this.searchTextToSearch = '';
+      return;
+    }
+
+    this.searchTextToSearchTimeout = setTimeout(() => {
+      runInAction(() => {
+        this.searchTextToSearchTimeout = null;
+        this.searchTextToSearch = this.searchText;
+        this.scheduleScrollToFirstSearchMatch();
+      });
+    }, SearchEngine.searchDebounceMs);
+  }
 
   private scheduleScrollToFirstSearchMatch() {
     if (this.scrollToSearchMatchTimeout) {
@@ -751,12 +811,15 @@ export class SearchEngine {
   }
 
   resetSearch = () => {
+    this.clearSearchDebounce();
     if (this.scrollToSearchMatchTimeout) {
       clearTimeout(this.scrollToSearchMatchTimeout);
       this.scrollToSearchMatchTimeout = null;
     }
     this.searchText = '';
+    this.searchTextToSearch = '';
     this.selectedSuggestionIndex = 0;
+    this.isSuggestionsDismissed = false;
     this.focusInput();
   };
 
@@ -769,12 +832,17 @@ export class SearchEngine {
 
     makeObservable(this, {
       searchText: observable.ref,
+      searchTextToSearch: observable.ref,
       selectedSuggestionIndex: observable.ref,
       isSearchInputFocused: observable.ref,
+      isSuggestionsDismissed: observable.ref,
       formattedSearchText: computed,
       segments: computed.struct,
       endsWithDot: computed,
+      isNestedSearch: computed,
       isActive: computed,
+      isSearchTextDebouncing: computed,
+      shouldShowSuggestions: computed,
       suggestionItems: computed.struct,
       selectedSuggestion: computed,
       suggestionSuffix: computed,
