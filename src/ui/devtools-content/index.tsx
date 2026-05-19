@@ -108,6 +108,26 @@ export const VmDevtoolsContent = withViewModel(
                 <Xmark />
               </button>
             </div>
+              {devtools.searchEngine.suggestionItems.length > 0 && (
+                <div className={css.inputSuggestions} aria-hidden="true">
+                  <span className={css.inputGhostTyped}>
+                    {devtools.searchEngine.searchText}
+                  </span>
+                  <div className={css.inputSuggestionsList}>
+                    {devtools.searchEngine.suggestionItems.map((suggestion, index) => (
+                      <div
+                        key={suggestion.value}
+                        className={cx(
+                          css.inputSuggestionItem,
+                          index === devtools.searchEngine.selectedSuggestionIndex && css.selected,
+                        )}
+                      >
+                        {suggestion.value}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
           </div>
         </header>
         <div

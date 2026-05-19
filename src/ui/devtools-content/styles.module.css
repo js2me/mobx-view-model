@@ -374,6 +374,44 @@
   opacity: 0.7;
 }
 
+.inputSuggestions {
+  position: absolute;
+  left: 35px;
+  top: calc(100% + -10px);
+  display: flex;
+  align-items: flex-start;
+  font-size: 14px;
+  pointer-events: none;
+  white-space: pre;
+  z-index: 3;
+}
+
+.inputSuggestionsList {
+  min-width: 120px;
+  max-width: 260px;
+  padding: 3px;
+  border: 1px solid var(--vmd-control-border);
+  border-radius: 5px;
+  background: var(--vmd-control-bg);
+  box-shadow: 0 6px 18px #00000059;
+  overflow: hidden;
+  backdrop-filter: blur(8px);
+}
+
+.inputSuggestionItem {
+  padding: 1px 2px;
+  border-radius: 3px;
+  color: var(--vmd-control-active-text-input-placeholder-color);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.inputSuggestionItem.selected {
+  color: var(--vmd-control-active-text-input-color);
+  background: var(--vmd-content-highlight-bg);
+}
+
 /* Прозрачный фон когда ghost-text показан, чтобы подсказка была видна */
 .vmContentInput > input.inputWithSuggestion {
   background: transparent;
@@ -395,9 +433,6 @@
 
 .vmContentInput.filled > button {
   display: block;
-}
-
-.vmContentVirtualScroll {
 }
 
 .gradientBlur {

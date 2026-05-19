@@ -28,10 +28,16 @@ interface SearchEngineConfig {
   getPresentationMode: () => 'tree' | 'list';
 }
 
+export interface SearchSuggestion {
+  value: string;
+  suffix: string;
+}
+
 export class SearchEngine {
   searchInputRef: FocusableRef<HTMLInputElement>;
 
   searchText = '';
+  selectedSuggestionIndex = 0;
 
   searchCacheKey = '';
   isSearching = false;
@@ -62,24 +68,21 @@ export class SearchEngine {
     return this.formattedSearchText.length > 0;
   }
 
-  /**
-   * Суффикс первого найденного свойства, которое начинается с последнего сегмента.
-   * Отображается как серая подсказка в инпуте.
-   * Например: ввод "_pay" → suggestionSuffix = "load" (от "_payload")
-   */
-  get suggestionSuffix(): string {
-    if (!this.isActive) return '';
+  get suggestionItems(): SearchSuggestion[] {
+    if (!this.isActive) return [];
     const { segments } = this;
-    if (segments.length === 0) return '';
+    if (segments.length === 0) return [];
 
     const completingSegment = this.endsWithDot
       ? ''
       : segments[segments.length - 1];
-    if (!this.endsWithDot && !completingSegment) return '';
+    if (!this.endsWithDot && !completingSegment) return [];
 
     const rootItems = this.config.getRootItems();
     const pathSegments = this.endsWithDot ? segments : segments.slice(0, -1);
     const candidates = this.getCandidatePropsAtDepth(rootItems, pathSegments);
+    const seen = new Set<string>();
+    const result: SearchSuggestion[] = [];
 
     for (const prop of candidates) {
       const nameLower = prop.searchData.property;
@@ -89,22 +92,66 @@ export class SearchEngine {
         nameLower.startsWith(completingSegment) &&
         nameLower.length > completingSegment.length
       ) {
-        return nameOriginal.slice(completingSegment.length);
+        if (seen.has(nameLower)) continue;
+        seen.add(nameLower);
+        result.push({
+          value: nameOriginal,
+          suffix: nameOriginal.slice(completingSegment.length),
+        });
+
+        if (result.length >= 5) {
+          return result;
+        }
       }
     }
 
-    return '';
+    return result;
+  }
+
+  get selectedSuggestion(): SearchSuggestion | null {
+    if (this.suggestionItems.length === 0) return null;
+    const index = Math.min(
+      this.selectedSuggestionIndex,
+      this.suggestionItems.length - 1,
+    );
+    return this.suggestionItems[index] ?? null;
+  }
+
+  /**
+   * Суффикс выбранного свойства, которое начинается с последнего сегмента.
+   * Отображается как серая подсказка в инпуте.
+   * Например: ввод "_pay" → suggestionSuffix = "load" (от "_payload")
+   */
+  get suggestionSuffix(): string {
+    return this.selectedSuggestion?.suffix ?? '';
   }
 
   handleSearchInput = (e: ChangeEvent<HTMLInputElement>) => {
     this.searchText = e.target.value;
+    this.selectedSuggestionIndex = 0;
     this.scheduleScrollToFirstSearchMatch();
   };
 
   handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'ArrowDown' && this.suggestionItems.length > 0) {
+      e.preventDefault();
+      this.selectedSuggestionIndex =
+        (this.selectedSuggestionIndex + 1) % this.suggestionItems.length;
+      return;
+    }
+
+    if (e.key === 'ArrowUp' && this.suggestionItems.length > 0) {
+      e.preventDefault();
+      this.selectedSuggestionIndex =
+        (this.selectedSuggestionIndex - 1 + this.suggestionItems.length) %
+        this.suggestionItems.length;
+      return;
+    }
+
     if (e.key === 'Tab' && this.suggestionSuffix) {
       e.preventDefault();
       this.searchText += this.suggestionSuffix;
+      this.selectedSuggestionIndex = 0;
       this.scheduleScrollToFirstSearchMatch();
     }
   };
@@ -651,6 +698,7 @@ export class SearchEngine {
       this.scrollToSearchMatchTimeout = null;
     }
     this.searchText = '';
+    this.selectedSuggestionIndex = 0;
     this.focusInput();
   };
 
@@ -663,10 +711,13 @@ export class SearchEngine {
 
     makeObservable(this, {
       searchText: observable.ref,
+      selectedSuggestionIndex: observable.ref,
       formattedSearchText: computed,
       segments: computed.struct,
       endsWithDot: computed,
       isActive: computed,
+      suggestionItems: computed.struct,
+      selectedSuggestion: computed,
       suggestionSuffix: computed,
       handleSearchInput: action,
       handleKeyDown: action,
