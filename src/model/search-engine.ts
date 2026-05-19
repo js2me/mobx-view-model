@@ -323,29 +323,22 @@ export class SearchEngine {
     rootItems: ListItem<any>[],
     pathSegments: string[],
   ): PropertyListItem[] {
-    // Собираем ВСЕ VM рекурсивно (включая вложенные)
     const allVMs = this.collectAllVMs(rootItems);
+    const extras = rootItems.filter(
+      (item): item is ExtraListItem => item instanceof ExtraListItem,
+    );
 
     if (pathSegments.length === 0) {
-      // Нет навигации — прямые свойства ВСЕХ VM на любой глубине
-      const props: PropertyListItem[] = [];
-      for (const vm of allVMs) {
-        props.push(
-          ...vm.children.filter(
-            (c): c is PropertyListItem => c instanceof PropertyListItem,
-          ),
-        );
-      }
-      return props;
+      return [...allVMs, ...extras].flatMap((item) =>
+        this.getDirectPropertyChildren(item),
+      );
     }
 
     const firstSeg = pathSegments[0];
     const result: PropertyListItem[] = [];
 
     for (const vm of allVMs) {
-      const directProps = vm.children.filter(
-        (c): c is PropertyListItem => c instanceof PropertyListItem,
-      );
+      const directProps = this.getDirectPropertyChildren(vm);
       const firstSegmentIsExactProperty = directProps.some(
         (prop) => prop.searchData.property === firstSeg,
       );
@@ -355,34 +348,57 @@ export class SearchEngine {
           vm.searchData.id.includes(firstSeg));
 
       if (vmNameMatch) {
-        // VM совпал по имени — следующий уровень это прямые свойства VM
-        if (pathSegments.length === 1) {
-          result.push(...directProps);
-        } else {
-          result.push(
-            ...this.navigatePropertyPath(directProps, pathSegments.slice(1)),
-          );
-        }
+        result.push(...this.getOwnerMatchedPathCandidates(directProps, pathSegments));
       } else if (firstSegmentIsExactProperty) {
-        // Совпадение через свойство — заходим в совпадающие свойства
-        const matchingProps = this.getPathMatchingProps(directProps, firstSeg);
-
-        if (pathSegments.length === 1) {
-          // Нужны дети совпадающих свойств
-          for (const prop of matchingProps) {
-            result.push(...prop.children);
-          }
-        } else {
-          for (const prop of matchingProps) {
-            result.push(
-              ...this.navigatePropertyPath(prop.children, pathSegments.slice(1)),
-            );
-          }
-        }
+        result.push(...this.getPropertyPathCandidates(directProps, pathSegments));
       }
     }
 
+    for (const extra of extras) {
+      const directProps = this.getDirectPropertyChildren(extra);
+      const firstSegmentIsExactProperty = directProps.some(
+        (prop) => prop.searchData.property === firstSeg,
+      );
+
+      if (!firstSegmentIsExactProperty) continue;
+
+      result.push(...this.getPropertyPathCandidates(directProps, pathSegments));
+    }
+
     return result;
+  }
+
+  private getOwnerMatchedPathCandidates(
+    directProps: PropertyListItem[],
+    pathSegments: string[],
+  ): PropertyListItem[] {
+    if (pathSegments.length === 1) {
+      return directProps;
+    }
+
+    return this.navigatePropertyPath(directProps, pathSegments.slice(1));
+  }
+
+  private getPropertyPathCandidates(
+    directProps: PropertyListItem[],
+    pathSegments: string[],
+  ): PropertyListItem[] {
+    const [firstSeg, ...restSegments] = pathSegments;
+    const matchingProps = this.getPathMatchingProps(directProps, firstSeg);
+
+    if (restSegments.length === 0) {
+      return matchingProps.flatMap((prop) => prop.children);
+    }
+
+    return matchingProps.flatMap((prop) =>
+      this.navigatePropertyPath(prop.children, restSegments),
+    );
+  }
+
+  private getDirectPropertyChildren(item: ListItem<any>): PropertyListItem[] {
+    return item.children.filter(
+      (child): child is PropertyListItem => child instanceof PropertyListItem,
+    );
   }
 
   /**
@@ -495,9 +511,20 @@ export class SearchEngine {
       return this.getVMSearchItems(item);
     }
     if (item instanceof ExtraListItem) {
-      return item.isExpanded ? [item, ...item.children] : [item];
+      return this.getExtraSearchItems(item);
     }
     return [item];
+  }
+
+  private getExtraSearchItems(item: ExtraListItem): ListItem<any>[] {
+    const directProps = this.getDirectPropertyChildren(item);
+    const matchesByProperty = directProps.some((prop) =>
+      prop.searchData.property.includes(this.segments[0] ?? ''),
+    );
+
+    if (!matchesByProperty) return [];
+
+    return [item, ...this.getPropertySearchItems(directProps, this.segments)];
   }
 
   private getVMSearchItems(vmItem: VMListItem): ListItem<any>[] {
@@ -681,17 +708,18 @@ export class SearchEngine {
       parent = parent.parentListItem;
     }
 
-    if (!(parent instanceof VMListItem)) return false;
+    if (!(parent instanceof VMListItem) && !(parent instanceof ExtraListItem)) {
+      return false;
+    }
 
     const firstSeg = segments[0];
     const hasPathSyntax = this.endsWithDot || segments.length > 1;
-    const parentDirectProps = parent.children.filter(
-      (child): child is PropertyListItem => child instanceof PropertyListItem,
-    );
+    const parentDirectProps = this.getDirectPropertyChildren(parent);
     const firstSegmentIsExactProperty =
       hasPathSyntax &&
       parentDirectProps.some((prop) => prop.searchData.property === firstSeg);
     const vmMatchesByName =
+      parent instanceof VMListItem &&
       !firstSegmentIsExactProperty &&
       (parent.searchData.name.includes(firstSeg) ||
         parent.searchData.id.includes(firstSeg));
@@ -748,18 +776,18 @@ export class SearchEngine {
         parent = parent.parentListItem;
       }
 
-      // Предок не VMListItem (например, ExtraListItem) — не фильтруем
-      if (!(parent instanceof VMListItem)) return true;
+      if (!(parent instanceof VMListItem) && !(parent instanceof ExtraListItem)) {
+        return true;
+      }
 
       const firstSeg = segments[0];
       const hasPathSyntax = this.endsWithDot || segments.length > 1;
-      const parentDirectProps = parent.children.filter(
-        (child): child is PropertyListItem => child instanceof PropertyListItem,
-      );
+      const parentDirectProps = this.getDirectPropertyChildren(parent);
       const firstSegmentIsExactProperty =
         hasPathSyntax &&
         parentDirectProps.some((prop) => prop.searchData.property === firstSeg);
       const vmMatchesByName =
+        parent instanceof VMListItem &&
         !firstSegmentIsExactProperty &&
         (parent.searchData.name.includes(firstSeg) ||
           parent.searchData.id.includes(firstSeg));
