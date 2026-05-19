@@ -381,7 +381,6 @@
   display: flex;
   align-items: flex-start;
   font-size: 14px;
-  pointer-events: none;
   white-space: pre;
   z-index: 3;
 }

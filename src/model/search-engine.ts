@@ -4,7 +4,7 @@ import {
   makeObservable,
   observable,
 } from 'mobx';
-import type { ChangeEvent, KeyboardEvent } from 'react';
+import type { ChangeEvent, FocusEvent, KeyboardEvent } from 'react';
 import type { AnyObject } from 'yummies/types';
 import { ExtraListItem } from './list-item/extra-list-item';
 import type { ListItem } from './list-item/list-item';
@@ -38,6 +38,7 @@ export class SearchEngine {
 
   searchText = '';
   selectedSuggestionIndex = 0;
+  isSearchInputFocused = false;
 
   searchCacheKey = '';
   isSearching = false;
@@ -130,6 +131,14 @@ export class SearchEngine {
     this.searchText = e.target.value;
     this.selectedSuggestionIndex = 0;
     this.scheduleScrollToFirstSearchMatch();
+  };
+
+  handleSearchInputFocus = (_e: FocusEvent<HTMLInputElement>) => {
+    this.isSearchInputFocused = true;
+  };
+
+  handleSearchInputBlur = (_e: FocusEvent<HTMLInputElement>) => {
+    this.isSearchInputFocused = false;
   };
 
   handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
@@ -712,6 +721,7 @@ export class SearchEngine {
     makeObservable(this, {
       searchText: observable.ref,
       selectedSuggestionIndex: observable.ref,
+      isSearchInputFocused: observable.ref,
       formattedSearchText: computed,
       segments: computed.struct,
       endsWithDot: computed,
@@ -720,6 +730,8 @@ export class SearchEngine {
       selectedSuggestion: computed,
       suggestionSuffix: computed,
       handleSearchInput: action,
+      handleSearchInputFocus: action,
+      handleSearchInputBlur: action,
       handleKeyDown: action,
       resetSearch: action,
     });

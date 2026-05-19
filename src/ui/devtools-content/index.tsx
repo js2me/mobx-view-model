@@ -101,6 +101,8 @@ export const VmDevtoolsContent = withViewModel(
                 value={devtools.searchEngine.searchText}
                 onChange={devtools.searchEngine.handleSearchInput}
                 onKeyDown={devtools.searchEngine.handleKeyDown}
+                onFocus={devtools.searchEngine.handleSearchInputFocus}
+                onBlur={devtools.searchEngine.handleSearchInputBlur}
                 placeholder={devtools.searchEngine.suggestionSuffix ? '' : 'search by property path or ViewModel name'}
                 className={devtools.searchEngine.suggestionSuffix ? css.inputWithSuggestion : undefined}
               />
@@ -108,7 +110,8 @@ export const VmDevtoolsContent = withViewModel(
                 <Xmark />
               </button>
             </div>
-              {devtools.searchEngine.suggestionItems.length > 0 && (
+              {devtools.searchEngine.isSearchInputFocused &&
+                devtools.searchEngine.suggestionItems.length > 0 && (
                 <div className={css.inputSuggestions} aria-hidden="true">
                   <span className={css.inputGhostTyped}>
                     {devtools.searchEngine.searchText}
