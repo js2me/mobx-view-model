@@ -93,8 +93,6 @@ export class SearchEngine {
   }
 
   get shouldShowSuggestions(): boolean {
-return true;
-
     return (
       this.isSearchInputFocused &&
       !this.isSuggestionsDismissed &&
