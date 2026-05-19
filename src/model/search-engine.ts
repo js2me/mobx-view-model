@@ -33,6 +33,7 @@ export interface SearchSuggestion {
   value: string;
   suffix: string;
   vmName: string;
+  ownerKey: string;
 }
 
 export class SearchEngine {
@@ -43,6 +44,8 @@ export class SearchEngine {
   selectedSuggestionIndex = 0;
   isSearchInputFocused = false;
   isSuggestionsDismissed = false;
+  selectedPathOwnerKey: string | null = null;
+  selectedPathSegment: string | null = null;
 
   searchCacheKey = '';
   isSearching = false;
@@ -93,18 +96,33 @@ export class SearchEngine {
   }
 
   get suggestionItems(): SearchSuggestion[] {
-    if (this.isSearchTextDebouncing) return [];
-    if (!this.isActive) return [];
-    const { segments } = this;
+    if (this.isSearchTextDebouncing && !this.searchText.includes('.')) return [];
+    return this.buildSuggestionItemsForText(this.getActiveSearchText());
+  }
+
+  private getActiveSearchText(): string {
+    // После точки сразу используем актуальный текст, иначе debounce ломает path и owner-lock.
+    if (this.searchText.includes('.')) {
+      return this.searchText;
+    }
+
+    return this.searchTextToSearch;
+  }
+
+  private buildSuggestionItemsForText(text: string): SearchSuggestion[] {
+    const formatted = text.toLowerCase().trim();
+    if (!formatted) return [];
+
+    const all = formatted.split('.');
+    const segments = all[all.length - 1] === '' ? all.slice(0, -1) : all;
     if (segments.length === 0) return [];
 
-    const completingSegment = this.endsWithDot
-      ? ''
-      : segments[segments.length - 1];
-    if (!this.endsWithDot && !completingSegment) return [];
+    const endsWithDot = text.trim().endsWith('.');
+    const completingSegment = endsWithDot ? '' : segments[segments.length - 1];
+    if (!endsWithDot && !completingSegment) return [];
 
     const rootItems = this.config.getRootItems();
-    const pathSegments = this.endsWithDot ? segments : segments.slice(0, -1);
+    const pathSegments = endsWithDot ? segments : segments.slice(0, -1);
     const candidates = this.getCandidatePropsAtDepth(rootItems, pathSegments);
     const suggestionsByVM = new Map<string, SearchSuggestion[]>();
     const seen = new Set<string>();
@@ -113,7 +131,8 @@ export class SearchEngine {
       const nameLower = prop.searchData.property;
       const nameOriginal = prop.property ?? '';
       const vmName = this.getOwnerVMName(prop);
-      const uniqueKey = `${vmName}/${nameLower}`;
+      const ownerKey = this.getOwnerKey(prop);
+      const uniqueKey = `${ownerKey}/${nameLower}`;
 
       if (
         nameLower.startsWith(completingSegment) &&
@@ -127,6 +146,7 @@ export class SearchEngine {
           value: nameOriginal,
           suffix: nameOriginal.slice(completingSegment.length),
           vmName,
+          ownerKey,
         });
         suggestionsByVM.set(vmName, suggestions);
       }
@@ -178,19 +198,37 @@ export class SearchEngine {
 
   applySuggestion = (suggestion: SearchSuggestion) => {
     this.clearSearchDebounce();
+    const hadPathSyntax = this.searchText.includes('.');
     const nextSearchText = this.searchText + suggestion.suffix;
     this.searchText = nextSearchText;
     this.searchTextToSearch = nextSearchText;
     this.selectedSuggestionIndex = 0;
     this.isSuggestionsDismissed = false;
+
+    if (!hadPathSyntax) {
+      this.commitSuggestionOwner(suggestion);
+    } else if (!this.selectedPathOwnerKey) {
+      this.commitSuggestionOwner(
+        suggestion,
+        this.getFirstPathSegment(nextSearchText),
+      );
+    }
+
     this.searchInputRef.current?.focus();
     this.scheduleScrollToFirstSearchMatch();
   };
 
   handleSearchInput = (e: ChangeEvent<HTMLInputElement>) => {
+    const previousSearchText = this.searchText;
+    const previousSelectedSuggestion = this.selectedSuggestion;
     this.searchText = e.target.value;
-    this.selectedSuggestionIndex = 0;
     this.isSuggestionsDismissed = false;
+    this.handlePathOwnerSelectionFromInput(
+      previousSearchText,
+      this.searchText,
+      previousSelectedSuggestion,
+    );
+    this.selectedSuggestionIndex = 0;
     this.scheduleSearchTextDebounce();
   };
 
@@ -226,11 +264,107 @@ export class SearchEngine {
       return;
     }
 
-    if (e.key === 'Tab' && this.suggestionSuffix) {
+    if (e.key === 'Tab' && this.selectedSuggestion) {
       e.preventDefault();
-      this.applySuggestion(this.selectedSuggestion!);
+      this.applySuggestion(this.selectedSuggestion);
     }
   };
+
+  private commitSuggestionOwner(
+    suggestion: SearchSuggestion,
+    lockedSegment?: string,
+  ) {
+    this.selectedPathOwnerKey = suggestion.ownerKey;
+    this.selectedPathSegment =
+      lockedSegment ?? suggestion.value.toLowerCase().trim();
+  }
+
+  private handlePathOwnerSelectionFromInput(
+    previousSearchText: string,
+    nextSearchText: string,
+    previousSelectedSuggestion: SearchSuggestion | null,
+  ) {
+    const addedDot =
+      nextSearchText.endsWith('.') && nextSearchText === `${previousSearchText}.`;
+    const enteredPathSyntax =
+      nextSearchText.includes('.') && !previousSearchText.includes('.');
+
+    if (addedDot || enteredPathSyntax) {
+      const pathSegment = this.getFirstPathSegment(
+        addedDot ? previousSearchText : nextSearchText,
+      );
+
+      if (
+        this.selectedPathOwnerKey &&
+        this.selectedPathSegment === pathSegment
+      ) {
+        this.searchTextToSearch = nextSearchText;
+        this.clearSearchDebounce();
+        return;
+      }
+
+      const suggestion =
+        addedDot &&
+        previousSelectedSuggestion &&
+        previousSelectedSuggestion.value.toLowerCase() === pathSegment
+          ? previousSelectedSuggestion
+          : this.resolvePathOwnerSuggestion(
+              pathSegment,
+              this.selectedSuggestionIndex,
+            );
+
+      if (suggestion) {
+        this.commitSuggestionOwner(suggestion, pathSegment);
+      }
+
+      // Path-навигация должна работать сразу, без ожидания debounce.
+      this.searchTextToSearch = nextSearchText;
+      this.clearSearchDebounce();
+      return;
+    }
+
+    const firstSegment = nextSearchText.toLowerCase().trim().split('.')[0] ?? '';
+    if (
+      !nextSearchText.includes('.') ||
+      !firstSegment ||
+      firstSegment !== this.selectedPathSegment
+    ) {
+      this.selectedPathOwnerKey = null;
+      this.selectedPathSegment = null;
+    }
+  }
+
+  /**
+   * При вводе точки debounce ещё не применил searchTextToSearch,
+   * поэтому owner берём из подсказок предыдущего сегмента.
+   * Если пользователь явно не выбирал — берём exact-match `service`, иначе первый в списке.
+   */
+  private getFirstPathSegment(text: string): string {
+    return text.toLowerCase().trim().split('.')[0] ?? '';
+  }
+
+  private resolvePathOwnerSuggestion(
+    pathSegment: string,
+    selectedIndex: number,
+  ): SearchSuggestion | null {
+    if (!pathSegment) return null;
+
+    const items = this.buildSuggestionItemsForText(pathSegment);
+    if (items.length === 0) return null;
+
+    const exactMatches = items.filter(
+      (item) => item.value.toLowerCase() === pathSegment,
+    );
+
+    if (exactMatches.length > 0) {
+      return (
+        exactMatches[Math.min(selectedIndex, exactMatches.length - 1)] ??
+        exactMatches[0]
+      );
+    }
+
+    return items[Math.min(selectedIndex, items.length - 1)] ?? items[0];
+  }
 
   private clearSearchDebounce() {
     if (this.searchTextToSearchTimeout) {
@@ -338,6 +472,8 @@ export class SearchEngine {
     const result: PropertyListItem[] = [];
 
     for (const vm of allVMs) {
+      if (!this.isOwnerAllowedForFirstPathSegment(vm, firstSeg)) continue;
+
       const directProps = this.getDirectPropertyChildren(vm);
       const firstSegmentIsExactProperty = directProps.some(
         (prop) => prop.searchData.property === firstSeg,
@@ -355,6 +491,8 @@ export class SearchEngine {
     }
 
     for (const extra of extras) {
+      if (!this.isOwnerAllowedForFirstPathSegment(extra, firstSeg)) continue;
+
       const directProps = this.getDirectPropertyChildren(extra);
       const firstSegmentIsExactProperty = directProps.some(
         (prop) => prop.searchData.property === firstSeg,
@@ -401,6 +539,24 @@ export class SearchEngine {
     );
   }
 
+  private isOwnerAllowedForFirstPathSegment(
+    owner: ListItem<any>,
+    firstSegment: string,
+  ): boolean {
+    if (!this.selectedPathOwnerKey || this.selectedPathSegment !== firstSegment) {
+      return true;
+    }
+
+    return owner.key === this.selectedPathOwnerKey;
+  }
+
+  private isPathOwnerLockedToAnotherOwner(
+    owner: ListItem<any>,
+    firstSegment: string,
+  ): boolean {
+    return !this.isOwnerAllowedForFirstPathSegment(owner, firstSegment);
+  }
+
   /**
    * Уже введённый path-сегмент должен совпадать строго:
    * `product.` заходит только в `product`, а не в `productAsyncTasks`
@@ -429,6 +585,16 @@ export class SearchEngine {
     }
 
     return '';
+  }
+
+  private getOwnerKey(item: PropertyListItem): string {
+    let parent: ListItem<any> = item.parentListItem;
+
+    while (parent instanceof PropertyListItem) {
+      parent = parent.parentListItem;
+    }
+
+    return parent.key;
   }
 
   /**
@@ -517,6 +683,10 @@ export class SearchEngine {
   }
 
   private getExtraSearchItems(item: ExtraListItem): ListItem<any>[] {
+    if (this.isPathOwnerLockedToAnotherOwner(item, this.segments[0] ?? '')) {
+      return [];
+    }
+
     const directProps = this.getDirectPropertyChildren(item);
     const matchesByProperty = directProps.some((prop) =>
       prop.searchData.property.includes(this.segments[0] ?? ''),
@@ -529,6 +699,16 @@ export class SearchEngine {
 
   private getVMSearchItems(vmItem: VMListItem): ListItem<any>[] {
     const result: ListItem<any>[] = [];
+    const firstSeg = this.segments[0] ?? '';
+
+    if (this.isPathOwnerLockedToAnotherOwner(vmItem, firstSeg)) {
+      for (const child of vmItem.children) {
+        if (child instanceof VMListItem) {
+          result.push(...this.getVMSearchItems(child));
+        }
+      }
+      return result;
+    }
 
     if (!this.vmMatchesSearch(vmItem)) {
       for (const child of vmItem.children) {
@@ -542,7 +722,6 @@ export class SearchEngine {
     result.push(vmItem);
 
     const { segments } = this;
-    const firstSeg = segments[0] ?? '';
     const directProps = vmItem.children.filter(
       (c): c is PropertyListItem => c instanceof PropertyListItem,
     );
@@ -631,6 +810,10 @@ export class SearchEngine {
 
     const firstSegment = segments[0];
 
+    if (this.isPathOwnerLockedToAnotherOwner(item, firstSegment)) {
+      return false;
+    }
+
     // Совпадение по имени класса или id
     if (
       item.searchData.name.includes(firstSegment) ||
@@ -678,6 +861,8 @@ export class SearchEngine {
     if (segments.length === 0) return false;
 
     const firstSeg = segments[0];
+    if (this.isPathOwnerLockedToAnotherOwner(item, firstSeg)) return false;
+
     const hasPathSyntax = this.endsWithDot || segments.length > 1;
     const firstSegmentIsExactProperty =
       hasPathSyntax &&
@@ -713,6 +898,8 @@ export class SearchEngine {
     }
 
     const firstSeg = segments[0];
+    if (this.isPathOwnerLockedToAnotherOwner(parent, firstSeg)) return false;
+
     const hasPathSyntax = this.endsWithDot || segments.length > 1;
     const parentDirectProps = this.getDirectPropertyChildren(parent);
     const firstSegmentIsExactProperty =
@@ -781,6 +968,8 @@ export class SearchEngine {
       }
 
       const firstSeg = segments[0];
+      if (this.isPathOwnerLockedToAnotherOwner(parent, firstSeg)) return false;
+
       const hasPathSyntax = this.endsWithDot || segments.length > 1;
       const parentDirectProps = this.getDirectPropertyChildren(parent);
       const firstSegmentIsExactProperty =
@@ -848,6 +1037,8 @@ export class SearchEngine {
     this.searchTextToSearch = '';
     this.selectedSuggestionIndex = 0;
     this.isSuggestionsDismissed = false;
+    this.selectedPathOwnerKey = null;
+    this.selectedPathSegment = null;
     this.focusInput();
   };
 
@@ -864,6 +1055,8 @@ export class SearchEngine {
       selectedSuggestionIndex: observable.ref,
       isSearchInputFocused: observable.ref,
       isSuggestionsDismissed: observable.ref,
+      selectedPathOwnerKey: observable.ref,
+      selectedPathSegment: observable.ref,
       formattedSearchText: computed,
       segments: computed.struct,
       endsWithDot: computed,
