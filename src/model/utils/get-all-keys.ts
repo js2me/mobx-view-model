@@ -55,5 +55,7 @@ export function getAllKeys(instance: any): string[] {
 
     currentPrototype = nextPrototype;
   }
-  return Array.from(keysSet);
+  // Spread instead of Array.from: some sites (e.g. MooTools) patch Array.from so
+  // Array.from(set) returns [set] instead of set values.
+  return [...keysSet];
 }

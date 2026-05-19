@@ -9,7 +9,7 @@ export const Notifications = withViewModel(NotificationsVM, ({ model }) => {
   }
   return (
     <div className={css.notifications}>
-      {Array.from(model.items.values()).map((item) => (
+      {[...model.items.values()].map((item) => (
         <div className={css.notification} key={item.id}>
           {item.title}
         </div>

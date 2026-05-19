@@ -5,8 +5,7 @@ import css from './styles.module.css';
 
 export const FunctionPropertyContent = observer(
   ({ item }: PropertyListItemRenderProps) => {
-    const argLabels = Array.from(
-      { length: item.data.length },
+    const argLabels = [...Array(item.data.length)].map(
       (_, i) => `arg${i + 1}`,
     );
 
