@@ -423,6 +423,10 @@
   direction: rtl;
   border-radius: 3px;
   opacity: 0.85;
+
+  &.extras {
+    background: var(--vmd-secondary-bg);
+  }
 }
 
 .inputSuggestionValue {

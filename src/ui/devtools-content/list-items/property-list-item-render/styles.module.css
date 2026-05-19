@@ -41,6 +41,10 @@
   --value-color: rgb(190 113 195);
 }
 
+.property.inaccessible {
+  --value-color: var(--vmd-property-meta-color);
+}
+
 .property.primitive.boolean,
 .property.primitive.number,
 .property.primitive.object,

@@ -33,6 +33,14 @@ const ignoredPrototypes = new Set([
 ]);
 
 export function getAllKeys(instance: any): string[] {
+  try {
+    return collectKeys(instance);
+  } catch {
+    return [];
+  }
+}
+
+function collectKeys(instance: any): string[] {
   const keysSet = new Set<string>(Object.keys(instance));
   let currentPrototype = Object.getPrototypeOf(instance);
 
@@ -41,13 +49,23 @@ export function getAllKeys(instance: any): string[] {
       break;
     }
 
-    const descriptors = Object.getOwnPropertyDescriptors(currentPrototype);
-    for (const key in descriptors) {
-      if (!ignoredKeys.has(key)) {
-        keysSet.add(key);
+    try {
+      const descriptors = Object.getOwnPropertyDescriptors(currentPrototype);
+      for (const key in descriptors) {
+        if (!ignoredKeys.has(key)) {
+          keysSet.add(key);
+        }
       }
+    } catch {
+      break;
     }
-    const nextPrototype = Object.getPrototypeOf(currentPrototype);
+
+    let nextPrototype: object | null;
+    try {
+      nextPrototype = Object.getPrototypeOf(currentPrototype);
+    } catch {
+      break;
+    }
 
     if (ignoredPrototypes.has(nextPrototype)) {
       break;
@@ -59,3 +77,4 @@ export function getAllKeys(instance: any): string[] {
   // Array.from(set) returns [set] instead of set values.
   return [...keysSet];
 }
+

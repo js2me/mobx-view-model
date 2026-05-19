@@ -29,11 +29,16 @@ interface SearchEngineConfig {
   getPresentationMode: () => 'tree' | 'list';
 }
 
+export interface OwnerInfo {
+  type: 'vm' | 'extras' | 'unknown';
+  name: string;
+  key: string;
+}
+
 export interface SearchSuggestion {
   value: string;
   suffix: string;
-  vmName: string;
-  ownerKey: string;
+  owner: OwnerInfo;
 }
 
 export class SearchEngine {
@@ -88,6 +93,8 @@ export class SearchEngine {
   }
 
   get shouldShowSuggestions(): boolean {
+return true;
+
     return (
       this.isSearchInputFocused &&
       !this.isSuggestionsDismissed &&
@@ -96,7 +103,8 @@ export class SearchEngine {
   }
 
   get suggestionItems(): SearchSuggestion[] {
-    if (this.isSearchTextDebouncing && !this.searchText.includes('.')) return [];
+    if (this.isSearchTextDebouncing && !this.searchText.includes('.'))
+      return [];
     return this.buildSuggestionItemsForText(this.getActiveSearchText());
   }
 
@@ -130,9 +138,8 @@ export class SearchEngine {
     for (const prop of candidates) {
       const nameLower = prop.searchData.property;
       const nameOriginal = prop.property ?? '';
-      const vmName = this.getOwnerVMName(prop);
-      const ownerKey = this.getOwnerKey(prop);
-      const uniqueKey = `${ownerKey}/${nameLower}`;
+      const owner = this.getOwnerInfo(prop);
+      const uniqueKey = `${owner.key}/${nameLower}`;
 
       if (
         nameLower.startsWith(completingSegment) &&
@@ -141,14 +148,13 @@ export class SearchEngine {
         if (seen.has(uniqueKey)) continue;
         seen.add(uniqueKey);
 
-        const suggestions = suggestionsByVM.get(vmName) ?? [];
+        const suggestions = suggestionsByVM.get(owner.name) ?? [];
         suggestions.push({
           value: nameOriginal,
           suffix: nameOriginal.slice(completingSegment.length),
-          vmName,
-          ownerKey,
+          owner,
         });
-        suggestionsByVM.set(vmName, suggestions);
+        suggestionsByVM.set(owner.name, suggestions);
       }
     }
 
@@ -231,10 +237,7 @@ export class SearchEngine {
     this.scheduleScrollToFirstSearchMatch();
   };
 
-  applySuggestionFromClick = (
-    suggestion: SearchSuggestion,
-    index: number,
-  ) => {
+  applySuggestionFromClick = (suggestion: SearchSuggestion, index: number) => {
     this.selectSuggestionAtIndex(index);
     this.applySuggestion(suggestion, { commitOwner: true });
   };
@@ -285,10 +288,7 @@ export class SearchEngine {
       return;
     }
 
-    if (
-      (e.key === 'Tab' || e.key === 'Enter') &&
-      this.selectedSuggestion
-    ) {
+    if ((e.key === 'Tab' || e.key === 'Enter') && this.selectedSuggestion) {
       e.preventDefault();
       this.applySuggestion(this.selectedSuggestion, {
         dismissSuggestions: e.key === 'Enter',
@@ -300,7 +300,7 @@ export class SearchEngine {
     suggestion: SearchSuggestion,
     lockedSegment?: string,
   ) {
-    this.selectedPathOwnerKey = suggestion.ownerKey;
+    this.selectedPathOwnerKey = suggestion.owner.key;
     this.selectedPathSegment =
       lockedSegment ?? suggestion.value.toLowerCase().trim();
   }
@@ -311,7 +311,8 @@ export class SearchEngine {
     previousSelectedSuggestion: SearchSuggestion | null,
   ) {
     const addedDot =
-      nextSearchText.endsWith('.') && nextSearchText === `${previousSearchText}.`;
+      nextSearchText.endsWith('.') &&
+      nextSearchText === `${previousSearchText}.`;
     const enteredPathSyntax =
       nextSearchText.includes('.') && !previousSearchText.includes('.');
 
@@ -349,7 +350,8 @@ export class SearchEngine {
       return;
     }
 
-    const firstSegment = nextSearchText.toLowerCase().trim().split('.')[0] ?? '';
+    const firstSegment =
+      nextSearchText.toLowerCase().trim().split('.')[0] ?? '';
     if (
       !nextSearchText.includes('.') ||
       !firstSegment ||
@@ -431,7 +433,9 @@ export class SearchEngine {
     if (!this.isActive) return;
 
     const listItems = this.getListItems(this.config.getRootItems());
-    const index = listItems.findIndex((item) => this.isSearchTargetMatched(item));
+    const index = listItems.findIndex((item) =>
+      this.isSearchTargetMatched(item),
+    );
 
     if (index < 0) return;
 
@@ -510,9 +514,13 @@ export class SearchEngine {
           vm.searchData.id.includes(firstSeg));
 
       if (vmNameMatch) {
-        result.push(...this.getOwnerMatchedPathCandidates(directProps, pathSegments));
+        result.push(
+          ...this.getOwnerMatchedPathCandidates(directProps, pathSegments),
+        );
       } else if (firstSegmentIsExactProperty) {
-        result.push(...this.getPropertyPathCandidates(directProps, pathSegments));
+        result.push(
+          ...this.getPropertyPathCandidates(directProps, pathSegments),
+        );
       }
     }
 
@@ -569,7 +577,10 @@ export class SearchEngine {
     owner: ListItem<any>,
     firstSegment: string,
   ): boolean {
-    if (!this.selectedPathOwnerKey || this.selectedPathSegment !== firstSegment) {
+    if (
+      !this.selectedPathOwnerKey ||
+      this.selectedPathSegment !== firstSegment
+    ) {
       return true;
     }
 
@@ -595,7 +606,7 @@ export class SearchEngine {
     return props.filter((p) => p.searchData.property === segment);
   }
 
-  private getOwnerVMName(item: PropertyListItem): string {
+  private getOwnerInfo(item: PropertyListItem): OwnerInfo {
     let parent: ListItem<any> = item.parentListItem;
 
     while (parent instanceof PropertyListItem) {
@@ -603,24 +614,14 @@ export class SearchEngine {
     }
 
     if (parent instanceof VMListItem) {
-      return parent.displayName;
+      return { name: parent.displayName, type: 'vm', key: parent.key };
     }
 
     if (parent instanceof ExtraListItem) {
-      return parent.displayName;
+      return { name: parent.displayName, type: 'extras', key: parent.key };
     }
 
-    return '';
-  }
-
-  private getOwnerKey(item: PropertyListItem): string {
-    let parent: ListItem<any> = item.parentListItem;
-
-    while (parent instanceof PropertyListItem) {
-      parent = parent.parentListItem;
-    }
-
-    return parent.key;
+    return { name: '', type: 'unknown', key: '-unknown' };
   }
 
   /**
@@ -953,7 +954,8 @@ export class SearchEngine {
 
     if (propLevel !== targetLevel) return false;
 
-    const isPathSegment = this.endsWithDot || propLevel < propSegments.length - 1;
+    const isPathSegment =
+      this.endsWithDot || propLevel < propSegments.length - 1;
     return this.isPropertyFittedToSegment(
       item,
       propSegments[targetLevel],
@@ -989,7 +991,10 @@ export class SearchEngine {
         parent = parent.parentListItem;
       }
 
-      if (!(parent instanceof VMListItem) && !(parent instanceof ExtraListItem)) {
+      if (
+        !(parent instanceof VMListItem) &&
+        !(parent instanceof ExtraListItem)
+      ) {
         return true;
       }
 

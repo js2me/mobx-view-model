@@ -44,9 +44,11 @@ export const VmDevtoolsContent = withViewModel(
             </span>
             {headerContent}
           </div>
-          <div className={cx(css.vmContentControlPanel, {
-            [css.searchIsActive]: devtools.searchEngine.isActive,
-          })}>
+          <div
+            className={cx(css.vmContentControlPanel, {
+              [css.searchIsActive]: devtools.searchEngine.isActive,
+            })}
+          >
             <div className={css.vmContentControlPanelActions}>
               <IconToggleButton
                 onUpdate={devtools.handleChangePresentationMode}
@@ -82,7 +84,10 @@ export const VmDevtoolsContent = withViewModel(
               />
             </div>
             <div
-              className={cx(css.vmContentInput, devtools.searchEngine.isActive && css.filled)}
+              className={cx(
+                css.vmContentInput,
+                devtools.searchEngine.isActive && css.filled,
+              )}
             >
               <Magnifier />
               {devtools.searchEngine.suggestionSuffix && (
@@ -103,22 +108,31 @@ export const VmDevtoolsContent = withViewModel(
                 onKeyDown={devtools.searchEngine.handleKeyDown}
                 onFocus={devtools.searchEngine.handleSearchInputFocus}
                 onBlur={devtools.searchEngine.handleSearchInputBlur}
-                placeholder={devtools.searchEngine.suggestionSuffix ? '' : 'search by property path or ViewModel name'}
-                className={devtools.searchEngine.suggestionSuffix ? css.inputWithSuggestion : undefined}
+                placeholder={
+                  devtools.searchEngine.suggestionSuffix
+                    ? ''
+                    : 'search by property path or ViewModel name'
+                }
+                className={
+                  devtools.searchEngine.suggestionSuffix
+                    ? css.inputWithSuggestion
+                    : undefined
+                }
               />
               <button onClick={devtools.searchEngine.resetSearch}>
                 <Xmark />
               </button>
             </div>
-              {devtools.searchEngine.shouldShowSuggestions && (
-                <div className={css.inputSuggestions} aria-hidden="true">
-                  <span className={css.inputGhostTyped}>
-                    {devtools.searchEngine.searchText}
-                  </span>
-                  <div className={css.inputSuggestionsList}>
-                    {devtools.searchEngine.suggestionItems.map((suggestion, index) => (
+            {devtools.searchEngine.shouldShowSuggestions && (
+              <div className={css.inputSuggestions} aria-hidden="true">
+                <span className={css.inputGhostTyped}>
+                  {devtools.searchEngine.searchText}
+                </span>
+                <div className={css.inputSuggestionsList}>
+                  {devtools.searchEngine.suggestionItems.map(
+                    (suggestion, index) => (
                       <div
-                        key={`${suggestion.ownerKey}/${suggestion.value}`}
+                        key={`${suggestion.owner.key}/${suggestion.value}`}
                         onMouseEnter={() => {
                           devtools.searchEngine.selectSuggestionAtIndex(index);
                         }}
@@ -131,31 +145,34 @@ export const VmDevtoolsContent = withViewModel(
                         }}
                         className={cx(
                           css.inputSuggestionItem,
-                          index === devtools.searchEngine.selectedSuggestionIndex && css.selected,
+                          index ===
+                            devtools.searchEngine.selectedSuggestionIndex &&
+                            css.selected,
                         )}
                       >
                         {!devtools.searchEngine.isNestedSearch && (
-                          <span className={css.inputSuggestionOwner}>
-                            {suggestion.vmName}
+                          <span
+                            className={`${css.inputSuggestionOwner} ${css[suggestion.owner.type]}`}
+                          >
+                            {suggestion.owner.name}
                           </span>
                         )}
                         <span className={css.inputSuggestionValue}>
                           {suggestion.value}
                         </span>
                       </div>
-                    ))}
-                  </div>
+                    ),
+                  )}
                 </div>
-              )}
+              </div>
+            )}
           </div>
         </header>
         <div
           className={css.vmContentVirtualScroll}
           style={{ height: model.virtualHeight }} // 10_0000
         >
-          <div
-            className={css.vmContentVirtualizedContent}
-          >
+          <div className={css.vmContentVirtualizedContent}>
             {model.itemNodes}
           </div>
         </div>

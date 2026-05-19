@@ -4,8 +4,9 @@ import css from './styles.module.css';
 
 export const InstancePropertyContent = observer(
   ({ item }: PropertyListItemRenderProps) => {
-    const Constructor = item.data.constructor as Function;
-    const className = Constructor.name;
+    const valueLabel = item.isInaccessibleDisplay
+      ? item.inaccessibleDisplayLabel
+      : item.instanceClassName;
 
     return (
       <>
@@ -15,8 +16,8 @@ export const InstancePropertyContent = observer(
             :&nbsp;
           </>
         )}
-        <span className={css.propertyValue}>{`${className}`}</span>
-        {item.isExpanded && <>&nbsp;{`{`}</>}
+        <span className={css.propertyValue}>{valueLabel}</span>
+        {item.isExpanded && !item.isInaccessibleDisplay && <>&nbsp;{`{`}</>}
       </>
     );
   },

@@ -46,6 +46,7 @@ export const PropertyListItemRender = observer(
     return (
       <div
         className={cx(css.property, css[item.type], css[item.dataType], {
+          [css.inaccessible]: item.isInaccessibleDisplay,
           [css.null]: item.data === null,
           [css.expandable]: item.isExpandable,
           [css.expanded]: item.isExpanded,

@@ -12,7 +12,11 @@ export const PrimitivePropertyContent = observer(
             :&nbsp;
           </>
         )}
-        <span className={css.propertyValue}>{item.stringifiedData}</span>
+        <span className={css.propertyValue}>
+          {item.isInaccessibleDisplay
+            ? item.inaccessibleDisplayLabel
+            : item.stringifiedData}
+        </span>
       </>
     );
   },
