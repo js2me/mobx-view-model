@@ -1,6 +1,6 @@
 {
   "name": "mobx-view-model-devtools",
-  "version": "0.0.42",
+  "version": "0.0.43",
   "description": "",
   "scripts": {
     "build:watch": "nodemon --watch src --delay 600ms --ext ts,tsx,css --exec \"pnpm build\"",
