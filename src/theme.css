@@ -29,6 +29,7 @@
   --vmd-property-value-primitive: rgb(89 153 205);
   --vmd-property-value-nullish: #499098;
   --vmd-property-value-string: #af7249;
+  --vmd-property-bg-content-color: var(--vmd-base-color);
 }
 
 [data-vmd-theme='light'] {
@@ -36,7 +37,7 @@
   --vmd-bg: #f4f4f8f0;
   --vmd-overlay-bg: #e8e8f0e6;
   --vmd-base-color: #2a2a2a;
-  --vmd-control-active-bg: #0000001a;
+  --vmd-control-active-bg: #0000001c;
   --vmd-control-active-color: #181818;
   --vmd-control-active-text-input-color: var(--vmd-base-color);
   --vmd-control-active-text-input-placeholder-color: #888;
@@ -61,4 +62,5 @@
   --vmd-property-value-primitive: rgb(21 101 168);
   --vmd-property-value-nullish: #0a7a73;
   --vmd-property-value-string: #a04d12;
+  --vmd-property-bg-content-color: #e3e3e3;
 }
