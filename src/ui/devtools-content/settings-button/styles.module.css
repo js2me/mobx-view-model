@@ -1,0 +1,55 @@
+.settingsWrap {
+  position: relative;
+  display: inline-flex;
+}
+
+.settingsButton {
+  position: relative;
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--vmd-control-inactive-color);
+  border-radius: 4px;
+  cursor: pointer;
+  opacity: 0.7;
+  transition:
+    color 150ms ease,
+    opacity 150ms ease;
+}
+
+.settingsButton:hover {
+  color: var(--vmd-base-color);
+  opacity: 1;
+}
+
+.settingsButton > svg {
+  width: 14px;
+  height: 14px;
+}
+
+.settingsBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 4;
+}
+
+.settingsPopup {
+  position: absolute;
+  z-index: 6;
+  top: calc(100% + 4px);
+  left: 0;
+  min-width: 160px;
+  min-height: 80px;
+  padding: 8px;
+  border: 1px solid var(--vmd-control-border);
+  border-radius: 6px;
+  background: var(--vmd-bg);
+  box-shadow: 0 6px 18px #00000059;
+  backdrop-filter: blur(8px);
+}

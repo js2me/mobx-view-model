@@ -13,6 +13,7 @@ import { cx } from 'yummies/css';
 import { IconToggleButton } from '../shared/icon-toggle-button';
 import { DevtoolsContentVM } from './model';
 import { Notifications } from './notifications';
+import { SettingsButton } from './settings-button';
 import css from './styles.module.css';
 
 export const VmDevtoolsContent = withViewModel(
@@ -41,6 +42,7 @@ export const VmDevtoolsContent = withViewModel(
             <img className={css.vmContentHeaderLogo} src={devtools.logoUrl} />
             <span className={css.vmContentHeaderTitleText}>
               mobx-view-model devtools
+              <SettingsButton />
             </span>
             {headerContent}
           </div>
