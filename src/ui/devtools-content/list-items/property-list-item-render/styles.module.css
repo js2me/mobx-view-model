@@ -38,7 +38,7 @@
 }
 
 .property.instance {
-  --value-color: rgb(190 113 195);
+  --value-color: var(--vmd-property-value-instance);
 }
 
 .property.inaccessible {
@@ -50,22 +50,23 @@
 .property.primitive.object,
 .property.primitive.bigint,
 .property.primitive.symbol {
-  --value-color: rgb(89, 153, 205);
+  --value-color: var(--vmd-property-value-primitive);
 }
 
 .property.primitive.undefined {
-  --value-color: #499098;
+  --value-color: var(--vmd-property-value-nullish);
 }
+
 .property.primitive.null {
-  --value-color: #499098;
+  --value-color: var(--vmd-property-value-nullish);
 }
 
 .primitive.string {
-  --value-color: #af7249;
+  --value-color: var(--vmd-property-value-string);
 }
 
 .propertyName {
-  color: rgb(204, 204, 204);
+  color: var(--vmd-base-color);
 }
 
 .propertyMeta {

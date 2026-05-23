@@ -3,6 +3,7 @@
 .root {
   display: contents;
   box-sizing: border-box;
+  color: var(--vmd-base-color);
 }
 
 .root * {
@@ -20,6 +21,13 @@
   padding-block: 0;
   padding-inline: 0;
   color: var(--vmd-base-color);
+}
+
+.root code {
+  background: var(--vmd-code-bg);
+  letter-spacing: 0.1px;
+  padding: 0 1px;
+  border-radius: 1px;
 }
 
 .hierarchyButton {

@@ -42,7 +42,7 @@ export const VmDevtoolsContent = withViewModel(
             <img className={css.vmContentHeaderLogo} src={devtools.logoUrl} />
             <span className={css.vmContentHeaderTitleText}>
               mobx-view-model devtools
-              <SettingsButton />
+              <SettingsButton devtools={devtools} />
             </span>
             {headerContent}
           </div>

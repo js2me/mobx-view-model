@@ -2,6 +2,7 @@ import { computed, makeObservable, untracked } from 'mobx';
 import type { ViewModelParams } from 'mobx-view-model';
 import type { AnyVM } from '../types';
 import { getAllKeys } from '../utils/get-all-keys';
+import { getViewModelBaseKeys } from '../utils/get-view-model-base-keys';
 import type { ViewModelDevtools } from '../view-model-devtools';
 import { ListItem, type ListItemOperation } from './list-item';
 import { PropertyListItem } from './property-list-item';
@@ -22,6 +23,11 @@ export class VMListItem extends ListItem<AnyVM> {
     this.dataWatchAtom.reportObserved();
 
     let keys = getAllKeys(this.data);
+
+    if (this.devtools.hideViewModelBaseMembers) {
+      const baseKeys = getViewModelBaseKeys();
+      keys = keys.filter((key) => !baseKeys.has(key));
+    }
 
     if (this.devtools.sortPropertiesBy !== 'none') {
       keys = keys.sort((a, b) => {

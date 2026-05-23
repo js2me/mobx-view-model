@@ -44,12 +44,35 @@
   z-index: 6;
   top: calc(100% + 4px);
   left: 0;
-  min-width: 160px;
-  min-height: 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 200px;
   padding: 8px;
   border: 1px solid var(--vmd-control-border);
   border-radius: 6px;
   background: var(--vmd-bg);
   box-shadow: 0 6px 18px #00000059;
   backdrop-filter: blur(8px);
+}
+
+.settingRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.settingCheckbox {
+  width: 14px;
+  height: 14px;
+  margin: 0;
+  accent-color: var(--vmd-primary-color);
+  cursor: pointer;
+}
+
+.settingLabel {
+  font-size: 13px;
+  color: var(--vmd-base-color);
+  white-space: nowrap;
 }

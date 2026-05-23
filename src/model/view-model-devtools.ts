@@ -4,8 +4,18 @@ import {
   makeObservable,
   type ObservableSet,
   observable,
+  reaction,
 } from 'mobx';
 import { Storage } from 'mobx-swiss-knife';
+import { colorScheme } from 'mobx-web-api';
+import {
+  type DevtoolsTheme,
+  devtoolsHideViewModelBaseKey,
+  devtoolsThemeKey,
+  type ResolvedDevtoolsTheme,
+} from './devtools-settings-storage';
+
+export type { DevtoolsTheme, ResolvedDevtoolsTheme };
 import type {
   AnyViewModel,
   ViewModelParams,
@@ -168,6 +178,43 @@ export class ViewModelDevtools {
     this.sortPropertiesBy = sortBy as any;
   };
 
+  get theme(): DevtoolsTheme {
+    return devtoolsThemeKey.value;
+  }
+
+  get hideViewModelBaseMembers(): boolean {
+    return devtoolsHideViewModelBaseKey.value;
+  }
+
+  handleThemeChange = (theme: string) => {
+    devtoolsThemeKey.value =
+      theme === 'light' || theme === 'dark' ? theme : 'auto';
+    this.applyThemeToContainer();
+  };
+
+  handleHideViewModelBaseMembersChange = (hide: boolean) => {
+    devtoolsHideViewModelBaseKey.value = hide;
+  };
+
+  get resolvedTheme(): ResolvedDevtoolsTheme {
+    if (this.theme === 'light') {
+      return 'light';
+    }
+
+    if (this.theme === 'dark') {
+      return 'dark';
+    }
+
+    return colorScheme.isLight ? 'light' : 'dark';
+  }
+
+  private applyThemeToContainer() {
+    const container = document.getElementById(this.containerId);
+    if (container) {
+      container.dataset.vmdTheme = this.resolvedTheme;
+    }
+  }
+
   expandAllVMs() {
     // this.expandedVmsMap.replace(
     //   this.vmsData.flatten.map((it) => [it.key, true] as const),
@@ -201,6 +248,18 @@ export class ViewModelDevtools {
     this.storage.syncProperty(this, 'sortPropertiesBy');
     this.storage.syncProperty(this, 'presentationMode');
     this.storage.syncProperty(this, 'position');
+    this.applyThemeToContainer();
+
+    reaction(() => devtoolsThemeKey.value, () => this.applyThemeToContainer());
+
+    reaction(
+      () => colorScheme.scheme,
+      () => {
+        if (this.theme === 'auto') {
+          this.applyThemeToContainer();
+        }
+      },
+    );
   }
 
   private isInitialized = false;
@@ -214,6 +273,7 @@ export class ViewModelDevtools {
       container = document.createElement('div');
       container.className = css.root;
       container.id = this.containerId;
+      container.dataset.vmdTheme = this.resolvedTheme;
 
       if (document.body) {
         document.body.appendChild(container);
@@ -272,6 +332,8 @@ export class ViewModelDevtools {
       projectVmStore: observable.ref,
       presentationMode: observable.ref,
       sortPropertiesBy: observable.ref,
+      theme: computed,
+      hideViewModelBaseMembers: computed,
       extras: observable.ref,
       setStore: action.bound,
       setExtras: action.bound,
@@ -279,10 +341,13 @@ export class ViewModelDevtools {
       hidePopup: action.bound,
       handleChangePresentationMode: action.bound,
       handleSortPropertiesChange: action.bound,
+      handleThemeChange: action.bound,
+      handleHideViewModelBaseMembersChange: action.bound,
       handleExpandVmPropertyClick: action.bound,
       expandAllVMs: action.bound,
       collapseAllVms: action.bound,
       isActive: computed,
+      resolvedTheme: computed,
       listItems: computed.struct,
       rootVmListItems: computed.struct,
       extraListItems: computed.struct,
