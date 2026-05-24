@@ -10,18 +10,7 @@ import type { ChangeEventHandler } from 'react';
 import type { Maybe } from 'yummies/types';
 import { getAllKeys } from '../utils/get-all-keys';
 import {
-  INACCESSIBLE_DISPLAY_LABEL,
-  isInaccessible,
-  isRestrictedObject,
-  safeConstructorName,
-  safeGet,
-  safeHasOwn,
-  safeIsFunction,
-  safeIsObjectLike,
-  safeObjectKeys,
-  safeObjectTag,
-  safeString,
-  safeTypeof,
+  INACCESSIBLE,
 } from '../utils/safe-access';
 import type { ViewModelDevtools } from '../view-model-devtools';
 import { ListItem, type ListItemOperation } from './list-item';
@@ -41,13 +30,18 @@ export class PropertyListItem extends ListItem<any> {
     return this.devtools.searchEngine.isPropertyItemExpandable(this);
   }
 
-  get data() {
+  get data(): any {
     this.dataWatchAtom.reportObserved();
+
     if (!this.property) {
       return undefined;
     }
 
-    return safeGet(this.parent.data, this.property);
+    try {
+      return Reflect.get(this.parent.data, this.property);
+    } catch {
+      return INACCESSIBLE;
+    }
   }
 
   get descriptor() {
@@ -63,29 +57,44 @@ export class PropertyListItem extends ListItem<any> {
   }
 
   get dataType() {
-    return safeTypeof(this.data);
+    if (this.isInaccessible) {
+      return 'object';
+    }
+    return typeof this.data;
   }
 
   get stringifiedDataType() {
-    return safeObjectTag(this.data);
+    if (this.isInaccessible) {
+      return '[object Inaccessible]'
+    }
+    return Object.prototype.toString.call(this.data);
   }
 
-  get instanceClassName() {
-    return safeConstructorName(this.data);
+  get instanceClassName(): string {
+    if (this.isInaccessible) {
+      return '<Inaccessible>';
+    }
+
+    if (this.data && this.data.constructor?.name) {
+      return this.data.constructor.name;
+    }
+
+    const match = /^\[object (.+)\]$/.exec(this.stringifiedDataType);
+    if (match?.[1] && match[1] !== 'Object') {
+      return match[1];
+    }
+
+    return 'Object';
   }
 
   get isInaccessibleDisplay() {
-    return isRestrictedObject(this.data);
-  }
-
-  get inaccessibleDisplayLabel() {
-    return INACCESSIBLE_DISPLAY_LABEL;
+    return super.isInaccessible;
   }
 
   get type() {
     const data = this.data;
 
-    if (isRestrictedObject(data)) {
+    if (this.isInaccessible) {
       return 'primitive';
     }
 
@@ -93,26 +102,16 @@ export class PropertyListItem extends ListItem<any> {
       return 'array';
     }
 
-    if (safeIsFunction(data)) {
+    if (this.dataType === 'function') {
       return 'function';
     }
 
-    if (safeIsObjectLike(data)) {
-      const className = safeConstructorName(data);
-      if (className && className !== 'Object') {
+    if (this.data && this.dataType === 'object') {
+      if (this.instanceClassName !== 'Object') {
         return 'instance';
       }
 
       return 'object';
-    }
-
-    if (
-      this.stringifiedDataType.startsWith('[object ') &&
-      data !== null &&
-      safeTypeof(data) === 'object' &&
-      safeHasOwn(data, 'constructor')
-    ) {
-      return 'instance';
     }
 
     return 'primitive';
@@ -122,7 +121,7 @@ export class PropertyListItem extends ListItem<any> {
     let listItems: PropertyListItem[] = [];
 
     if (this.type === 'array') {
-      listItems = safeObjectKeys(this.data).map((property, order) =>
+      listItems = Object.keys(this.data).map((property, order) =>
         PropertyListItem.create(
           this.devtools,
           property,
@@ -142,7 +141,7 @@ export class PropertyListItem extends ListItem<any> {
         ),
       );
     } else if (this.type === 'function') {
-      listItems = safeObjectKeys(this.data).map((property, order) => {
+      listItems = Object.keys(this.data).map((property, order) => {
         return PropertyListItem.create(
           this.devtools,
           property,
@@ -269,8 +268,8 @@ export class PropertyListItem extends ListItem<any> {
   }
 
   get stringifiedData() {
-    if (isInaccessible(this.data)) {
-      return INACCESSIBLE_DISPLAY_LABEL;
+    if (this.isInaccessible) {
+      return '';
     }
 
     switch (this.type) {
@@ -290,10 +289,10 @@ export class PropertyListItem extends ListItem<any> {
           case 'symbol':
             return `Symbol(${Symbol.keyFor(this.data as symbol) || ''})`;
           case 'string':
-            return `"${safeString(this.data)}"`;
+            return `"${String(this.data)}"`;
         }
 
-        return safeString(this.data);
+        return String(this.data);
       }
     }
   }

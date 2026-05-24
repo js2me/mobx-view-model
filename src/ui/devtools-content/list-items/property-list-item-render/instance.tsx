@@ -1,11 +1,12 @@
 import { observer } from 'mobx-react-lite';
 import type { PropertyListItemRenderProps } from '.';
 import css from './styles.module.css';
+import { INACCESSIBLE_DISPLAY_LABEL } from '@/model/utils/safe-access';
 
 export const InstancePropertyContent = observer(
   ({ item }: PropertyListItemRenderProps) => {
     const valueLabel = item.isInaccessibleDisplay
-      ? item.inaccessibleDisplayLabel
+      ? INACCESSIBLE_DISPLAY_LABEL
       : item.instanceClassName;
 
     return (

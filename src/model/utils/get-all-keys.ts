@@ -67,6 +67,7 @@ function collectKeys(instance: any): string[] {
       break;
     }
 
+    // @ts-ignore
     if (ignoredPrototypes.has(nextPrototype)) {
       break;
     }

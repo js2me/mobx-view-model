@@ -45,9 +45,9 @@ const createBundle = async ({
       buildEnvs: JSON.stringify(buildEnvs),
     },
     build: {
-      cssMinify: true,
+      cssMinify:mode === 'development' ? false : true,
       cssCodeSplit: false,
-      minify: 'terser',
+      minify: mode === 'development' ? false : 'terser',
       emptyOutDir,
       lib: {
         entry: {

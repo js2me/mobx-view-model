@@ -1,12 +1,11 @@
 import { observer } from 'mobx-react-lite';
 import { skipEvent } from 'yummies/html';
-import { safeFunctionLength } from '@/model/utils/safe-access';
 import type { PropertyListItemRenderProps } from '.';
 import css from './styles.module.css';
 
 export const FunctionPropertyContent = observer(
   ({ item }: PropertyListItemRenderProps) => {
-    const argLabels = [...Array(safeFunctionLength(item.data))].map(
+    const argLabels = item.isInaccessible ? [] : [...Array(item.data.length)].map(
       (_, i) => `arg${i + 1}`,
     );
 

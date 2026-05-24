@@ -1,6 +1,7 @@
 import { observer } from 'mobx-react-lite';
 import type { PropertyListItemRenderProps } from '.';
 import css from './styles.module.css';
+import { INACCESSIBLE_DISPLAY_LABEL } from '@/model/utils/safe-access';
 
 export const PrimitivePropertyContent = observer(
   ({ item }: PropertyListItemRenderProps) => {
@@ -14,7 +15,7 @@ export const PrimitivePropertyContent = observer(
         )}
         <span className={css.propertyValue}>
           {item.isInaccessibleDisplay
-            ? item.inaccessibleDisplayLabel
+            ? INACCESSIBLE_DISPLAY_LABEL
             : item.stringifiedData}
         </span>
       </>

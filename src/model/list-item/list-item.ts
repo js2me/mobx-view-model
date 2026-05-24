@@ -3,6 +3,7 @@ import { action, computed, createAtom, makeObservable } from 'mobx';
 import type { ComponentType } from 'react';
 import type { AnyObject } from 'yummies/types';
 import type { ViewModelDevtools } from '../view-model-devtools';
+import { isInaccessible } from '../utils/safe-access';
 
 export type ListItemViewProps<T extends ListItem<any>> = { item: T };
 
@@ -117,6 +118,10 @@ export abstract class ListItem<T> {
     return String(this.data);
   }
 
+  get isInaccessible() {
+    return isInaccessible(this.data);
+  }
+
   get operations(): ListItemOperation<T>[] {
     return [
       {
@@ -169,6 +174,7 @@ export abstract class ListItem<T> {
     computed(this, 'totalChildCount');
     computed(this, 'depthLine');
     computed(this, 'depth');
+    computed(this, 'isInaccessible');
     computed(this, 'stringifiedData');
     computed.struct(this, 'operations');
     computed.struct(this, 'children');
