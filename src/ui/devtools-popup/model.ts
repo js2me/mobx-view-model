@@ -34,8 +34,11 @@ export class VmDevtoolsPopupVM extends ViewModelImpl<{}, DevtoolsClientVM> {
           const isDragOnContentHeader = path.some(
             (it) => (it as HTMLElement).dataset?.contentHeader,
           );
+          const isNoDragTarget = path.some(
+            (it) => (it as HTMLElement).dataset?.noDrag,
+          );
 
-          if (!isDragOnContentHeader) {
+          if (!isDragOnContentHeader || isNoDragTarget) {
             return;
           }
 
