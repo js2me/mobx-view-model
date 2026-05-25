@@ -9,6 +9,15 @@ import type { DevtoolsClientVM } from '../devtools-client/model';
 import { VmDevtoolsPopupVM } from '../devtools-popup/model';
 import css from './styles.module.css';
 
+type EdgeAnchors = {
+  left: boolean;
+  right: boolean;
+  top: boolean;
+  bottom: boolean;
+};
+
+const EDGE_MARGIN = 12;
+
 export class VmDevtoolsButtonVM extends ViewModelBase<{}, DevtoolsClientVM> {
   devtools = this.parentViewModel.devtools;
 
@@ -31,12 +40,25 @@ export class VmDevtoolsButtonVM extends ViewModelBase<{}, DevtoolsClientVM> {
         startY: 0,
       };
 
+      const applyPosition = (x: number, y: number) => {
+        node.style.left = `${x}px`;
+        node.style.top = `${y}px`;
+        node.style.bottom = 'auto';
+        node.style.right = 'auto';
+      };
+
       const savedLeft = this.storage.get({ key: 'left', fallback: '' });
       const savedTop = this.storage.get({ key: 'top', fallback: '' });
 
       const { x, y } = this.fixPosition(savedLeft, savedTop);
-      node.style.left = `${x}px`;
-      node.style.top = `${y}px`;
+      applyPosition(x, y);
+      this.rect = node.getBoundingClientRect();
+      this.saveAnchors(
+        this.detectAnchors(x, y, {
+          width: window.innerWidth,
+          height: window.innerHeight,
+        }),
+      );
 
       node.addEventListener(
         'mousedown',
@@ -63,8 +85,7 @@ export class VmDevtoolsButtonVM extends ViewModelBase<{}, DevtoolsClientVM> {
           e.clientY + dragState.offsetY,
         );
 
-        node.style.left = `${x}px`;
-        node.style.top = `${y}px`;
+        applyPosition(x, y);
         VmDevtoolsPopupVM.lastX = null;
 
         if (x !== dragState.startX || y !== dragState.startY) {
@@ -78,6 +99,17 @@ export class VmDevtoolsButtonVM extends ViewModelBase<{}, DevtoolsClientVM> {
 
         this.storage.set({ key: 'left', value: node.style.left });
         this.storage.set({ key: 'top', value: node.style.top });
+        this.rect = node.getBoundingClientRect();
+        this.saveAnchors(
+          this.detectAnchors(
+            +node.style.left.replace('px', '') || 0,
+            +node.style.top.replace('px', '') || 0,
+            {
+              width: window.innerWidth,
+              height: window.innerHeight,
+            },
+          ),
+        );
         if (this.position !== this.devtools.position) {
           runInAction(() => {
             this.devtools.position = this.position;
@@ -106,6 +138,47 @@ export class VmDevtoolsButtonVM extends ViewModelBase<{}, DevtoolsClientVM> {
         signal: this.unmountSignal,
       });
       window.addEventListener('blur', handleStopDragging, {
+        signal: this.unmountSignal,
+      });
+
+      let prevViewport = {
+        width: window.innerWidth,
+        height: window.innerHeight,
+      };
+
+      const handleResize = () => {
+        node.classList.add(css.dragging);
+
+        const rect = node.getBoundingClientRect();
+        this.rect = rect;
+
+        const anchors = this.loadAnchors({
+          x: rect.left,
+          y: rect.top,
+          viewport: prevViewport,
+        });
+
+        const { x, y } = this.fixPositionOnResize(rect.left, rect.top, anchors);
+
+        prevViewport = {
+          width: window.innerWidth,
+          height: window.innerHeight,
+        };
+
+        applyPosition(x, y);
+        node.classList.remove(css.dragging);
+
+        this.storage.set({ key: 'left', value: node.style.left });
+        this.storage.set({ key: 'top', value: node.style.top });
+
+        if (this.position !== this.devtools.position) {
+          runInAction(() => {
+            this.devtools.position = this.position;
+          });
+        }
+      };
+
+      window.addEventListener('resize', handleResize, {
         signal: this.unmountSignal,
       });
     },
@@ -158,14 +231,79 @@ export class VmDevtoolsButtonVM extends ViewModelBase<{}, DevtoolsClientVM> {
     rawX: Maybe<number | string>,
     rawY: Maybe<number | string>,
   ) {
-    const minX = 12;
-    const minY = 12;
-    const maxX = window.innerWidth - this.size.width - 12;
-    const maxY = window.innerHeight - this.size.height - 12;
+    const maxX = window.innerWidth - this.size.width - EDGE_MARGIN;
+    const maxY = window.innerHeight - this.size.height - EDGE_MARGIN;
 
     const x = typeof rawX === 'string' ? +rawX.replace('px', '') : rawX;
     const y = typeof rawY === 'string' ? +rawY.replace('px', '') : rawY;
 
-    return { x: clamp(x || 0, minX, maxX), y: clamp(y || 0, minY, maxY) };
+    return {
+      x: clamp(x || 0, EDGE_MARGIN, maxX),
+      y: clamp(y || 0, EDGE_MARGIN, maxY),
+    };
+  }
+
+  private detectAnchors(
+    x: number,
+    y: number,
+    viewport: { width: number; height: number },
+  ): EdgeAnchors {
+    const { width, height } = this.size;
+    const maxX = viewport.width - width - EDGE_MARGIN;
+    const maxY = viewport.height - height - EDGE_MARGIN;
+
+    return {
+      left: x <= EDGE_MARGIN + 1,
+      right: x >= maxX - 1,
+      top: y <= EDGE_MARGIN + 1,
+      bottom: y >= maxY - 1,
+    };
+  }
+
+  private saveAnchors(anchors: EdgeAnchors) {
+    this.storage.set({ key: 'anchors', value: JSON.stringify(anchors) });
+  }
+
+  private loadAnchors(fallback?: {
+    x: number;
+    y: number;
+    viewport: { width: number; height: number };
+  }): EdgeAnchors {
+    const raw = this.storage.get({ key: 'anchors', fallback: '' });
+
+    if (raw) {
+      return JSON.parse(raw) as EdgeAnchors;
+    }
+
+    if (fallback) {
+      const anchors = this.detectAnchors(
+        fallback.x,
+        fallback.y,
+        fallback.viewport,
+      );
+      this.saveAnchors(anchors);
+      return anchors;
+    }
+
+    return { left: false, right: false, top: false, bottom: false };
+  }
+
+  private fixPositionOnResize(x: number, y: number, anchors: EdgeAnchors) {
+    const { width, height } = this.size;
+    const maxX = window.innerWidth - width - EDGE_MARGIN;
+    const maxY = window.innerHeight - height - EDGE_MARGIN;
+
+    return {
+      x: anchors.right
+        ? maxX
+        : anchors.left
+          ? EDGE_MARGIN
+          : clamp(x, EDGE_MARGIN, maxX),
+      y: anchors.bottom
+        ? maxY
+        : anchors.top
+          ? EDGE_MARGIN
+          : clamp(y, EDGE_MARGIN, maxY),
+    };
   }
 }

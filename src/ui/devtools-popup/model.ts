@@ -100,6 +100,31 @@ export class VmDevtoolsPopupVM extends ViewModelImpl<{}, DevtoolsClientVM> {
       window.addEventListener('blur', handleStopDragging, {
         signal: this.unmountSignal,
       });
+
+      let prevViewportWidth = window.innerWidth;
+
+      const handleResize = () => {
+        if (VmDevtoolsPopupVM.lastX === null) {
+          prevViewportWidth = window.innerWidth;
+          return;
+        }
+
+        this.rect = node.getBoundingClientRect();
+
+        const x = this.fixXOnResize(
+          VmDevtoolsPopupVM.lastX,
+          prevViewportWidth,
+        );
+
+        prevViewportWidth = window.innerWidth;
+
+        node.style.left = `${x}px`;
+        VmDevtoolsPopupVM.lastX = x;
+      };
+
+      window.addEventListener('resize', handleResize, {
+        signal: this.unmountSignal,
+      });
     },
   });
 
@@ -145,5 +170,21 @@ export class VmDevtoolsPopupVM extends ViewModelImpl<{}, DevtoolsClientVM> {
     const x = typeof rawX === 'string' ? +rawX.replace('px', '') : rawX;
 
     return clamp(x || 0, minX, maxX);
+  }
+
+  private fixXOnResize(x: number, prevViewportWidth: number) {
+    const margin = 12;
+    const { width } = this.size;
+    const minX = margin;
+    const prevMaxX = prevViewportWidth - width - margin;
+    const maxX = window.innerWidth - width - margin;
+
+    const pinRight = x >= prevMaxX - 1;
+    const pinLeft = x <= minX + 1;
+
+    if (pinRight) return maxX;
+    if (pinLeft) return minX;
+
+    return clamp(x, minX, maxX);
   }
 }

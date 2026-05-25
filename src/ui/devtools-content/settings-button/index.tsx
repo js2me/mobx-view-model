@@ -49,16 +49,14 @@ export const SettingsButton = observer(
                 />
               </div>
               <label className={css.settingRow}>
-                <span className={css.settingLabel}>
-                  Hide <code>ViewModelBase</code> fields
-                </span>
+                <span className={css.settingLabel}>Show internals</span>
                 <input
                   type="checkbox"
                   className={css.settingCheckbox}
-                  checked={devtools.hideViewModelBaseMembers}
+                  checked={!devtools.hideViewModelBaseMembers}
                   onChange={(event) => {
                     devtools.handleHideViewModelBaseMembersChange(
-                      event.target.checked,
+                      !event.target.checked,
                     );
                   }}
                 />
