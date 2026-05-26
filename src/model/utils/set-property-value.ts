@@ -1,4 +1,4 @@
-import { runInAction } from 'mobx';
+import { observable, runInAction } from 'mobx';
 import {
   forceMobxAtomInvalidation,
   rememberSwappedComputedAtom,
@@ -111,6 +111,32 @@ function isCannotRedefinePropertyError(error: unknown) {
   return error instanceof Error && /cannot redefine property/i.test(error.message);
 }
 
+let fallbackObservableValueConstructor:
+  | (new (
+      value: unknown,
+      enhancer: (value: unknown) => unknown,
+      name: string,
+    ) => MobxAtom)
+  | undefined;
+
+function getFallbackObservableValueConstructor() {
+  if (fallbackObservableValueConstructor) {
+    return fallbackObservableValueConstructor;
+  }
+
+  const probe = observable({ __mobxDevtoolsProbe: 0 });
+  const adm = findMobxAdministration(probe);
+  const probeAtom = adm?.values_.get('__mobxDevtoolsProbe');
+
+  if (probeAtom?.constructor) {
+    fallbackObservableValueConstructor = probeAtom.constructor as NonNullable<
+      typeof fallbackObservableValueConstructor
+    >;
+  }
+
+  return fallbackObservableValueConstructor;
+}
+
 function getObservableValueConstructor(adm: MobxObjectAdministration) {
   for (const atom of adm.values_.values()) {
     if (atom && typeof atom.derivation !== 'function' && atom.constructor) {
@@ -118,7 +144,7 @@ function getObservableValueConstructor(adm: MobxObjectAdministration) {
     }
   }
 
-  return undefined;
+  return getFallbackObservableValueConstructor();
 }
 
 function createMatchingObservableValue(
@@ -127,6 +153,7 @@ function createMatchingObservableValue(
   value: unknown,
 ) {
   const ObservableValueCtor = getObservableValueConstructor(adm);
+
   if (!ObservableValueCtor) {
     return undefined;
   }
@@ -231,6 +258,12 @@ function replaceViaMobxAdministration(
 }
 
 function shadowPropertyValue(object: object, key: string, value: unknown) {
+  const descriptor = getPropertyDescriptor(object, key);
+
+  if (isReadOnlyAccessor(descriptor)) {
+    return false;
+  }
+
   if (!hasOwnProperty(object, key)) {
     (object as Record<string, unknown>)[key] = value;
     return true;
