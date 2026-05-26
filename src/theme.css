@@ -28,7 +28,7 @@
   --vmd-property-value-instance: rgb(190 113 195);
   --vmd-property-value-primitive: rgb(89 153 205);
   --vmd-property-value-nullish: #499098;
-  --vmd-property-value-boolean: rgb(84 102 255);
+  --vmd-property-value-boolean: rgb(76 92 228);
   --vmd-property-value-string: #af7249;
   --vmd-property-bg-content-color: var(--vmd-base-color);
 }
@@ -61,7 +61,7 @@
   --vmd-code-bg: #dadada9e;
   --vmd-property-value-instance: rgb(139 61 150);
   --vmd-property-value-primitive: rgb(21 101 168);
-  --vmd-property-value-boolean: rgb(121 133 230);
+  --vmd-property-value-boolean: rgb(105 117 216);
   --vmd-property-value-nullish: #0a7a73;
   --vmd-property-value-string: #a04d12;
   --vmd-property-bg-content-color: #e3e3e3;
