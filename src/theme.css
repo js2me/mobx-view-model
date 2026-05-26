@@ -31,6 +31,7 @@
   --vmd-property-value-boolean: rgb(131 144 255);
   --vmd-property-value-string: #af7249;
   --vmd-property-bg-content-color: var(--vmd-base-color);
+  --vmd-update-highlight-bg: rgb(255 212 59 / 0.42);
 }
 
 [data-vmd-theme='light'] {
@@ -65,4 +66,5 @@
   --vmd-property-value-nullish: #0a7a73;
   --vmd-property-value-string: #a04d12;
   --vmd-property-bg-content-color: #e3e3e3;
+  --vmd-update-highlight-bg: rgb(255 204 0 / 0.38);
 }

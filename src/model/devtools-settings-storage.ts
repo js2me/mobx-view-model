@@ -16,3 +16,8 @@ export const devtoolsHideViewModelBaseKey = settingsStorage.key<boolean>(
   'hideViewModelBaseMembers',
   false,
 );
+
+export const devtoolsHighlightUpdatesKey = settingsStorage.key<boolean>(
+  'highlightUpdates',
+  true,
+);

@@ -20,6 +20,21 @@
   background: var(--vmd-content-highlight-bg);
 }
 
+.property.updateHighlighted {
+  animation: propertyUpdateHighlight 900ms ease-out;
+}
+
+@keyframes propertyUpdateHighlight {
+  0%,
+  25% {
+    background-color: var(--vmd-update-highlight-bg);
+  }
+
+  100% {
+    background-color: var(--vmd-content-bg);
+  }
+}
+
 .property.expandable {
   cursor: pointer;
 }

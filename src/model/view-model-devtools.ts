@@ -11,6 +11,7 @@ import { colorScheme } from 'mobx-web-api';
 import {
   type DevtoolsTheme,
   devtoolsHideViewModelBaseKey,
+  devtoolsHighlightUpdatesKey,
   devtoolsThemeKey,
   type ResolvedDevtoolsTheme,
 } from './devtools-settings-storage';
@@ -190,6 +191,10 @@ export class ViewModelDevtools {
     return devtoolsHideViewModelBaseKey.value;
   }
 
+  get highlightUpdates(): boolean {
+    return devtoolsHighlightUpdatesKey.value;
+  }
+
   handleThemeChange = (theme: string) => {
     devtoolsThemeKey.value =
       theme === 'light' || theme === 'dark' ? theme : 'auto';
@@ -198,6 +203,10 @@ export class ViewModelDevtools {
 
   handleHideViewModelBaseMembersChange = (hide: boolean) => {
     devtoolsHideViewModelBaseKey.value = hide;
+  };
+
+  handleHighlightUpdatesChange = (enabled: boolean) => {
+    devtoolsHighlightUpdatesKey.value = enabled;
   };
 
   get resolvedTheme(): ResolvedDevtoolsTheme {
@@ -338,6 +347,7 @@ export class ViewModelDevtools {
       sortPropertiesBy: observable.ref,
       theme: computed,
       hideViewModelBaseMembers: computed,
+      highlightUpdates: computed,
       extras: observable.ref,
       setStore: action.bound,
       setExtras: action.bound,
@@ -347,6 +357,7 @@ export class ViewModelDevtools {
       handleSortPropertiesChange: action.bound,
       handleThemeChange: action.bound,
       handleHideViewModelBaseMembersChange: action.bound,
+      handleHighlightUpdatesChange: action.bound,
       handleExpandVmPropertyClick: action.bound,
       expandAllVMs: action.bound,
       collapseAllVms: action.bound,

@@ -78,6 +78,17 @@ export const SettingsButton = observer(
                 }}
               />
             </label>
+            <label className={css.settingRow}>
+              <span className={css.settingLabel}>Highlight updates</span>
+              <input
+                type="checkbox"
+                className={css.settingCheckbox}
+                checked={devtools.highlightUpdates}
+                onChange={(event) => {
+                  devtools.handleHighlightUpdatesChange(event.target.checked);
+                }}
+              />
+            </label>
           </div>
         )}
       </span>

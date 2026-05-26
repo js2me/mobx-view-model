@@ -10,6 +10,7 @@ import { ObjectPropertyContent } from './object';
 import { MapEntryPropertyContent } from './map-entry';
 import { PrimitivePropertyContent } from './primitive';
 import { SetEntryPropertyContent } from './set-entry';
+import { usePropertyUpdateHighlight } from './use-property-update-highlight';
 import css from './styles.module.css';
 
 export interface PropertyListItemRenderProps {
@@ -19,6 +20,7 @@ export interface PropertyListItemRenderProps {
 export const PropertyListItemRender = observer(
   (props: PropertyListItemRenderProps) => {
     const { item } = props;
+    const isUpdateHighlighted = usePropertyUpdateHighlight(item);
 
     let content: ReactNode = null;
 
@@ -61,6 +63,7 @@ export const PropertyListItemRender = observer(
           [css.expandable]: item.isExpandable,
           [css.expanded]: item.isExpanded,
           [css.isEditMode]: item.isEditMode,
+          [css.updateHighlighted]: isUpdateHighlighted,
         })}
         style={
           { '--level': item.depth, '--order': item.order } as CSSProperties
