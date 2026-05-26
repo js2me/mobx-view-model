@@ -20,13 +20,19 @@ export const ListItemOperations = observer(
             return (
               <button
                 key={operation.title}
+                type="button"
                 title={operation.title}
                 data-list-item-operation
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
                 onClick={(e) => {
+                  e.preventDefault();
                   e.stopPropagation();
                   runInAction(() => {
                     operation.action();
-                  })
+                  });
                 }}
               >
                 <operation.icon />

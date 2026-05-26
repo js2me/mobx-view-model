@@ -66,10 +66,11 @@ export const PropertyListItemRender = observer(
           { '--level': item.depth, '--order': item.order } as CSSProperties
         }
         data-fitted={item.devtools.searchEngine.isItemFitted(item)}
-        onClick={(e) => item.devtools.handlePropertyClick(item, e)}
         data-depth={item.depthLine}
       >
-        <span>
+        <span
+          onClick={(e) => item.devtools.handlePropertyClick(item, e)}
+        >
           {content}
           {item.extraContent}
         </span>

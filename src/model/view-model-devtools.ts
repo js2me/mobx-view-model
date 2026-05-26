@@ -136,8 +136,12 @@ export class ViewModelDevtools {
 
   handlePropertyClick(
     item: PropertyListItem,
-    _e: React.MouseEvent<HTMLElement>,
+    e: React.MouseEvent<HTMLElement>,
   ) {
+    if ((e.target as HTMLElement).closest('[data-list-item-operations]')) {
+      return;
+    }
+
     item.toggleExpand();
   }
 

@@ -9,8 +9,21 @@ import {
   getSwappedComputedAtom,
 } from './force-mobx-invalidation';
 
+function isComputedAtom(atom: MobxAtom | undefined): atom is MobxAtom {
+  return !!atom && typeof atom.derivation === 'function';
+}
+
 function invalidateMobxAtom(atom: MobxAtom | undefined, host: object, key: string) {
-  forceMobxAtomInvalidation(getSwappedComputedAtom(host, key));
+  const swappedAtom = getSwappedComputedAtom(host, key);
+
+  if (swappedAtom && atom && !isComputedAtom(atom)) {
+    // Computed was pinned to an observable during edit; refreshing the old
+    // computed derivation would restore the pre-edit value.
+    forceMobxAtomInvalidation(atom);
+    return;
+  }
+
+  forceMobxAtomInvalidation(swappedAtom);
   forceMobxAtomInvalidation(atom);
 }
 

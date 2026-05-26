@@ -1,4 +1,4 @@
-import { Check, Copy, Pencil, Play, Xmark } from '@gravity-ui/icons';
+import { Check, Copy, Pencil, Play, ToggleOn, Xmark } from '@gravity-ui/icons';
 import {
   action,
   computed,
@@ -590,14 +590,26 @@ export class PropertyListItem extends ListItem<any> {
           this.isEditMode = true;
         },
       });
-    } else if (this.isEditable) {
-      operations.push({
-        title: 'Edit',
-        icon: Pencil,
-        action: () => {
-          this.startEdit();
-        },
-      });
+    } else {
+      if (this.dataType === 'boolean' && this.isEditable) {
+        operations.push({
+          title: 'Toggle',
+          icon: ToggleOn,
+          action: () => {
+            this.toggleBoolean();
+          },
+        });
+      }
+
+      if (this.isEditable) {
+        operations.push({
+          title: 'Edit',
+          icon: Pencil,
+          action: () => {
+            this.startEdit();
+          },
+        });
+      }
     }
 
     if (this.type !== 'instance' && !this.failedStringify) {
@@ -672,18 +684,39 @@ export class PropertyListItem extends ListItem<any> {
       return;
     }
 
+    if (!this.commitParsedEdit(parsed)) {
+      return;
+    }
+
+    this.cancelEdit();
+  }
+
+  toggleBoolean() {
+    if (
+      !this.isEditable ||
+      this.dataType !== 'boolean' ||
+      this.property === undefined
+    ) {
+      return;
+    }
+
+    const nextValue = !this.data;
+    this.commitParsedEdit(nextValue);
+  }
+
+  private commitParsedEdit(parsed: unknown): boolean {
     const result = this.applyParsedEdit(parsed);
 
     if (!result.ok) {
       this.devtools.notifications.push({
         title: `Failed to update "${this.getEditTargetLabel()}": ${result.error}`,
       });
-      return;
+      return false;
     }
 
-    this.reportDataChangedUpwards();
     this.notifyHostAppAfterEdit(result.producerTarget);
-    this.cancelEdit();
+    this.reportDataChangedUpwards();
+    return true;
   }
 
   private getEditTargetLabel() {
@@ -963,6 +996,7 @@ export class PropertyListItem extends ListItem<any> {
     action(this, 'startEdit');
     action(this, 'cancelEdit');
     action(this, 'applyEdit');
+    action(this, 'toggleBoolean');
     action(this, 'confirmEdit');
     action(this, 'callFunction');
     makeObservable(this);
