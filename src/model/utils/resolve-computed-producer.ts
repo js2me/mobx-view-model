@@ -123,46 +123,144 @@ function pickBestComputedProducerCandidate(
   return [...candidates].sort((left, right) => right.depth - left.depth)[0] ?? null;
 }
 
-function buildProducerValue(
+function findProducerPropertyListItem(
   item: PropertyListItem,
-  parsed: unknown,
-): unknown | null {
-  const propertyKey = item.property;
+  producer: ComputedProducerCandidate,
+): PropertyListItem | null {
+  let current: ListItem<any> | null = item.parentListItem;
 
-  if (propertyKey == null) {
-    return null;
-  }
+  while (current instanceof PropertyListItem) {
+    const host = getPropertyOwnerHost(current);
 
-  if (item.type === 'object' || item.type === 'array') {
-    return parsed;
-  }
-
-  const parentItem = item.parentListItem;
-
-  if (!(parentItem instanceof PropertyListItem)) {
-    return null;
-  }
-
-  const parentValue = parentItem.data;
-
-  if (parentValue !== null && typeof parentValue === 'object') {
-    if (Array.isArray(parentValue)) {
-      const index = Number(propertyKey);
-
-      if (!Number.isNaN(index)) {
-        const nextArray = [...parentValue];
-        nextArray[index] = parsed;
-        return nextArray;
-      }
-    } else {
-      return {
-        ...(parentValue as Record<string, unknown>),
-        [propertyKey]: parsed,
-      };
+    if (host === producer.host && current.property === producer.key) {
+      return current;
     }
+
+    current = current.parentListItem;
   }
 
   return null;
+}
+
+function collectPathSegmentsFromProducer(
+  producerItem: PropertyListItem,
+  item: PropertyListItem,
+): string[] | null {
+  const replacesWholeValue = item.type === 'object' || item.type === 'array';
+
+  if (producerItem === item && replacesWholeValue) {
+    return [];
+  }
+
+  const segments: string[] = [];
+
+  if (!replacesWholeValue) {
+    if (item.property == null) {
+      return null;
+    }
+
+    segments.unshift(item.property);
+  }
+
+  let current: PropertyListItem | null =
+    item.parentListItem instanceof PropertyListItem ? item.parentListItem : null;
+
+  while (current && current !== producerItem) {
+    if (current.property == null) {
+      return null;
+    }
+
+    segments.unshift(current.property);
+    current =
+      current.parentListItem instanceof PropertyListItem
+        ? current.parentListItem
+        : null;
+  }
+
+  if (current !== producerItem) {
+    return null;
+  }
+
+  if (replacesWholeValue) {
+    if (item.property == null) {
+      return null;
+    }
+
+    segments.push(item.property);
+  }
+
+  return segments;
+}
+
+function applyNestedEdit(
+  value: unknown,
+  segments: string[],
+  parsed: unknown,
+): unknown {
+  if (segments.length === 0) {
+    return parsed;
+  }
+
+  const [head, ...rest] = segments;
+
+  if (Array.isArray(value)) {
+    const index = Number(head);
+
+    if (Number.isNaN(index)) {
+      return value;
+    }
+
+    const next = [...value];
+    next[index] = applyNestedEdit(next[index], rest, parsed);
+    return next;
+  }
+
+  if (value !== null && typeof value === 'object') {
+    return {
+      ...(value as Record<string, unknown>),
+      [head]: applyNestedEdit(
+        (value as Record<string, unknown>)[head],
+        rest,
+        parsed,
+      ),
+    };
+  }
+
+  if (rest.length === 0) {
+    return parsed;
+  }
+
+  return value;
+}
+
+function buildProducerValueForComputed(
+  item: PropertyListItem,
+  parsed: unknown,
+  producer: ComputedProducerCandidate,
+): unknown | null {
+  const producerItem = findProducerPropertyListItem(item, producer);
+
+  if (!producerItem) {
+    return null;
+  }
+
+  const pathSegments = collectPathSegmentsFromProducer(producerItem, item);
+
+  if (pathSegments == null) {
+    return null;
+  }
+
+  let rootValue: unknown;
+
+  try {
+    rootValue = untracked(
+      () => (producer.host as Record<string, unknown>)[producer.key],
+    );
+  } catch {
+    return null;
+  }
+
+  return applyNestedEdit(rootValue, pathSegments, parsed);
 }
 
 /**
@@ -186,12 +284,6 @@ export function resolveComputedProducerForEdit(
     return null;
   }
 
-  const producerValue = buildProducerValue(item, parsed);
-
-  if (producerValue == null) {
-    return null;
-  }
-
   const candidates = collectComputedProducerCandidates(
     parentItem,
     parentItem.data,
@@ -200,6 +292,12 @@ export function resolveComputedProducerForEdit(
   const producer = pickBestComputedProducerCandidate(candidates);
 
   if (!producer) {
+    return null;
+  }
+
+  const producerValue = buildProducerValueForComputed(item, parsed, producer);
+
+  if (producerValue == null) {
     return null;
   }
 
