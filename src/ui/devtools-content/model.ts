@@ -13,16 +13,22 @@ import { type ViewModelDevtools, ViewModelImpl } from '@/model';
 import { ExtraListItem } from '@/model/list-item/extra-list-item';
 import { MetaListItem } from '@/model/list-item/meta-list-item';
 import { PropertyListItem } from '@/model/list-item/property-list-item';
+import { PropertyWatchHistoryHeaderListItem } from '@/model/list-item/property-watch-history-header-item';
+import { PropertyWatchHistoryListItem } from '@/model/list-item/property-watch-history-item';
 import { VMListItem } from '@/model/list-item/vm-list-item';
 import { ExtraListItemRender } from './list-items/extra-list-item-render';
 import { MetaListItemRender } from './list-items/meta-list-item-render';
 import { PropertyListItemRender } from './list-items/property-list-item-render';
+import { PropertyWatchHistoryHeaderRender } from './list-items/property-watch-history-header-render';
+import { PropertyWatchHistoryItemRender } from './list-items/property-watch-history-item-render';
 import { VmListItemRender } from './list-items/vm-list-item-render';
 
 const listItemRenderersMap = new Map<any, any>([
   [VMListItem, VmListItemRender],
   [ExtraListItem, ExtraListItemRender],
   [PropertyListItem, PropertyListItemRender],
+  [PropertyWatchHistoryHeaderListItem, PropertyWatchHistoryHeaderRender],
+  [PropertyWatchHistoryListItem, PropertyWatchHistoryItemRender],
   [MetaListItem, MetaListItemRender],
 ]);
 

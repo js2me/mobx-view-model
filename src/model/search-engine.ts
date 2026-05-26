@@ -719,6 +719,9 @@ export class SearchEngine {
         if (item.isExpanded) {
           result.push(...item.expandedChildren);
         }
+        for (const trailing of item.trailingItems) {
+          result.push(...trailing.expandedChildrenWithSelf);
+        }
       }
     };
 

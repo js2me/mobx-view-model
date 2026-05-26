@@ -32,6 +32,7 @@
   --vmd-property-value-string: #af7249;
   --vmd-property-bg-content-color: var(--vmd-base-color);
   --vmd-update-highlight-bg: rgb(255 212 59 / 0.42);
+  --vmd-watch-active-color: rgb(235 82 82);
 }
 
 [data-vmd-theme='light'] {
@@ -67,4 +68,5 @@
   --vmd-property-value-string: #a04d12;
   --vmd-property-bg-content-color: #e3e3e3;
   --vmd-update-highlight-bg: rgb(255 204 0 / 0.38);
+  --vmd-watch-active-color: rgb(210 58 58);
 }

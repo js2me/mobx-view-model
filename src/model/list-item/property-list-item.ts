@@ -1,4 +1,4 @@
-import { Check, Copy, Pencil, Play, ToggleOn, Xmark } from '@gravity-ui/icons';
+import { Check, Copy, Eye, EyeSlash, Pencil, Play, ToggleOn, Xmark } from '@gravity-ui/icons';
 import {
   action,
   computed,
@@ -38,16 +38,28 @@ import {
 } from '../utils/set-collection-entry-value';
 import { setPropertyValue } from '../utils/set-property-value';
 import { sortPropertyListItems } from '../utils/sort-property-keys';
+import {
+  PropertyWatcher,
+  type PropertyWatchHistoryEntry,
+} from '../utils/property-watcher';
 import type { AnyVM } from '../types';
 import type { ViewModelDevtools } from '../view-model-devtools';
 import { ListItem, type ListItemOperation } from './list-item';
 import { MetaListItem } from './meta-list-item';
+import { PropertyWatchHistoryHeaderListItem } from './property-watch-history-header-item';
+import { PropertyWatchHistoryListItem } from './property-watch-history-item';
 import { VMListItem } from './vm-list-item';
 
 export class PropertyListItem extends ListItem<any> {
   editContent = '';
 
   isEditMode = false;
+
+  isWatching = false;
+
+  watchHistory: PropertyWatchHistoryEntry[] = [];
+
+  private watcher = new PropertyWatcher();
 
   get isExpanded() {
     return this.devtools.searchEngine.isPropertyItemExpanded(this);
@@ -425,6 +437,10 @@ export class PropertyListItem extends ListItem<any> {
       }
 
       result.push(child, ...child.expandedChildren);
+
+      for (const trailing of child.trailingItems) {
+        result.push(...trailing.expandedChildrenWithSelf);
+      }
     }
  
     if (this.closingItem) {
@@ -620,7 +636,49 @@ export class PropertyListItem extends ListItem<any> {
       });
     }
 
+    if (this.dataType !== 'function') {
+      operations.push({
+        title: this.isWatching
+          ? 'Stop watching property changes'
+          : 'Watch property changes',
+        icon: this.isWatching ? EyeSlash : Eye,
+        active: this.isWatching,
+        persistent: this.isWatching,
+        action: () => {
+          this.handleWatchClick();
+        },
+      });
+    }
+
     return [...operations, ...super.operations];
+  }
+
+  handleWatchClick() {
+    if (this.isWatching) {
+      this.isWatching = false;
+      this.watcher.stop();
+      return;
+    }
+
+    this.isWatching = true;
+    this.watcher.start(this);
+  }
+
+  clearWatchHistory() {
+    this.watchHistory.length = 0;
+  }
+
+  get trailingItems(): ListItem<any>[] {
+    if (this.watchHistory.length === 0 && !this.isWatching) {
+      return [];
+    }
+
+    return [
+      PropertyWatchHistoryHeaderListItem.create(this),
+      ...this.watchHistory.map((entry, index) =>
+        PropertyWatchHistoryListItem.create(this, entry, index),
+      ),
+    ];
   }
 
   handleChangeEditContent: ChangeEventHandler<HTMLInputElement> = (e) => {
@@ -991,6 +1049,10 @@ export class PropertyListItem extends ListItem<any> {
     observable.ref(this, 'failedStringify');
     observable.ref(this, 'editContent');
     observable(this, 'isEditMode');
+    observable(this, 'isWatching');
+    observable.shallow(this, 'watchHistory');
+    action(this, 'handleWatchClick');
+    action(this, 'clearWatchHistory');
     action(this, 'handleChangeEditContent');
     action(this, 'handleEditKeyDown');
     action(this, 'startEdit');

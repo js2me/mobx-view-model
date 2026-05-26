@@ -150,7 +150,7 @@
   margin-right: 4px;
 }
 
-.property.isEditMode > [data-list-item-operations] {
+.property.isEditMode [data-list-item-operations-collapsible] {
   width: auto;
 }
 
@@ -168,4 +168,63 @@
 
 .property.isEditMode .propertyValue > .editContent {
   width: 100%;
+}
+
+.watchHistoryHeaderRow {
+  display: flex;
+  align-items: center;
+}
+
+.watchHistoryHeader {
+  color: var(--vmd-property-meta-color);
+  font-size: 12px;
+  font-style: italic;
+}
+
+.watchHistoryClearButton {
+  margin-left: auto;
+  margin-right: 12px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--vmd-property-meta-color);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.watchHistoryClearButton:hover {
+  color: var(--vmd-base-color);
+}
+
+.watchHistoryEntry {
+  color: var(--vmd-property-meta-color);
+}
+
+.watchHistoryEntry > span {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-right: 12px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  min-width: 0;
+}
+
+.watchHistoryMeta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex: none;
+  margin-right: 8px;
+}
+
+.watchHistoryIndex {
+  color: var(--vmd-property-meta-color);
+  min-width: 28px;
+}
+
+.watchHistoryTime {
+  color: var(--vmd-property-meta-color);
+  min-width: 92px;
 }

@@ -139,7 +139,7 @@ export class ViewModelDevtools {
     item: PropertyListItem,
     e: React.MouseEvent<HTMLElement>,
   ) {
-    if ((e.target as HTMLElement).closest('[data-list-item-operations]')) {
+    if ((e.target as HTMLElement).closest('[data-list-item-operations-wrapper]')) {
       return;
     }
 

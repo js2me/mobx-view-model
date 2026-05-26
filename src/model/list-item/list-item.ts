@@ -12,6 +12,8 @@ export type ListItemOperation<T> =
       title: string;
       icon: ComponentType;
       action: VoidFunction;
+      active?: boolean;
+      persistent?: boolean;
     }
   | ComponentType<ListItemViewProps<ListItem<T>>>;
 
@@ -86,6 +88,10 @@ export abstract class ListItem<T> {
           result.push(item.closingItem);
         }
       }
+
+      for (const trailing of item.trailingItems) {
+        result.push(...trailing.expandedChildrenWithSelf);
+      }
     };
     
     // Обрабатываем детей в порядке их появления
@@ -96,8 +102,16 @@ export abstract class ListItem<T> {
     return result;
   }
 
+  get trailingItems(): ListItem<any>[] {
+    return [];
+  }
+
   get expandedChildrenWithSelf(): ListItem<any>[] {
-    return [this, ...this.expandedChildren];
+    const trailing = this.trailingItems.flatMap(
+      (item) => item.expandedChildrenWithSelf,
+    );
+
+    return [this, ...this.expandedChildren, ...trailing];
   }
 
   get data() {
@@ -183,6 +197,7 @@ export abstract class ListItem<T> {
     computed.struct(this, 'operations');
     computed.struct(this, 'children');
     computed.struct(this, 'expandedChildren');
+    computed.struct(this, 'trailingItems');
     computed.struct(this, 'expandedChildrenWithSelf');
     computed(this, 'data');
     computed(this, 'isExpandable');

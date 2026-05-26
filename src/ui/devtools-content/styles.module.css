@@ -502,19 +502,36 @@
   );
 }
 
-[data-list-item-operations] {
-  position: relative;
-  right: 12px;
+[data-list-item-operations-wrapper] {
   display: flex;
   align-items: center;
   margin-left: auto;
+  margin-right: 12px;
   gap: 4px;
+  flex-shrink: 0;
+}
+
+[data-list-item-operations] {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+[data-list-item-operations-persistent] {
+  flex-shrink: 0;
+  width: auto;
+  overflow: visible;
+}
+
+[data-list-item-operations-collapsible] {
+  flex-shrink: 0;
   width: 0;
-  transition: all 150ms ease;
+  transition: width 150ms ease;
   overflow: hidden;
 }
 
-*:has(> [data-list-item-operations]):hover > [data-list-item-operations] {
+*:has(> [data-list-item-operations-wrapper]):hover
+  [data-list-item-operations-collapsible] {
   width: auto;
 }
 

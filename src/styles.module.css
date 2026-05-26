@@ -23,6 +23,11 @@
   color: var(--vmd-base-color);
 }
 
+.root button[data-list-item-operation][data-active],
+.root button[data-list-item-operation][data-active] svg {
+  color: var(--vmd-watch-active-color);
+}
+
 .root code {
   background: var(--vmd-code-bg);
   letter-spacing: 0.1px;
