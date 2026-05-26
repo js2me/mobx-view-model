@@ -127,6 +127,10 @@
   white-space: nowrap;
 }
 
+.property.isEditMode .propertyValue {
+  width: 100%;
+}
+
 .propertyValue:has(+.propertyName) {
   margin-right: 4px;
 }
