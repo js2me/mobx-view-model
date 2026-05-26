@@ -16,7 +16,11 @@ import {
 } from '../utils/collection-like';
 import { formatSearchSegmentKey } from '../utils/format-search-key';
 import { getAllKeys } from '../utils/get-all-keys';
-import { isInaccessible, INACCESSIBLE } from '../utils/safe-access';
+import {
+  getConstructorName,
+  isInaccessible,
+  INACCESSIBLE,
+} from '../utils/safe-access';
 import { notifyMobxEditPropagation } from '../utils/notify-mobx-change';
 import {
   invalidateMobxObject,
@@ -135,12 +139,13 @@ export class PropertyListItem extends ListItem<any> {
   }
 
   private getInstanceClassName(data: any): string {
-    if (this.isInaccessible) {
+    if (this.isInaccessible || isInaccessible(data)) {
       return '<Inaccessible>';
     }
 
-    if (data && data.constructor?.name) {
-      return data.constructor.name;
+    const constructorName = getConstructorName(data);
+    if (constructorName) {
+      return constructorName;
     }
 
     const match = /^\[object (.+)\]$/.exec(

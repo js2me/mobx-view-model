@@ -1,34 +1,7 @@
 import type { ReactNode } from 'react';
 import { cx } from 'yummies/css';
+import { getInspectorValueType } from '@/model/utils/get-inspector-value-type';
 import css from './styles.module.css';
-
-export function getInspectorValueType(value: unknown): string {
-  if (value === null) {
-    return 'null';
-  }
-
-  if (value === undefined) {
-    return 'undefined';
-  }
-
-  if (Array.isArray(value)) {
-    return 'array';
-  }
-
-  if (typeof value === 'function') {
-    return 'function';
-  }
-
-  if (typeof value === 'object') {
-    if (value.constructor?.name && value.constructor.name !== 'Object') {
-      return 'instance';
-    }
-
-    return 'object';
-  }
-
-  return typeof value;
-}
 
 export function getTypedValueClassName(
   value: unknown,
