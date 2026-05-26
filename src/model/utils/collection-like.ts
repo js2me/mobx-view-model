@@ -1,11 +1,20 @@
+import {
+  isMobxObservableMap,
+  isMobxObservableSet,
+  isNativeMap,
+  isNativeSet,
+  type MapLike,
+  type SetLike,
+} from './mobx-collection';
+
 export type CollectionKind = 'map' | 'set';
 
-export function isMapLike(value: unknown): value is Map<unknown, unknown> {
-  return hasPrototypeInChain(value, globalThis.Map.prototype);
+export function isMapLike(value: unknown): value is MapLike {
+  return isNativeMap(value) || isMobxObservableMap(value);
 }
 
-export function isSetLike(value: unknown): value is Set<unknown> {
-  return hasPrototypeInChain(value, globalThis.Set.prototype);
+export function isSetLike(value: unknown): value is SetLike {
+  return isNativeSet(value) || isMobxObservableSet(value);
 }
 
 export function getCollectionKind(value: unknown): CollectionKind | null {
@@ -25,7 +34,7 @@ export function getCollectionKind(value: unknown): CollectionKind | null {
 }
 
 export function getMapEntryAt(
-  map: Map<unknown, unknown>,
+  map: MapLike,
   index: number,
 ): [unknown, unknown] | undefined {
   let currentIndex = 0;
@@ -41,7 +50,7 @@ export function getMapEntryAt(
   return undefined;
 }
 
-export function getSetValueAt(set: Set<unknown>, index: number): unknown {
+export function getSetValueAt(set: SetLike, index: number): unknown {
   let currentIndex = 0;
 
   for (const value of set.values()) {
@@ -55,20 +64,4 @@ export function getSetValueAt(set: Set<unknown>, index: number): unknown {
   return undefined;
 }
 
-function hasPrototypeInChain(value: unknown, prototype: object): boolean {
-  if (!value || typeof value !== 'object') {
-    return false;
-  }
-
-  let current: object | null = value;
-
-  while (current) {
-    if (Object.getPrototypeOf(current) === prototype) {
-      return true;
-    }
-
-    current = Object.getPrototypeOf(current);
-  }
-
-  return false;
-}
+export { isMobxObservableMap, isMobxObservableSet } from './mobx-collection';
