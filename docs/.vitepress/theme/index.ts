@@ -17,5 +17,9 @@ export default {
   enhanceApp({ app }) {
     app.component('ReactMark', ReactMark)
     app.component('ReactImportDeprecationWarning', ReactImportDeprecationWarning)
+
+    if (!import.meta.env.SSR) {
+      void import('./load-devtools').then((m) => m.loadDevtools())
+    }
   },
 } satisfies Theme

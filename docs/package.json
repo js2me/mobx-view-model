@@ -2,6 +2,11 @@
   "name": "mobx-view-model-docs",
   "private": true,
   "type": "module",
+  "dependencies": {
+    "mobx": "^6.13.0",
+    "mobx-view-model": "workspace:^10.2.0",
+    "mobx-view-model-devtools": "^0.0.55"
+  },
   "devDependencies": {
     "@iconify-json/logos": "^1.2.9",
     "sborshik": "^1.8.0",

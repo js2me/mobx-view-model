@@ -38,6 +38,16 @@ importers:
         version: 4.21.0
 
   docs:
+    dependencies:
+      mobx:
+        specifier: ^6.13.0
+        version: 6.15.0
+      mobx-view-model:
+        specifier: workspace:^10.2.0
+        version: link:../packages/core/dist
+      mobx-view-model-devtools:
+        specifier: ^0.0.55
+        version: 0.0.55(vue@3.5.32(typescript@5.9.3))
     devDependencies:
       '@iconify-json/logos':
         specifier: ^1.2.9
@@ -1245,6 +1255,18 @@ packages:
       '@noble/hashes':
         optional: true
 
+  '@faker-js/faker@9.9.0':
+    resolution: {integrity: sha512-OEl393iCOoo/z8bMezRlJu+GlRGlsKbUAN7jKB6LhnKoqKve5DXRpalbItIIcwnCjs1k/FOPjFzcA6Qn+H+YbA==}
+    engines: {node: '>=18.0.0', npm: '>=9.0.0'}
+
+  '@gravity-ui/icons@2.18.0':
+    resolution: {integrity: sha512-JoRc/4Ch9GLaufZfpGd2ePRRisMXEjMI+r3y8kPKyYIAdQZz07jpIXEgsft1gvBxjSht2MS2uu5+vfhe1WP0ow==}
+    peerDependencies:
+      react: '*'
+    peerDependenciesMeta:
+      react:
+        optional: true
+
   '@iconify-json/logos@1.2.11':
     resolution: {integrity: sha512-fOo4pGEatuyuCFNL+cwquYMa2Im0oJHRHV7lt/Qqs5Ode/lPImHCQcfTtPzZj7qYMPb/h8YHN3TG54uEowrjNQ==}
 
@@ -2332,6 +2354,12 @@ packages:
 
   '@types/linkify-it@5.0.0':
     resolution: {integrity: sha512-sVDA58zAw4eWAffKOaQH5/5j3XeayukzDk+ewSsnv3p4yJEZHCCzMDiZM8e0OUrRvmpGZ85jf4yDHkHsgBNr9Q==}
+
+  '@types/lodash-es@4.17.12':
+    resolution: {integrity: sha512-0NgftHUcV4v34VhXm8QBSftKVXtbkBG3ViCjs6+eJ5a6y6Mi/jiFGPc1sC7QK+9BFhWrURE3EOggmWaSxL9OzQ==}
+
+  '@types/lodash@4.17.24':
+    resolution: {integrity: sha512-gIW7lQLZbue7lRSWEFql49QJJWThrTFFeIMJdp3eH4tKoxm1OvEPg02rm4wCCSHS0cL3/Fizimb35b7k8atwsQ==}
 
   '@types/markdown-it@14.1.2':
     resolution: {integrity: sha512-promo4eFwuiW+TfGxhi+0x3czqTYJkG8qB17ZUJiVF10Xm7NLVRSLUsfRTU/6h1e24VvRnXCx+hG7li58lkzog==}
@@ -3975,6 +4003,9 @@ packages:
   lines-and-columns@1.2.4:
     resolution: {integrity: sha512-7ylylesZQ/PV29jhEDl3Ufjo6ZX7gCqJr5F7PKrqc93v7fzSymt1BpwEU8nAUXs8qzzvqhbjhK5QZg6Mt/HkBg==}
 
+  linked-abort-controller@1.1.1:
+    resolution: {integrity: sha512-jx6n22UPonBx9KsGcsDv580+EDI0LQ22iLQCx/WOuqQ44Wx7sQ12AgrbV74LYYzkYce2v7FlVPVLDl//zxfDBA==}
+
   linkify-it@5.0.0:
     resolution: {integrity: sha512-5aHCbzQRADcdP+ATqnDuhhJ/MRIqDkZX5pyjFHRRysS8vZ5AbqGEoFIb6pYHPZ+L/OC2Lc+xT8uHVVR5CAK/wQ==}
 
@@ -3989,6 +4020,9 @@ packages:
   locate-path@5.0.0:
     resolution: {integrity: sha512-t7hw9pI+WvuwNJXwk5zVHpyhIqzg2qTlklJOf0mVxGSbe3Fp2VieZcduNYjaLDoy6p9uGpQEGWG87WpMKlNq8g==}
     engines: {node: '>=8'}
+
+  lodash-es@4.18.1:
+    resolution: {integrity: sha512-J8xewKD/Gk22OZbhpOVSwcs60zhd95ESDwezOFuA3/099925PdHJ7OFHNTGtajL3AlZkykD32HykiMo+BIBI8A==}
 
   lodash.startcase@4.4.0:
     resolution: {integrity: sha512-+WKqsK294HMSc2jEbNgpHpd0JfIBhp7rEV4aqXWqFr6AlXov+SlcgB1Fv01y2kGe3Gc8nMW7VA0SrGuSkRfIEg==}
@@ -4258,6 +4292,36 @@ packages:
         optional: true
       react-native:
         optional: true
+
+  mobx-swiss-knife@1.15.0:
+    resolution: {integrity: sha512-BbzU+JcGlg7eyPRSXcLVonn0QeiuQ/jtMbCwixFpPXDed/E9dbneCJA3ELB5ebI15GTVoI4ov5VdKoLmB5jnxA==}
+    peerDependencies:
+      mobx: ^6.12.4
+
+  mobx-view-model-devtools@0.0.55:
+    resolution: {integrity: sha512-xF/7IXRn48cXqzUJmGu7Bv5kY9bZVNWWugUjJbqCiBq8h8zZchzVp67TNo15CgpNNfTAPKsiKU4PgJ/TNH8UOw==}
+
+  mobx-view-model-react@10.2.0:
+    resolution: {integrity: sha512-EhKyI2UQSfT4kVmYqXPRL2YQEK60EO2oTuTXtgRnGODEEauerbq923T7VDbUai+6bMgRsjf9DOXnHwYvkFMuBQ==}
+    peerDependencies:
+      mobx: ^6.12.4
+      mobx-react-lite: ^4.0.7
+      react: ^18.0.0 || ^19.0.0
+      react-dom: ^18.0.0 || ^19.0.0
+
+  mobx-view-model@10.2.0:
+    resolution: {integrity: sha512-IfS4cQrb9vSQ0CaP8zDHWZ/yU0M/NfwX5SGUaHam2vZ/yJPWWM1Qv6x1PykBvTNvdwCwud+jXV1yyLvFGwd4vw==}
+    peerDependencies:
+      mobx: ^6.12.4
+      react: ^18.0.0 || ^19.0.0
+    peerDependenciesMeta:
+      react:
+        optional: true
+
+  mobx-web-api@1.13.0:
+    resolution: {integrity: sha512-UG8fNjRiU2r8bops3RW9thavQfx/HYGjI/JkNPsdrSrxuNWayK1QK9/AybiFkEUq93mN0z05iiH16Akib2kuIw==}
+    peerDependencies:
+      mobx: ^6.13.6
 
   mobx@6.15.0:
     resolution: {integrity: sha512-UczzB+0nnwGotYSgllfARAqWCJ5e/skuV2K/l+Zyck/H6pJIhLXuBnz+6vn2i211o7DtbE78HQtsYEKICHGI+g==}
@@ -4877,6 +4941,12 @@ packages:
     resolution: {integrity: sha512-a2B9Y0KlNXl9u/vsW6sTIu9vGEpfKu2wRV6l1H3XEas/0gUIzGzBoP/IouTcUQbm9JWZLH3COxyn03TYlFax6w==}
     engines: {node: '>=10'}
 
+  simplebar-core@1.3.2:
+    resolution: {integrity: sha512-qKgTTuTqapjsFGkNhCjyPhysnbZGpQqNmjk0nOYjFN5ordC/Wjvg+RbYCyMSnW60l/Z0ZS82GbNltly6PMUH1w==}
+
+  simplebar@6.3.3:
+    resolution: {integrity: sha512-ni9cIiA8GRitiaenV7A/gh8nTStiVqO3gLxrfCMmq6CSy/pB+fz+QxqvJLo142QHb2Tvgvr8ILwZxf3qzAq7pg==}
+
   sirv@3.0.2:
     resolution: {integrity: sha512-2wcC/oGxHis/BoHkkPwldgiPSYcpZK3JU28WoMVv55yHJgcZ8rlXvuG9iZggz+sU1d4bRgIGASwyWqjxu3FM0g==}
     engines: {node: '>=18'}
@@ -5300,6 +5370,26 @@ packages:
   vfile@6.0.3:
     resolution: {integrity: sha512-KzIbH/9tXat2u30jf+smMwFCsno4wHVdNmzFyL+T/L3UGqqk6JKfVqOFOZEpZSHADH1k40ab6NUIXZq422ov3Q==}
 
+  virtua@0.49.1:
+    resolution: {integrity: sha512-6f79msqg3jzNFdqJiS0FSzhRN1EHlDhR7EvW7emp6z5qQ22VdsReiDHflkpMEMhoAyUuYr69nwT0aagiM7NrUg==}
+    peerDependencies:
+      react: '>=16.14.0'
+      react-dom: '>=16.14.0'
+      solid-js: '>=1.0'
+      svelte: '>=5.0'
+      vue: '>=3.2'
+    peerDependenciesMeta:
+      react:
+        optional: true
+      react-dom:
+        optional: true
+      solid-js:
+        optional: true
+      svelte:
+        optional: true
+      vue:
+        optional: true
+
   vite-node@3.2.4:
     resolution: {integrity: sha512-EbKSKh+bh1E1IFxeO0pg1n4dvoOTt0UDiXMd/qn++r98+jPO1xtJilvXldeuQ8giIB5IkpjCgMleHMNEsGH6pg==}
     engines: {node: ^18.0.0 || ^20.0.0 || >=22.0.0}
@@ -5652,6 +5742,17 @@ packages:
   yargs@17.7.2:
     resolution: {integrity: sha512-7dSzzRQ++CKnNI/krKnYRV7JKKPUXMEh61soaHKg9mrWEhzFWhFnxPxGl+69cD1Ou63C13NUPCnmIcrvqCuM6w==}
     engines: {node: '>=12'}
+
+  yummies@6.9.0:
+    resolution: {integrity: sha512-r0CbemLwbectHbTc2o0U60mFdTHZk6/IxaoTXEKhSuj12dZ0Py/rpu1GD3P4Hhb9WCllaQ8cYLEVJ3If5+alyA==}
+    peerDependencies:
+      mobx: ^6.12.4
+      react: ^18 || ^19
+    peerDependenciesMeta:
+      mobx:
+        optional: true
+      react:
+        optional: true
 
   yummies@7.16.2:
     resolution: {integrity: sha512-SipDNYM832pMlZCY9gWyaapxZq01yV6tibe8vAY+2jBBy05BtzgPPTHicUGSC37Oc4B9liWbmMDxu3Hk2wdfkQ==}
@@ -6477,6 +6578,14 @@ snapshots:
     optional: true
 
   '@exodus/bytes@1.15.0': {}
+
+  '@faker-js/faker@9.9.0': {}
+
+  '@gravity-ui/icons@2.18.0(react@18.3.1)':
+    dependencies:
+      tslib: 2.8.1
+    optionalDependencies:
+      react: 18.3.1
 
   '@iconify-json/logos@1.2.11':
     dependencies:
@@ -7416,6 +7525,12 @@ snapshots:
       '@types/node': 25.6.0
 
   '@types/linkify-it@5.0.0': {}
+
+  '@types/lodash-es@4.17.12':
+    dependencies:
+      '@types/lodash': 4.17.24
+
+  '@types/lodash@4.17.24': {}
 
   '@types/markdown-it@14.1.2':
     dependencies:
@@ -9338,6 +9453,8 @@ snapshots:
 
   lines-and-columns@1.2.4: {}
 
+  linked-abort-controller@1.1.1: {}
+
   linkify-it@5.0.0:
     dependencies:
       uc.micro: 2.1.0
@@ -9358,6 +9475,8 @@ snapshots:
   locate-path@5.0.0:
     dependencies:
       p-locate: 4.1.0
+
+  lodash-es@4.18.1: {}
 
   lodash.startcase@4.4.0: {}
 
@@ -9725,6 +9844,62 @@ snapshots:
       use-sync-external-store: 1.6.0(react@19.2.5)
     optionalDependencies:
       react-dom: 19.2.5(react@19.2.5)
+
+  mobx-swiss-knife@1.15.0(mobx@6.15.0)(react@18.3.1):
+    dependencies:
+      '@faker-js/faker': 9.9.0
+      '@types/lodash-es': 4.17.12
+      linked-abort-controller: 1.1.1
+      lodash-es: 4.18.1
+      mobx: 6.15.0
+      yummies: 7.17.0(mobx@6.15.0)(react@18.3.1)
+    transitivePeerDependencies:
+      - react
+
+  mobx-view-model-devtools@0.0.55(vue@3.5.32(typescript@5.9.3)):
+    dependencies:
+      '@gravity-ui/icons': 2.18.0(react@18.3.1)
+      mobx: 6.15.0
+      mobx-react-lite: 4.1.1(mobx@6.15.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      mobx-swiss-knife: 1.15.0(mobx@6.15.0)(react@18.3.1)
+      mobx-view-model: 10.2.0(mobx-react-lite@4.1.1(mobx@6.15.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(mobx@6.15.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      mobx-web-api: 1.13.0(mobx@6.15.0)(react@18.3.1)
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
+      simplebar: 6.3.3
+      virtua: 0.49.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(vue@3.5.32(typescript@5.9.3))
+      yummies: 6.9.0(mobx@6.15.0)(react@18.3.1)
+    transitivePeerDependencies:
+      - react-native
+      - solid-js
+      - svelte
+      - vue
+
+  mobx-view-model-react@10.2.0(mobx-react-lite@4.1.1(mobx@6.15.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(mobx@6.15.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
+    dependencies:
+      mobx: 6.15.0
+      mobx-react-lite: 4.1.1(mobx@6.15.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      mobx-view-model: 10.2.0(mobx-react-lite@4.1.1(mobx@6.15.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(mobx@6.15.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
+
+  mobx-view-model@10.2.0(mobx-react-lite@4.1.1(mobx@6.15.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(mobx@6.15.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
+    dependencies:
+      mobx: 6.15.0
+      mobx-view-model-react: 10.2.0(mobx-react-lite@4.1.1(mobx@6.15.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(mobx@6.15.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      yummies: 7.17.0(mobx@6.15.0)(react@18.3.1)
+    optionalDependencies:
+      react: 18.3.1
+    transitivePeerDependencies:
+      - mobx-react-lite
+      - react-dom
+
+  mobx-web-api@1.13.0(mobx@6.15.0)(react@18.3.1):
+    dependencies:
+      mobx: 6.15.0
+      yummies: 7.17.0(mobx@6.15.0)(react@18.3.1)
+    transitivePeerDependencies:
+      - react
 
   mobx@6.15.0: {}
 
@@ -10613,6 +10788,15 @@ snapshots:
     dependencies:
       semver: 7.7.4
 
+  simplebar-core@1.3.2:
+    dependencies:
+      lodash: 4.18.1
+      lodash-es: 4.18.1
+
+  simplebar@6.3.3:
+    dependencies:
+      simplebar-core: 1.3.2
+
   sirv@3.0.2:
     dependencies:
       '@polka/url': 1.0.0-next.29
@@ -11032,6 +11216,12 @@ snapshots:
     dependencies:
       '@types/unist': 3.0.3
       vfile-message: 4.0.3
+
+  virtua@0.49.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(vue@3.5.32(typescript@5.9.3)):
+    optionalDependencies:
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
+      vue: 3.5.32(typescript@5.9.3)
 
   vite-node@3.2.4(@types/node@22.7.4)(jiti@2.6.1)(lightningcss@1.32.0)(terser@5.46.1)(tsx@4.21.0):
     dependencies:
@@ -11590,6 +11780,18 @@ snapshots:
       y18n: 5.0.8
       yargs-parser: 21.1.1
 
+  yummies@6.9.0(mobx@6.15.0)(react@18.3.1):
+    dependencies:
+      class-variance-authority: 0.7.1
+      clsx: 2.1.1
+      dayjs: 1.11.20
+      dompurify: 3.3.3
+      nanoid: 5.1.7
+      tailwind-merge: 3.5.0
+    optionalDependencies:
+      mobx: 6.15.0
+      react: 18.3.1
+
   yummies@7.16.2(mobx@6.15.0)(react@19.2.5):
     dependencies:
       class-variance-authority: 0.7.1
@@ -11601,6 +11803,18 @@ snapshots:
     optionalDependencies:
       mobx: 6.15.0
       react: 19.2.5
+
+  yummies@7.17.0(mobx@6.15.0)(react@18.3.1):
+    dependencies:
+      class-variance-authority: 0.7.1
+      clsx: 2.1.1
+      dayjs: 1.11.20
+      dompurify: 3.3.3
+      nanoid: 5.1.7
+      tailwind-merge: 3.5.0
+    optionalDependencies:
+      mobx: 6.15.0
+      react: 18.3.1
 
   yummies@7.17.0(mobx@6.15.0)(react@19.2.5):
     dependencies:
