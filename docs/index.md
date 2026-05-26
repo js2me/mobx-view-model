@@ -25,4 +25,8 @@ features:
   - title: Dynamic
     icon: 🌪️
     details: Create and destroy view models on the fly
+  - title: DevTools
+    icon: 🛠️
+    details: Inspect and debug ViewModel instances in real time (WIP)
+    link: /other/dev-tools
 ---
