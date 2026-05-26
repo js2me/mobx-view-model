@@ -37,6 +37,8 @@
   opacity: 0.5;
 }
 
+.property.map-entry,
+.property.set-entry,
 .property.instance {
   --value-color: var(--vmd-property-value-instance);
 }

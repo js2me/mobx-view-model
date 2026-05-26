@@ -134,26 +134,24 @@ export class SearchEngine {
     const seen = new Set<string>();
 
     for (const prop of candidates) {
-      const nameLower = prop.searchData.property;
-      const nameOriginal = prop.property ?? '';
-      const owner = this.getOwnerInfo(prop);
-      const uniqueKey = `${owner.key}/${nameLower}`;
-
-      if (
-        nameLower.startsWith(completingSegment) &&
-        nameLower.length >= completingSegment.length
-      ) {
-        if (seen.has(uniqueKey)) continue;
-        seen.add(uniqueKey);
-
-        const suggestions = suggestionsByVM.get(owner.name) ?? [];
-        suggestions.push({
-          value: nameOriginal,
-          suffix: nameOriginal.slice(completingSegment.length),
-          owner,
-        });
-        suggestionsByVM.set(owner.name, suggestions);
+      if (!this.propertyMatchesSegmentPartial(prop, completingSegment)) {
+        continue;
       }
+
+      const alias = this.getBestSuggestionAlias(prop, completingSegment);
+      const owner = this.getOwnerInfo(prop);
+      const uniqueKey = `${owner.key}/${alias.lower}`;
+
+      if (seen.has(uniqueKey)) continue;
+      seen.add(uniqueKey);
+
+      const suggestions = suggestionsByVM.get(owner.name) ?? [];
+      suggestions.push({
+        value: alias.original,
+        suffix: alias.original.slice(completingSegment.length),
+        owner,
+      });
+      suggestionsByVM.set(owner.name, suggestions);
     }
 
     const result: SearchSuggestion[] = [];
@@ -503,8 +501,8 @@ export class SearchEngine {
       if (!this.isOwnerAllowedForFirstPathSegment(vm, firstSeg)) continue;
 
       const directProps = this.getDirectPropertyChildren(vm);
-      const firstSegmentIsExactProperty = directProps.some(
-        (prop) => prop.searchData.property === firstSeg,
+      const firstSegmentIsExactProperty = directProps.some((prop) =>
+        this.propertyMatchesSegmentExact(prop, firstSeg),
       );
       const vmNameMatch =
         !firstSegmentIsExactProperty &&
@@ -526,8 +524,8 @@ export class SearchEngine {
       if (!this.isOwnerAllowedForFirstPathSegment(extra, firstSeg)) continue;
 
       const directProps = this.getDirectPropertyChildren(extra);
-      const firstSegmentIsExactProperty = directProps.some(
-        (prop) => prop.searchData.property === firstSeg,
+      const firstSegmentIsExactProperty = directProps.some((prop) =>
+        this.propertyMatchesSegmentExact(prop, firstSeg),
       );
 
       if (!firstSegmentIsExactProperty) continue;
@@ -601,7 +599,40 @@ export class SearchEngine {
     props: PropertyListItem[],
     segment: string,
   ): PropertyListItem[] {
-    return props.filter((p) => p.searchData.property === segment);
+    return props.filter((p) => this.propertyMatchesSegmentExact(p, segment));
+  }
+
+  private propertyMatchesSegmentExact(
+    item: PropertyListItem,
+    segment: string,
+  ): boolean {
+    const { property, mapKey } = item.searchData;
+
+    return property === segment || (mapKey !== '' && mapKey === segment);
+  }
+
+  private propertyMatchesSegmentPartial(
+    item: PropertyListItem,
+    segment: string,
+  ): boolean {
+    const { property, mapKey } = item.searchData;
+
+    return (
+      property.includes(segment) || (mapKey !== '' && mapKey.includes(segment))
+    );
+  }
+
+  private getBestSuggestionAlias(
+    prop: PropertyListItem,
+    prefix: string,
+  ): { lower: string; original: string } {
+    const { property, mapKey, mapKeyOriginal } = prop.searchData;
+
+    if (mapKey && mapKey.startsWith(prefix)) {
+      return { lower: mapKey, original: mapKeyOriginal };
+    }
+
+    return { lower: property, original: prop.property ?? '' };
   }
 
   private getOwnerInfo(item: PropertyListItem): OwnerInfo {
@@ -714,7 +745,7 @@ export class SearchEngine {
 
     const directProps = this.getDirectPropertyChildren(item);
     const matchesByProperty = directProps.some((prop) =>
-      prop.searchData.property.includes(this.segments[0] ?? ''),
+      this.propertyMatchesSegmentPartial(prop, this.segments[0] ?? ''),
     );
 
     if (!matchesByProperty) return [];
@@ -756,7 +787,9 @@ export class SearchEngine {
     const hasPathSyntax = this.endsWithDot || segments.length > 1;
     const firstSegmentIsExactProperty =
       hasPathSyntax &&
-      directProps.some((prop) => prop.searchData.property === firstSeg);
+      directProps.some((prop) =>
+        this.propertyMatchesSegmentExact(prop, firstSeg),
+      );
     const vmMatchesByName =
       !firstSegmentIsExactProperty &&
       (vmItem.searchData.name.includes(firstSeg) ||
@@ -851,7 +884,7 @@ export class SearchEngine {
     return item.children.some(
       (child) =>
         child instanceof PropertyListItem &&
-        child.searchData.property.includes(firstSegment),
+        this.propertyMatchesSegmentPartial(child, firstSegment),
     );
   }
 
@@ -894,7 +927,7 @@ export class SearchEngine {
       item.children.some(
         (child) =>
           child instanceof PropertyListItem &&
-          child.searchData.property === firstSeg,
+          this.propertyMatchesSegmentExact(child, firstSeg),
       );
 
     return (
@@ -929,7 +962,9 @@ export class SearchEngine {
     const parentDirectProps = this.getDirectPropertyChildren(parent);
     const firstSegmentIsExactProperty =
       hasPathSyntax &&
-      parentDirectProps.some((prop) => prop.searchData.property === firstSeg);
+      parentDirectProps.some((prop) =>
+        this.propertyMatchesSegmentExact(prop, firstSeg),
+      );
     const vmMatchesByName =
       parent instanceof VMListItem &&
       !firstSegmentIsExactProperty &&
@@ -1003,7 +1038,9 @@ export class SearchEngine {
       const parentDirectProps = this.getDirectPropertyChildren(parent);
       const firstSegmentIsExactProperty =
         hasPathSyntax &&
-        parentDirectProps.some((prop) => prop.searchData.property === firstSeg);
+        parentDirectProps.some((prop) =>
+        this.propertyMatchesSegmentExact(prop, firstSeg),
+      );
       const vmMatchesByName =
         parent instanceof VMListItem &&
         !firstSegmentIsExactProperty &&
@@ -1051,9 +1088,10 @@ export class SearchEngine {
     preferExact: boolean,
   ): boolean {
     if (!segment) return true;
-    if (!preferExact) return item.searchData.property.includes(segment);
 
-    return item.searchData.property === segment;
+    return preferExact
+      ? this.propertyMatchesSegmentExact(item, segment)
+      : this.propertyMatchesSegmentPartial(item, segment);
   }
 
   resetSearch = () => {

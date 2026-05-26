@@ -7,7 +7,9 @@ import { ArrayPropertyContent } from './array';
 import { FunctionPropertyContent } from './function';
 import { InstancePropertyContent } from './instance';
 import { ObjectPropertyContent } from './object';
+import { MapEntryPropertyContent } from './map-entry';
 import { PrimitivePropertyContent } from './primitive';
+import { SetEntryPropertyContent } from './set-entry';
 import css from './styles.module.css';
 
 export interface PropertyListItemRenderProps {
@@ -35,6 +37,14 @@ export const PropertyListItemRender = observer(
       }
       case 'object': {
         content = <ObjectPropertyContent {...props} />;
+        break;
+      }
+      case 'map-entry': {
+        content = <MapEntryPropertyContent {...props} />;
+        break;
+      }
+      case 'set-entry': {
+        content = <SetEntryPropertyContent {...props} />;
         break;
       }
       case 'primitive': {

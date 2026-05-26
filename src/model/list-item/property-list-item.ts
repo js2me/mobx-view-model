@@ -8,6 +8,13 @@ import {
 } from 'mobx';
 import type { ChangeEventHandler, KeyboardEventHandler } from 'react';
 import type { Maybe } from 'yummies/types';
+import {
+  getCollectionKind,
+  getMapEntryAt,
+  getSetValueAt,
+  type CollectionKind,
+} from '../utils/collection-like';
+import { formatSearchSegmentKey } from '../utils/format-search-key';
 import { getAllKeys } from '../utils/get-all-keys';
 import { isInaccessible, INACCESSIBLE } from '../utils/safe-access';
 import { notifyMobxEditPropagation } from '../utils/notify-mobx-change';
@@ -44,6 +51,26 @@ export class PropertyListItem extends ListItem<any> {
   get data(): any {
     this.dataWatchAtom.reportObserved();
 
+    if (this.collectionEntryKind != null && this.collectionEntryIndex != null) {
+      const parentData = this.parent.data;
+
+      if (
+        this.collectionEntryKind === 'map' &&
+        getCollectionKind(parentData) === 'map'
+      ) {
+        return getMapEntryAt(parentData, this.collectionEntryIndex)?.[1];
+      }
+
+      if (
+        this.collectionEntryKind === 'set' &&
+        getCollectionKind(parentData) === 'set'
+      ) {
+        return getSetValueAt(parentData, this.collectionEntryIndex);
+      }
+
+      return undefined;
+    }
+
     if (!this.property) {
       return undefined;
     }
@@ -53,6 +80,23 @@ export class PropertyListItem extends ListItem<any> {
     } catch {
       return INACCESSIBLE;
     }
+  }
+
+  get mapEntryKey(): unknown {
+    if (
+      this.collectionEntryKind !== 'map' ||
+      this.collectionEntryIndex == null
+    ) {
+      return undefined;
+    }
+
+    const parentData = this.parent.data;
+
+    if (getCollectionKind(parentData) !== 'map') {
+      return undefined;
+    }
+
+    return getMapEntryAt(parentData, this.collectionEntryIndex)?.[0];
   }
 
   get descriptor() {
@@ -82,15 +126,21 @@ export class PropertyListItem extends ListItem<any> {
   }
 
   get instanceClassName(): string {
+    return this.getInstanceClassName(this.data);
+  }
+
+  private getInstanceClassName(data: any): string {
     if (this.isInaccessible) {
       return '<Inaccessible>';
     }
 
-    if (this.data && this.data.constructor?.name) {
-      return this.data.constructor.name;
+    if (data && data.constructor?.name) {
+      return data.constructor.name;
     }
 
-    const match = /^\[object (.+)\]$/.exec(this.stringifiedDataType);
+    const match = /^\[object (.+)\]$/.exec(
+      data == null ? '[object Object]' : Object.prototype.toString.call(data),
+    );
     if (match?.[1] && match[1] !== 'Object') {
       return match[1];
     }
@@ -103,8 +153,22 @@ export class PropertyListItem extends ListItem<any> {
   }
 
   get type() {
-    const data = this.data;
+    if (this.collectionEntryKind === 'map') {
+      return 'map-entry';
+    }
 
+    if (this.collectionEntryKind === 'set') {
+      return 'set-entry';
+    }
+
+    return this.detectValueType(this.data);
+  }
+
+  get nestedValueType() {
+    return this.detectValueType(this.data);
+  }
+
+  private detectValueType(data: any) {
     if (this.isInaccessible) {
       return 'primitive';
     }
@@ -113,12 +177,12 @@ export class PropertyListItem extends ListItem<any> {
       return 'array';
     }
 
-    if (this.dataType === 'function') {
+    if (typeof data === 'function') {
       return 'function';
     }
 
-    if (this.data && this.dataType === 'object') {
-      if (this.instanceClassName !== 'Object') {
+    if (data && typeof data === 'object') {
+      if (this.getInstanceClassName(data) !== 'Object') {
         return 'instance';
       }
 
@@ -129,10 +193,128 @@ export class PropertyListItem extends ListItem<any> {
   }
 
   get children(): PropertyListItem[] {
+    if (this.collectionEntryKind != null) {
+      return this.getChildrenForNestedValue(this.data);
+    }
+
     let listItems: PropertyListItem[] = [];
 
     if (this.type === 'array') {
-      listItems = Object.keys(this.data).map((property, order) =>
+      listItems = this.getChildrenForNestedValue(this.data);
+    } else if (this.type === 'function') {
+      listItems = Object.keys(this.data).map((property, order) => {
+        return PropertyListItem.create(
+          this.devtools,
+          property,
+          `${this.path}.${property}`,
+          order,
+          this,
+        );
+      });
+    } else if (this.type === 'instance' || this.type === 'object') {
+      const entryItems = this.getCollectionEntryChildren();
+      let memberItems = getAllKeys(this.data).map((property, order) => {
+        return PropertyListItem.create(
+          this.devtools,
+          property,
+          `${this.path}.${property}`,
+          order + entryItems.length,
+          this,
+        );
+      });
+
+      if (this.devtools.sortPropertiesBy !== 'none') {
+        memberItems = memberItems.sort((a, b) => {
+          const aProperty = String(a.property);
+          const bProperty = String(b.property);
+
+          if (this.devtools.sortPropertiesBy === 'asc') {
+            return aProperty.localeCompare(bProperty);
+          }
+          return bProperty.localeCompare(aProperty);
+        });
+      }
+
+      return [...entryItems, ...memberItems];
+    }
+
+    if (this.devtools.sortPropertiesBy !== 'none') {
+      listItems = listItems.sort((a, b) => {
+        const aProperty = String(a.property);
+        const bProperty = String(b.property);
+
+        if (this.devtools.sortPropertiesBy === 'asc') {
+          return aProperty.localeCompare(bProperty);
+        }
+        return bProperty.localeCompare(aProperty);
+      });
+    }
+
+    return listItems;
+  }
+
+  private getCollectionEntryChildren(): PropertyListItem[] {
+    const data = this.data;
+    const collectionKind = getCollectionKind(data);
+
+    if (collectionKind === 'map') {
+      const items: PropertyListItem[] = [];
+      let index = 0;
+
+      for (const _ of data.entries()) {
+        items.push(
+          PropertyListItem.create(
+            this.devtools,
+            String(index),
+            `${this.path}[${index}]`,
+            index,
+            this,
+            {
+              collectionEntryKind: 'map',
+              collectionEntryIndex: index,
+            },
+          ),
+        );
+        index++;
+      }
+
+      return items;
+    }
+
+    if (collectionKind === 'set') {
+      const items: PropertyListItem[] = [];
+      let index = 0;
+
+      for (const _ of data.values()) {
+        items.push(
+          PropertyListItem.create(
+            this.devtools,
+            String(index),
+            `${this.path}[${index}]`,
+            index,
+            this,
+            {
+              collectionEntryKind: 'set',
+              collectionEntryIndex: index,
+            },
+          ),
+        );
+        index++;
+      }
+
+      return items;
+    }
+
+    return [];
+  }
+
+  private getChildrenForNestedValue(data: any): PropertyListItem[] {
+    if (this.isInaccessible || isInaccessible(data)) {
+      return [];
+    }
+
+    if (Array.isArray(data)) {
+      const listItems = Object.keys(data).map((property, order) =>
         PropertyListItem.create(
           this.devtools,
           property,
@@ -151,18 +333,12 @@ export class PropertyListItem extends ListItem<any> {
           this,
         ),
       );
-    } else if (this.type === 'function') {
-      listItems = Object.keys(this.data).map((property, order) => {
-        return PropertyListItem.create(
-          this.devtools,
-          property,
-          `${this.path}.${property}`,
-          order,
-          this,
-        );
-      });
-    } else if (this.type === 'instance' || this.type === 'object') {
-      return getAllKeys(this.data).map((property, order) => {
+
+      return listItems;
+    }
+
+    if (typeof data === 'function') {
+      return Object.keys(data).map((property, order) => {
         return PropertyListItem.create(
           this.devtools,
           property,
@@ -173,19 +349,19 @@ export class PropertyListItem extends ListItem<any> {
       });
     }
 
-    if (this.devtools.sortPropertiesBy !== 'none') {
-      listItems = listItems.sort((a, b) => {
-        const aProperty = String(a.property);
-        const bProperty = String(b.property);
-
-        if (this.devtools.sortPropertiesBy === 'asc') {
-          return aProperty.localeCompare(bProperty);
-        }
-        return bProperty.localeCompare(aProperty);
+    if (data && typeof data === 'object') {
+      return getAllKeys(data).map((property, order) => {
+        return PropertyListItem.create(
+          this.devtools,
+          property,
+          `${this.path}.${property}`,
+          order,
+          this,
+        );
       });
     }
 
-    return listItems;
+    return [];
   }
 
   get extraContent() {
@@ -202,6 +378,8 @@ export class PropertyListItem extends ListItem<any> {
           case 'array':
           case 'instance':
           case 'object':
+          case 'map-entry':
+          case 'set-entry':
             return ',';
         }
     }
@@ -220,6 +398,8 @@ export class PropertyListItem extends ListItem<any> {
         );
       case 'instance':
       case 'object':
+      case 'map-entry':
+      case 'set-entry':
         return new MetaListItem(
           this.devtools,
           `${this.key}/closing-tag`,
@@ -267,8 +447,19 @@ export class PropertyListItem extends ListItem<any> {
   }
 
   get searchData() {
+    const property = this.property?.toLowerCase() || '';
+    let mapKey = '';
+    let mapKeyOriginal = '';
+
+    if (this.collectionEntryKind === 'map' && this.mapEntryKey != null) {
+      mapKeyOriginal = formatSearchSegmentKey(this.mapEntryKey);
+      mapKey = mapKeyOriginal.toLowerCase();
+    }
+
     return {
-      property: this.property?.toLowerCase() || '',
+      property,
+      mapKey,
+      mapKeyOriginal,
     };
   }
 
@@ -277,6 +468,7 @@ export class PropertyListItem extends ListItem<any> {
   get isEditable() {
     return (
       this.property !== undefined &&
+      this.collectionEntryKind == null &&
       this.type !== 'instance' &&
       !this.isInaccessible &&
       !isInaccessible(this.parent.data)
@@ -663,6 +855,8 @@ export class PropertyListItem extends ListItem<any> {
     public path: string,
     public order: number,
     private parent: ListItem<any>,
+    public collectionEntryKind?: CollectionKind,
+    public collectionEntryIndex?: number,
   ) {
     super(devtools, PropertyListItem.createKey(parent, property), undefined);
 
@@ -672,6 +866,8 @@ export class PropertyListItem extends ListItem<any> {
     computed(this, 'dataType');
     computed(this, 'stringifiedDataType');
     computed(this, 'instanceClassName');
+    computed(this, 'nestedValueType');
+    computed(this, 'mapEntryKey');
     computed(this, 'isInaccessibleDisplay');
     computed(this, 'extraContent');
     observable.ref(this, 'failedStringify');
@@ -697,6 +893,10 @@ export class PropertyListItem extends ListItem<any> {
     path: string,
     order: number,
     parent: ListItem<any>,
+    options?: {
+      collectionEntryKind?: CollectionKind;
+      collectionEntryIndex?: number;
+    },
   ) {
     const cache = parent.cache ?? devtools.anyCache;
     const key = `${PropertyListItem.createKey(parent, property)}/list-item`;
@@ -704,7 +904,15 @@ export class PropertyListItem extends ListItem<any> {
     let item: Maybe<PropertyListItem> = cache.get(key);
 
     if (!item) {
-      item = new PropertyListItem(devtools, property, path, order, parent);
+      item = new PropertyListItem(
+        devtools,
+        property,
+        path,
+        order,
+        parent,
+        options?.collectionEntryKind,
+        options?.collectionEntryIndex,
+      );
       cache.set(key, item);
     }
 
