@@ -38,7 +38,10 @@
 }
 
 .property.map-entry,
-.property.set-entry,
+.property.set-entry {
+  --value-color: var(--vmd-property-meta-color);
+}
+
 .property.instance {
   --value-color: var(--vmd-property-value-instance);
 }
@@ -63,8 +66,48 @@
   --value-color: var(--vmd-property-value-nullish);
 }
 
+.property.primitive.boolean {
+  --value-color: var(--vmd-property-value-boolean);
+}
+
 .primitive.string {
   --value-color: var(--vmd-property-value-string);
+}
+
+.collectionMeta {
+  color: var(--vmd-property-meta-color);
+}
+
+.typedValue {
+  color: var(--value-color, var(--vmd-property-meta-color));
+}
+
+.typedValue.string {
+  --value-color: var(--vmd-property-value-string);
+}
+
+.typedValue.primitive,
+.typedValue.number,
+.typedValue.boolean,
+.typedValue.bigint,
+.typedValue.symbol {
+  --value-color: var(--vmd-property-value-primitive);
+}
+
+.typedValue.null,
+.typedValue.undefined,
+.typedValue.nullish {
+  --value-color: var(--vmd-property-value-nullish);
+}
+
+.typedValue.instance {
+  --value-color: var(--vmd-property-value-instance);
+}
+
+.typedValue.object,
+.typedValue.array,
+.typedValue.function {
+  --value-color: var(--vmd-property-meta-color);
 }
 
 .propertyName {
