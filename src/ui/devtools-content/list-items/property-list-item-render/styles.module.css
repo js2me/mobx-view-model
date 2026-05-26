@@ -150,3 +150,7 @@
   border-radius: 4px;
   padding: 0 4px;
 }
+
+.property.isEditMode .propertyValue > .editContent {
+  width: 100%;
+}

@@ -6,6 +6,7 @@ import {
   getNestedValueExpandedOpen,
   getNestedValuePreview,
 } from './format-collection-inspector-value';
+import { PropertyValueEditInput } from './property-value-edit-input';
 import css from './styles.module.css';
 
 export const MapEntryPropertyContent = observer(
@@ -26,7 +27,11 @@ export const MapEntryPropertyContent = observer(
           {formatCollectionKey(mapKey)}
         </CollectionTypedValue>
         <CollectionMeta>{' => '}</CollectionMeta>
-        {valueIsStructuralOpen ? (
+        {item.isEditMode ? (
+          <span className={css.propertyValue}>
+            <PropertyValueEditInput item={item} />
+          </span>
+        ) : valueIsStructuralOpen ? (
           <CollectionMeta>{valuePart}</CollectionMeta>
         ) : (
           <CollectionTypedValue

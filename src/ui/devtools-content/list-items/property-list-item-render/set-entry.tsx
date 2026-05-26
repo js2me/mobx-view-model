@@ -9,6 +9,7 @@ import {
   getNestedValueExpandedOpen,
   getNestedValuePreview,
 } from './format-collection-inspector-value';
+import { PropertyValueEditInput } from './property-value-edit-input';
 
 export const SetEntryPropertyContent = observer(
   ({ item }: PropertyListItemRenderProps) => {
@@ -24,7 +25,11 @@ export const SetEntryPropertyContent = observer(
         <span className={css.propertyName}>{item.property}</span>
         :&nbsp;
         <CollectionMeta>{'{ '}</CollectionMeta>
-        {valueIsStructuralOpen ? (
+        {item.isEditMode ? (
+          <span className={css.propertyValue}>
+            <PropertyValueEditInput item={item} />
+          </span>
+        ) : valueIsStructuralOpen ? (
           <CollectionMeta>{valuePart}</CollectionMeta>
         ) : (
           <CollectionTypedValue value={item.data} displayType={item.nestedValueType}>

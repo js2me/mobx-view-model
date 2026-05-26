@@ -28,6 +28,10 @@ import {
   findMobxAdministration,
 } from '../utils/mobx-administration';
 import { resolveComputedProducerForEdit } from '../utils/resolve-computed-producer';
+import {
+  setMapEntryValue,
+  setSetEntryValue,
+} from '../utils/set-collection-entry-value';
 import { setPropertyValue } from '../utils/set-property-value';
 import type { AnyVM } from '../types';
 import type { ViewModelDevtools } from '../view-model-devtools';
@@ -466,6 +470,21 @@ export class PropertyListItem extends ListItem<any> {
   private failedStringify = false;
 
   get isEditable() {
+    if (this.isInaccessible || isInaccessible(this.parent.data)) {
+      return false;
+    }
+
+    if (
+      this.collectionEntryKind === 'map' ||
+      this.collectionEntryKind === 'set'
+    ) {
+      return (
+        this.property !== undefined &&
+        this.nestedValueType !== 'instance' &&
+        this.nestedValueType !== 'function'
+      );
+    }
+
     return (
       this.property !== undefined &&
       this.collectionEntryKind == null &&
@@ -482,6 +501,10 @@ export class PropertyListItem extends ListItem<any> {
   get editableContent() {
     if (this.isInaccessible) {
       return '';
+    }
+
+    if (this.collectionEntryKind != null) {
+      return this.formatEditableNestedValue();
     }
 
     switch (this.type) {
@@ -656,33 +679,98 @@ export class PropertyListItem extends ListItem<any> {
       parsed = this.parseEditContent();
     } catch (error) {
       this.devtools.notifications.push({
-        title: `Failed to parse value for "${this.property}": ${formatEditError(error)}`,
+        title: `Failed to parse value for "${this.getEditTargetLabel()}": ${formatEditError(error)}`,
       });
       return;
     }
 
-    const producerTarget = resolveComputedProducerForEdit(this, parsed);
-
-    const result = producerTarget
-      ? setPropertyValue(
-          producerTarget.host,
-          producerTarget.key,
-          producerTarget.value,
-        )
-      : this.property != null
-        ? setPropertyValue(this.parent.data, this.property, parsed)
-        : { ok: false as const, error: 'Property key is missing' };
+    const result = this.applyParsedEdit(parsed);
 
     if (!result.ok) {
       this.devtools.notifications.push({
-        title: `Failed to update "${this.property}": ${result.error}`,
+        title: `Failed to update "${this.getEditTargetLabel()}": ${result.error}`,
       });
       return;
     }
 
     this.reportDataChangedUpwards();
-    this.notifyHostAppAfterEdit(producerTarget ?? undefined);
+    this.notifyHostAppAfterEdit(result.producerTarget);
     this.cancelEdit();
+  }
+
+  private getEditTargetLabel() {
+    if (this.collectionEntryKind === 'map' && this.mapEntryKey != null) {
+      return formatSearchSegmentKey(this.mapEntryKey);
+    }
+
+    return String(this.property);
+  }
+
+  private applyParsedEdit(parsed: unknown): {
+    ok: boolean;
+    error?: string;
+    producerTarget?: { host: object; key: string };
+  } {
+    if (this.collectionEntryKind === 'map') {
+      const key = this.mapEntryKey;
+
+      if (key === undefined) {
+        return { ok: false, error: 'Map key is missing' };
+      }
+
+      return setMapEntryValue(this.parent.data, key, parsed);
+    }
+
+    if (this.collectionEntryKind === 'set') {
+      return setSetEntryValue(this.parent.data, this.data, parsed);
+    }
+
+    const producerTarget = resolveComputedProducerForEdit(this, parsed);
+
+    if (producerTarget) {
+      const result = setPropertyValue(
+        producerTarget.host,
+        producerTarget.key,
+        producerTarget.value,
+      );
+
+      return result.ok
+        ? { ok: true, producerTarget }
+        : { ok: false, error: result.error };
+    }
+
+    if (this.property == null) {
+      return { ok: false, error: 'Property key is missing' };
+    }
+
+    const result = setPropertyValue(this.parent.data, this.property, parsed);
+
+    return result.ok ? { ok: true } : { ok: false, error: result.error };
+  }
+
+  private formatEditableNestedValue() {
+    switch (this.nestedValueType) {
+      case 'object':
+      case 'array': {
+        try {
+          return JSON.stringify(this.data, null, 2);
+        } catch {
+          return this.stringifiedData;
+        }
+      }
+      default: {
+        switch (this.dataType) {
+          case 'bigint':
+            return `${String(this.data)}n`;
+          case 'symbol':
+            return `Symbol(${Symbol.keyFor(this.data as symbol) || ''})`;
+          case 'string':
+            return `"${String(this.data)}"`;
+        }
+
+        return String(this.data);
+      }
+    }
   }
 
   private notifyHostAppAfterEdit(producerTarget?: {
@@ -696,7 +784,10 @@ export class PropertyListItem extends ListItem<any> {
     const editedHosts: object[] = [];
     const pathFromVm = this.buildMobxPathFromVm(producerTarget);
 
-    if (producerTarget) {
+    if (this.collectionEntryKind != null) {
+      registerEditedHost(editedHosts, this.parent.data);
+      invalidateMobxObject(this.parent.data);
+    } else if (producerTarget) {
       registerEditedHost(editedHosts, producerTarget.host);
       invalidateMobxProperty(producerTarget.host, producerTarget.key);
 
@@ -821,7 +912,13 @@ export class PropertyListItem extends ListItem<any> {
   private parseEditContent(): unknown {
     const content = this.editContent.trim();
 
-    if (this.type === 'object' || this.type === 'array') {
+    if (
+      this.type === 'object' ||
+      this.type === 'array' ||
+      (this.collectionEntryKind != null &&
+        (this.nestedValueType === 'object' ||
+          this.nestedValueType === 'array'))
+    ) {
       return JSON.parse(content);
     }
 
