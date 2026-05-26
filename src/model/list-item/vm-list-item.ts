@@ -1,6 +1,8 @@
+import { ArrowsRotateRight } from '@gravity-ui/icons';
 import { computed, makeObservable, untracked } from 'mobx';
-import type { ViewModelParams } from 'mobx-view-model';
+import { isViewModel, type ViewModelParams } from 'mobx-view-model';
 import type { AnyVM } from '../types';
+import { forceUpdateViewModel } from '../utils/force-update-view-model';
 import { getAllKeys } from '../utils/get-all-keys';
 import { getViewModelBaseKeys } from '../utils/get-view-model-base-keys';
 import type { ViewModelDevtools } from '../view-model-devtools';
@@ -66,7 +68,33 @@ export class VMListItem extends ListItem<AnyVM> {
   }
 
   get operations(): ListItemOperation<any>[] {
-    return super.operations;
+    const operations: ListItemOperation<any>[] = [];
+
+    if (this.canForceUpdateView) {
+      operations.push({
+        title: 'Force update bound view',
+        icon: ArrowsRotateRight,
+        action: () => {
+          const result = forceUpdateViewModel(this.data);
+
+          if (!result.ok) {
+            this.devtools.notifications.push({ title: result.error });
+            return;
+          }
+
+          this.reportDataChanged();
+          this.devtools.notifications.push({
+            title: `Bound view for ${this.displayName} (${this.data.id}) was force-updated`,
+          });
+        },
+      });
+    }
+
+    return [...operations, ...super.operations];
+  }
+
+  private get canForceUpdateView() {
+    return isViewModel(this.data);
   }
 
   get depth(): number {

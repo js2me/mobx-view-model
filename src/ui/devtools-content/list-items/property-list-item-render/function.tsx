@@ -19,6 +19,7 @@ export const FunctionPropertyContent = observer(
               value={item.editContent}
               className={css.editContent}
               onChange={item.handleChangeEditContent}
+              onKeyDown={item.handleEditKeyDown}
               onClick={skipEvent as any}
               data-ignore-global-keys
             />

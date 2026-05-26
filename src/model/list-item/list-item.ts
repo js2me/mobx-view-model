@@ -155,6 +155,10 @@ export abstract class ListItem<T> {
     ];
   }
 
+  reportDataChanged() {
+    this.dataWatchAtom.reportChanged();
+  }
+
   getSavedTempVarNotification(tempVarName: string) {
     return `Saved into ${tempVarName}`;
   }
