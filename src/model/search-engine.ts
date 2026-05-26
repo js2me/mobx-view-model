@@ -15,6 +15,11 @@ import {
   createFocusableRef,
   type FocusableRef,
 } from './utils/create-focusable-ref';
+import {
+  getSearchPathParts,
+  hasSearchPathSyntax,
+  parseSearchPath,
+} from './utils/parse-search-path';
 
 export type SearchInput =
   | { type: 'vm'; item: VMListItem }
@@ -67,17 +72,16 @@ export class SearchEngine {
   }
 
   /**
-   * Сегменты поиска, разбитые по точке.
-   * Trailing-пустой сегмент (от trailing dot) убирается — для этого есть endsWithDot.
+   * Сегменты пути: точка и bracket-нотация `obj['key']` эквивалентны.
    */
   get segments(): string[] {
     if (!this.formattedSearchText) return [];
-    const all = this.formattedSearchText.split('.');
-    return all[all.length - 1] === '' ? all.slice(0, -1) : all;
+
+    return parseSearchPath(this.formattedSearchText).segments;
   }
 
   get endsWithDot(): boolean {
-    return this.searchTextToSearch.trim().endsWith('.');
+    return parseSearchPath(this.formattedSearchText).endsWithDot;
   }
 
   get isNestedSearch(): boolean {
@@ -101,14 +105,15 @@ export class SearchEngine {
   }
 
   get suggestionItems(): SearchSuggestion[] {
-    if (this.isSearchTextDebouncing && !this.searchText.includes('.'))
+    if (this.isSearchTextDebouncing && !hasSearchPathSyntax(this.searchText)) {
       return [];
+    }
     return this.buildSuggestionItemsForText(this.getActiveSearchText());
   }
 
   private getActiveSearchText(): string {
-    // После точки сразу используем актуальный текст, иначе debounce ломает path и owner-lock.
-    if (this.searchText.includes('.')) {
+    // Path-синтаксис (точка / bracket) — сразу актуальный текст, иначе debounce ломает path.
+    if (hasSearchPathSyntax(this.searchText)) {
       return this.searchText;
     }
 
@@ -119,16 +124,22 @@ export class SearchEngine {
     const formatted = text.toLowerCase().trim();
     if (!formatted) return [];
 
-    const all = formatted.split('.');
-    const segments = all[all.length - 1] === '' ? all.slice(0, -1) : all;
-    if (segments.length === 0) return [];
+    const {
+      pathSegments,
+      completingSegment,
+      endsWithDot,
+      hasBracketKeySyntax,
+    } = getSearchPathParts(text);
 
-    const endsWithDot = text.trim().endsWith('.');
-    const completingSegment = endsWithDot ? '' : segments[segments.length - 1];
-    if (!endsWithDot && !completingSegment) return [];
+    if (pathSegments.length === 0 && !completingSegment && !endsWithDot) {
+      return [];
+    }
+
+    if (!endsWithDot && !completingSegment && !hasBracketKeySyntax) {
+      return [];
+    }
 
     const rootItems = this.config.getRootItems();
-    const pathSegments = endsWithDot ? segments : segments.slice(0, -1);
     const candidates = this.getCandidatePropsAtDepth(rootItems, pathSegments);
     const suggestionsByVM = new Map<string, SearchSuggestion[]>();
     const seen = new Set<string>();
@@ -210,7 +221,7 @@ export class SearchEngine {
     options?: { commitOwner?: boolean; dismissSuggestions?: boolean },
   ) => {
     this.clearSearchDebounce();
-    const hadPathSyntax = this.searchText.includes('.');
+    const hadPathSyntax = hasSearchPathSyntax(this.searchText);
     const nextSearchText = this.searchText + suggestion.suffix;
     this.searchText = nextSearchText;
     this.searchTextToSearch = nextSearchText;
@@ -310,7 +321,8 @@ export class SearchEngine {
       nextSearchText.endsWith('.') &&
       nextSearchText === `${previousSearchText}.`;
     const enteredPathSyntax =
-      nextSearchText.includes('.') && !previousSearchText.includes('.');
+      hasSearchPathSyntax(nextSearchText) &&
+      !hasSearchPathSyntax(previousSearchText);
 
     if (addedDot || enteredPathSyntax) {
       const pathSegment = this.getFirstPathSegment(
@@ -346,10 +358,9 @@ export class SearchEngine {
       return;
     }
 
-    const firstSegment =
-      nextSearchText.toLowerCase().trim().split('.')[0] ?? '';
+    const firstSegment = this.getFirstPathSegment(nextSearchText);
     if (
-      !nextSearchText.includes('.') ||
+      !hasSearchPathSyntax(nextSearchText) ||
       !firstSegment ||
       firstSegment !== this.selectedPathSegment
     ) {
@@ -364,7 +375,7 @@ export class SearchEngine {
    * Если пользователь явно не выбирал — берём exact-match `service`, иначе первый в списке.
    */
   private getFirstPathSegment(text: string): string {
-    return text.toLowerCase().trim().split('.')[0] ?? '';
+    return parseSearchPath(text).segments[0] ?? '';
   }
 
   private resolvePathOwnerSuggestion(
@@ -1039,8 +1050,8 @@ export class SearchEngine {
       const firstSegmentIsExactProperty =
         hasPathSyntax &&
         parentDirectProps.some((prop) =>
-        this.propertyMatchesSegmentExact(prop, firstSeg),
-      );
+          this.propertyMatchesSegmentExact(prop, firstSeg),
+        );
       const vmMatchesByName =
         parent instanceof VMListItem &&
         !firstSegmentIsExactProperty &&
