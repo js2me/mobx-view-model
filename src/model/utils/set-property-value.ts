@@ -52,8 +52,45 @@ function isReadOnlyAccessor(descriptor: PropertyDescriptor | undefined) {
   return !!descriptor?.get && !descriptor.set && descriptor.writable !== true;
 }
 
-function isMobxAccessor(descriptor: PropertyDescriptor | undefined) {
-  return !!descriptor?.get && typeof descriptor.set === 'function';
+function isMobxAccessor(object: object, key: string, descriptor: PropertyDescriptor | undefined) {
+  if (!descriptor?.get || typeof descriptor.set !== 'function') {
+    return false;
+  }
+
+  const adm = findMobxAdministration(object);
+
+  if (!adm) {
+    return false;
+  }
+
+  ensureMobxPropertyAtomLoaded(object, key, adm);
+  return adm.values_.has(key);
+}
+
+function shouldOverrideProperty(object: object, key: PropertyKey) {
+  if (!isStringKey(key)) {
+    return isReadOnlyAccessor(getPropertyDescriptor(object, key));
+  }
+
+  const descriptor = getPropertyDescriptor(object, key);
+
+  if (isReadOnlyAccessor(descriptor)) {
+    return true;
+  }
+
+  if (!findMobxAdministration(object)) {
+    return false;
+  }
+
+  if (isMobxComputedKey(object, key)) {
+    return true;
+  }
+
+  if (isMobxAccessor(object, key, descriptor)) {
+    return true;
+  }
+
+  return false;
 }
 
 function isMobxComputedKey(object: object, key: string) {
@@ -202,28 +239,6 @@ function shadowPropertyValue(object: object, key: string, value: unknown) {
   return false;
 }
 
-function shouldOverrideProperty(object: object, key: PropertyKey) {
-  if (!isStringKey(key)) {
-    return isReadOnlyAccessor(getPropertyDescriptor(object, key));
-  }
-
-  const descriptor = getPropertyDescriptor(object, key);
-
-  if (isReadOnlyAccessor(descriptor)) {
-    return true;
-  }
-
-  if (isMobxComputedKey(object, key)) {
-    return true;
-  }
-
-  if (isMobxAccessor(descriptor)) {
-    return true;
-  }
-
-  return false;
-}
-
 export function setPropertyValue(
   object: object,
   key: PropertyKey,
@@ -326,7 +341,14 @@ function overrideMobxProperty(object: object, key: string, value: unknown) {
     return;
   }
 
-  if (getPropertyDescriptor(object, key)) {
+  const descriptor = getPropertyDescriptor(object, key);
+
+  if (descriptor?.set) {
+    descriptor.set.call(object, value);
+    return;
+  }
+
+  if (descriptor && !descriptor.writable && !descriptor.configurable) {
     throw new Error(formatMobxUpdateFailure(key));
   }
 
