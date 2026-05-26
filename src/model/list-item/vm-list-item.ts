@@ -5,6 +5,7 @@ import type { AnyVM } from '../types';
 import { forceUpdateViewModel } from '../utils/force-update-view-model';
 import { getAllKeys } from '../utils/get-all-keys';
 import { getViewModelBaseKeys } from '../utils/get-view-model-base-keys';
+import { sortPropertyKeys } from '../utils/sort-property-keys';
 import type { ViewModelDevtools } from '../view-model-devtools';
 import { ListItem, type ListItemOperation } from './list-item';
 import { PropertyListItem } from './property-list-item';
@@ -31,14 +32,7 @@ export class VMListItem extends ListItem<AnyVM> {
       keys = keys.filter((key) => !baseKeys.has(key));
     }
 
-    if (this.devtools.sortPropertiesBy !== 'none') {
-      keys = keys.sort((a, b) => {
-        if (this.devtools.sortPropertiesBy === 'asc') {
-          return a.localeCompare(b);
-        }
-        return b.localeCompare(a);
-      });
-    }
+    keys = sortPropertyKeys(keys, this.devtools.sortPropertiesBy);
 
     return keys.map((property, order) => {
       return PropertyListItem.create(

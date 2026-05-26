@@ -2,6 +2,7 @@ import { computed, makeObservable, untracked } from 'mobx';
 import type { AnyObject } from 'yummies/types';
 import type { AnyVM } from '../types';
 import type { ViewModelDevtools } from '../view-model-devtools';
+import { sortPropertyKeys } from '../utils/sort-property-keys';
 import { ListItem, type ListItemOperation } from './list-item';
 import { PropertyListItem } from './property-list-item';
 
@@ -11,14 +12,7 @@ export class ExtraListItem extends ListItem<AnyVM> {
 
     let keys = Object.keys(this.data || {});
 
-    if (this.devtools.sortPropertiesBy !== 'none') {
-      keys = keys.sort((a, b) => {
-        if (this.devtools.sortPropertiesBy === 'asc') {
-          return a.localeCompare(b);
-        }
-        return b.localeCompare(a);
-      });
-    }
+    keys = sortPropertyKeys(keys, this.devtools.sortPropertiesBy);
 
     return keys.map((property, order) => {
       return PropertyListItem.create(

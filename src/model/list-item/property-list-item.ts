@@ -33,6 +33,7 @@ import {
   setSetEntryValue,
 } from '../utils/set-collection-entry-value';
 import { setPropertyValue } from '../utils/set-property-value';
+import { sortPropertyListItems } from '../utils/sort-property-keys';
 import type { AnyVM } from '../types';
 import type { ViewModelDevtools } from '../view-model-devtools';
 import { ListItem, type ListItemOperation } from './list-item';
@@ -198,7 +199,10 @@ export class PropertyListItem extends ListItem<any> {
 
   get children(): PropertyListItem[] {
     if (this.collectionEntryKind != null) {
-      return this.getChildrenForNestedValue(this.data);
+      return sortPropertyListItems(
+        this.getChildrenForNestedValue(this.data),
+        this.devtools.sortPropertiesBy,
+      );
     }
 
     let listItems: PropertyListItem[] = [];
@@ -217,44 +221,23 @@ export class PropertyListItem extends ListItem<any> {
       });
     } else if (this.type === 'instance' || this.type === 'object') {
       const entryItems = this.getCollectionEntryChildren();
-      let memberItems = getAllKeys(this.data).map((property, order) => {
-        return PropertyListItem.create(
-          this.devtools,
-          property,
-          `${this.path}.${property}`,
-          order + entryItems.length,
-          this,
-        );
-      });
-
-      if (this.devtools.sortPropertiesBy !== 'none') {
-        memberItems = memberItems.sort((a, b) => {
-          const aProperty = String(a.property);
-          const bProperty = String(b.property);
-
-          if (this.devtools.sortPropertiesBy === 'asc') {
-            return aProperty.localeCompare(bProperty);
-          }
-          return bProperty.localeCompare(aProperty);
-        });
-      }
+      const memberItems = sortPropertyListItems(
+        getAllKeys(this.data).map((property, order) => {
+          return PropertyListItem.create(
+            this.devtools,
+            property,
+            `${this.path}.${property}`,
+            order + entryItems.length,
+            this,
+          );
+        }),
+        this.devtools.sortPropertiesBy,
+      );
 
       return [...entryItems, ...memberItems];
     }
 
-    if (this.devtools.sortPropertiesBy !== 'none') {
-      listItems = listItems.sort((a, b) => {
-        const aProperty = String(a.property);
-        const bProperty = String(b.property);
-
-        if (this.devtools.sortPropertiesBy === 'asc') {
-          return aProperty.localeCompare(bProperty);
-        }
-        return bProperty.localeCompare(aProperty);
-      });
-    }
-
-    return listItems;
+    return sortPropertyListItems(listItems, this.devtools.sortPropertiesBy);
   }
 
   private getCollectionEntryChildren(): PropertyListItem[] {
