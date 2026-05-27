@@ -43,7 +43,7 @@ importers:
         specifier: ^6.13.0
         version: 6.15.0
       mobx-view-model:
-        specifier: workspace:^10.2.0
+        specifier: ^10.2.0
         version: link:../packages/core/dist
       mobx-view-model-devtools:
         specifier: ^0.0.55

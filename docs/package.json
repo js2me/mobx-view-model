@@ -4,7 +4,7 @@
   "type": "module",
   "dependencies": {
     "mobx": "^6.13.0",
-    "mobx-view-model": "workspace:^10.2.0",
+    "mobx-view-model": "^10.2.0",
     "mobx-view-model-devtools": "^0.0.55"
   },
   "devDependencies": {
