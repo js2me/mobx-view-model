@@ -1,4 +1,5 @@
 import type { PropertyListItem } from '@/model/list-item/property-list-item';
+import { formatArrayInlinePreview } from '@/model/utils/format-array-inline-preview';
 
 export function formatCollectionKey(key: unknown): string {
   if (typeof key === 'string') {
@@ -27,7 +28,11 @@ export function formatCollectionKey(key: unknown): string {
 export function getNestedValuePreview(item: PropertyListItem): string {
   switch (item.nestedValueType) {
     case 'array':
-      return item.isExpandable ? '[...]' : '[]';
+      return Array.isArray(item.data)
+        ? formatArrayInlinePreview(item.data)
+        : item.isExpandable
+          ? '[...]'
+          : '[]';
     case 'object':
       return item.isExpandable ? '{...}' : '{}';
     case 'instance':

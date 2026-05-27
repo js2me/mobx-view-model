@@ -1,9 +1,9 @@
 import { observer } from 'mobx-react-lite';
 import type { PropertyListItemRenderProps } from '.';
 import {
-  DateInstanceCollapsedValue,
-  shouldShowDateInstanceCollapsedValue,
-} from './date-instance-collapsed-value';
+  InstanceCollapsedValue,
+  shouldShowInstanceCollapsedValue,
+} from './instance-collapsed-value';
 import css from './styles.module.css';
 import { INACCESSIBLE_DISPLAY_LABEL } from '@/model/utils/safe-access';
 
@@ -13,11 +13,11 @@ export const InstancePropertyContent = observer(
       ? INACCESSIBLE_DISPLAY_LABEL
       : item.instanceClassName;
 
-    const showDateCollapsedPreview = shouldShowDateInstanceCollapsedValue(
+    const showCollapsedPreview = shouldShowInstanceCollapsedValue(
       item.data,
       item.isExpanded,
       item.isInaccessibleDisplay,
-      item.instanceClassName,
+      item.type,
     );
 
     return (
@@ -28,8 +28,8 @@ export const InstancePropertyContent = observer(
             :&nbsp;
           </>
         )}
-        {showDateCollapsedPreview ? (
-          <DateInstanceCollapsedValue
+        {showCollapsedPreview ? (
+          <InstanceCollapsedValue
             className={css.propertyValue}
             instanceClassName={item.instanceClassName}
             data={item.data}

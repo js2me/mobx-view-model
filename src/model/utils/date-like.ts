@@ -13,13 +13,6 @@ export function isDateLike(value: unknown): value is Date {
   );
 }
 
-export function getDateToStringValue(date: Date): string {
-  try {
-    return date.toString();
-  } catch {
-    return 'Invalid Date';
-  }
-}
 
 function getDatePreviewValue(
   date: Date,
