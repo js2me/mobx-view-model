@@ -1,5 +1,6 @@
 import { act, render, screen } from '@testing-library/react';
 import { describe, expect, expectTypeOf, test, vi } from 'vitest';
+import type { AnyObject, Maybe, PartialKeys } from 'yummies/types';
 import type { ViewModelSimple, ViewModelStore } from 'mobx-view-model';
 import { viewModelsConfig } from 'mobx-view-model';
 import type { ReactNode } from 'react';
@@ -223,6 +224,41 @@ describe('useCreateViewModel', () => {
 
       expect(setPayloadSpy).toHaveBeenCalledTimes(2);
       expect(setPayloadSpy).toHaveBeenLastCalledWith({ n: 2 });
+    });
+
+    test('ViewModelSimple with literal payload type: useCreateViewModel accepts typed item', () => {
+      type Foo = PartialKeys<
+        {
+          optionalA?: string;
+          id: number;
+          optionalB?: AnyObject[];
+          requiredA: string;
+          optionalC?: string;
+          requiredB: string;
+          requiredC: string;
+          optionalD?: string;
+          requiredD: string;
+        },
+        'requiredA' | 'requiredB' | 'requiredD'
+      >;
+
+      class TestSimpleVM implements ViewModelSimple<Foo> {
+        private item: Maybe<Foo>;
+
+        setPayload(payload: Foo): void {
+          if (payload !== this.item) {
+            this.item = payload;
+          }
+        }
+      }
+
+      const assertTypes = (item: Foo) => {
+        const model = useCreateViewModel(TestSimpleVM, item);
+        expectTypeOf(model).toEqualTypeOf<TestSimpleVM>();
+        return model;
+      };
+
+      expect(assertTypes).toBeTypeOf('function');
     });
 
     test('should call "attachViewModelStore"', async () => {
