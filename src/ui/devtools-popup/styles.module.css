@@ -1,18 +1,23 @@
 .vmPopup {
   position: fixed !important;
   z-index: 999999;
-  width: 520px;
   border-radius: 8px;
   height: calc(100vh - 24px);
   width: calc(100vw - 34px);
   max-width: 520px;
+  min-width: 325px;
+  min-height: 250px;
   box-shadow: 0 5px 20px #00000066;
 
-  &.dragging {
+  &.dragging,
+  &.resizing {
     transition: none;
-    cursor: grabbing;
     opacity: 0.8;
     z-index: 1000;
+  }
+
+  &.dragging {
+    cursor: grabbing;
   }
 
   &[data-position="top-right"] {
@@ -36,6 +41,83 @@
   }
 }
 
+.vmPopupContent {
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  overflow: hidden;
+}
+
+.resizeHandleLeft,
+.resizeHandleRight {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 6px;
+  z-index: 2;
+  cursor: ew-resize;
+}
+
+.resizeHandleTop,
+.resizeHandleBottom {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 6px;
+  z-index: 2;
+  cursor: ns-resize;
+}
+
+.resizeHandleTop {
+  top: 0;
+}
+
+.resizeHandleBottom {
+  bottom: 0;
+}
+
+.resizeHandleLeft {
+  left: 0;
+}
+
+.resizeHandleRight {
+  right: 0;
+}
+
+.resizeHandleCornerTopLeft,
+.resizeHandleCornerTopRight,
+.resizeHandleCornerBottomLeft,
+.resizeHandleCornerBottomRight {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  z-index: 3;
+}
+
+.resizeHandleCornerTopLeft {
+  top: 0;
+  left: 0;
+  cursor: nwse-resize;
+}
+
+.resizeHandleCornerTopRight {
+  top: 0;
+  right: 0;
+  cursor: nesw-resize;
+}
+
+.resizeHandleCornerBottomLeft {
+  bottom: 0;
+  left: 0;
+  cursor: nesw-resize;
+}
+
+.resizeHandleCornerBottomRight {
+  bottom: 0;
+  right: 0;
+  cursor: nwse-resize;
+}
+
 .closePopupButton {
   width: 28px;
   height: 28px;
@@ -48,6 +130,7 @@
   justify-content: center;
 }
 
-html:has( .dragging) *{
+html:has( .dragging) *,
+html:has( .resizing) * {
   user-select: none !important;
 }

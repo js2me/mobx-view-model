@@ -23,9 +23,9 @@ export const ExtraListItemRender = observer(
             expandable={item.isExpandable}
             expanded={item.isExpanded}
           />
-          <label className={css.treeItemLabel} title={item.displayName}>
+          <span className={css.treeItemLabel} title={item.displayName}>
             {item.displayName}
-          </label>
+          </span>
         </header>
       </div>
     );

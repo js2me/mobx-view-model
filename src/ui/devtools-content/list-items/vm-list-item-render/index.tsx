@@ -23,9 +23,9 @@ export const VmListItemRender = observer(({ item }: { item: VMListItem }) => {
           expandable={item.devtools.isExpandable(item)}
           expanded={item.isExpanded}
         />
-        <label className={css.treeItemLabel} title={item.displayName}>
+        <span className={css.treeItemLabel} title={item.displayName}>
           {item.displayName}
-        </label>
+        </span>
         <span className={css.treeItemMetaText} title={item.data.id}>
           {item.data.id}
         </span>

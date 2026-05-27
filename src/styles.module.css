@@ -23,6 +23,15 @@
   color: var(--vmd-base-color);
 }
 
+.root label {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font: inherit;
+  line-height: inherit;
+  color: inherit;
+}
+
 .root button[data-list-item-operation][data-active],
 .root button[data-list-item-operation][data-active] svg {
   color: var(--vmd-watch-active-color);
@@ -51,6 +60,10 @@
   align-items: center;
   gap: 4px;
   margin: auto 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
   cursor: pointer;
   z-index: 1;
   overflow: hidden;
@@ -59,9 +72,19 @@
 }
 
 .treeItemLabel {
+  display: inline-flex;
+  align-items: center;
+  margin: 0;
   padding: 0 4px;
+  border: 0;
   border-radius: 4px;
+  line-height: 1;
+  font: inherit;
   color: var(--vmd-property-bg-content-color);
+  white-space: nowrap;
+  flex: none;
+  cursor: inherit;
+  user-select: none;
 }
 
 .treeItemMetaText {
