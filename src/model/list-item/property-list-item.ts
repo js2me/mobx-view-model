@@ -14,6 +14,7 @@ import {
   getSetValueAt,
   type CollectionKind,
 } from '../utils/collection-like';
+import { createDatePreviewChildren } from '../utils/create-date-preview-children';
 import { formatSearchSegmentKey } from '../utils/format-search-key';
 import { getAllKeys } from '../utils/get-all-keys';
 import {
@@ -71,6 +72,10 @@ export class PropertyListItem extends ListItem<any> {
 
   get data(): any {
     this.dataWatchAtom.reportObserved();
+
+    if (this.getPreview) {
+      return this.getPreview();
+    }
 
     if (this.collectionEntryKind != null && this.collectionEntryIndex != null) {
       const parentData = this.parent.data;
@@ -175,6 +180,10 @@ export class PropertyListItem extends ListItem<any> {
   }
 
   get type() {
+    if (this.getPreview) {
+      return 'primitive';
+    }
+
     if (this.collectionEntryKind === 'map') {
       return 'map-entry';
     }
@@ -237,6 +246,12 @@ export class PropertyListItem extends ListItem<any> {
         );
       });
     } else if (this.type === 'instance' || this.type === 'object') {
+      const datePreviewItems = createDatePreviewChildren(
+        this.devtools,
+        this,
+        this.path,
+        this.data,
+      );
       const entryItems = this.getCollectionEntryChildren();
       const memberItems = sortPropertyListItems(
         getAllKeys(this.data).map((property, order) => {
@@ -244,14 +259,14 @@ export class PropertyListItem extends ListItem<any> {
             this.devtools,
             property,
             `${this.path}.${property}`,
-            order + entryItems.length,
+            order + datePreviewItems.length + entryItems.length,
             this,
           );
         }),
         this.devtools.sortPropertiesBy,
       );
 
-      return [...entryItems, ...memberItems];
+      return [...datePreviewItems, ...entryItems, ...memberItems];
     }
 
     return sortPropertyListItems(listItems, this.devtools.sortPropertiesBy);
@@ -475,6 +490,10 @@ export class PropertyListItem extends ListItem<any> {
 
   get isEditable() {
     if (this.isInaccessible || isInaccessible(this.parent.data)) {
+      return false;
+    }
+
+    if (this.getPreview) {
       return false;
     }
 
@@ -1033,6 +1052,7 @@ export class PropertyListItem extends ListItem<any> {
     private parent: ListItem<any>,
     public collectionEntryKind?: CollectionKind,
     public collectionEntryIndex?: number,
+    public getPreview?: () => unknown,
   ) {
     super(devtools, PropertyListItem.createKey(parent, property), undefined);
 
@@ -1077,6 +1097,7 @@ export class PropertyListItem extends ListItem<any> {
     options?: {
       collectionEntryKind?: CollectionKind;
       collectionEntryIndex?: number;
+      getPreview?: () => unknown;
     },
   ) {
     const cache = parent.cache ?? devtools.anyCache;
@@ -1093,6 +1114,7 @@ export class PropertyListItem extends ListItem<any> {
         parent,
         options?.collectionEntryKind,
         options?.collectionEntryIndex,
+        options?.getPreview,
       );
       cache.set(key, item);
     }

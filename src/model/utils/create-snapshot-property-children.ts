@@ -1,6 +1,7 @@
 import type { ListItem } from '../list-item/list-item';
 import { PropertyListItem } from '../list-item/property-list-item';
 import type { ViewModelDevtools } from '../view-model-devtools';
+import { createDatePreviewChildren } from './create-date-preview-children';
 import {
   getCollectionKind,
   type CollectionKind,
@@ -158,6 +159,12 @@ export const createSnapshotPropertyChildren = (
   }
 
   if (valueType === 'instance' || valueType === 'object') {
+    const datePreviewItems = createDatePreviewChildren(
+      devtools,
+      parent,
+      path,
+      data,
+    );
     const entryItems = createCollectionEntryChildren(
       devtools,
       parent,
@@ -170,14 +177,14 @@ export const createSnapshotPropertyChildren = (
           devtools,
           property,
           `${path}.${property}`,
-          order + entryItems.length,
+          order + datePreviewItems.length + entryItems.length,
           parent,
         ),
       ),
       sortPropertiesBy,
     );
 
-    return [...entryItems, ...memberItems];
+    return [...datePreviewItems, ...entryItems, ...memberItems];
   }
 
   return [];
