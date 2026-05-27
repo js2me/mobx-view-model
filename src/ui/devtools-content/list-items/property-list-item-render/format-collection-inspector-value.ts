@@ -1,29 +1,6 @@
 import type { PropertyListItem } from '@/model/list-item/property-list-item';
 import { formatArrayInlinePreview } from '@/model/utils/format-array-inline-preview';
-
-export function formatCollectionKey(key: unknown): string {
-  if (typeof key === 'string') {
-    return `"${key}"`;
-  }
-
-  if (typeof key === 'symbol') {
-    return String(key);
-  }
-
-  if (key === null) {
-    return 'null';
-  }
-
-  if (key === undefined) {
-    return 'undefined';
-  }
-
-  if (typeof key === 'object') {
-    return '{...}';
-  }
-
-  return String(key);
-}
+import { formatObjectInlinePreview } from '@/model/utils/format-object-inline-preview';
 
 export function getNestedValuePreview(item: PropertyListItem): string {
   switch (item.nestedValueType) {
@@ -34,7 +11,11 @@ export function getNestedValuePreview(item: PropertyListItem): string {
           ? '[...]'
           : '[]';
     case 'object':
-      return item.isExpandable ? '{...}' : '{}';
+      return item.data && typeof item.data === 'object'
+        ? formatObjectInlinePreview(item.data)
+        : item.isExpandable
+          ? '{...}'
+          : '{}';
     case 'instance':
       return item.isExpandable ? '{...}' : item.instanceClassName;
     case 'function':

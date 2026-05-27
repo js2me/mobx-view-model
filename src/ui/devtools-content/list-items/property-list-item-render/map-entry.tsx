@@ -1,8 +1,8 @@
 import { observer } from 'mobx-react-lite';
 import type { PropertyListItemRenderProps } from '.';
+import { formatCollectionKey } from '@/model/utils/format-collection-key';
 import { CollectionMeta, CollectionTypedValue } from './collection-typed-value';
 import {
-  formatCollectionKey,
   getNestedValueExpandedOpen,
   getNestedValuePreview,
 } from './format-collection-inspector-value';

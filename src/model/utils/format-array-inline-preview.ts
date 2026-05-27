@@ -1,4 +1,45 @@
 import { getConstructorName, isInaccessible } from './safe-access';
+import {
+  INLINE_PREVIEW_MAX_ITEMS,
+  resolveInlinePreviewSlice,
+  type InlinePreviewSlice,
+} from './inline-preview';
+
+export type { InlinePreviewSlice };
+
+export type ArrayInlinePreviewModel = {
+  totalCount: number;
+  scannedValues: readonly unknown[];
+  formattedElements: string[];
+};
+
+export function prepareArrayInlinePreview(
+  array: readonly unknown[],
+): ArrayInlinePreviewModel {
+  const scannedValues = array.slice(0, INLINE_PREVIEW_MAX_ITEMS);
+
+  return {
+    totalCount: array.length,
+    scannedValues,
+    formattedElements: getArrayInlinePreviewElements(scannedValues),
+  };
+}
+
+export function resolveArrayInlinePreviewSlice(
+  model: ArrayInlinePreviewModel,
+  visibleCount: number,
+): InlinePreviewSlice & { values: readonly unknown[] } {
+  const slice = resolveInlinePreviewSlice(
+    visibleCount,
+    model.scannedValues.length,
+    model.totalCount,
+  );
+
+  return {
+    ...slice,
+    values: model.scannedValues.slice(0, slice.count),
+  };
+}
 
 export function formatArrayInlineElement(value: unknown): string {
   if (isInaccessible(value)) {
@@ -95,10 +136,11 @@ export function measureInlineTextWidth(text: string, font: string): number {
   return measureContext.measureText(text).width;
 }
 
-export function getVisibleArrayInlineCount(
+export function getVisibleInlinePreviewCount(
   elements: readonly string[],
   availableWidth: number,
   font: string,
+  formatPreview: (elements: readonly string[], visibleCount: number) => string,
 ): number {
   if (elements.length === 0) {
     return 0;
@@ -109,17 +151,27 @@ export function getVisibleArrayInlineCount(
   }
 
   for (let count = elements.length; count >= 1; count--) {
-    const text = formatArrayInlinePreviewFromElements(elements, count);
+    const text = formatPreview(elements, count);
 
     if (measureInlineTextWidth(text, font) <= availableWidth) {
       return count;
     }
   }
 
-  return measureInlineTextWidth(
-    formatArrayInlinePreviewFromElements(elements, 1),
-    font,
-  ) <= availableWidth
+  return measureInlineTextWidth(formatPreview(elements, 1), font) <= availableWidth
     ? 1
     : 0;
+}
+
+export function getVisibleArrayInlineCount(
+  elements: readonly string[],
+  availableWidth: number,
+  font: string,
+): number {
+  return getVisibleInlinePreviewCount(
+    elements,
+    availableWidth,
+    font,
+    formatArrayInlinePreviewFromElements,
+  );
 }

@@ -72,10 +72,13 @@ export const PropertyListItemRender = observer(
         data-depth={item.depthLine}
       >
         <span
+          className={css.propertyContent}
           onClick={(e) => item.devtools.handlePropertyClick(item, e)}
         >
           {content}
-          {item.extraContent}
+          {item.extraContent ? (
+            <span className={css.propertySuffix}>{item.extraContent}</span>
+          ) : null}
         </span>
         <ListItemOperations item={item} />
       </div>

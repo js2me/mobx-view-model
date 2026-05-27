@@ -39,13 +39,18 @@
   cursor: pointer;
 }
 
-.property > span {
+.propertyContent {
+  display: inline-flex;
   flex: 1;
+  align-items: center;
+  min-width: 0;
   overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: nowrap;
   padding-right: 12px;
-  display: flex;
-  flex-direction: row;
+}
+
+.propertySuffix {
+  flex: none;
 }
 
 .property[data-fitted='false'] {
@@ -127,6 +132,22 @@
 
 .propertyName {
   color: var(--vmd-base-color);
+  flex: none;
+}
+
+.inlinePreview {
+  min-width: 0;
+  max-width: 100%;
+  display: inline-flex;
+  align-items: center;
+  overflow: hidden;
+  white-space: nowrap;
+  flex: 0 1 auto;
+  opacity: 0.65;
+}
+
+.property:hover .inlinePreview {
+  opacity: 1;
 }
 
 .propertyMeta {

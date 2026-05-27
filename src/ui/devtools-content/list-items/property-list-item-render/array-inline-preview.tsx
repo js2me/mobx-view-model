@@ -1,14 +1,15 @@
 import { observer } from 'mobx-react-lite';
-import { Fragment, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, useMemo } from 'react';
+import { cx } from 'yummies/css';
 import {
   formatArrayInlineElement,
-  getArrayInlinePreviewElements,
   getVisibleArrayInlineCount,
+  prepareArrayInlinePreview,
+  resolveArrayInlinePreviewSlice,
 } from '@/model/utils/format-array-inline-preview';
 import { CollectionMeta, CollectionTypedValue } from './collection-typed-value';
+import { useInlinePreviewVisibleCount } from './use-inline-preview-visible-count';
 import css from './styles.module.css';
-
-const MAX_SCANNED_ITEMS = 256;
 
 export const ArrayInlinePreview = observer(
   ({
@@ -18,70 +19,35 @@ export const ArrayInlinePreview = observer(
     array: readonly unknown[];
     className?: string;
   }) => {
-    const containerRef = useRef<HTMLSpanElement>(null);
-    const [visibleCount, setVisibleCount] = useState(array.length);
-
-    const scannedArray = useMemo(
-      () => array.slice(0, MAX_SCANNED_ITEMS),
-      [array],
+    const preview = useMemo(() => prepareArrayInlinePreview(array), [array]);
+    const previewClassName = cx(css.inlinePreview, className);
+    const { containerRef, visibleCount } = useInlinePreviewVisibleCount(
+      preview.formattedElements,
+      getVisibleArrayInlineCount,
+      preview.totalCount,
     );
-    const formattedElements = useMemo(
-      () => getArrayInlinePreviewElements(scannedArray),
-      [scannedArray],
-    );
+    const slice = resolveArrayInlinePreviewSlice(preview, visibleCount);
 
-    useLayoutEffect(() => {
-      const container = containerRef.current;
-
-      if (!container) {
-        return;
-      }
-
-      const updateVisibleCount = () => {
-        const style = getComputedStyle(container);
-        const font = `${style.fontStyle} ${style.fontVariant} ${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
-        const nextCount = getVisibleArrayInlineCount(
-          formattedElements,
-          container.clientWidth,
-          font,
-        );
-
-        setVisibleCount(nextCount);
-      };
-
-      updateVisibleCount();
-
-      const resizeObserver = new ResizeObserver(updateVisibleCount);
-      resizeObserver.observe(container);
-
-      return () => {
-        resizeObserver.disconnect();
-      };
-    }, [formattedElements]);
-
-    if (array.length === 0) {
+    if (slice.isEmpty) {
       return (
-        <span ref={containerRef} className={className}>
+        <span ref={containerRef} className={previewClassName}>
           <CollectionMeta>[]</CollectionMeta>
         </span>
       );
     }
 
-    const count = Math.max(0, Math.min(visibleCount, scannedArray.length));
-    const hasMore = count < array.length;
-
-    if (count === 0) {
+    if (slice.isOverflow) {
       return (
-        <span ref={containerRef} className={className}>
+        <span ref={containerRef} className={previewClassName}>
           <CollectionMeta>[...]</CollectionMeta>
         </span>
       );
     }
 
     return (
-      <span ref={containerRef} className={className}>
+      <span ref={containerRef} className={previewClassName}>
         <CollectionMeta>[</CollectionMeta>
-        {scannedArray.slice(0, count).map((value, index) => (
+        {slice.values.map((value, index) => (
           <Fragment key={index}>
             {index > 0 ? <CollectionMeta>{', '}</CollectionMeta> : null}
             <CollectionTypedValue value={value}>
@@ -89,7 +55,7 @@ export const ArrayInlinePreview = observer(
             </CollectionTypedValue>
           </Fragment>
         ))}
-        {hasMore ? (
+        {slice.hasMore ? (
           <>
             <CollectionMeta>{', '}</CollectionMeta>
             <CollectionMeta>...</CollectionMeta>
