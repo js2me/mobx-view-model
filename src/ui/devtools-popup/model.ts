@@ -125,16 +125,12 @@ export class VmDevtoolsPopupVM extends ViewModelImpl<{}, DevtoolsClientVM> {
 
         if (!this.dragState.isDragging) return;
 
-        const x = this.fixX(e.clientX + this.dragState.offsetX);
-        const y = this.fixY(e.clientY + this.dragState.offsetY);
+        this.refreshRect(node);
 
-        node.style.left = `${x}px`;
-        node.style.top = `${y}px`;
-        node.style.right = 'auto';
-        node.style.bottom = 'auto';
+        const x = this.fixX(e.clientX + this.dragState.offsetX, node);
+        const y = this.fixY(e.clientY + this.dragState.offsetY, node);
 
-        VmDevtoolsPopupVM.lastX = x;
-        VmDevtoolsPopupVM.lastY = y;
+        this.applyInlinePosition(node, x, y);
 
         if (x !== this.dragState.startX || y !== this.dragState.startY) {
           this.dragState.hasMoved = true;
@@ -148,6 +144,12 @@ export class VmDevtoolsPopupVM extends ViewModelImpl<{}, DevtoolsClientVM> {
       };
 
       const handleStopResizing = () => {
+        if (this.resizeState.isResizing) {
+          this.refreshRect(node);
+          VmDevtoolsPopupVM.lastWidth = this.size.width;
+          VmDevtoolsPopupVM.lastHeight = this.size.height;
+        }
+
         this.resizeState.isResizing = false;
         this.resizeState.edge = null;
         node.classList.remove(css.resizing);
@@ -187,7 +189,7 @@ export class VmDevtoolsPopupVM extends ViewModelImpl<{}, DevtoolsClientVM> {
 
       const handleWindowResize = () => {
         node.classList.add(css.resizing);
-        this.rect = node.getBoundingClientRect();
+        this.refreshRect(node);
 
         if (VmDevtoolsPopupVM.lastWidth !== null) {
           const width = this.fixWidth(VmDevtoolsPopupVM.lastWidth);
@@ -203,26 +205,26 @@ export class VmDevtoolsPopupVM extends ViewModelImpl<{}, DevtoolsClientVM> {
           VmDevtoolsPopupVM.lastHeight = height;
         }
 
+        this.refreshRect(node);
+
         if (VmDevtoolsPopupVM.lastX !== null) {
           const x = this.fixXOnWindowResize(
             VmDevtoolsPopupVM.lastX,
             prevViewport.width,
+            node,
           );
 
-          node.style.left = `${x}px`;
-          node.style.right = 'auto';
-          VmDevtoolsPopupVM.lastX = x;
+          this.applyInlineX(node, x);
         }
 
         if (VmDevtoolsPopupVM.lastY !== null) {
           const y = this.fixYOnWindowResize(
             VmDevtoolsPopupVM.lastY,
             prevViewport.height,
+            node,
           );
 
-          node.style.top = `${y}px`;
-          node.style.bottom = 'auto';
-          VmDevtoolsPopupVM.lastY = y;
+          this.applyInlineY(node, y);
         }
 
         prevViewport = {
@@ -343,10 +345,27 @@ export class VmDevtoolsPopupVM extends ViewModelImpl<{}, DevtoolsClientVM> {
     node.style.maxWidth = 'none';
     node.style.maxHeight = 'none';
 
-    this.rect = node.getBoundingClientRect();
+    this.refreshRect(node);
 
     VmDevtoolsPopupVM.lastWidth = width;
     VmDevtoolsPopupVM.lastHeight = height;
+  }
+
+  private applyInlineX(node: HTMLDivElement, x: number) {
+    node.style.left = `${x}px`;
+    node.style.right = 'auto';
+    VmDevtoolsPopupVM.lastX = x;
+  }
+
+  private applyInlineY(node: HTMLDivElement, y: number) {
+    node.style.top = `${y}px`;
+    node.style.bottom = 'auto';
+    VmDevtoolsPopupVM.lastY = y;
+  }
+
+  private applyInlinePosition(node: HTMLDivElement, x: number, y: number) {
+    this.applyInlineX(node, x);
+    this.applyInlineY(node, y);
   }
 
   private applyPopupPosition(
@@ -355,17 +374,11 @@ export class VmDevtoolsPopupVM extends ViewModelImpl<{}, DevtoolsClientVM> {
     rawY: Maybe<number>,
   ) {
     if (rawX !== null) {
-      const x = this.fixX(rawX);
-      node.style.left = `${x}px`;
-      node.style.right = 'auto';
-      VmDevtoolsPopupVM.lastX = x;
+      this.applyInlineX(node, this.fixX(rawX, node));
     }
 
     if (rawY !== null) {
-      const y = this.fixY(rawY);
-      node.style.top = `${y}px`;
-      node.style.bottom = 'auto';
-      VmDevtoolsPopupVM.lastY = y;
+      this.applyInlineY(node, this.fixY(rawY, node));
     }
   }
 
@@ -392,10 +405,12 @@ export class VmDevtoolsPopupVM extends ViewModelImpl<{}, DevtoolsClientVM> {
       VmDevtoolsPopupVM.lastWidth = width;
       VmDevtoolsPopupVM.widthAnchor = 'left';
 
+      this.refreshRect(node);
+
       if (VmDevtoolsPopupVM.lastX !== null) {
-        const x = this.fixX(VmDevtoolsPopupVM.lastX);
-        node.style.left = `${x}px`;
-        VmDevtoolsPopupVM.lastX = x;
+        this.applyInlineX(node, this.fixX(VmDevtoolsPopupVM.lastX, node));
+      } else {
+        this.syncInlineLayout(node);
       }
 
       return;
@@ -404,15 +419,14 @@ export class VmDevtoolsPopupVM extends ViewModelImpl<{}, DevtoolsClientVM> {
     const width = this.fixWidth(this.resizeState.startWidth - deltaX);
     const left =
       this.resizeState.startLeft + (this.resizeState.startWidth - width);
-    const x = this.fixX(left);
 
-    node.style.left = `${x}px`;
-    node.style.right = 'auto';
     node.style.width = `${width}px`;
     node.style.maxWidth = 'none';
-    VmDevtoolsPopupVM.lastX = x;
     VmDevtoolsPopupVM.lastWidth = width;
     VmDevtoolsPopupVM.widthAnchor = 'right';
+
+    this.refreshRect(node);
+    this.applyInlineX(node, this.fixX(left, node));
   }
 
   private handleHeightResize(
@@ -430,11 +444,12 @@ export class VmDevtoolsPopupVM extends ViewModelImpl<{}, DevtoolsClientVM> {
       VmDevtoolsPopupVM.lastHeight = height;
       VmDevtoolsPopupVM.heightAnchor = 'top';
 
+      this.refreshRect(node);
+
       if (VmDevtoolsPopupVM.lastY !== null) {
-        const y = this.fixY(VmDevtoolsPopupVM.lastY);
-        node.style.top = `${y}px`;
-        node.style.bottom = 'auto';
-        VmDevtoolsPopupVM.lastY = y;
+        this.applyInlineY(node, this.fixY(VmDevtoolsPopupVM.lastY, node));
+      } else {
+        this.syncInlineLayout(node);
       }
 
       return;
@@ -443,15 +458,14 @@ export class VmDevtoolsPopupVM extends ViewModelImpl<{}, DevtoolsClientVM> {
     const height = this.fixHeight(this.resizeState.startHeight - deltaY);
     const top =
       this.resizeState.startTop + (this.resizeState.startHeight - height);
-    const y = this.fixY(top);
 
-    node.style.top = `${y}px`;
-    node.style.bottom = 'auto';
     node.style.height = `${height}px`;
     node.style.maxHeight = 'none';
-    VmDevtoolsPopupVM.lastY = y;
     VmDevtoolsPopupVM.lastHeight = height;
     VmDevtoolsPopupVM.heightAnchor = 'bottom';
+
+    this.refreshRect(node);
+    this.applyInlineY(node, this.fixY(top, node));
   }
 
   private applyStoredLayout(node: HTMLDivElement) {
@@ -465,33 +479,33 @@ export class VmDevtoolsPopupVM extends ViewModelImpl<{}, DevtoolsClientVM> {
       node.style.maxHeight = 'none';
     }
 
+    this.refreshRect(node);
+
     if (VmDevtoolsPopupVM.lastX !== null) {
-      node.style.left = `${this.fixX(VmDevtoolsPopupVM.lastX)}px`;
-      node.style.right = 'auto';
+      this.applyInlineX(node, this.fixX(VmDevtoolsPopupVM.lastX, node));
     }
 
     if (VmDevtoolsPopupVM.lastY !== null) {
-      node.style.top = `${this.fixY(VmDevtoolsPopupVM.lastY)}px`;
-      node.style.bottom = 'auto';
+      this.applyInlineY(node, this.fixY(VmDevtoolsPopupVM.lastY, node));
     }
   }
 
   private syncInlineLayout(node: HTMLDivElement) {
-    const rect = node.getBoundingClientRect();
+    this.refreshRect(node);
+    const rect = this.rect!;
 
-    node.style.left = `${rect.left}px`;
-    node.style.top = `${rect.top}px`;
-    node.style.right = 'auto';
-    node.style.bottom = 'auto';
+    this.applyInlinePosition(node, rect.left, rect.top);
     node.style.width = `${rect.width}px`;
     node.style.height = `${rect.height}px`;
     node.style.maxWidth = 'none';
     node.style.maxHeight = 'none';
 
-    VmDevtoolsPopupVM.lastX = rect.left;
-    VmDevtoolsPopupVM.lastY = rect.top;
     VmDevtoolsPopupVM.lastWidth = rect.width;
     VmDevtoolsPopupVM.lastHeight = rect.height;
+  }
+
+  private refreshRect(node: HTMLDivElement) {
+    this.rect = node.getBoundingClientRect();
   }
 
   private get offsets() {
@@ -526,7 +540,8 @@ export class VmDevtoolsPopupVM extends ViewModelImpl<{}, DevtoolsClientVM> {
     return clamp(rawHeight, MIN_POPUP_HEIGHT, maxHeight);
   }
 
-  private fixX(rawX: Maybe<number | string>) {
+  private fixX(rawX: Maybe<number | string>, node: HTMLDivElement) {
+    this.refreshRect(node);
     const maxX = window.innerWidth - this.size.width - EDGE_MARGIN;
 
     const x = typeof rawX === 'string' ? +rawX.replace('px', '') : rawX;
@@ -534,7 +549,8 @@ export class VmDevtoolsPopupVM extends ViewModelImpl<{}, DevtoolsClientVM> {
     return clamp(x || 0, EDGE_MARGIN, maxX);
   }
 
-  private fixY(rawY: Maybe<number | string>) {
+  private fixY(rawY: Maybe<number | string>, node: HTMLDivElement) {
+    this.refreshRect(node);
     const maxY = window.innerHeight - this.size.height - EDGE_MARGIN;
 
     const y = typeof rawY === 'string' ? +rawY.replace('px', '') : rawY;
@@ -542,7 +558,12 @@ export class VmDevtoolsPopupVM extends ViewModelImpl<{}, DevtoolsClientVM> {
     return clamp(y || 0, EDGE_MARGIN, maxY);
   }
 
-  private fixXOnWindowResize(x: number, prevViewportWidth: number) {
+  private fixXOnWindowResize(
+    x: number,
+    prevViewportWidth: number,
+    node: HTMLDivElement,
+  ) {
+    this.refreshRect(node);
     const { width } = this.size;
     const minX = EDGE_MARGIN;
     const prevMaxX = prevViewportWidth - width - EDGE_MARGIN;
@@ -565,7 +586,12 @@ export class VmDevtoolsPopupVM extends ViewModelImpl<{}, DevtoolsClientVM> {
     return clamp(x, minX, maxX);
   }
 
-  private fixYOnWindowResize(y: number, prevViewportHeight: number) {
+  private fixYOnWindowResize(
+    y: number,
+    prevViewportHeight: number,
+    node: HTMLDivElement,
+  ) {
+    this.refreshRect(node);
     const { height } = this.size;
     const minY = EDGE_MARGIN;
     const prevMaxY = prevViewportHeight - height - EDGE_MARGIN;
