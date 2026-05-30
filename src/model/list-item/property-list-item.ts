@@ -6,7 +6,6 @@ import {
   observable,
   runInAction,
 } from 'mobx';
-import type { ChangeEventHandler, KeyboardEventHandler } from 'react';
 import type { Maybe } from 'yummies/types';
 import {
   getCollectionKind,
@@ -22,39 +21,21 @@ import {
   isInaccessible,
   INACCESSIBLE,
 } from '../utils/safe-access';
-import { notifyMobxEditPropagation } from '../utils/notify-mobx-change';
-import {
-  invalidateMobxObject,
-  invalidateMobxProperty,
-  invalidateViewModelsAfterEdit,
-} from '../utils/invalidate-view-models-after-edit';
-import {
-  ensureMobxPropertyAtomLoaded,
-  findMobxAdministration,
-} from '../utils/mobx-administration';
-import { resolveComputedProducerForEdit } from '../utils/resolve-computed-producer';
-import {
-  setMapEntryValue,
-  setSetEntryValue,
-} from '../utils/set-collection-entry-value';
-import { setPropertyValue } from '../utils/set-property-value';
 import { sortPropertyListItems } from '../utils/sort-property-keys';
 import {
   PropertyWatcher,
   type PropertyWatchHistoryEntry,
 } from '../utils/property-watcher';
-import type { AnyVM } from '../types';
 import type { ViewModelDevtools } from '../view-model-devtools';
 import { ListItem, type ListItemOperation } from './list-item';
 import { MetaListItem } from './meta-list-item';
+import { PropertyEditor } from './property-editor';
 import { PropertyWatchHistoryHeaderListItem } from './property-watch-history-header-item';
 import { PropertyWatchHistoryListItem } from './property-watch-history-item';
 import { VMListItem } from './vm-list-item';
 
 export class PropertyListItem extends ListItem<any> {
-  editContent = '';
-
-  isEditMode = false;
+  editor = new PropertyEditor(this);
 
   isWatching = false;
 
@@ -457,7 +438,7 @@ export class PropertyListItem extends ListItem<any> {
         result.push(...trailing.expandedChildrenWithSelf);
       }
     }
- 
+
     if (this.closingItem) {
       result.push(this.closingItem);
     }
@@ -488,70 +469,8 @@ export class PropertyListItem extends ListItem<any> {
 
   private failedStringify = false;
 
-  get isEditable() {
-    if (this.isInaccessible || isInaccessible(this.parent.data)) {
-      return false;
-    }
-
-    if (this.getPreview) {
-      return false;
-    }
-
-    if (
-      this.collectionEntryKind === 'map' ||
-      this.collectionEntryKind === 'set'
-    ) {
-      return (
-        this.property !== undefined &&
-        this.nestedValueType !== 'instance' &&
-        this.nestedValueType !== 'function'
-      );
-    }
-
-    return (
-      this.property !== undefined &&
-      this.collectionEntryKind == null &&
-      this.type !== 'instance' &&
-      !this.isInaccessible &&
-      !isInaccessible(this.parent.data)
-    );
-  }
-
   get isCopiable() {
     return this.type !== 'instance' && !this.failedStringify;
-  }
-
-  get editableContent() {
-    if (this.isInaccessible) {
-      return '';
-    }
-
-    if (this.collectionEntryKind != null) {
-      return this.formatEditableNestedValue();
-    }
-
-    switch (this.type) {
-      case 'object':
-      case 'array': {
-        try {
-          return JSON.stringify(this.data, null, 2);
-        } catch {
-          return this.stringifiedData;
-        }
-      }
-      default: {
-        switch (this.dataType) {
-          case 'bigint':
-            return `${String(this.data)}n`;
-          case 'symbol':
-            return `Symbol(${Symbol.keyFor(this.data as symbol) || ''})`;
-          case 'string':
-            return `"${String(this.data)}"`;
-        }
-
-        return String(this.data);
-      }
-    }
   }
 
   get stringifiedData() {
@@ -587,28 +506,28 @@ export class PropertyListItem extends ListItem<any> {
   get operations() {
     const operations: ListItemOperation<any>[] = [];
 
-    if (this.isEditMode) {
+    if (this.editor.isEditMode) {
       operations.push(
         this.dataType === 'function'
           ? {
               title: 'Call function',
               icon: Play,
               action: () => {
-                this.callFunction();
+                this.editor.callFunction();
               },
             }
           : {
               title: 'Apply',
               icon: Check,
               action: () => {
-                this.applyEdit();
+                this.editor.applyEdit();
               },
             },
         {
           title: 'Cancel',
           icon: Xmark,
           action: () => {
-            this.cancelEdit();
+            this.editor.cancelEdit();
           },
         },
       );
@@ -621,27 +540,27 @@ export class PropertyListItem extends ListItem<any> {
         title: 'Call',
         icon: Play,
         action: () => {
-          this.editContent = '';
-          this.isEditMode = true;
+          this.editor.editContent = '';
+          this.editor.isEditMode = true;
         },
       });
     } else {
-      if (this.dataType === 'boolean' && this.isEditable) {
+      if (this.dataType === 'boolean' && this.editor.isEditable) {
         operations.push({
           title: 'Toggle',
           icon: ToggleOn,
           action: () => {
-            this.toggleBoolean();
+            this.editor.toggleBoolean();
           },
         });
       }
 
-      if (this.isEditable) {
+      if (this.editor.isEditable) {
         operations.push({
           title: 'Edit',
           icon: Pencil,
           action: () => {
-            this.startEdit();
+            this.editor.startEdit();
           },
         });
       }
@@ -700,342 +619,6 @@ export class PropertyListItem extends ListItem<any> {
     ];
   }
 
-  handleChangeEditContent: ChangeEventHandler<HTMLInputElement> = (e) => {
-    this.editContent = e.target.value;
-  };
-
-  handleEditKeyDown: KeyboardEventHandler<HTMLInputElement> = (e) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      e.stopPropagation();
-      this.confirmEdit();
-      return;
-    }
-
-    if (e.key === 'Escape') {
-      e.preventDefault();
-      e.stopPropagation();
-      this.cancelEdit();
-    }
-  };
-
-  confirmEdit() {
-    if (this.dataType === 'function') {
-      this.callFunction();
-      return;
-    }
-
-    this.applyEdit();
-  }
-
-  callFunction() {
-    // biome-ignore lint/security/noGlobalEval: no way...
-    const args = eval(`[${this.editContent.trim()}]`);
-    this.data.apply(this.parent.data, args);
-    this.cancelEdit();
-  }
-
-  startEdit() {
-    this.editContent = this.editableContent;
-    this.isEditMode = true;
-  }
-
-  cancelEdit() {
-    this.editContent = '';
-    this.isEditMode = false;
-  }
-
-  applyEdit() {
-    if (!this.isEditable || this.property === undefined) {
-      return;
-    }
-
-    let parsed: unknown;
-
-    try {
-      parsed = this.parseEditContent();
-    } catch (error) {
-      this.devtools.notifications.push({
-        title: `Failed to parse value for "${this.getEditTargetLabel()}": ${formatEditError(error)}`,
-      });
-      return;
-    }
-
-    if (!this.commitParsedEdit(parsed)) {
-      return;
-    }
-
-    this.cancelEdit();
-  }
-
-  toggleBoolean() {
-    if (
-      !this.isEditable ||
-      this.dataType !== 'boolean' ||
-      this.property === undefined
-    ) {
-      return;
-    }
-
-    const nextValue = !this.data;
-    this.commitParsedEdit(nextValue);
-  }
-
-  private commitParsedEdit(parsed: unknown): boolean {
-    const result = this.applyParsedEdit(parsed);
-
-    if (!result.ok) {
-      this.devtools.notifications.push({
-        title: `Failed to update "${this.getEditTargetLabel()}": ${result.error}`,
-      });
-      return false;
-    }
-
-    this.notifyHostAppAfterEdit(result.producerTarget);
-    this.reportDataChangedUpwards();
-    return true;
-  }
-
-  private getEditTargetLabel() {
-    if (this.collectionEntryKind === 'map' && this.mapEntryKey != null) {
-      return formatSearchSegmentKey(this.mapEntryKey);
-    }
-
-    return String(this.property);
-  }
-
-  private applyParsedEdit(parsed: unknown): {
-    ok: boolean;
-    error?: string;
-    producerTarget?: { host: object; key: string };
-  } {
-    if (this.collectionEntryKind === 'map') {
-      const key = this.mapEntryKey;
-
-      if (key === undefined) {
-        return { ok: false, error: 'Map key is missing' };
-      }
-
-      return setMapEntryValue(this.parent.data, key, parsed);
-    }
-
-    if (this.collectionEntryKind === 'set') {
-      return setSetEntryValue(this.parent.data, this.data, parsed);
-    }
-
-    const producerTarget = resolveComputedProducerForEdit(this, parsed);
-
-    if (producerTarget) {
-      const result = setPropertyValue(
-        producerTarget.host,
-        producerTarget.key,
-        producerTarget.value,
-      );
-
-      return result.ok
-        ? { ok: true, producerTarget }
-        : { ok: false, error: result.error };
-    }
-
-    if (this.property == null) {
-      return { ok: false, error: 'Property key is missing' };
-    }
-
-    const result = setPropertyValue(this.parent.data, this.property, parsed);
-
-    return result.ok ? { ok: true } : { ok: false, error: result.error };
-  }
-
-  private formatEditableNestedValue() {
-    switch (this.nestedValueType) {
-      case 'object':
-      case 'array': {
-        try {
-          return JSON.stringify(this.data, null, 2);
-        } catch {
-          return this.stringifiedData;
-        }
-      }
-      default: {
-        switch (this.dataType) {
-          case 'bigint':
-            return `${String(this.data)}n`;
-          case 'symbol':
-            return `Symbol(${Symbol.keyFor(this.data as symbol) || ''})`;
-          case 'string':
-            return `"${String(this.data)}"`;
-        }
-
-        return String(this.data);
-      }
-    }
-  }
-
-  private notifyHostAppAfterEdit(producerTarget?: {
-    host: object;
-    key: string;
-  }) {
-    if (this.property === undefined) {
-      return;
-    }
-
-    const editedHosts: object[] = [];
-    const pathFromVm = this.buildMobxPathFromVm(producerTarget);
-
-    if (this.collectionEntryKind != null) {
-      registerEditedHost(editedHosts, this.parent.data);
-      invalidateMobxObject(this.parent.data);
-    } else if (producerTarget) {
-      registerEditedHost(editedHosts, producerTarget.host);
-      invalidateMobxProperty(producerTarget.host, producerTarget.key);
-
-      const nestedInfo = (producerTarget.host as { info?: object }).info;
-
-      if (nestedInfo && typeof nestedInfo === 'object') {
-        registerEditedHost(editedHosts, nestedInfo);
-        invalidateMobxProperty(nestedInfo, producerTarget.key);
-      }
-    } else if (this.property != null) {
-      registerEditedHost(editedHosts, this.parent.data);
-      invalidateMobxProperty(this.parent.data, this.property);
-    }
-
-    let ancestor: ListItem<any> | undefined = this.parentListItem;
-
-    while (ancestor instanceof PropertyListItem) {
-      if (ancestor.property != null) {
-        invalidateMobxProperty(ancestor.parent.data, ancestor.property);
-      }
-
-      if (ancestor.parent.data && typeof ancestor.parent.data === 'object') {
-        registerEditedHost(editedHosts, ancestor.parent.data);
-      }
-
-      ancestor = ancestor.parentListItem;
-    }
-
-    if (ancestor instanceof VMListItem) {
-      registerEditedHost(editedHosts, ancestor.data);
-      invalidateMobxObject(ancestor.data);
-
-      try {
-        this.refreshViewModelPayload(ancestor.data);
-      } catch {
-        // App ViewModel may use a separate mobx-view-model bundle.
-      }
-    }
-
-    this.bootstrapViewModelAdministrations();
-
-    const editedHost =
-      producerTarget?.host ??
-      (this.property != null ? this.parent.data : undefined);
-
-    let relatedVms: object[] = [];
-
-    if (editedHost && typeof editedHost === 'object') {
-      relatedVms = invalidateViewModelsAfterEdit({
-        editedHost,
-        editedPropertyKey: producerTarget?.key,
-        pathFromAncestorVm: pathFromVm,
-        viewModels: this.devtools.allVms,
-      });
-    }
-
-    notifyMobxEditPropagation({
-      editedHosts,
-      relatedViewModels: relatedVms,
-    });
-
-    for (const vm of relatedVms) {
-      try {
-        this.refreshViewModelPayload(vm);
-      } catch {
-        // App ViewModel may use a separate mobx-view-model bundle.
-      }
-    }
-  }
-
-  private bootstrapViewModelAdministrations() {
-    for (const vm of this.devtools.allVms) {
-      ensureMobxPropertyAtomLoaded(vm, '_payload');
-      ensureMobxPropertyAtomLoaded(vm, 'payload');
-      findMobxAdministration(vm);
-    }
-  }
-
-  private buildMobxPathFromVm(producerTarget?: { key: string }) {
-    const segments: string[] = [];
-    let current: ListItem<any> | undefined = this;
-
-    while (current instanceof PropertyListItem) {
-      if (current.property != null) {
-        segments.unshift(current.property);
-      }
-
-      current = current.parentListItem;
-    }
-
-    if (segments.length === 0) {
-      return segments;
-    }
-
-    if (producerTarget) {
-      return segments.slice(0, -1);
-    }
-
-    return segments.slice(0, -1);
-  }
-
-  private refreshViewModelPayload(vm: AnyVM) {
-    if (!('setPayload' in vm) || typeof vm.setPayload !== 'function') {
-      return;
-    }
-
-    if (!('payload' in vm)) {
-      return;
-    }
-
-    const payload = (vm as { payload: unknown }).payload;
-
-    if (payload === null || typeof payload !== 'object') {
-      return;
-    }
-
-    vm.setPayload(
-      Array.isArray(payload) ? [...payload] : { ...payload },
-    );
-  }
-
-  private parseEditContent(): unknown {
-    const content = this.editContent.trim();
-
-    if (
-      this.type === 'object' ||
-      this.type === 'array' ||
-      (this.collectionEntryKind != null &&
-        (this.nestedValueType === 'object' ||
-          this.nestedValueType === 'array'))
-    ) {
-      return JSON.parse(content);
-    }
-
-    // biome-ignore lint/security/noGlobalEval: devtools edit field, same as function call args
-    return eval(`(${content})`);
-  }
-
-  private reportDataChangedUpwards() {
-    let current: ListItem<any> | undefined = this;
-
-    while (current) {
-      current.reportDataChanged();
-      current =
-        current instanceof PropertyListItem
-          ? current.parentListItem
-          : undefined;
-    }
-  }
-
   getSavedTempVarNotification(tempVarName: string) {
     return `Property value "${this.property}" saved into ${tempVarName}`;
   }
@@ -1067,20 +650,10 @@ export class PropertyListItem extends ListItem<any> {
     computed(this, 'isInaccessibleDisplay');
     computed(this, 'extraContent');
     observable.ref(this, 'failedStringify');
-    observable.ref(this, 'editContent');
-    observable(this, 'isEditMode');
     observable(this, 'isWatching');
     observable.shallow(this, 'watchHistory');
     action(this, 'handleWatchClick');
     action(this, 'clearWatchHistory');
-    action(this, 'handleChangeEditContent');
-    action(this, 'handleEditKeyDown');
-    action(this, 'startEdit');
-    action(this, 'cancelEdit');
-    action(this, 'applyEdit');
-    action(this, 'toggleBoolean');
-    action(this, 'confirmEdit');
-    action(this, 'callFunction');
     makeObservable(this);
   }
 
@@ -1121,18 +694,4 @@ export class PropertyListItem extends ListItem<any> {
 
     return item;
   }
-}
-
-function registerEditedHost(hosts: object[], host: object) {
-  if (!hosts.includes(host)) {
-    hosts.push(host);
-  }
-}
-
-function formatEditError(error: unknown) {
-  if (error instanceof Error) {
-    return error.message;
-  }
-
-  return String(error);
 }

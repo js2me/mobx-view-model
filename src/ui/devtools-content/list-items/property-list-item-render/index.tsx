@@ -62,7 +62,7 @@ export const PropertyListItemRender = observer(
           [css.null]: item.data === null,
           [css.expandable]: item.isExpandable,
           [css.expanded]: item.isExpanded,
-          [css.isEditMode]: item.isEditMode,
+          [css.isEditMode]: item.editor.isEditMode,
           [css.updateHighlighted]: isUpdateHighlighted,
         })}
         style={

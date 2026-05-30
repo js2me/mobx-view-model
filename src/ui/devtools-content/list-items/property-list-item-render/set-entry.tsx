@@ -25,7 +25,7 @@ export const SetEntryPropertyContent = observer(
         <span className={css.propertyName}>{item.property}</span>
         :&nbsp;
         <CollectionMeta>{'{ '}</CollectionMeta>
-        {item.isEditMode ? (
+        {item.editor.isEditMode ? (
           <span className={css.propertyValue}>
             <PropertyValueEditInput item={item} />
           </span>

@@ -105,10 +105,11 @@
   display: flex;
   flex-direction: row;
   align-items: center;
-  padding-left: calc(8px + (var(--level) * 20px));
+  padding-left: max(8px, calc(8px + (var(--level) - var(--depth-offset, 0)) * 20px));
   position: sticky;
-  top: calc(var(--vmd-header-height) + var(--vmd-control-panel-height));
+  top: var(--vmd-header-height);
   z-index: 1;
+  background: var(--vmd-bg);
 }
 
 .treeItem:hover {

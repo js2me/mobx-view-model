@@ -5,7 +5,7 @@ import {
   reaction,
   runInAction,
 } from 'mobx';
-import { createElement, type ReactNode } from 'react';
+import { createElement, type CSSProperties, type ReactNode } from 'react';
 import SimpleBar from 'simplebar';
 import { createRef, type Ref } from 'yummies/mobx';
 import type { Maybe } from 'yummies/types';
@@ -33,7 +33,11 @@ const listItemRenderersMap = new Map<any, any>([
 ]);
 
 const ITEM_HEIGHT = 22;
-const BUFFER_SIZE = 10; // Количество дополнительных элементов сверху и снизу для более плавного скролла
+const BUFFER_SIZE = 10;
+
+function isTreeItem(item: unknown): item is VMListItem | ExtraListItem {
+  return item instanceof VMListItem || item instanceof ExtraListItem;
+}
 
 export class DevtoolsContentVM extends ViewModelImpl<{
   devtools: ViewModelDevtools;
@@ -41,8 +45,12 @@ export class DevtoolsContentVM extends ViewModelImpl<{
 }> {
   private startIndex = 0;
   private endIndex = 0;
-
+  stickyVmItemIndex = -1;
   itemsCount = 0;
+
+  private get listItems() {
+    return this.payload.devtools.listItems;
+  }
 
   contentRef = createRef<HTMLDivElement, { scrollbar: Maybe<SimpleBar> }>({
     meta: { scrollbar: null },
@@ -51,39 +59,22 @@ export class DevtoolsContentVM extends ViewModelImpl<{
       const scrollbar = new SimpleBar(node);
       this.contentRef.meta = { scrollbar };
       const scrollElement = scrollbar.getScrollElement();
-
-
       if (!scrollElement) return;
 
       runInAction(() => {
-        // Увеличиваем количество отображаемых элементов с учетом буфера
         const visibleItemsCount = Math.ceil(
           scrollElement.clientHeight / ITEM_HEIGHT,
         );
         this.itemsCount = visibleItemsCount + BUFFER_SIZE * 2;
       });
 
-      // Подписываемся на изменения длины списка элементов
       reaction(
-        () => this.payload.devtools.listItems.length,
-        () => this.handleRefreshItems(),
-        {
-          fireImmediately: true,
-        },
+        () => this.listItems.length,
+        () => this.updateVisibleRange(),
+        { fireImmediately: true },
       );
 
-      // Подписываемся на изменения startIndex и endIndex для принудительной перерисовки
-      reaction(
-        () => [this.startIndex, this.endIndex],
-        () => {
-          // Просто триггерим перерасчет itemNodes
-        },
-        {
-          fireImmediately: false,
-        },
-      );
-
-      scrollElement.addEventListener('scroll', this.handleRefreshItems);
+      scrollElement.addEventListener('scroll', this.handleScroll);
 
       requestAnimationFrame(() => {
         this.payload.devtools.searchEngine.focusInput();
@@ -93,48 +84,88 @@ export class DevtoolsContentVM extends ViewModelImpl<{
 
   @computed
   get virtualHeight() {
-    return this.payload.devtools.listItems.length * ITEM_HEIGHT;
+    return this.listItems.length * ITEM_HEIGHT;
   }
 
-  get itemNodes(): ReactNode[] {
-    const result: ReactNode[] = [];
+  get stickyVmItem(): VMListItem | ExtraListItem | null {
+    if (this.stickyVmItemIndex < 0) return null;
+    const item = this.listItems[this.stickyVmItemIndex];
+    return isTreeItem(item) ? item : null;
+  }
 
-    // Обновляем диапазон элементов при каждом рендере
+  @computed
+  get itemNodes(): ReactNode[] {
     this.updateVisibleRange();
 
-    // Добавляем пустой div в начале для смещения (оффсет сверху)
-    if (this.startIndex > 0) {
-      const topOffset = this.startIndex * ITEM_HEIGHT;
-      result.push(
-        createElement('div', {
-          key: 'top-offset',
-          style: { height: `${topOffset}px` },
-        }),
-      );
+    const { stickyScopeEndIndex, stickyDepth } = this.computeStickyScope();
+
+    return [
+      ...this.createOffsetNode('top', this.startIndex),
+      ...this.createVisibleItemNodes(stickyScopeEndIndex, stickyDepth),
+      ...this.createOffsetNode(
+        'bottom',
+        this.listItems.length - this.endIndex,
+      ),
+    ];
+  }
+
+  private computeStickyScope() {
+    if (this.stickyVmItemIndex < 0) {
+      return { stickyScopeEndIndex: -1, stickyDepth: -1 };
     }
 
-    // Рендерим только видимые элементы в нужном диапазоне
-    for (let i = this.startIndex; i < this.endIndex; i++) {
-      const listItem = this.payload.devtools.listItems[i];
-      const component = listItemRenderersMap.get(listItem?.constructor);
+    const stickyDepth = this.listItems[this.stickyVmItemIndex].depth;
+    let stickyScopeEndIndex = this.endIndex;
 
-      if (component) {
-        result.push(
-          createElement(component, { key: `item-${i}`, item: listItem }),
-        );
+    for (let i = this.stickyVmItemIndex + 1; i < this.endIndex; i++) {
+      if (isTreeItem(this.listItems[i]) && this.listItems[i].depth <= stickyDepth) {
+        stickyScopeEndIndex = i;
+        break;
       }
     }
 
-    // Добавляем пустой div в конце для смещения (оффсет снизу)
-    const bottomItemCount =
-      this.payload.devtools.listItems.length - this.endIndex;
-    if (bottomItemCount > 0) {
-      const bottomOffset = bottomItemCount * ITEM_HEIGHT;
+    return { stickyScopeEndIndex, stickyDepth };
+  }
+
+  private createOffsetNode(
+    position: 'top' | 'bottom',
+    count: number,
+  ): ReactNode[] {
+    if (count <= 0) return [];
+    return [
+      createElement('div', {
+        key: `${position}-offset`,
+        style: { height: `${count * ITEM_HEIGHT}px` },
+      }),
+    ];
+  }
+
+  private createVisibleItemNodes(
+    stickyScopeEndIndex: number,
+    stickyDepth: number,
+  ): ReactNode[] {
+    const result: ReactNode[] = [];
+
+    for (let i = this.startIndex; i < this.endIndex; i++) {
+      const listItem = this.listItems[i];
+      const component = listItemRenderersMap.get(listItem?.constructor);
+      if (!component) continue;
+
+      const isInStickyScope =
+        stickyScopeEndIndex >= 0 && i < stickyScopeEndIndex;
+
       result.push(
-        createElement('div', {
-          key: 'bottom-offset',
-          style: { height: `${bottomOffset}px` },
-        }),
+        createElement(
+          'div',
+          {
+            key: listItem.key,
+            style: {
+              '--depth-offset': isInStickyScope ? stickyDepth : 0,
+              display: 'contents',
+            } as CSSProperties,
+          },
+          createElement(component, { item: listItem }),
+        ),
       );
     }
 
@@ -144,12 +175,9 @@ export class DevtoolsContentVM extends ViewModelImpl<{
   private updateVisibleRange = () => {
     const scrollElement = this.contentRef.meta.scrollbar?.getScrollElement();
     if (!scrollElement) {
-      // Если скролл элемент недоступен, показываем первые элементы
       this.startIndex = 0;
-      this.endIndex = Math.min(
-        this.itemsCount,
-        this.payload.devtools.listItems.length,
-      );
+      this.endIndex = Math.min(this.itemsCount, this.listItems.length);
+      this.stickyVmItemIndex = -1;
       return;
     }
 
@@ -159,24 +187,38 @@ export class DevtoolsContentVM extends ViewModelImpl<{
       scrollElement.clientHeight / ITEM_HEIGHT,
     );
 
-    // Рассчитываем диапазон с учетом буфера
     const newStartIndex = Math.max(0, visibleStartIndex - BUFFER_SIZE);
     const newEndIndex = Math.min(
-      this.payload.devtools.listItems.length,
+      this.listItems.length,
       visibleStartIndex + visibleItemsCount + BUFFER_SIZE,
     );
 
-    // Обновляем значения только если они изменились, чтобы вызвать перерисовку
-    if (this.startIndex !== newStartIndex || this.endIndex !== newEndIndex) {
+    const newStickyIndex = this.findStickyTreeItemIndex(visibleStartIndex);
+
+    if (
+      this.startIndex !== newStartIndex ||
+      this.endIndex !== newEndIndex ||
+      this.stickyVmItemIndex !== newStickyIndex
+    ) {
       runInAction(() => {
         this.startIndex = newStartIndex;
         this.endIndex = newEndIndex;
+        this.stickyVmItemIndex = newStickyIndex;
       });
     }
   };
 
-  handleRefreshItems = () => {
-    // Вызываем обновление диапазона, что должно привести к перерисовке
+  private findStickyTreeItemIndex(visibleStartIndex: number): number {
+    const searchFrom = Math.min(visibleStartIndex, this.listItems.length - 1);
+    for (let i = searchFrom; i >= 0; i--) {
+      if (isTreeItem(this.listItems[i])) {
+        return i >= visibleStartIndex ? -1 : i;
+      }
+    }
+    return -1;
+  }
+
+  handleScroll = () => {
     this.updateVisibleRange();
   };
 
@@ -185,6 +227,7 @@ export class DevtoolsContentVM extends ViewModelImpl<{
       startIndex: observable.ref,
       endIndex: observable.ref,
       itemsCount: observable.ref,
+      stickyVmItemIndex: observable.ref,
     });
   }
 }

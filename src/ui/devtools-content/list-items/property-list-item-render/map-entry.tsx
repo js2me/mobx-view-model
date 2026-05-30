@@ -27,7 +27,7 @@ export const MapEntryPropertyContent = observer(
           {formatCollectionKey(mapKey)}
         </CollectionTypedValue>
         <CollectionMeta>{' => '}</CollectionMeta>
-        {item.isEditMode ? (
+        {item.editor.isEditMode ? (
           <span className={css.propertyValue}>
             <PropertyValueEditInput item={item} />
           </span>

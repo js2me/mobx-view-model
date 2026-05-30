@@ -7,10 +7,10 @@ export const PropertyValueEditInput = observer(
   ({ item }: PropertyListItemRenderProps) => {
     return (
       <input
-        value={item.editContent}
+        value={item.editor.editContent}
         className={css.editContent}
-        onChange={item.handleChangeEditContent}
-        onKeyDown={item.handleEditKeyDown}
+        onChange={item.editor.handleChangeEditContent}
+        onKeyDown={item.editor.handleEditKeyDown}
         onClick={skipEvent as any}
         data-ignore-global-keys
       />

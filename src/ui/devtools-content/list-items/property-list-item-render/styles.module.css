@@ -13,7 +13,7 @@
   align-items: center;
   position: relative;
   color: var(--vmd-property-meta-color);
-  padding-left: calc(0px + 28px + (var(--level) * 15px));
+  padding-left: max(28px, calc(28px + (var(--level) - var(--depth-offset, 0)) * 15px));
 }
 
 .property:hover, .property.isEditMode {

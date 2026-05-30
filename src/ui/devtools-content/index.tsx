@@ -10,10 +10,14 @@ import {
 import { type ViewModelProps, withViewModel } from 'mobx-view-model';
 import type { ReactNode } from 'react';
 import { cx } from 'yummies/css';
+import { VMListItem } from '@/model/list-item/vm-list-item';
+import { ExtraListItem } from '@/model/list-item/extra-list-item';
 import { IconToggleButton } from '../shared/icon-toggle-button';
 import { DevtoolsContentVM } from './model';
 import { Notifications } from './notifications';
 import { SettingsButton } from './settings-button';
+import { VmListItemRender } from './list-items/vm-list-item-render';
+import { ExtraListItemRender } from './list-items/extra-list-item-render';
 import css from './styles.module.css';
 
 export const VmDevtoolsContent = withViewModel(
@@ -170,6 +174,21 @@ export const VmDevtoolsContent = withViewModel(
             )}
           </div>
         </header>
+        <div
+          className={css.stickyVmHeader}
+          style={
+            {
+              '--depth-offset': model.stickyVmItem?.depth ?? 0,
+              display: model.stickyVmItem ? undefined : 'none',
+            } as React.CSSProperties
+          }
+        >
+          {model.stickyVmItem instanceof VMListItem ? (
+            <VmListItemRender item={model.stickyVmItem} />
+          ) : model.stickyVmItem instanceof ExtraListItem ? (
+            <ExtraListItemRender item={model.stickyVmItem} />
+          ) : null}
+        </div>
         <div
           className={css.vmContentVirtualScroll}
           style={{ height: model.virtualHeight }} // 10_0000

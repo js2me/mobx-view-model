@@ -15,7 +15,7 @@ export const PrimitivePropertyContent = observer(
           </>
         )}
         <span className={css.propertyValue}>
-          {item.isEditMode ? (
+          {item.editor.isEditMode ? (
             <PropertyValueEditInput item={item} />
           ) : item.isInaccessibleDisplay ? (
             INACCESSIBLE_DISPLAY_LABEL

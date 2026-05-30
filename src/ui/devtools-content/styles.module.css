@@ -18,7 +18,25 @@
 }
 
 .vmContentVirtualizedContent {
-  overflow: hidden;
+}
+
+.stickyVmHeader {
+  position: sticky;
+  top: var(--vmd-header-height);
+  z-index: 1;
+  height: 0;
+  overflow: visible;
+}
+
+.stickyVmHeader::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 22px;
+  background: var(--vmd-bg);
+  backdrop-filter: blur(var(--vmd-base-blur));
 }
 
 .vmContent[data-simplebar] {
