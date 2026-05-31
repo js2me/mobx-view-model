@@ -4,12 +4,60 @@
   display: contents;
   box-sizing: border-box;
   color: var(--vmd-base-color);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
+    'Courier New', monospace;
+  font-size: 14px;
+  font-weight: 400;
+  font-style: normal;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  text-decoration: none;
+  font-synthesis: none;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 .root * {
-  font-family: ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
-  font-size: 14px;
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  font-style: inherit;
+  line-height: 1;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  text-decoration: inherit;
   box-sizing: border-box;
+  outline: 0;
+}
+
+.root svg {
+  display: inline-block;
+  flex-shrink: 0;
+  vertical-align: middle;
+}
+
+.root input,
+.root textarea,
+.root select {
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  line-height: 1;
+  color: inherit;
+  margin: 0;
+}
+
+.root a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.root code,
+.root kbd,
+.root samp,
+.root pre {
+  font-family: inherit;
 }
 
 .root button {
@@ -27,8 +75,10 @@
   margin: 0;
   padding: 0;
   border: 0;
-  font: inherit;
-  line-height: inherit;
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  line-height: 1;
   color: inherit;
 }
 
@@ -63,7 +113,10 @@
   padding: 0;
   border: 0;
   background: transparent;
-  font: inherit;
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  line-height: 1;
   cursor: pointer;
   z-index: 1;
   overflow: hidden;
@@ -79,7 +132,9 @@
   border: 0;
   border-radius: 4px;
   line-height: 1;
-  font: inherit;
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
   color: var(--vmd-property-bg-content-color);
   white-space: nowrap;
   flex: none;
@@ -109,14 +164,14 @@
   position: sticky;
   top: var(--vmd-header-height);
   z-index: 1;
-  background: var(--vmd-bg);
+  background: transparent;
 }
 
 .treeItem:hover {
   background: var(--vmd-content-highlight-bg);
 }
 
-.treeItem:not([data-fitted='true']) > header {
+.treeItem:not([data-fitted='true']) > .treeItemHeader {
   opacity: 0.6;
 }
 

@@ -39,7 +39,7 @@ export const VmDevtoolsContent = withViewModel(
         className={cx(css.vmContent, className)}
         ref={model.contentRef}
       >
-        <header className={css.vmContentHeader}>
+        <div className={css.vmContentHeader}>
           <Notifications />
           <div className={css.gradientBlur} />
           <div className={css.vmContentHeaderTitle} data-content-header>
@@ -173,7 +173,7 @@ export const VmDevtoolsContent = withViewModel(
               </div>
             )}
           </div>
-        </header>
+        </div>
         <div
           className={css.stickyVmHeader}
           style={

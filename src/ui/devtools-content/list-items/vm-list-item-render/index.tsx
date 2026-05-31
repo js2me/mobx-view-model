@@ -14,7 +14,7 @@ export const VmListItemRender = observer(({ item }: { item: VMListItem }) => {
       data-depth={item.depthLine}
       style={{ '--level': item.depth } as CSSProperties}
     >
-      <header
+      <div
         className={css.treeItemHeader}
         onClick={() => item.devtools.handleVmItemHeaderClick(item)}
       >
@@ -29,7 +29,7 @@ export const VmListItemRender = observer(({ item }: { item: VMListItem }) => {
         <span className={css.treeItemMetaText} title={item.data.id}>
           {item.data.id}
         </span>
-      </header>
+      </div>
       <ListItemOperations item={item} />
     </div>
   );

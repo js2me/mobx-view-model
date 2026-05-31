@@ -14,7 +14,7 @@ export const ExtraListItemRender = observer(
         data-depth={item.depthLine}
         style={{ '--level': item.depth } as CSSProperties}
       >
-        <header
+        <div
           className={css.treeItemHeader}
           onClick={() => item.toggleExpand()}
         >
@@ -26,7 +26,7 @@ export const ExtraListItemRender = observer(
           <span className={css.treeItemLabel} title={item.displayName}>
             {item.displayName}
           </span>
-        </header>
+        </div>
       </div>
     );
   },
