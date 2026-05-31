@@ -39,8 +39,8 @@ importers:
         specifier: ^0.49.1
         version: 0.49.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(vue@3.5.22(typescript@5.9.3))
       yummies:
-        specifier: ^6.5.0
-        version: 6.5.0(mobx@6.15.0)(react@18.3.1)
+        specifier: ^7.19.4
+        version: 7.19.4(mobx@6.15.0)(react@18.3.1)
     devDependencies:
       '@biomejs/biome':
         specifier: 2.3.3
@@ -1824,9 +1824,6 @@ packages:
     resolution: {integrity: sha512-BnBS08aLUM+DKamupXs3w2tJJoqU+AkaE/+6vQxi/G/DPmIZFJJp9Dkb1kM03AZx8ADehDUZgsNxju3mPXZYIA==}
     engines: {node: '>=20'}
 
-  dayjs@1.11.19:
-    resolution: {integrity: sha512-t5EcLVS6QPBNqM2z8fakk/NKel+Xzshgt8FFKAn+qwlD1pzZWxh0nVCrvFK7ZDb6XucZeF9z8C7CBWTRIVApAw==}
-
   dayjs@1.11.20:
     resolution: {integrity: sha512-YbwwqR/uYpeoP4pu043q+LTDLFBLApUP6VxRihdfNTqu4ubqMlGDLd6ErXhEgsyvY0K6nCs7nggYumAN+9uEuQ==}
 
@@ -1902,9 +1899,6 @@ packages:
   diff@8.0.2:
     resolution: {integrity: sha512-sSuxWU5j5SR9QQji/o2qMvqRNYRDOcBTgsJ/DeCf4iSN4gW+gNMXM7wFIP+fdXZxoNiAnHUTGjCr+TSWXdRDKg==}
     engines: {node: '>=0.3.1'}
-
-  dompurify@3.3.0:
-    resolution: {integrity: sha512-r+f6MYR1gGN1eJv0TVQbhA7if/U7P87cdPl3HN5rikqaBSBxLiCb/b9O+2eG0cxz0ghyU+mU1QkbsOwERMYlWQ==}
 
   dompurify@3.4.5:
     resolution: {integrity: sha512-OrwIBKsdNSVEeubdJ1HBv/wNENRM9ytAVCv7YXt//A3vPdVMNuACRqK9mXCGCBW2ln7BT/A4X0jXHo2Gu89miA==}
@@ -2847,11 +2841,6 @@ packages:
     engines: {node: ^18 || >=20}
     hasBin: true
 
-  nanoid@5.1.6:
-    resolution: {integrity: sha512-c7+7RQ+dMB5dPwwCp4ee1/iV/q2P6aK1mTZcfr1BTuVlyW9hJYiMPybJCcnBlQtuSmTIWNeazm/zqNoZSSElBg==}
-    engines: {node: ^18 || >=20}
-    hasBin: true
-
   node-addon-api@7.1.1:
     resolution: {integrity: sha512-5m3bsyrjFWE1xf7nz7YXdN4udnVtXK6/Yfgn5qnahL6bCkf2yKt4k3nuTKAtT4r3IG8JNR2ncsIMdZuAzJjHQQ==}
 
@@ -3494,9 +3483,6 @@ packages:
   tabbable@6.3.0:
     resolution: {integrity: sha512-EIHvdY5bPLuWForiR/AN2Bxngzpuwn1is4asboytXtpTgsArc+WmSJKVLlhdh71u7jFcryDqB2A8lQvj78MkyQ==}
 
-  tailwind-merge@3.3.1:
-    resolution: {integrity: sha512-gBXpgUm/3rp1lMZZrM/w7D8GKqshif0zAymAhbCyIt8KMe+0v9DQ7cdYLR4FHH/cKpdTXb+A/tKKU3eolfsI+g==}
-
   tailwind-merge@3.6.0:
     resolution: {integrity: sha512-uxL7qAVQriqRQPAyK3pj66VqskWqoZ37PW94jwOTwNfq/z9oyu1V+eqrZqtR2+fCiXdYOZe/Modt8GtvqNzu+w==}
 
@@ -3993,17 +3979,6 @@ packages:
   yargs@17.7.2:
     resolution: {integrity: sha512-7dSzzRQ++CKnNI/krKnYRV7JKKPUXMEh61soaHKg9mrWEhzFWhFnxPxGl+69cD1Ou63C13NUPCnmIcrvqCuM6w==}
     engines: {node: '>=12'}
-
-  yummies@6.5.0:
-    resolution: {integrity: sha512-boTeCzkitGzEkMWAgBA7yjH+RU4zOCtw37jhc/9GHLucPGbOeUrukUcNBMo/wRlvETHX0mEm2PtxZ3O0v63qRw==}
-    peerDependencies:
-      mobx: ^6.12.4
-      react: ^18 || ^19
-    peerDependenciesMeta:
-      mobx:
-        optional: true
-      react:
-        optional: true
 
   yummies@7.19.4:
     resolution: {integrity: sha512-OO7jPtnYW+D8DX/1P1vQsWGZZjpQljuW2oEHc3RJ1a8e6SiWOtIUCL8sTwkLO6kaf7NfocRr/ld48vXZnO2hOg==}
@@ -5707,8 +5682,6 @@ snapshots:
       whatwg-mimetype: 4.0.0
       whatwg-url: 15.1.0
 
-  dayjs@1.11.19: {}
-
   dayjs@1.11.20: {}
 
   de-indent@1.0.2: {}
@@ -5764,10 +5737,6 @@ snapshots:
       dequal: 2.0.3
 
   diff@8.0.2: {}
-
-  dompurify@3.3.0:
-    optionalDependencies:
-      '@types/trusted-types': 2.0.7
 
   dompurify@3.4.5:
     optionalDependencies:
@@ -6835,8 +6804,6 @@ snapshots:
 
   nanoid@5.1.11: {}
 
-  nanoid@5.1.6: {}
-
   node-addon-api@7.1.1:
     optional: true
 
@@ -7587,8 +7554,6 @@ snapshots:
 
   tabbable@6.3.0: {}
 
-  tailwind-merge@3.3.1: {}
-
   tailwind-merge@3.6.0: {}
 
   terser@5.44.0:
@@ -8153,18 +8118,6 @@ snapshots:
       string-width: 4.2.3
       y18n: 5.0.8
       yargs-parser: 21.1.1
-
-  yummies@6.5.0(mobx@6.15.0)(react@18.3.1):
-    dependencies:
-      class-variance-authority: 0.7.1
-      clsx: 2.1.1
-      dayjs: 1.11.19
-      dompurify: 3.3.0
-      nanoid: 5.1.6
-      tailwind-merge: 3.3.1
-    optionalDependencies:
-      mobx: 6.15.0
-      react: 18.3.1
 
   yummies@7.19.4(mobx@6.15.0)(react@18.3.1):
     dependencies:

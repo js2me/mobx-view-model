@@ -7,6 +7,9 @@ const settingsStorage = createStorageData({
   prefix: 'mobx-view-model-devtools:',
 });
 
+export const hasPersistedDevtoolsSetting = (key: string): boolean =>
+  settingsStorage.local[key] != null;
+
 export const devtoolsThemeKey = settingsStorage.key<DevtoolsTheme>(
   'theme',
   'auto',
