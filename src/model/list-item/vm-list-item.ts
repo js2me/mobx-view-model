@@ -99,6 +99,10 @@ export class VMListItem extends ListItem<AnyVM> {
     return 0;
   }
 
+  get parentLabel(): string | null {
+    return this.parent?.displayName ?? null;
+  }
+
   searchData;
 
   displayName;

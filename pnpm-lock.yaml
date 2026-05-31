@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@gravity-ui/icons':
-        specifier: ^2.16.0
-        version: 2.16.0(react@18.3.1)
+        specifier: ^2.18.0
+        version: 2.18.0(react@18.3.1)
       mobx:
         specifier: ^6.15.0
         version: 6.15.0
@@ -658,8 +658,8 @@ packages:
     resolution: {integrity: sha512-OEl393iCOoo/z8bMezRlJu+GlRGlsKbUAN7jKB6LhnKoqKve5DXRpalbItIIcwnCjs1k/FOPjFzcA6Qn+H+YbA==}
     engines: {node: '>=18.0.0', npm: '>=9.0.0'}
 
-  '@gravity-ui/icons@2.16.0':
-    resolution: {integrity: sha512-AMjPSO+7yPpvcCa9k+ZFNOZ+8cmIauLyRMswhoyfQ7SeoJOVzsAa2OP/B+Dd+AZRvzTaeJha4m2iEk93JvAklA==}
+  '@gravity-ui/icons@2.18.0':
+    resolution: {integrity: sha512-JoRc/4Ch9GLaufZfpGd2ePRRisMXEjMI+r3y8kPKyYIAdQZz07jpIXEgsft1gvBxjSht2MS2uu5+vfhe1WP0ow==}
     peerDependencies:
       react: '*'
     peerDependenciesMeta:
@@ -4422,7 +4422,7 @@ snapshots:
 
   '@faker-js/faker@9.9.0': {}
 
-  '@gravity-ui/icons@2.16.0(react@18.3.1)':
+  '@gravity-ui/icons@2.18.0(react@18.3.1)':
     dependencies:
       tslib: 2.8.1
     optionalDependencies:

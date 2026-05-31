@@ -39,9 +39,11 @@ export const VmDevtoolsContent = withViewModel(
         className={cx(css.vmContent, className)}
         ref={model.contentRef}
       >
+        <div className={css.gradientBlurLayer} aria-hidden="true">
+          <div className={css.gradientBlur} />
+        </div>
         <div className={css.vmContentHeader}>
           <Notifications />
-          <div className={css.gradientBlur} />
           <div className={css.vmContentHeaderTitle} data-content-header>
             <img className={css.vmContentHeaderLogo} src={devtools.logoUrl} />
             <span className={css.vmContentHeaderTitleText}>
@@ -184,7 +186,7 @@ export const VmDevtoolsContent = withViewModel(
           }
         >
           {model.stickyVmItem instanceof VMListItem ? (
-            <VmListItemRender item={model.stickyVmItem} />
+            <VmListItemRender item={model.stickyVmItem} compact />
           ) : model.stickyVmItem instanceof ExtraListItem ? (
             <ExtraListItemRender item={model.stickyVmItem} />
           ) : null}

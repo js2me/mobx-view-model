@@ -44,7 +44,7 @@
     "vite-plugin-css-injected-by-js": "^3.5.2"
   },
   "dependencies": {
-    "@gravity-ui/icons": "^2.16.0",
+    "@gravity-ui/icons": "^2.18.0",
     "mobx": "^6.15.0",
     "mobx-react-lite": "^4.1.1",
     "mobx-swiss-knife": "^1.15.0",

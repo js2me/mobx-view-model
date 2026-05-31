@@ -7,10 +7,20 @@ import {
 } from 'mobx';
 import type { ChangeEvent, FocusEvent, KeyboardEvent } from 'react';
 import type { AnyObject } from 'yummies/types';
-import { ExtraListItem } from './list-item/extra-list-item';
 import type { ListItem } from './list-item/list-item';
-import { PropertyListItem } from './list-item/property-list-item';
-import { VMListItem } from './list-item/vm-list-item';
+import type { PropertyListItem } from './list-item/property-list-item';
+import type { VMListItem } from './list-item/vm-list-item';
+import {
+  getListItems as filterGetListItems,
+  getOwnerInfo as filterGetOwnerInfo,
+  isItemFitted as filterIsItemFitted,
+  isSearchTargetMatched as filterIsSearchTargetMatched,
+  getBestSuggestionAlias,
+  getCandidatePropsAtDepth,
+  type OwnerInfo,
+  propertyMatchesSegmentPartial,
+  type SearchContext,
+} from './search-filter';
 import {
   createFocusableRef,
   type FocusableRef,
@@ -20,17 +30,6 @@ import {
   hasSearchPathSyntax,
   parseSearchPath,
 } from './utils/parse-search-path';
-import {
-  type SearchContext,
-  type OwnerInfo,
-  getListItems as filterGetListItems,
-  isItemFitted as filterIsItemFitted,
-  isSearchTargetMatched as filterIsSearchTargetMatched,
-  getCandidatePropsAtDepth,
-  propertyMatchesSegmentPartial,
-  getBestSuggestionAlias,
-  getOwnerInfo as filterGetOwnerInfo,
-} from './search-filter';
 
 export type SearchInput =
   | { type: 'vm'; item: VMListItem }

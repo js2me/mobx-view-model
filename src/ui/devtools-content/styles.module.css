@@ -23,9 +23,19 @@
 .stickyVmHeader {
   position: sticky;
   top: var(--vmd-header-height);
-  z-index: 100;
+  z-index: 5;
   height: 0;
   overflow: visible;
+}
+
+.gradientBlurLayer {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  height: 0;
+  flex: none;
+  overflow: visible;
+  pointer-events: none;
 }
 
 /* .stickyVmHeader::before {
@@ -280,7 +290,7 @@
   padding: 0 8px;
   position: sticky;
   top: 0;
-  z-index: 2;
+  z-index: 10;
 }
 
 .vmContentHeaderLogo {
@@ -293,8 +303,9 @@
   justify-content: space-between;
   align-items: center;
   flex: none;
+  position: relative;
   font-weight: 600;
-  z-index: 4;
+  z-index: 1;
 }
 
 .vmContentHeaderTitleText {
@@ -313,9 +324,10 @@
   flex: none;
   display: flex;
   flex-direction: row;
+  position: relative;
   z-index: 1;
   gap: 4px;
-  overflow: hidden;
+  overflow: visible;
   padding-right: 6px;
 }
 
@@ -412,7 +424,7 @@
   padding: 3px;
   border: 1px solid var(--vmd-control-border);
   border-radius: 5px;
-  background: var(--vmd-control-bg);
+  background: var(--vmd-overlay-bg);
   box-shadow: 0 6px 18px #00000059;
   overflow: hidden;
   backdrop-filter: blur(8px);
@@ -488,21 +500,14 @@
   top: 0;
   left: 0;
   width: 100%;
-  height: calc(100% + 6px);
+  height: calc(var(--vmd-header-height) + 6px);
   pointer-events: none;
-  transition: all 150ms ease;
-  
-  /* Основной черный градиент */
+  transition: all 240ms ease;
   background: linear-gradient(
     to bottom,
     var(--vmd-overlay-bg) 0%,
     rgba(0, 0, 0, 0) 100%
   );
-}
-
-.vmContent[data-simplebar]:has(.stickyVmHeader>div) .gradientBlur {
-  height: calc(100% + 30px);
-  background: linear-gradient(to bottom, var(--vmd-overlay-bg) 10%, rgba(0, 0, 0, 0) 100%);
 }
 
 .gradientBlur::before {

@@ -124,7 +124,7 @@
   white-space: nowrap;
   padding-right: 8px;
   background: var(--vmd-overlay-bg);
-  border-radius: 8px;
+  border-radius: 6px;
 }
 
 .treeItemLabel {
@@ -152,6 +152,30 @@
   white-space: nowrap;
 }
 
+.treeItemNestingBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  flex: none;
+  margin-right: 1px;
+  padding: 1px 3px;
+  border-radius: 4px;
+  line-height: 1;
+}
+
+.treeItemNestingBadge svg {
+  width: 10px;
+  height: 10px;
+  opacity: 0.8;
+}
+
+.treeItemNestingBadgeLevel {
+  font-size: 10px;
+  font-weight: 600;
+  min-width: 7px;
+  text-align: center;
+}
+
 .treeItem {
   display: flex;
   align-items: center;
@@ -166,7 +190,7 @@
   padding-left: max(8px, calc(8px + (var(--level) - var(--depth-offset, 0)) * 20px));
   position: sticky;
   top: var(--vmd-header-height);
-  z-index: 1;
+  z-index: 3;
   background: transparent;
   transition: all 150ms ease;
 }
@@ -184,6 +208,11 @@
     background: var(--vmd-primary-bg);
   }
 
+  .treeItemNestingBadge {
+    background: var(--vmd-content-highlight-bg);
+    color: var(--vmd-property-bg-content-color);
+  }
+
   .treeItemMetaText {
     color: var(--vmd-primary-color);
   }
@@ -192,5 +221,10 @@
 .extraTreeItem {
   .treeItemLabel {
     background: var(--vmd-secondary-bg);
+  }
+
+  .treeItemNestingBadge {
+    background: var(--vmd-content-highlight-bg);
+    color: var(--vmd-property-bg-content-color);
   }
 }
