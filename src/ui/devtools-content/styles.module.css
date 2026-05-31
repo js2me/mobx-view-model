@@ -490,7 +490,7 @@
   width: 100%;
   height: calc(100% + 6px);
   pointer-events: none;
-  transition: all 240ms ease;
+  transition: all 150ms ease;
   
   /* Основной черный градиент */
   background: linear-gradient(
@@ -501,7 +501,7 @@
 }
 
 .vmContent[data-simplebar]:has(.stickyVmHeader>div) .gradientBlur {
-  height: calc(100% + 22px);
+  height: calc(100% + 30px);
   background: linear-gradient(to bottom, var(--vmd-overlay-bg) 10%, rgba(0, 0, 0, 0) 100%);
 }
 

@@ -122,6 +122,9 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  padding-right: 8px;
+  background: var(--vmd-overlay-bg);
+  border-radius: 8px;
 }
 
 .treeItemLabel {
@@ -165,6 +168,7 @@
   top: var(--vmd-header-height);
   z-index: 1;
   background: transparent;
+  transition: all 150ms ease;
 }
 
 .treeItem:hover {
