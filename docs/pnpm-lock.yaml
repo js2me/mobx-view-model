@@ -15,8 +15,8 @@ importers:
         specifier: ^10.2.0
         version: 10.2.0(mobx-react-lite@4.1.1(mobx@6.15.4)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(mobx@6.15.4)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       mobx-view-model-devtools:
-        specifier: ^0.0.56
-        version: 0.0.56(vue@3.5.34(typescript@5.9.3))
+        specifier: ^0.0.58
+        version: 0.0.58(vue@3.5.34(typescript@5.9.3))
     devDependencies:
       '@iconify-json/logos':
         specifier: ^1.2.9
@@ -2370,8 +2370,8 @@ packages:
     peerDependencies:
       mobx: ^6.12.4
 
-  mobx-view-model-devtools@0.0.56:
-    resolution: {integrity: sha512-31YDpFawrwpqk6K5XL8juuVXKSWDkZhoxLfp5kPBxHRTQWWqKljbkZ/y4m+B6rQpG5VGjI3NTYr1hdr8RR3+bQ==}
+  mobx-view-model-devtools@0.0.58:
+    resolution: {integrity: sha512-YXbMr7JjuG2r+eQyZEqL90mIFvpAVbMYiEqVXrHZBDSFYb02HOJvd5SSqJR9OZiaFQqWw/bbZNWpBSVJDGjN5w==}
 
   mobx-view-model-react@10.2.0:
     resolution: {integrity: sha512-EhKyI2UQSfT4kVmYqXPRL2YQEK60EO2oTuTXtgRnGODEEauerbq923T7VDbUai+6bMgRsjf9DOXnHwYvkFMuBQ==}
@@ -5761,7 +5761,7 @@ snapshots:
     transitivePeerDependencies:
       - react
 
-  mobx-view-model-devtools@0.0.56(vue@3.5.34(typescript@5.9.3)):
+  mobx-view-model-devtools@0.0.58(vue@3.5.34(typescript@5.9.3)):
     dependencies:
       '@gravity-ui/icons': 2.18.0(react@18.3.1)
       mobx: 6.15.4

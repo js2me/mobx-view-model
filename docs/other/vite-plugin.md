@@ -38,19 +38,8 @@ All features are on by default in dev mode. The plugin injects nothing in produc
 
 ### Smart HMR for ViewModel classes
 
-Fixes [Error #2](/errors/2) that shows up when Vite HMR replaces a ViewModel class module.
+Fixes [Error #2](/errors/2) that shows up when Vite HMR replaces a ViewModel class module.   
 
-**What happens without the plugin:** when you edit a ViewModel class (say, `CounterVM`), Vite creates a new class constructor. `withViewModel(NewCounterVM)` creates or reuses a VM instance, but `ViewModelStoreBase.viewModelIdsByClasses` still maps the **old** class to the VM IDs. `useViewModel(NewCounterVM)` can't find the instance — and things break.
-
-**How the plugin fixes it:** it injects `import.meta.hot.dispose()` into every ViewModel class file. On HMR update, it remaps:
-
-- `viewModelIdsByClasses` — old class → new class
-- `linkedAnchorVMClasses` — anchor → old class → anchor → new class
-- VM instance prototypes — `Object.setPrototypeOf(instance, NewClass.prototype)`
-
-No full page reload. State is preserved. `useViewModel()` keeps working after HMR.
-
-The plugin also pulls all consumer modules (files using `useViewModel(YourVM)` or `withViewModel(YourVM)`) into the HMR update, so they get the new class reference.
 
 ### Auto `displayName` for observer components
 
@@ -119,13 +108,3 @@ mobxVmVitePlugin({
   },
 });
 ```
-
-## How HMR works under the hood
-
-1. The plugin scans `.ts`/`.tsx` files for ViewModel classes (extends `ViewModelBase`, implements `ViewModel`/`ViewModelSimple`)
-2. It injects `import.meta.hot.dispose()` + class-remapping code into ViewModel class files
-3. On first load, the injected code saves current class references via `import.meta.hot.data`
-4. On HMR re-evaluation, it reads the old references, compares them with the new ones, and remaps the store's internal maps
-5. The runtime module subscribes to `viewModelsConfig.hooks.storeCreate` to access `ViewModelStore` instances
-
-The plugin uses the official `viewModelsConfig.hooks.storeCreate` PubSub hook — the same mechanism used by `mobx-view-model-devtools`. No monkey-patching, no fragile internal hacks.
