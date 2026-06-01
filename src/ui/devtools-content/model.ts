@@ -22,6 +22,11 @@ import { PropertyListItemRender } from './list-items/property-list-item-render';
 import { PropertyWatchHistoryHeaderRender } from './list-items/property-watch-history-header-render';
 import { PropertyWatchHistoryItemRender } from './list-items/property-watch-history-item-render';
 import { VmListItemRender } from './list-items/vm-list-item-render';
+import {
+  findStickyTreeItemIndex,
+  isStickyTreeItem,
+  LIST_ITEM_HEIGHT,
+} from '@/model/utils/sticky-tree-item-scroll';
 
 const listItemRenderersMap = new Map<any, any>([
   [VMListItem, VmListItemRender],
@@ -32,12 +37,7 @@ const listItemRenderersMap = new Map<any, any>([
   [MetaListItem, MetaListItemRender],
 ]);
 
-const ITEM_HEIGHT = 22;
 const BUFFER_SIZE = 10;
-
-function isTreeItem(item: unknown): item is VMListItem | ExtraListItem {
-  return item instanceof VMListItem || item instanceof ExtraListItem;
-}
 
 export class DevtoolsContentVM extends ViewModelImpl<{
   devtools: ViewModelDevtools;
@@ -63,7 +63,7 @@ export class DevtoolsContentVM extends ViewModelImpl<{
 
       runInAction(() => {
         const visibleItemsCount = Math.ceil(
-          scrollElement.clientHeight / ITEM_HEIGHT,
+          scrollElement.clientHeight / LIST_ITEM_HEIGHT,
         );
         this.itemsCount = visibleItemsCount + BUFFER_SIZE * 2;
       });
@@ -84,47 +84,27 @@ export class DevtoolsContentVM extends ViewModelImpl<{
 
   @computed
   get virtualHeight() {
-    return this.listItems.length * ITEM_HEIGHT;
+    return this.listItems.length * LIST_ITEM_HEIGHT;
   }
 
   get stickyVmItem(): VMListItem | ExtraListItem | null {
     if (this.stickyVmItemIndex < 0) return null;
     const item = this.listItems[this.stickyVmItemIndex];
-    return isTreeItem(item) ? item : null;
+    return isStickyTreeItem(item) ? item : null;
   }
 
   @computed
   get itemNodes(): ReactNode[] {
     this.updateVisibleRange();
 
-    const { stickyScopeEndIndex, stickyDepth } = this.computeStickyScope();
-
     return [
       ...this.createOffsetNode('top', this.startIndex),
-      ...this.createVisibleItemNodes(stickyScopeEndIndex, stickyDepth),
+      ...this.createVisibleItemNodes(),
       ...this.createOffsetNode(
         'bottom',
         this.listItems.length - this.endIndex,
       ),
     ];
-  }
-
-  private computeStickyScope() {
-    if (this.stickyVmItemIndex < 0) {
-      return { stickyScopeEndIndex: -1, stickyDepth: -1 };
-    }
-
-    const stickyDepth = this.listItems[this.stickyVmItemIndex].depth;
-    let stickyScopeEndIndex = this.endIndex;
-
-    for (let i = this.stickyVmItemIndex + 1; i < this.endIndex; i++) {
-      if (isTreeItem(this.listItems[i]) && this.listItems[i].depth <= stickyDepth) {
-        stickyScopeEndIndex = i;
-        break;
-      }
-    }
-
-    return { stickyScopeEndIndex, stickyDepth };
   }
 
   private createOffsetNode(
@@ -135,15 +115,12 @@ export class DevtoolsContentVM extends ViewModelImpl<{
     return [
       createElement('div', {
         key: `${position}-offset`,
-        style: { height: `${count * ITEM_HEIGHT}px` },
+        style: { height: `${count * LIST_ITEM_HEIGHT}px` },
       }),
     ];
   }
 
-  private createVisibleItemNodes(
-    stickyScopeEndIndex: number,
-    stickyDepth: number,
-  ): ReactNode[] {
+  private createVisibleItemNodes(): ReactNode[] {
     const result: ReactNode[] = [];
 
     for (let i = this.startIndex; i < this.endIndex; i++) {
@@ -151,18 +128,12 @@ export class DevtoolsContentVM extends ViewModelImpl<{
       const component = listItemRenderersMap.get(listItem?.constructor);
       if (!component) continue;
 
-      const isInStickyScope =
-        stickyScopeEndIndex >= 0 && i < stickyScopeEndIndex;
-
       result.push(
         createElement(
           'div',
           {
             key: listItem.key,
-            style: {
-              '--depth-offset': isInStickyScope ? stickyDepth : 0,
-              display: 'contents',
-            } as CSSProperties,
+            style: { display: 'contents' } as CSSProperties,
           },
           createElement(component, { item: listItem }),
         ),
@@ -182,9 +153,9 @@ export class DevtoolsContentVM extends ViewModelImpl<{
     }
 
     const scrollTop = scrollElement.scrollTop;
-    const visibleStartIndex = Math.floor(scrollTop / ITEM_HEIGHT);
+    const visibleStartIndex = Math.floor(scrollTop / LIST_ITEM_HEIGHT);
     const visibleItemsCount = Math.ceil(
-      scrollElement.clientHeight / ITEM_HEIGHT,
+      scrollElement.clientHeight / LIST_ITEM_HEIGHT,
     );
 
     const newStartIndex = Math.max(0, visibleStartIndex - BUFFER_SIZE);
@@ -193,7 +164,10 @@ export class DevtoolsContentVM extends ViewModelImpl<{
       visibleStartIndex + visibleItemsCount + BUFFER_SIZE,
     );
 
-    const newStickyIndex = this.findStickyTreeItemIndex(visibleStartIndex);
+    const newStickyIndex = findStickyTreeItemIndex(
+      this.listItems,
+      visibleStartIndex,
+    );
 
     if (
       this.startIndex !== newStartIndex ||
@@ -207,16 +181,6 @@ export class DevtoolsContentVM extends ViewModelImpl<{
       });
     }
   };
-
-  private findStickyTreeItemIndex(visibleStartIndex: number): number {
-    const searchFrom = Math.min(visibleStartIndex, this.listItems.length - 1);
-    for (let i = searchFrom; i >= 0; i--) {
-      if (isTreeItem(this.listItems[i])) {
-        return i >= visibleStartIndex ? -1 : i;
-      }
-    }
-    return -1;
-  }
 
   handleScroll = () => {
     this.updateVisibleRange();

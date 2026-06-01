@@ -394,6 +394,79 @@ export function vmMatchesSearch(
   );
 }
 
+/** Сегменты path-поиска для свойств внутри VM/Extras (как в getVMSearchItems). */
+export function getVmPropSegmentsForProperty(
+  ctx: SearchContext,
+  item: PropertyListItem,
+): string[] | null {
+  let parent: ListItem<any> = item.parentListItem;
+
+  while (parent instanceof PropertyListItem) {
+    parent = parent.parentListItem;
+  }
+
+  if (!(parent instanceof VMListItem) && !(parent instanceof ExtraListItem)) {
+    return null;
+  }
+
+  const { segments } = ctx;
+  if (segments.length === 0) return null;
+
+  const firstSeg = segments[0];
+  if (isPathOwnerLockedToAnotherOwner(ctx, parent, firstSeg)) {
+    return null;
+  }
+
+  const directProps = getDirectPropertyChildren(parent);
+  const hasPathSyntax = ctx.endsWithDot || segments.length > 1;
+  const firstSegmentIsExactProperty =
+    hasPathSyntax &&
+    directProps.some((prop) => propertyMatchesSegmentExact(prop, firstSeg));
+
+  const vmMatchesByName =
+    parent instanceof VMListItem &&
+    !firstSegmentIsExactProperty &&
+    (parent.searchData.name.includes(firstSeg) ||
+      parent.searchData.id.includes(firstSeg));
+
+  return vmMatchesByName ? segments.slice(1) : segments;
+}
+
+/**
+ * Свойство на пути поиска должно выглядеть раскрытым (без inline-preview),
+ * как после ручного клика — см. getPropertySearchItems autoExpandProps.
+ */
+export function isPropertySearchAutoExpanded(
+  ctx: SearchContext,
+  item: PropertyListItem,
+): boolean {
+  if (!ctx.isActive) return false;
+
+  const propSegments = getVmPropSegmentsForProperty(ctx, item);
+  if (!propSegments || propSegments.length === 0) return false;
+
+  const chain: PropertyListItem[] = [];
+  let current: ListItem<any> = item;
+
+  while (current instanceof PropertyListItem) {
+    chain.unshift(current);
+    current = current.parentListItem;
+  }
+
+  if (chain.length > propSegments.length) return false;
+
+  for (let i = 0; i < chain.length; i++) {
+    if (!propertyMatchesSegmentExact(chain[i], propSegments[i])) {
+      return false;
+    }
+  }
+
+  const depth = chain.length - 1;
+  const remainingAtLevel = propSegments.slice(depth);
+
+  return remainingAtLevel.length > 1 || ctx.endsWithDot;
+}
+
 function getPropertySearchItems(
   ctx: SearchContext,
   properties: PropertyListItem[],
@@ -406,6 +479,9 @@ function getPropertySearchItems(
       result.push(prop);
       if (prop.isExpanded) {
         result.push(...prop.expandedChildren);
+      }
+      for (const trailing of prop.trailingItems) {
+        result.push(...trailing.expandedChildrenWithSelf);
       }
     }
     return result;
@@ -423,11 +499,19 @@ function getPropertySearchItems(
     const matches = autoExpandProps.includes(prop);
 
     if (matches && isNotLastSeg) {
-      result.push(
-        ...getPropertySearchItems(ctx, prop.children, propSegments.slice(1)),
-      );
+      const restSegments = propSegments.slice(1);
+      result.push(...getPropertySearchItems(ctx, prop.children, restSegments));
+
+      // Как в expandedChildren: закрывающая `}`/`]` после детей path-узла.
+      if (prop.isExpanded && prop.closingItem && restSegments.length === 0) {
+        result.push(prop.closingItem);
+      }
     } else if (prop.isExpanded) {
       result.push(...prop.expandedChildren);
+    }
+
+    for (const trailing of prop.trailingItems) {
+      result.push(...trailing.expandedChildrenWithSelf);
     }
   }
 

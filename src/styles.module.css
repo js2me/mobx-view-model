@@ -161,6 +161,8 @@
   padding: 1px 3px;
   border-radius: 4px;
   line-height: 1;
+  position: absolute;
+  left: 4px;
 }
 
 .treeItemNestingBadge svg {
@@ -209,8 +211,8 @@
   }
 
   .treeItemNestingBadge {
-    background: var(--vmd-content-highlight-bg);
-    color: var(--vmd-property-bg-content-color);
+    background: var(--vmd-badge-bg);
+    color: var(--vmd-badge-color);
   }
 
   .treeItemMetaText {
@@ -224,7 +226,7 @@
   }
 
   .treeItemNestingBadge {
-    background: var(--vmd-content-highlight-bg);
-    color: var(--vmd-property-bg-content-color);
+    background: var(--vmd-badge-bg);
+    color: var(--vmd-badge-color);
   }
 }

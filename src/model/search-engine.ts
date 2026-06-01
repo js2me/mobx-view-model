@@ -14,6 +14,7 @@ import {
   getListItems as filterGetListItems,
   getOwnerInfo as filterGetOwnerInfo,
   isItemFitted as filterIsItemFitted,
+  isPropertySearchAutoExpanded as filterIsPropertySearchAutoExpanded,
   isSearchTargetMatched as filterIsSearchTargetMatched,
   getBestSuggestionAlias,
   getCandidatePropsAtDepth,
@@ -30,6 +31,10 @@ import {
   hasSearchPathSyntax,
   parseSearchPath,
 } from './utils/parse-search-path';
+import {
+  getStickyHeaderScrollPadding,
+  LIST_ITEM_HEIGHT,
+} from './utils/sticky-tree-item-scroll';
 
 export type SearchInput =
   | { type: 'vm'; item: VMListItem }
@@ -42,6 +47,7 @@ interface SearchEngineConfig {
   scrollToOffset: (offset: number) => void;
   getRootItems: () => ListItem<any>[];
   getPresentationMode: () => 'tree' | 'list';
+  initialSearchText?: string;
 }
 
 export type { OwnerInfo };
@@ -71,7 +77,7 @@ export class SearchEngine {
     null;
 
   private static readonly searchDebounceMs = 150;
-  private static readonly itemHeight = 22;
+  private static readonly itemHeight = LIST_ITEM_HEIGHT;
 
   private get searchContext(): SearchContext {
     return {
@@ -450,10 +456,12 @@ export class SearchEngine {
     if (index < 0) return;
 
     const virtualizerOffset = this.config.getItemOffset(index);
-    const offset =
+    const baseOffset =
       virtualizerOffset > 0
         ? virtualizerOffset
         : index * SearchEngine.itemHeight;
+    const stickyPadding = getStickyHeaderScrollPadding(listItems, index);
+    const offset = Math.max(0, baseOffset - stickyPadding);
 
     this.config.scrollToOffset(offset);
     this.scrollSimpleBarToOffset(offset);
@@ -479,7 +487,11 @@ export class SearchEngine {
   }
 
   isPropertyItemExpanded(item: PropertyListItem) {
-    return item.cache.get(item.expandKey) === true;
+    if (item.cache.get(item.expandKey) === true) {
+      return true;
+    }
+
+    return filterIsPropertySearchAutoExpanded(this.searchContext, item);
   }
 
   isPropertyItemExpandable(item: PropertyListItem) {
@@ -515,6 +527,11 @@ export class SearchEngine {
 
   constructor(private config: SearchEngineConfig) {
     this.searchInputRef = createFocusableRef<HTMLInputElement>();
+
+    if (config.initialSearchText) {
+      this.searchText = config.initialSearchText;
+      this.searchTextToSearch = config.initialSearchText;
+    }
 
     makeObservable(this, {
       searchText: observable.ref,

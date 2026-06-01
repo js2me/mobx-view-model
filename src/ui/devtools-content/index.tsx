@@ -178,12 +178,9 @@ export const VmDevtoolsContent = withViewModel(
         </div>
         <div
           className={css.stickyVmHeader}
-          style={
-            {
-              '--depth-offset': model.stickyVmItem?.depth ?? 0,
-              display: model.stickyVmItem ? undefined : 'none',
-            } as React.CSSProperties
-          }
+          style={{
+            display: model.stickyVmItem ? undefined : 'none',
+          }}
         >
           {model.stickyVmItem instanceof VMListItem ? (
             <VmListItemRender item={model.stickyVmItem} compact />

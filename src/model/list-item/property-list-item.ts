@@ -595,11 +595,13 @@ export class PropertyListItem extends ListItem<any> {
     if (this.isWatching) {
       this.isWatching = false;
       this.watcher.stop();
+      this.devtools.removeWatchedPropertyKey(this.key);
       return;
     }
 
     this.isWatching = true;
     this.watcher.start(this);
+    this.devtools.addWatchedPropertyKey(this.key);
   }
 
   clearWatchHistory() {
@@ -690,6 +692,11 @@ export class PropertyListItem extends ListItem<any> {
         options?.getPreview,
       );
       cache.set(key, item);
+
+      if (devtools.watchedPropertyKeys.includes(item.key)) {
+        const restoreItem = item;
+        setTimeout(() => restoreItem.handleWatchClick(), 0);
+      }
     }
 
     return item;

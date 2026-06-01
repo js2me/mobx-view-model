@@ -12,7 +12,7 @@ export const FunctionPropertyContent = observer(
     return (
       <>
         <span className={css.propertyName}>{item.property}</span>
-        {item.editor.isEditMode ? (
+        {item.editor?.isEditMode ? (
           <>
             {`(`}
             <input

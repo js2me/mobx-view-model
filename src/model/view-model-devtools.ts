@@ -77,10 +77,16 @@ export class ViewModelDevtools {
   searchEngine: SearchEngine;
   presentationMode: ViewModelDevtoolsPresentationMode;
   sortPropertiesBy: ViewModelDevtoolsSortPropertiesBy;
+  watchedPropertyKeys: string[] = [];
   position: Defined<ViewModelDevtoolsConfig['position']>;
   scrollListRef: Ref<VirtualizerHandle>;
 
   private storage = new Storage({
+    namespace: 'mobx-view-model-devtools',
+    type: 'local',
+  });
+
+  private sessionStorage = new Storage({
     namespace: 'mobx-view-model-devtools',
     type: 'session',
   });
@@ -226,6 +232,16 @@ export class ViewModelDevtools {
     this.sortPropertiesBy = sortBy as any;
   };
 
+  addWatchedPropertyKey = (key: string) => {
+    if (!this.watchedPropertyKeys.includes(key)) {
+      this.watchedPropertyKeys = [...this.watchedPropertyKeys, key];
+    }
+  };
+
+  removeWatchedPropertyKey = (key: string) => {
+    this.watchedPropertyKeys = this.watchedPropertyKeys.filter((k) => k !== key);
+  };
+
   get theme(): DevtoolsTheme {
     return devtoolsThemeKey.value;
   }
@@ -302,8 +318,11 @@ export class ViewModelDevtools {
     this.isInitialized = true;
 
     this.storage.syncProperty(this, 'sortPropertiesBy');
+    this.storage.syncProperty(this, 'isPopupOpened');
+    this.sessionStorage.syncProperty(this, 'watchedPropertyKeys');
     this.storage.syncProperty(this, 'presentationMode');
     this.storage.syncProperty(this, 'position');
+    this.storage.syncProperty(this.searchEngine, 'searchText');
     this.applyThemeToContainer();
 
     reaction(() => devtoolsThemeKey.value, () => this.applyThemeToContainer());
@@ -354,7 +373,9 @@ export class ViewModelDevtools {
   private static _instance: ViewModelDevtools | null = null;
 
   private constructor(public config: ViewModelDevtoolsConfig) {
-    this.isPopupOpened = !!this.config.defaultIsOpened;
+    this.isPopupOpened =
+      this.storage.get({ key: 'isPopupOpened' }) ??
+      !!this.config.defaultIsOpened;
     this.displayType = 'popup';
     this.position =
       this.storage.get({ key: 'position' }) ??
@@ -371,6 +392,8 @@ export class ViewModelDevtools {
       this.storage.get({ key: 'sortPropertiesBy' }) ??
       this.config.display?.sortPropertiesBy ??
       'none';
+    this.watchedPropertyKeys =
+      this.sessionStorage.get({ key: 'watchedPropertyKeys' }) ?? [];
     this.applyDisplayConfigDefaults();
     this.expandedVmItemsPaths = observable.set<string>();
     this.logoUrl =
@@ -385,6 +408,7 @@ export class ViewModelDevtools {
       scrollToOffset: (offset) => this.scrollListRef.current?.scrollTo(offset),
       getRootItems: () => this.searchRootItems,
       getPresentationMode: () => this.presentationMode,
+      initialSearchText: this.storage.get({ key: 'searchText' }) ?? undefined,
     });
 
     makeObservable<typeof this, 'rootVmListItems' | 'extraListItems'>(this, {
@@ -393,6 +417,7 @@ export class ViewModelDevtools {
       projectVmStore: observable.ref,
       presentationMode: observable.ref,
       sortPropertiesBy: observable.ref,
+      watchedPropertyKeys: observable.ref,
       theme: computed,
       hideViewModelBaseMembers: computed,
       highlightUpdates: computed,
@@ -403,6 +428,8 @@ export class ViewModelDevtools {
       hidePopup: action.bound,
       handleChangePresentationMode: action.bound,
       handleSortPropertiesChange: action.bound,
+      addWatchedPropertyKey: action.bound,
+      removeWatchedPropertyKey: action.bound,
       handleThemeChange: action.bound,
       handleHideViewModelBaseMembersChange: action.bound,
       handleHighlightUpdatesChange: action.bound,

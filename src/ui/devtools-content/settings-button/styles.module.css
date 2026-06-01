@@ -1,11 +1,11 @@
 .settingsWrap {
   position: relative;
+  z-index: 1;
   display: inline-flex;
 }
 
 .settingsButton {
   position: relative;
-  z-index: 6;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -35,7 +35,7 @@
 
 .settingsPopup {
   position: absolute;
-  z-index: 6;
+  z-index: 1;
   top: calc(100% + 4px);
   left: 0;
   display: flex;

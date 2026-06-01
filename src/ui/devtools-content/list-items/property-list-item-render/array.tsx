@@ -16,7 +16,7 @@ export const ArrayPropertyContent = observer(
             :&nbsp;
           </>
         )}
-        {item.editor.isEditMode ? (
+        {item.editor?.isEditMode ? (
           <span className={css.propertyValue}>
             <PropertyValueEditInput item={item} />
           </span>
