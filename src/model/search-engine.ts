@@ -32,6 +32,10 @@ import {
   parseSearchPath,
 } from './utils/parse-search-path';
 import {
+  applySuggestionToSearchText,
+  getSuggestionSuffix,
+} from './utils/search-suggestion-text';
+import {
   getStickyHeaderScrollPadding,
   LIST_ITEM_HEIGHT,
 } from './utils/sticky-tree-item-scroll';
@@ -178,7 +182,7 @@ export class SearchEngine {
       const suggestions = suggestionsByVM.get(owner.name) ?? [];
       suggestions.push({
         value: alias.original,
-        suffix: alias.original.slice(completingSegment.length),
+        suffix: getSuggestionSuffix(alias.original, completingSegment),
         owner,
       });
       suggestionsByVM.set(owner.name, suggestions);
@@ -236,7 +240,10 @@ export class SearchEngine {
   ) => {
     this.clearSearchDebounce();
     const hadPathSyntax = hasSearchPathSyntax(this.searchText);
-    const nextSearchText = this.searchText + suggestion.suffix;
+    const nextSearchText = applySuggestionToSearchText(
+      this.searchText,
+      suggestion.value,
+    );
     this.searchText = nextSearchText;
     this.searchTextToSearch = nextSearchText;
     this.selectedSuggestionIndex = 0;

@@ -1,6 +1,7 @@
 @import './theme.css';
 
 .root {
+  --depth-offset: 0;
   display: contents;
   box-sizing: border-box;
   color: var(--vmd-base-color);
@@ -123,7 +124,6 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   padding-right: 8px;
-  background: var(--vmd-overlay-bg);
   border-radius: 6px;
 }
 
@@ -189,10 +189,9 @@
   display: flex;
   flex-direction: row;
   align-items: center;
-  padding-left: max(8px, calc(8px + (var(--level) - var(--depth-offset, 0)) * 20px));
-  position: sticky;
-  top: var(--vmd-header-height);
-  z-index: 3;
+  padding-left: calc(
+    8px + max(0, var(--level, 0) - var(--depth-offset, 0)) * 20px
+  );
   background: transparent;
   transition: all 150ms ease;
 }

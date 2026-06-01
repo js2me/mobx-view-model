@@ -92,6 +92,7 @@ export class ViewModelDevtools {
   });
 
   anyCache = observable.map<string, any>();
+  depthOffset = 0;
 
   get allVms() {
     const vmStore = this.projectVmStore as Maybe<ViewModelStoreBase>;
@@ -287,6 +288,25 @@ export class ViewModelDevtools {
     }
   }
 
+  setDepthOffset(offset: number) {
+    if (this.depthOffset === offset) {
+      return;
+    }
+
+    this.depthOffset = offset;
+    this.applyDepthOffsetToContainer();
+  }
+
+  private applyDepthOffsetToContainer() {
+    const container = document.getElementById(this.containerId);
+
+    if (!container) {
+      return;
+    }
+
+    container.style.setProperty('--depth-offset', String(this.depthOffset));
+  }
+
   expandAllVMs() {
     // this.expandedVmsMap.replace(
     //   this.vmsData.flatten.map((it) => [it.key, true] as const),
@@ -349,6 +369,7 @@ export class ViewModelDevtools {
       container.className = css.root;
       container.id = this.containerId;
       container.dataset.vmdTheme = this.resolvedTheme;
+      this.applyDepthOffsetToContainer();
 
       if (document.body) {
         document.body.appendChild(container);
@@ -424,6 +445,8 @@ export class ViewModelDevtools {
       extras: observable.ref,
       setStore: action.bound,
       setExtras: action.bound,
+      setDepthOffset: action.bound,
+      depthOffset: observable,
       showPopup: action.bound,
       hidePopup: action.bound,
       handleChangePresentationMode: action.bound,

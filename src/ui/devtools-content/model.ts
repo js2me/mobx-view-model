@@ -27,6 +27,7 @@ import {
   isStickyTreeItem,
   LIST_ITEM_HEIGHT,
 } from '@/model/utils/sticky-tree-item-scroll';
+import css from './styles.module.css';
 
 const listItemRenderersMap = new Map<any, any>([
   [VMListItem, VmListItemRender],
@@ -47,6 +48,7 @@ export class DevtoolsContentVM extends ViewModelImpl<{
   private endIndex = 0;
   stickyVmItemIndex = -1;
   itemsCount = 0;
+  private disposeDepthOffsetReaction?: () => void;
 
   private get listItems() {
     return this.payload.devtools.listItems;
@@ -94,6 +96,11 @@ export class DevtoolsContentVM extends ViewModelImpl<{
   }
 
   @computed
+  get depthOffset(): number {
+    return this.stickyVmItem?.depth ?? 0;
+  }
+
+  @computed
   get itemNodes(): ReactNode[] {
     this.updateVisibleRange();
 
@@ -128,12 +135,20 @@ export class DevtoolsContentVM extends ViewModelImpl<{
       const component = listItemRenderersMap.get(listItem?.constructor);
       if (!component) continue;
 
+      const isStickySource =
+        this.stickyVmItemIndex >= 0 && i === this.stickyVmItemIndex;
+
       result.push(
         createElement(
           'div',
           {
             key: listItem.key,
-            style: { display: 'contents' } as CSSProperties,
+            className: isStickySource ? css.listItemStickySource : undefined,
+            style: (
+              isStickySource
+                ? { height: `${LIST_ITEM_HEIGHT}px` }
+                : { display: 'contents' }
+            ) as CSSProperties,
           },
           createElement(component, { item: listItem }),
         ),
@@ -192,6 +207,21 @@ export class DevtoolsContentVM extends ViewModelImpl<{
       endIndex: observable.ref,
       itemsCount: observable.ref,
       stickyVmItemIndex: observable.ref,
+      depthOffset: computed,
+      stickyVmItem: computed,
     });
+
+    this.disposeDepthOffsetReaction = reaction(
+      () => this.depthOffset,
+      (offset) => {
+        this.payload.devtools.setDepthOffset(offset);
+      },
+      { fireImmediately: true },
+    );
+  }
+
+  willUnmount(): void {
+    this.disposeDepthOffsetReaction?.();
+    this.payload.devtools.setDepthOffset(0);
   }
 }

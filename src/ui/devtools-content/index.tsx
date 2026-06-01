@@ -8,7 +8,7 @@ import {
   Xmark,
 } from '@gravity-ui/icons';
 import { type ViewModelProps, withViewModel } from 'mobx-view-model';
-import type { ReactNode } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 import { cx } from 'yummies/css';
 import { VMListItem } from '@/model/list-item/vm-list-item';
 import { ExtraListItem } from '@/model/list-item/extra-list-item';
@@ -26,10 +26,12 @@ export const VmDevtoolsContent = withViewModel(
     model,
     className,
     headerContent,
+    style: propsStyle,
     ...props
   }: {
     className?: string;
     headerContent?: ReactNode;
+    style?: CSSProperties;
   } & ViewModelProps<DevtoolsContentVM>) => {
     const { devtools } = model.payload;
 
@@ -38,6 +40,13 @@ export const VmDevtoolsContent = withViewModel(
         {...props}
         className={cx(css.vmContent, className)}
         ref={model.contentRef}
+        data-sticky-vm-active={model.stickyVmItem ? '' : undefined}
+        style={
+          {
+            ...propsStyle,
+            '--depth-offset': devtools.depthOffset,
+          } as CSSProperties
+        }
       >
         <div className={css.gradientBlurLayer} aria-hidden="true">
           <div className={css.gradientBlur} />

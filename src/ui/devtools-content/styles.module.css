@@ -17,6 +17,10 @@
   }
 }
 
+.vmContent {
+  --depth-offset: 0;
+}
+
 .vmContentVirtualizedContent {
 }
 
@@ -26,6 +30,17 @@
   z-index: 5;
   height: 0;
   overflow: visible;
+  isolation: isolate;
+}
+
+.stickyVmHeader > :global(*) {
+  position: relative;
+  z-index: 1;
+}
+
+.listItemStickySource {
+  visibility: hidden;
+  pointer-events: none;
 }
 
 .gradientBlurLayer {
@@ -502,7 +517,16 @@
   width: 100%;
   height: calc(var(--vmd-header-height) + 6px);
   pointer-events: none;
-  transition: all 240ms ease;
+  transition: all 150ms ease;
+  background: linear-gradient(
+    to bottom,
+    var(--vmd-overlay-bg) 0%,
+    rgba(0, 0, 0, 0) 100%
+  );
+}
+
+.vmContent[data-simplebar][data-sticky-vm-active] .gradientBlur {
+  height: calc(var(--vmd-header-height) + 42px);
   background: linear-gradient(
     to bottom,
     var(--vmd-overlay-bg) 0%,

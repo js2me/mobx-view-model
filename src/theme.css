@@ -1,3 +1,15 @@
+@property --level {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 0;
+}
+
+@property --depth-offset {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 0;
+}
+
 :root,
 [data-vmd-theme='dark'] {
   --vmd-base-blur: 10px;
