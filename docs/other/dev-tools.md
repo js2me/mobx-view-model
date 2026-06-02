@@ -80,6 +80,18 @@ if (process.env.NODE_ENV === 'development') {
 }
 ```
 
+### Option 4 — Vite plugin
+
+If you're using Vite, the [mobx-view-model-vite-plugin](/other/vite-plugin) can connect the devtools automatically — no manual setup required:
+
+```ts
+import { mobxVmVitePlugin } from "mobx-view-model-vite-plugin";
+
+export default {
+  plugins: [mobxVmVitePlugin({ devtools: true })],
+};
+```
+
 ---
 
 ## Connecting to a ViewModelStore

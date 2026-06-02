@@ -29,4 +29,11 @@ features:
     icon: 🛠️
     details: Inspect and debug ViewModel instances in real time (WIP)
     link: /other/dev-tools
+  - title: Vite Plugin
+    icon: ⚡
+    details: Seamless integration with Vite dev server and HMR
+    link: /other/vite-plugin
+  - title: SSR Ready
+    icon: 🖥️
+    details: Server-side rendering support out of the box
 ---
