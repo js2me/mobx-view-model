@@ -84,7 +84,6 @@ export class DevtoolsContentVM extends ViewModelImpl<{
     },
   });
 
-  @computed
   get virtualHeight() {
     return this.listItems.length * LIST_ITEM_HEIGHT;
   }
@@ -95,12 +94,10 @@ export class DevtoolsContentVM extends ViewModelImpl<{
     return isStickyTreeItem(item) ? item : null;
   }
 
-  @computed
   get depthOffset(): number {
     return this.stickyVmItem?.depth ?? 0;
   }
 
-  @computed
   get itemNodes(): ReactNode[] {
     this.updateVisibleRange();
 
@@ -209,6 +206,8 @@ export class DevtoolsContentVM extends ViewModelImpl<{
       stickyVmItemIndex: observable.ref,
       depthOffset: computed,
       stickyVmItem: computed,
+      virtualHeight: computed,
+      itemNodes: computed,
     });
 
     this.disposeDepthOffsetReaction = reaction(
