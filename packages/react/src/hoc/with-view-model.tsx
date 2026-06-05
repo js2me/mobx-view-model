@@ -365,6 +365,11 @@ const withViewModelWrapper = (
   let Component =
     processViewComponent?.(OriginalComponent, VM, config) ?? OriginalComponent;
 
+
+  if (process.env.NODE_ENV !== 'production' && Component) {
+    Component.displayName = `ConnectedViewModel(${VM.name}->${Component.name || 'View'})`;
+  }
+
   if (
     wrapViewsInObserver &&
     Component &&
@@ -428,7 +433,7 @@ const withViewModelWrapper = (
 
   if (process.env.NODE_ENV !== 'production') {
     (ConnectedViewModel as RComponentType).displayName =
-      `ConnectedViewModel(${VM.name}->Component)`;
+      `ConnectedViewModel(${VM.name}->Observer)`;
   }
 
   // There is no problem to just assign it here to config

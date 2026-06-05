@@ -5,3 +5,7 @@ import { createContext } from 'react';
 export const ActiveViewModelContext = createContext<
   AnyViewModel | AnyViewModelSimple
 >(null as any);
+
+if (process.env.NODE_ENV !== 'production') {
+  ActiveViewModelContext.displayName = 'ActiveViewModelContext';
+}
