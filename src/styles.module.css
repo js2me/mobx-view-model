@@ -17,6 +17,8 @@
   font-synthesis: none;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  border: 0;
+  outline: 0;
 }
 
 .root * {
@@ -29,6 +31,7 @@
   text-transform: inherit;
   text-decoration: inherit;
   box-sizing: border-box;
+  border: 0;
   outline: 0;
 }
 
@@ -161,8 +164,6 @@
   padding: 1px 3px;
   border-radius: 4px;
   line-height: 1;
-  position: absolute;
-  left: 4px;
 }
 
 .treeItemNestingBadge svg {

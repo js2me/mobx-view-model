@@ -21,12 +21,6 @@ export const VmListItemRender = observer(
           className={css.treeItemHeader}
           onClick={() => item.devtools.handleVmItemHeaderClick(item)}
         >
-          {compact && (
-            <TreeItemNestingBadge
-              depth={item.depth}
-              parentLabel={item.parentLabel}
-            />
-          )}
           <ExpandButton
             showIconAnyway={item.devtools.presentationMode === 'tree'}
             expandable={item.devtools.isExpandable(item)}
@@ -38,6 +32,12 @@ export const VmListItemRender = observer(
           <span className={css.treeItemMetaText} title={item.data.id}>
             {item.data.id}
           </span>
+          {compact && (
+            <TreeItemNestingBadge
+              depth={item.depth}
+              parentLabel={item.parentLabel}
+            />
+          )}
         </div>
         <ListItemOperations item={item} />
       </div>

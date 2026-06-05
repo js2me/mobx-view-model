@@ -1,3 +1,4 @@
+import { BroomMotion } from '@gravity-ui/icons';
 import { observer } from 'mobx-react-lite';
 import type { CSSProperties } from 'react';
 import { cx } from 'yummies/css';
@@ -29,7 +30,8 @@ export const PropertyWatchHistoryHeaderRender = observer(
             parent.clearWatchHistory();
           }}
         >
-          clear
+          <BroomMotion />
+          {' '}clear
         </button>
       </div>
     );
