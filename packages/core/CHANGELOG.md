@@ -1,5 +1,14 @@
 # mobx-view-model
 
+## 10.2.1
+
+### Patch Changes
+
+- [`4544908`](https://github.com/js2me/mobx-view-model/commit/45449084cc4c94302cd4a24ae85f156b19c6f0f4) Thanks [@js2me](https://github.com/js2me)! - better display names for React components wrapped in `withViewModel` HOC
+
+- Updated dependencies [[`4544908`](https://github.com/js2me/mobx-view-model/commit/45449084cc4c94302cd4a24ae85f156b19c6f0f4)]:
+  - mobx-view-model-react@10.2.1
+
 ## 10.2.0
 
 ### Minor Changes
