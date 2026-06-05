@@ -4,12 +4,6 @@
   initial-value: 0;
 }
 
-@property --depth-offset {
-  syntax: '<number>';
-  inherits: true;
-  initial-value: 0;
-}
-
 :root,
 [data-vmd-theme='dark'] {
   --vmd-base-blur: 10px;
@@ -47,12 +41,15 @@
   --vmd-watch-active-color: rgb(235 82 82);
   --vmd-badge-bg: #3c3c3c9e;
   --vmd-badge-color: #b3b3b3;
+  --vmd-border-color: #251f43;
 }
 
 [data-vmd-theme='light'] {
   --vmd-base-blur: 10px;
-  --vmd-bg: #f4f4f8f0;
-  --vmd-overlay-bg: #e8e8f0e6;
+  /* --vmd-bg: #f4f4f8f0; */
+  /* --vmd-overlay-bg: #e8e8f0e6; */
+  --vmd-bg: #f6f3ff9e;
+  --vmd-overlay-bg: #ede7ffde;
   --vmd-base-color: #2a2a2a;
   --vmd-control-active-bg: #0000001c;
   --vmd-control-active-color: #181818;
@@ -85,4 +82,5 @@
   --vmd-watch-active-color: rgb(210 58 58);
   --vmd-badge-bg: #dadada9e;
   --vmd-badge-color: #606060;
+  --vmd-border-color: #d0c7f1;
 }

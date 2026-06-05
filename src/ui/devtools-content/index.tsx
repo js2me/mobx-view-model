@@ -44,7 +44,6 @@ export const VmDevtoolsContent = withViewModel(
         style={
           {
             ...propsStyle,
-            '--depth-offset': devtools.depthOffset,
           } as CSSProperties
         }
       >

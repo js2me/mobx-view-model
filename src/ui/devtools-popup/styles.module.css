@@ -13,7 +13,6 @@
   &.resizing {
     transition: none;
     opacity: 0.8;
-    z-index: 1000;
   }
 
   &.dragging {

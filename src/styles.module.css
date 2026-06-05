@@ -1,7 +1,6 @@
 @import './theme.css';
 
 .root {
-  --depth-offset: 0;
   display: contents;
   box-sizing: border-box;
   color: var(--vmd-base-color);
@@ -190,9 +189,7 @@
   display: flex;
   flex-direction: row;
   align-items: center;
-  padding-left: calc(
-    8px + max(0, var(--level, 0) - var(--depth-offset, 0)) * 20px
-  );
+  padding-left: calc(8px + var(--level, 0) * 20px);
   background: transparent;
   transition: all 150ms ease;
 }

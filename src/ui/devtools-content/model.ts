@@ -48,7 +48,6 @@ export class DevtoolsContentVM extends ViewModelImpl<{
   private endIndex = 0;
   stickyVmItemIndex = -1;
   itemsCount = 0;
-  private disposeDepthOffsetReaction?: () => void;
 
   private get listItems() {
     return this.payload.devtools.listItems;
@@ -92,10 +91,6 @@ export class DevtoolsContentVM extends ViewModelImpl<{
     if (this.stickyVmItemIndex < 0) return null;
     const item = this.listItems[this.stickyVmItemIndex];
     return isStickyTreeItem(item) ? item : null;
-  }
-
-  get depthOffset(): number {
-    return this.stickyVmItem?.depth ?? 0;
   }
 
   get itemNodes(): ReactNode[] {
@@ -204,23 +199,11 @@ export class DevtoolsContentVM extends ViewModelImpl<{
       endIndex: observable.ref,
       itemsCount: observable.ref,
       stickyVmItemIndex: observable.ref,
-      depthOffset: computed,
       stickyVmItem: computed,
       virtualHeight: computed,
       itemNodes: computed,
     });
-
-    this.disposeDepthOffsetReaction = reaction(
-      () => this.depthOffset,
-      (offset) => {
-        this.payload.devtools.setDepthOffset(offset);
-      },
-      { fireImmediately: true },
-    );
   }
 
-  willUnmount(): void {
-    this.disposeDepthOffsetReaction?.();
-    this.payload.devtools.setDepthOffset(0);
-  }
+  willUnmount(): void {}
 }

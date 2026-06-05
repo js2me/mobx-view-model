@@ -17,10 +17,6 @@
   }
 }
 
-.vmContent {
-  --depth-offset: 0;
-}
-
 .vmContentVirtualizedContent {
 }
 
@@ -83,6 +79,7 @@
   overflow-y: auto;
   scrollbar-width: thin;
   overflow-anchor: none;
+  border: 1px solid var(--vmd-border-color) !important
 }
 
 .vmContent[data-simplebar] :global(.simplebar-wrapper) {

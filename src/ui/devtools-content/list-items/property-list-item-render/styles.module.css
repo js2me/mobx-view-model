@@ -13,9 +13,7 @@
   align-items: center;
   position: relative;
   color: var(--vmd-property-meta-color);
-  padding-left: calc(
-    28px + max(0, var(--level, 0) - var(--depth-offset, 0)) * 15px
-  );
+  padding-left: calc(28px + var(--level, 0) * 15px);
 }
 
 .property:hover, .property.isEditMode {
@@ -205,9 +203,9 @@
 }
 
 button.watchHistoryClearButton {
-  margin-left: auto;
-  margin-right: 12px;
-  padding: 2px 6px;
+  margin-left: 4px;
+  margin-right: 0;
+  padding: 1px 4px;
   border: 0;
   background: var(--vmd-control-bg);
   color: var(--vmd-property-meta-color);
@@ -217,6 +215,11 @@ button.watchHistoryClearButton {
   display: inline-flex;
   align-items: center;
   gap: 2px;
+}
+
+button.watchHistoryClearButton > svg {
+  width: 12px;
+  height: 12px;
 }
 
 .watchHistoryClearButton:hover {
