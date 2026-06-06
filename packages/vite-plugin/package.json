@@ -1,0 +1,57 @@
+{
+  "name": "mobx-view-model-vite-plugin",
+  "version": "1.3.4",
+  "description": "Vite 8 plugin for mobx-view-model — smart HMR and auto displayName for observer components",
+  "keywords": [
+    "hmr",
+    "mobx",
+    "react",
+    "view-model",
+    "vite"
+  ],
+  "license": "MIT",
+  "author": "Sergey Volkov",
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "oxlint .",
+    "format": "oxfmt --write .",
+    "format:check": "oxfmt --check .",
+    "changeset:version": "changeset version",
+    "release": "pnpm build && changeset publish"
+  },
+  "dependencies": {
+    "magic-string": "^0.30.17",
+    "mobx-view-model-devtools": "^0.0.62"
+  },
+  "devDependencies": {
+    "@changesets/changelog-github": "^0.5.1",
+    "@changesets/cli": "^2.29.4",
+    "@types/node": "^25.9.1",
+    "oxfmt": "^0.52.0",
+    "oxlint": "^1.67.0",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.1",
+    "vitest": "^4.0.18"
+  },
+  "peerDependencies": {
+    "mobx-view-model": "^10.0.0",
+    "mobx-view-model-react": "^10.0.0",
+    "vite": "^6.0.0 || ^7.0.0 || ^8.0.0"
+  },
+  "packageManager": "pnpm@10.12.1"
+}
