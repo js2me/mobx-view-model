@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "composite": true,
+    "module": "ESNext",
+    "moduleResolution": "Node",
+    "lib": ["DOM", "DOM.Iterable", "ESNext"],
+    "useDefineForClassFields": true,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+    "typeRoots": ["./types/envs.d.ts", "node_modules/@types"]
+  },
+  "include": ["types", "scripts", "package.json"]
+}

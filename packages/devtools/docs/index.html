@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en" style="background: #232323">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <script type="text/javascript" src="./inject-devtools.js"></script>
+  </head>
+  <body>
+    <button id="change-color">change color</button>
+    <script>
+      document.getElementById("change-color").addEventListener("click", () => {
+        if (
+          document.documentElement.style.background === "rgb(255, 255, 255)"
+        ) {
+          document.documentElement.style.background = "rgb(35, 35, 35)";
+        } else {
+          document.documentElement.style.background = "rgb(255, 255, 255)";
+        }
+      });
+    </script>
+  </body>
+</html>

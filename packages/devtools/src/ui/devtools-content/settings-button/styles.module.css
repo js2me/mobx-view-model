@@ -1,0 +1,72 @@
+.settingsWrap {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+}
+
+.settingsButton {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--vmd-control-inactive-color);
+  border-radius: 4px;
+  cursor: pointer;
+  opacity: 0.7;
+  transition:
+    color 150ms ease,
+    opacity 150ms ease;
+}
+
+.settingsButton:hover {
+  color: var(--vmd-base-color);
+  opacity: 1;
+}
+
+.settingsButton > svg {
+  width: 14px;
+  height: 14px;
+}
+
+.settingsPopup {
+  position: absolute;
+  z-index: 1;
+  top: calc(100% + 4px);
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 200px;
+  padding: 8px;
+  border: 1px solid var(--vmd-control-border);
+  border-radius: 6px;
+  background: var(--vmd-bg);
+  box-shadow: 0 6px 18px #00000059;
+  backdrop-filter: blur(8px);
+}
+
+.settingRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.settingCheckbox {
+  width: 14px;
+  height: 14px;
+  margin: 0;
+  accent-color: var(--vmd-primary-color);
+  cursor: pointer;
+}
+
+.settingLabel {
+  font-size: 13px;
+  color: var(--vmd-base-color);
+  white-space: nowrap;
+}

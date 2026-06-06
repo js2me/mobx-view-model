@@ -1,0 +1,14 @@
+pre-commit:
+  parallel: true
+  commands:
+    lint:
+      run: pnpm exec biome check --write --no-errors-on-unmatched --files-ignore-unknown=true --colors=off {staged_files}
+      stage_fixed: true
+prepare-commit-msg:
+  commands:
+    format-commit-message:
+      run: pnpm exec commitfmt
+pre-push:
+  commands:
+    check-typings:
+      run: pnpm exec tsc --noEmit

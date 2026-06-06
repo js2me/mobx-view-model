@@ -1,0 +1,261 @@
+
+.property {
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: pre;
+  background: var(--vmd-content-bg);
+  height: 22px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  position: relative;
+  color: var(--vmd-property-meta-color);
+  padding-left: calc(28px + var(--level, 0) * 15px);
+}
+
+.property:hover, .property.isEditMode {
+  background: var(--vmd-content-highlight-bg);
+}
+
+.property.updateHighlighted {
+  animation: propertyUpdateHighlight 900ms ease-out;
+}
+
+@keyframes propertyUpdateHighlight {
+  0%,
+  25% {
+    background-color: var(--vmd-update-highlight-bg);
+  }
+
+  100% {
+    background-color: var(--vmd-content-bg);
+  }
+}
+
+.property.expandable {
+  cursor: pointer;
+}
+
+.propertyContent {
+  display: inline-flex;
+  flex: 1;
+  align-items: center;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  padding-right: 12px;
+}
+
+.propertySuffix {
+  flex: none;
+}
+
+.property[data-fitted='false'] {
+  opacity: 0.5;
+}
+
+.property.map-entry,
+.property.set-entry {
+  --value-color: var(--vmd-property-meta-color);
+}
+
+.property.instance {
+  --value-color: var(--vmd-property-value-instance);
+}
+
+.property.inaccessible {
+  --value-color: var(--vmd-property-meta-color);
+}
+
+.property.primitive.boolean,
+.property.primitive.number,
+.property.primitive.object,
+.property.primitive.bigint,
+.property.primitive.symbol {
+  --value-color: var(--vmd-property-value-primitive);
+}
+
+.property.primitive.undefined {
+  --value-color: var(--vmd-property-value-nullish);
+}
+
+.property.primitive.null {
+  --value-color: var(--vmd-property-value-nullish);
+}
+
+.property.primitive.boolean {
+  --value-color: var(--vmd-property-value-boolean);
+}
+
+.primitive.string {
+  --value-color: var(--vmd-property-value-string);
+}
+
+.collectionMeta {
+  color: var(--vmd-property-meta-color);
+}
+
+.typedValue {
+  color: var(--value-color, var(--vmd-property-meta-color));
+}
+
+.typedValue.string {
+  --value-color: var(--vmd-property-value-string);
+}
+
+.typedValue.primitive,
+.typedValue.number,
+.typedValue.boolean,
+.typedValue.bigint,
+.typedValue.symbol {
+  --value-color: var(--vmd-property-value-primitive);
+}
+
+.typedValue.null,
+.typedValue.undefined,
+.typedValue.nullish {
+  --value-color: var(--vmd-property-value-nullish);
+}
+
+.typedValue.instance {
+  --value-color: var(--vmd-property-value-instance);
+}
+
+.typedValue.object,
+.typedValue.array,
+.typedValue.function {
+  --value-color: var(--vmd-property-meta-color);
+}
+
+.propertyName {
+  color: var(--vmd-base-color);
+  flex: none;
+}
+
+.inlinePreview {
+  min-width: 0;
+  max-width: 100%;
+  display: inline-flex;
+  align-items: center;
+  overflow: hidden;
+  white-space: nowrap;
+  flex: 0 1 auto;
+  opacity: 0.65;
+}
+
+.property:hover .inlinePreview {
+  opacity: 1;
+}
+
+.propertyMeta {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.propertyValue {
+  color: var(--value-color, var(--vmd-property-meta-color));
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.property.isEditMode .propertyValue {
+  width: 100%;
+}
+
+.propertyValue:has(+.propertyName) {
+  margin-right: 4px;
+}
+
+.property.isEditMode [data-list-item-operations-collapsible] {
+  width: auto;
+}
+
+.editContent {
+  min-width: 180px;
+  flex: none;
+  text-overflow: ellipsis;
+  background: transparent;
+  color: var(--vmd-edit-content-color);
+  outline: 0;
+  border: 1px solid var(--vmd-control-active-text-input-color);
+  border-radius: 4px;
+  padding: 0 4px;
+}
+
+.property.isEditMode .propertyValue > .editContent {
+  width: 100%;
+}
+
+.watchHistoryHeaderRow {
+  display: flex;
+  align-items: center;
+}
+
+.watchHistoryHeader {
+  color: var(--vmd-property-meta-color);
+  font-size: 12px;
+  font-style: italic;
+}
+
+button.watchHistoryClearButton {
+  margin-left: 4px;
+  margin-right: 0;
+  padding: 1px 4px;
+  border: 0;
+  background: var(--vmd-control-bg);
+  color: var(--vmd-property-meta-color);
+  font-size: 12px;
+  cursor: pointer;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+button.watchHistoryClearButton > svg {
+  width: 12px;
+  height: 12px;
+}
+
+.watchHistoryClearButton:hover {
+  color: var(--vmd-base-color);
+  background: var(--vmd-content-highlight-bg);
+}
+
+.watchHistoryEntry {
+  color: var(--vmd-property-meta-color);
+}
+
+.watchHistoryEntry > span {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-right: 12px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  min-width: 0;
+}
+
+.watchHistoryMeta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex: none;
+  margin-right: 8px;
+}
+
+.watchHistoryIndex {
+  color: var(--vmd-property-meta-color);
+  min-width: 28px;
+}
+
+.watchHistoryTime {
+  color: var(--vmd-property-meta-color);
+  min-width: 92px;
+}
