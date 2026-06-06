@@ -29,6 +29,10 @@
   isolation: isolate;
 }
 
+.stickyVmHeader [data-depth] > div {
+  backdrop-filter: blur(var(--vmd-base-blur));
+}
+
 .stickyVmHeader > :global(*) {
   position: relative;
   z-index: 1;
