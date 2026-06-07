@@ -284,6 +284,13 @@ Using `Suspense` and `lazy` with `withViewModel` HOC can lead to unexpected beha
 
 To avoid this issue, either avoid using `Suspense`/`lazy` with this HOC or use `loadable()` from `react-simple-loadable` in your app code.
 
+### Concurrent Mode
+
+In concurrent mode, React may discard a render without committing it, which means cleanup effects never run. Since `mount()` is called synchronously during render (required for SSR), an orphaned mount could occur if the render is discarded.
+
+This only affects the scenario **without `ViewModelStore`**. When using a store, `viewModels.attach()` simply increments a ref-count, which is safe even if the render is discarded.
+
+**Recommendation:** Use `ViewModelStore` for full concurrent mode safety. The no-store scenario is designed for simple client-side use cases where SSR is not needed.
 
 
 ## Generic types for your wrapped `ViewModel` in this HOC   
