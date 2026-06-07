@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "types": ["node", "vite/client"],
+    "paths": {
+      "@/*": ["./src/*"],
+      "mobx-view-model": ["../core/src/index.ts"],
+      "mobx-view-model/react": ["../core/src/react-subpath.ts"],
+      "mobx-view-model-react": ["../react/src/index.ts"]
+    }
+  }
+}
