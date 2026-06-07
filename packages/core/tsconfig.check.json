@@ -1,6 +1,7 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
+    "rootDir": "../..",
     "paths": {
       "mobx-view-model": ["./src/index.ts"],
       "mobx-view-model/react": ["./src/react-subpath.ts"],

@@ -8,6 +8,28 @@ import { minify } from 'terser';
 import { build, defineConfig, type LibraryFormats } from 'vite';
 import cssInjectedByJsPlugin from 'vite-plugin-css-injected-by-js';
 
+const patchWorkspaceDeps = (configs: ConfigsManager) => {
+  const coreVersion = JSON.parse(
+    readFileSync(resolve(configs.rootPath, '../core/package.json'), 'utf8'),
+  ).version;
+  const distPath = resolve(configs.rootPath, 'dist/package.json');
+  const distPkg = JSON.parse(readFileSync(distPath, 'utf8'));
+
+  for (const depType of ['dependencies', 'peerDependencies'] as const) {
+    const deps = distPkg[depType];
+    if (!deps) continue;
+    for (const [name, version] of Object.entries(deps)) {
+      if (typeof version === 'string' && version.startsWith('workspace:')) {
+        if (name === 'mobx-view-model') {
+          deps[name] = `^${coreVersion}`;
+        }
+      }
+    }
+  }
+
+  writeFileSync(distPath, `${JSON.stringify(distPkg, null, 2)}\n`);
+};
+
 const createBundle = async ({
   configs,
   buildEnvs,
@@ -185,7 +207,13 @@ const main = async () => {
   await prepareDistDir({
     configs,
     ignoredModuleNamesForExport: ['auto.global'],
+    omitStrangeExportEntries: true,
+    distExtraFilesRoot: '../..',
+    distExtraFilesNames: ['LICENSE', 'README.md'],
+    rewritePackagePaths: true,
   });
+
+  patchWorkspaceDeps(configs);
 };
 
 // biome-ignore lint/nursery/noFloatingPromises: <explanation>

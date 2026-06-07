@@ -2,12 +2,12 @@
   "compilerOptions": {
     "composite": true,
     "module": "ESNext",
-    "moduleResolution": "Node",
+    "moduleResolution": "bundler",
+    "esModuleInterop": true,
     "lib": ["DOM", "DOM.Iterable", "ESNext"],
     "useDefineForClassFields": true,
-    "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
-    "typeRoots": ["./types/envs.d.ts", "node_modules/@types"]
+    "typeRoots": ["./types/envs.d.ts", "node_modules/@types", "../../node_modules/@types"]
   },
   "include": ["types", "scripts", "package.json"]
 }

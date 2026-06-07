@@ -24,9 +24,7 @@ import {
   useState,
   version,
 } from 'react';
-// @ts-expect-error react-dom/client types are not in dev deps
 import { hydrateRoot } from 'react-dom/client';
-// @ts-expect-error react-dom/server types are not in dev deps
 import { renderToString } from 'react-dom/server';
 import { describe, expect, expectTypeOf, it, test, vi } from 'vitest';
 import { sleep } from 'yummies/async';
@@ -210,7 +208,7 @@ describe('withViewModel', () => {
       const container = document.createElement('div');
       container.innerHTML = html;
 
-      let root: ReturnType<typeof hydrateRoot> | null = null;
+      let root: any = null;
       await act(async () => {
         root = hydrateRoot(
           container,
@@ -282,7 +280,7 @@ describe('withViewModel', () => {
       const container = document.createElement('div');
       container.innerHTML = html;
 
-      let root: ReturnType<typeof hydrateRoot> | null = null;
+      let root: any = null;
       await act(async () => {
         root = hydrateRoot(
           container,
@@ -321,7 +319,7 @@ describe('withViewModel', () => {
       const container = document.createElement('div');
       container.innerHTML = html;
 
-      let root: ReturnType<typeof hydrateRoot> | null = null;
+      let root: any = null;
       await act(async () => {
         root = hydrateRoot(
           container,
@@ -370,7 +368,7 @@ describe('withViewModel', () => {
       const container = document.createElement('div');
       container.innerHTML = html;
 
-      let root: ReturnType<typeof hydrateRoot> | null = null;
+      let root: any = null;
       await act(async () => {
         root = hydrateRoot(
           container,
@@ -408,7 +406,7 @@ describe('withViewModel', () => {
       const container = document.createElement('div');
       container.innerHTML = html;
 
-      let root: ReturnType<typeof hydrateRoot> | null = null;
+      let root: any = null;
       await act(async () => {
         root = hydrateRoot(
           container,
@@ -466,7 +464,7 @@ describe('withViewModel', () => {
       const container = document.createElement('div');
       container.innerHTML = html;
 
-      let root: ReturnType<typeof hydrateRoot> | null = null;
+      let root: any = null;
       await act(async () => {
         root = hydrateRoot(
           container,
@@ -517,7 +515,7 @@ describe('withViewModel', () => {
       const container = document.createElement('div');
       container.innerHTML = html;
 
-      let root: ReturnType<typeof hydrateRoot> | null = null;
+      let root: any = null;
       await act(async () => {
         root = hydrateRoot(
           container,
@@ -584,7 +582,7 @@ describe('withViewModel', () => {
       const container = document.createElement('div');
       container.innerHTML = html;
 
-      let root: ReturnType<typeof hydrateRoot> | null = null;
+      let root: any = null;
       await act(async () => {
         root = hydrateRoot(
           container,
@@ -637,7 +635,7 @@ describe('withViewModel', () => {
       const container = document.createElement('div');
       container.innerHTML = html;
 
-      let root: ReturnType<typeof hydrateRoot> | null = null;
+      let root: any = null;
       await act(async () => {
         root = hydrateRoot(
           container,

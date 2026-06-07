@@ -1,7 +1,8 @@
 {
   "extends": "./tsconfig.base.json",
   "compilerOptions": {
-    "types": ["vitest", "node"],
+    "rootDir": "../..",
+    "types": ["node"],
     "lib": ["DOM", "DOM.Iterable", "ESNext"],
     "paths": {
       "mobx-view-model": ["../core/src/index.ts"],

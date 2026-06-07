@@ -186,6 +186,7 @@ export abstract class ListItem<T> {
     private getChildren?: (item: ListItem<T>) => ListItem<any>[],
     cache?: Map<string, any>,
   ) {
+    // @ts-ignore ObservableMap is missing getOrInsert/getOrInsertComputed added in TS 6.0
     this.cache = cache ?? devtools.anyCache;
     this.expandKey = `${key}/expand-key`;
     computed(this, 'isExpanded');

@@ -5,6 +5,7 @@
       "@/*": ["./src/*"],
       "mobx-view-model": ["../../packages/core/src/index.ts"],
       "mobx-view-model-react": ["../../packages/react/src/index.ts"]
-    }
+    },
+    "rootDir": "../.."
   }
 }

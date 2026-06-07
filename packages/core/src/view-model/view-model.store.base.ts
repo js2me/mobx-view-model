@@ -63,9 +63,13 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
   public vmConfig: ViewModelsConfig;
 
   constructor(protected config?: ViewModelStoreConfig) {
+    // @ts-ignore ObservableMap is missing getOrInsert/getOrInsertComputed added in TS 6.0
     this.viewModels = observable.map([], { deep: false });
+    // @ts-ignore ObservableMap is missing getOrInsert/getOrInsertComputed added in TS 6.0
     this.linkedAnchorVMClasses = observable.map([], { deep: false });
+    // @ts-ignore ObservableMap is missing getOrInsert/getOrInsertComputed added in TS 6.0
     this.viewModelIdsByClasses = observable.map([], { deep: true });
+    // @ts-ignore ObservableMap is missing getOrInsert/getOrInsertComputed added in TS 6.0
     this.instanceAttachedCount = observable.map([], { deep: false });
     this.mountingViews = observable.set([], { deep: false });
     this.unmountingViews = observable.set([], { deep: false });
