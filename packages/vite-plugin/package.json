@@ -1,0 +1,49 @@
+{
+  "name": "mobx-view-model-vite-plugin",
+  "version": "1.3.4",
+  "description": "Vite 8 plugin for mobx-view-model — smart HMR and auto displayName for observer components",
+  "keywords": [
+    "hmr",
+    "mobx",
+    "react",
+    "view-model",
+    "vite"
+  ],
+  "license": "MIT",
+  "author": "Sergey Volkov",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "directory": "dist"
+  },
+  "scripts": {
+    "clean": "rimraf dist",
+    "check": "tsc --noEmit",
+    "build": "vite build && node ./scripts/patch-dist-package-json.mjs",
+    "build:watch": "vite build --watch",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "magic-string": "^0.30.17",
+    "mobx-view-model-devtools": "workspace:*"
+  },
+  "devDependencies": {},
+  "peerDependencies": {
+    "mobx-view-model": "^10.0.0",
+    "mobx-view-model-react": "^10.0.0",
+    "vite": "^6.0.0 || ^7.0.0 || ^8.0.0"
+  }
+}

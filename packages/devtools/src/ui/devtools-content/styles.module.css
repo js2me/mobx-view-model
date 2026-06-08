@@ -1,0 +1,594 @@
+
+.expandButton {
+  color: #a0a0a0;
+  opacity: 1 !important;
+  width: 16px;
+  height: 16px;
+  font-weight: bold;
+  cursor: pointer;
+
+  &.expanded {
+    color: #b8b8b8;
+    transform: rotate(90deg);
+  }
+
+  &.disabled {
+    opacity: 0.35 !important;
+  }
+}
+
+.vmContentVirtualizedContent {
+}
+
+.stickyVmHeader {
+  position: sticky;
+  top: var(--vmd-header-height);
+  z-index: 5;
+  height: 0;
+  overflow: visible;
+  isolation: isolate;
+}
+
+.stickyVmHeader [data-depth] > div {
+  backdrop-filter: blur(var(--vmd-base-blur));
+}
+
+.stickyVmHeader > :global(*) {
+  position: relative;
+  z-index: 1;
+}
+
+.listItemStickySource {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.gradientBlurLayer {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  height: 0;
+  flex: none;
+  overflow: visible;
+  pointer-events: none;
+}
+
+/* .stickyVmHeader::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 22px;
+  background: var(--vmd-bg);
+  backdrop-filter: blur(var(--vmd-base-blur));
+} */
+
+.vmContent[data-simplebar] {
+  position: relative;
+  flex-direction: column;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  align-content: flex-start;
+  align-items: flex-start;
+  color: var(--vmd-base-color);
+  background: var(--vmd-bg);
+  backdrop-filter: blur(var(--vmd-base-blur));
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  display: flex;
+  flex-direction: column;
+  overflow: auto;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  overflow-anchor: none;
+  border: 1px solid var(--vmd-border-color) !important
+}
+
+.vmContent[data-simplebar] :global(.simplebar-wrapper) {
+  overflow: hidden;
+  width: inherit;
+  height: inherit;
+  max-width: inherit;
+  max-height: inherit
+}
+
+.vmContent[data-simplebar] :global(.simplebar-mask) {
+  direction: inherit;
+  position: absolute;
+  overflow: hidden;
+  padding: 0;
+  margin: 0;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  width: auto !important;
+  height: auto !important;
+  z-index: 0
+}
+
+.vmContent[data-simplebar] :global(.simplebar-offset) {
+  direction: inherit !important;
+  box-sizing: inherit !important;
+  resize: none !important;
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  padding: 0;
+  margin: 0;
+  -webkit-overflow-scrolling: touch
+}
+
+.vmContent[data-simplebar] :global(.simplebar-content-wrapper) {
+  direction: inherit;
+  box-sizing: border-box !important;
+  position: relative;
+  display: block;
+  height: 100%;
+  width: auto;
+  max-width: 100%;
+  max-height: 100%;
+  overflow: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none
+}
+
+.vmContent[data-simplebar] :global(.simplebar-content-wrapper)::-webkit-scrollbar,
+.vmContent[data-simplebar] :global(.simplebar-hide-scrollbar)::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0
+}
+
+.vmContent[data-simplebar] :global(.simplebar-content):after,
+.vmContent[data-simplebar] :global(.simplebar-content):before {
+  content: ' ';
+  display: table
+}
+
+.vmContent[data-simplebar] :global(.simplebar-placeholder) {
+  max-height: 100%;
+  max-width: 100%;
+  width: 100%;
+  pointer-events: none
+}
+
+.vmContent[data-simplebar] :global(.simplebar-height-auto-observer-wrapper) {
+  box-sizing: inherit !important;
+  height: 100%;
+  width: 100%;
+  max-width: 1px;
+  position: relative;
+  float: left;
+  max-height: 1px;
+  overflow: hidden;
+  z-index: -1;
+  padding: 0;
+  margin: 0;
+  pointer-events: none;
+  flex-grow: inherit;
+  flex-shrink: 0;
+  flex-basis: 0
+}
+
+.vmContent[data-simplebar] :global(.simplebar-height-auto-observer) {
+  box-sizing: inherit;
+  display: block;
+  opacity: 0;
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 1000%;
+  width: 1000%;
+  min-height: 1px;
+  min-width: 1px;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: -1
+}
+
+.vmContent[data-simplebar] :global(.simplebar-track) {
+  z-index: 1;
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  overflow: hidden
+}
+
+.vmContent[data-simplebar]:global(.simplebar-dragging) {
+  pointer-events: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none
+}
+
+.vmContent[data-simplebar]:global(.simplebar-dragging) :global(.simplebar-content) {
+  pointer-events: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none
+}
+
+.vmContent[data-simplebar]:global(.simplebar-dragging) :global(.simplebar-track) {
+  pointer-events: all
+}
+
+.vmContent[data-simplebar] :global(.simplebar-scrollbar) {
+  position: absolute;
+  left: 0;
+  right: 0;
+  min-height: 10px
+}
+
+.vmContent[data-simplebar] :global(.simplebar-scrollbar):before {
+  position: absolute;
+  content: '';
+  background: var(--vmd-scrollbar-bg-base);
+  border-radius: 7px;
+  left: 2px;
+  right: 2px;
+  opacity: 0;
+  transition: opacity .2s .5s linear
+}
+
+.vmContent[data-simplebar] :global(.simplebar-scrollbar):global(.simplebar-visible):before {
+  opacity: .5;
+  transition-delay: 0s;
+  transition-duration: 0s
+}
+
+.vmContent[data-simplebar] :global(.simplebar-track.simplebar-vertical) {
+  top: 0;
+  width: var(--vmd-scrollbar-track-size);
+}
+
+.vmContent[data-simplebar] :global(.simplebar-scrollbar):before {
+  top: 2px;
+  bottom: 2px;
+  left: 2px;
+  right: 2px
+}
+
+.vmContent[data-simplebar] :global(.simplebar-track):global(.simplebar-horizontal) {
+  left: 0;
+  height: var(--vmd-scrollbar-track-size);
+}
+
+.vmContent[data-simplebar] :global(.simplebar-track.simplebar-horizontal) :global(.simplebar-scrollbar) {
+  right: auto;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  min-height: 0;
+  min-width: 10px;
+  width: auto
+}
+
+.vmContent[data-simplebar] :global(.simplebar-dummy-scrollbar-size) {
+  direction: rtl;
+  position: fixed;
+  opacity: 0;
+  visibility: hidden;
+  height: 500px;
+  width: 500px;
+  overflow-y: hidden;
+  overflow-x: scroll;
+  -ms-overflow-style: scrollbar !important
+}
+
+.vmContent[data-simplebar] :global(.simplebar-dummy-scrollbar-size)>div {
+  width: 200%;
+  height: 200%;
+  margin: 10px 0
+}
+
+.vmContent[data-simplebar] :global(.simplebar-hide-scrollbar) {
+  position: fixed;
+  left: 0;
+  visibility: hidden;
+  overflow-y: scroll;
+  scrollbar-width: none;
+  -ms-overflow-style: none
+}
+
+.vmContentHeader {
+  display: flex;
+  flex-direction: column;
+  height: var(--vmd-header-height);
+  flex: none;
+  padding: 0 8px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.vmContentHeaderLogo {
+  width: 16px;
+  margin-right: 6px;
+}
+
+.vmContentHeaderTitle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex: none;
+  position: relative;
+  font-weight: 600;
+  z-index: 3;
+}
+
+.vmContentHeaderTitleText {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 16px;
+  margin-right: auto;
+}
+
+.vmContentControlPanel {
+  width: 100%;
+  height: var(--vmd-control-panel-height);
+  flex: none;
+  padding-bottom: 4px;
+  flex: none;
+  display: flex;
+  flex-direction: row;
+  position: relative;
+  z-index: 0;
+  gap: 4px;
+  overflow: visible;
+  padding-right: 6px;
+}
+
+.vmContentControlPanel.searchIsActive > .vmContentControlPanelActions {
+  margin-left: -106px;
+}
+
+.vmContentControlPanelActions {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+  transition: all 150ms ease;
+}
+
+.hiearchyToggleButton {
+  display: flex;
+}
+
+.vmContentInput {
+  display: flex;
+  position: relative;
+  flex: 1;
+  backdrop-filter: blur(var(--vmd-control-blur));
+}
+
+.vmContentInput > svg {
+  position: absolute;
+  width: 16px;
+  inset: 50% 0;
+  transform: translate(6px, -50%);
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+.vmContentInput > input  {
+  background: var(--vmd-control-bg);
+  border: 1px solid var(--vmd-control-border);
+  color: var(--vmd-control-active-text-input-color);
+  border-radius: 4px;
+  outline: 0;
+  width: 100%;
+  padding: 3px 26px;
+  font-size: 14px;
+  text-overflow: ellipsis;
+
+  &::placeholder {
+    color: var(--vmd-control-active-text-input-placeholder-color);
+  }
+}
+
+/* Ghost-text inline autocomplete */
+.inputGhost {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  padding: 3px 26px;
+  font-size: 14px;
+  pointer-events: none;
+  white-space: pre;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.inputGhostTyped {
+  color: transparent;
+  white-space: pre;
+}
+
+.inputGhostSuggestion {
+  color: var(--vmd-control-active-text-input-placeholder-color);
+  white-space: pre;
+  opacity: 0.7;
+}
+
+.inputSuggestions {
+  position: absolute;
+  left: 35px;
+  top: calc(100% + -10px);
+  display: flex;
+  align-items: flex-start;
+  font-size: 14px;
+  white-space: pre;
+  z-index: 3;
+}
+
+.inputSuggestionsList {
+  min-width: 120px;
+  max-width: 320px;
+  padding: 3px;
+  border: 1px solid var(--vmd-control-border);
+  border-radius: 5px;
+  background: var(--vmd-overlay-bg);
+  box-shadow: 0 6px 18px #00000059;
+  overflow: hidden;
+  backdrop-filter: blur(8px);
+}
+
+.inputSuggestionItem {
+  display: flex;
+  align-items: baseline;
+  cursor: pointer;
+  gap: 6px;
+  padding: 1px 2px;
+  border-radius: 3px;
+  color: var(--vmd-control-active-text-input-placeholder-color);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.inputSuggestionOwner {
+  flex: none;
+  max-width: 90px;
+  font-size: 10px;
+  line-height: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  background: var(--vmd-primary-bg);
+  color: #fff;
+  padding: 2px 2px;
+  direction: rtl;
+  border-radius: 3px;
+  opacity: 0.85;
+
+  &.extras {
+    background: var(--vmd-secondary-bg);
+  }
+}
+
+.inputSuggestionValue {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.inputSuggestionItem.selected {
+  color: var(--vmd-control-active-text-input-color);
+  background: var(--vmd-content-highlight-bg);
+}
+
+/* Прозрачный фон когда ghost-text показан, чтобы подсказка была видна */
+.vmContentInput > input.inputWithSuggestion {
+  background: transparent;
+}
+
+.vmContentInput > button {
+  position: absolute;
+  right: 6px;
+  width: 16px;
+  transform: translate(4px, -50%);
+  top: 50%;
+  opacity: 0.6;
+  display: none;
+}
+
+.vmContentInput.filled > svg {
+  opacity: 0.9;
+}
+
+.vmContentInput.filled > button {
+  display: block;
+}
+
+.gradientBlur {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: calc(var(--vmd-header-height) + 6px);
+  pointer-events: none;
+  transition: all 150ms ease;
+  background: linear-gradient(
+    to bottom,
+    var(--vmd-overlay-bg) 0%,
+    rgba(0, 0, 0, 0) 100%
+  );
+}
+
+.vmContent[data-simplebar][data-sticky-vm-active] .gradientBlur {
+  height: calc(var(--vmd-header-height) + 42px);
+  background: linear-gradient(
+    to bottom,
+    var(--vmd-overlay-bg) 0%,
+    rgba(0, 0, 0, 0) 100%
+  );
+}
+
+.gradientBlur::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: transparent;
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  
+  /* Маска для постепенного размытия */
+  -webkit-mask: linear-gradient(
+    to bottom,
+    var(--vmd-overlay-bg) 50%,
+    rgba(0, 0, 0, 0) 100%
+  );
+  mask: linear-gradient(
+    to bottom,
+    var(--vmd-overlay-bg) 50%,
+    rgba(0, 0, 0, 0) 100%
+  );
+}
+
+[data-list-item-operations-wrapper] {
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+  margin-right: 12px;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+[data-list-item-operations] {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+[data-list-item-operations-persistent] {
+  flex-shrink: 0;
+  width: auto;
+  overflow: visible;
+}
+
+[data-list-item-operations-collapsible] {
+  flex-shrink: 0;
+  width: 0;
+  transition: width 150ms ease;
+  overflow: hidden;
+}
+
+*:has(> [data-list-item-operations-wrapper]):hover
+  [data-list-item-operations-collapsible] {
+  width: auto;
+}
+
+[data-list-item-operation]:active {
+  transform: scale(0.9);
+}

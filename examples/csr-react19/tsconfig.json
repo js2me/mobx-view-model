@@ -9,8 +9,8 @@
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "jsx": "react-jsx",
     "types": ["node"],
+    "jsx": "react-jsx",
     "paths": {
       "@/*": ["./src/*"]
     }
