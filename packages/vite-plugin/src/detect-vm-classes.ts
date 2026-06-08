@@ -132,7 +132,7 @@ export function extractImportBindings(
   }[] = [];
 
   // import { X, Y as Z } from 'source'
-  const namedImportRe = /import\s*\{([^}]+)\}\s*from\s*['"]([^'"]+)['"]/g;
+  const namedImportRe = /import\s+\{([^}]+)\}\s+from\s+['"]([^'"]+)['"]/g;
   let match: RegExpExecArray | null;
   while ((match = namedImportRe.exec(code)) !== null) {
     const specifiers = match[1];
