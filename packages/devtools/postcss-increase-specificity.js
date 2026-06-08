@@ -3,6 +3,20 @@ import selectorParser from 'postcss-selector-parser';
 const DEFAULT_REPEAT = 5;
 
 function isInsideGlobal(node) {
+  // Check if a preceding sibling is :global (shorthand syntax: `:global .foo`)
+  const siblings = node.parent?.nodes ?? [];
+  const nodeIndex = siblings.indexOf(node);
+  for (let i = nodeIndex - 1; i >= 0; i--) {
+    const sibling = siblings[i];
+    if (sibling.type === 'pseudo' && sibling.value.startsWith(':global')) {
+      return true;
+    }
+    // Stop at non-space combinators — :global only applies to adjacent selectors
+    if (sibling.type === 'combinator' && sibling.value !== ' ') {
+      break;
+    }
+  }
+  // Walk up the parent tree (parenthesized syntax: `:global(.foo)`)
   let current = node.parent;
   while (current) {
     if (current.type === 'pseudo' && current.value.startsWith(':global')) {
