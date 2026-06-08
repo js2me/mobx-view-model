@@ -33,6 +33,32 @@ export class MyVM implements ViewModel {
     expect(result[0].type).toBe('ViewModel');
   });
 
+  it('detects class extending base and implementing ViewModel', () => {
+    const code = `
+import type { ViewModel } from 'mobx-view-model';
+
+class MyVM extends Base implements ViewModel {
+  id = 'test';
+}`;
+    const result = detectViewModelClasses(code);
+    expect(result).toHaveLength(1);
+    expect(result[0].name).toBe('MyVM');
+    expect(result[0].type).toBe('ViewModel');
+  });
+
+  it('detects generic class implementing ViewModel', () => {
+    const code = `
+import type { ViewModel } from 'mobx-view-model';
+
+class MyVM<T> implements ViewModel {
+  id = 'test';
+}`;
+    const result = detectViewModelClasses(code);
+    expect(result).toHaveLength(1);
+    expect(result[0].name).toBe('MyVM');
+    expect(result[0].type).toBe('ViewModel');
+  });
+
   it('detects class implementing ViewModelSimple', () => {
     const code = `
 import { ViewModelSimple } from 'mobx-view-model';

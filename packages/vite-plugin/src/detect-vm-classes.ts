@@ -54,7 +54,7 @@ export function detectViewModelClasses(
 
   // class X implements ... ViewModel ...
   const implementsVMRe =
-    /class\s+(\w+)\s+implements\s+[^{]*?\bViewModel\b(?!Simple|Base)/g;
+    /class\s+(\w+)[^;{]*?\bimplements\b[^{]*?\bViewModel\b(?!Simple|Base)/g;
   while ((match = implementsVMRe.exec(code)) !== null) {
     // Avoid duplicating if already found via extends ViewModelBase
     if (!classes.some((c) => c.name === match![1])) {
@@ -68,7 +68,7 @@ export function detectViewModelClasses(
 
   // class X implements ... ViewModelSimple ...
   const implementsSimpleRe =
-    /class\s+(\w+)\s+implements\s+[^{]*?\bViewModelSimple\b/g;
+    /class\s+(\w+)[^;{]*?\bimplements\b[^{]*?\bViewModelSimple\b/g;
   while ((match = implementsSimpleRe.exec(code)) !== null) {
     if (!classes.some((c) => c.name === match![1])) {
       classes.push({
