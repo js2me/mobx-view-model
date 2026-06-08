@@ -140,9 +140,9 @@ export function extractImportBindings(
     for (const spec of specifiers.split(',')) {
       const trimmed = spec.trim();
       if (!trimmed) continue;
-      const parts = trimmed.split(/\s+as\s+/);
-      const importedName = parts[0]!.trim();
-      const localName = (parts[1] ?? parts[0]).trim();
+      const asIndex = trimmed.lastIndexOf(' as ');
+      const importedName = asIndex === -1 ? trimmed : trimmed.slice(0, asIndex);
+      const localName = asIndex === -1 ? trimmed : trimmed.slice(asIndex + 4);
       bindings.push({ localName, importedName, source });
     }
   }
