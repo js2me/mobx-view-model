@@ -271,4 +271,12 @@ describe('extractImportBindings', () => {
       { localName: 'C', importedName: 'B', source: './module' },
     ]);
   });
+
+  it('extracts compact imports without spaces', () => {
+    const code = `import{Foo}from'./module';`;
+    const bindings = extractImportBindings(code);
+    expect(bindings).toEqual([
+      { localName: 'Foo', importedName: 'Foo', source: './module' },
+    ]);
+  });
 });
