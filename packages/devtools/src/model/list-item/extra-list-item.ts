@@ -26,7 +26,7 @@ export class ExtraListItem extends ListItem<AnyVM> {
   }
 
   get children(): ListItem<any>[] {
-    return [...this.propertyListItems];
+    return this.propertyListItems;
   }
 
   get operations(): ListItemOperation<any>[] {
