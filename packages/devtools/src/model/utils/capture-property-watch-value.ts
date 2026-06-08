@@ -9,6 +9,8 @@ export const capturePropertyWatchValue = (value: unknown): unknown => {
   try {
     return toJS(value);
   } catch {
-    return value;
+    // Avoid leaking the raw observable — return a safe fallback
+    // since we can't produce a proper deep snapshot
+    return `[Capture failed: ${typeof value}]`;
   }
 };
