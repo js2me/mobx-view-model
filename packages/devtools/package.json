@@ -1,6 +1,6 @@
 {
   "name": "mobx-view-model-devtools",
-  "version": "0.0.63",
+  "version": "0.1.0",
   "description": "DevTools for mobx-view-model — inspect and debug ViewModel instances in real time",
   "keywords": [
     "mobx",
