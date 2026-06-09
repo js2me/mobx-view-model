@@ -104,6 +104,7 @@ const createBundle = async ({
       postcss: './postcss.config.js',
     },
     resolve: {
+      dedupe: ['react', 'react-dom', 'mobx-react-lite'],
       alias: [
         {
           find: '@',
