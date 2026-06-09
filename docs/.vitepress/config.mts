@@ -4,12 +4,18 @@ import { REACT_LOGO_SVG } from "./shared/react-logo-svg";
 
 const configs = ConfigsManager.create('../packages/core');
 
+const workspacePackages = [
+  'mobx-view-model',
+  'mobx-view-model-react',
+  'mobx-view-model-devtools',
+];
+
 /** React logo + comma before label (errors / warnings related to React integration) */
 function reactPrefixedSidebarItem(rest: string) {
   return `<span class="vp-sidebar-error-react-item"><span class="vp-sidebar-error-react-lead">${REACT_LOGO_SVG}</span> ${rest}</span>`;
 }
 
-export default defineDocsVitepressConfig(configs, {
+const config = defineDocsVitepressConfig(configs, {
   createdYear: '2024',
   themeConfig: {
     nav: [
@@ -220,3 +226,15 @@ export default defineDocsVitepressConfig(configs, {
     ],
   },
 });
+
+config.vite = {
+  ...config.vite,
+  resolve: {
+    dedupe: ['react', 'react-dom'],
+  },
+  ssr: {
+    noExternal: workspacePackages,
+  },
+};
+
+export default config;
