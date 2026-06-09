@@ -1,14 +1,11 @@
 import { defineDocsVitepressConfig } from "sborshik/vitepress";
 import { ConfigsManager } from "sborshik/utils/configs-manager";
+import { resolve } from "node:path";
 import { REACT_LOGO_SVG } from "./shared/react-logo-svg";
 
 const configs = ConfigsManager.create('../packages/core');
 
-const workspacePackages = [
-  'mobx-view-model',
-  'mobx-view-model-react',
-  'mobx-view-model-devtools',
-];
+const pkgsRoot = resolve(import.meta.dirname, '../../packages');
 
 /** React logo + comma before label (errors / warnings related to React integration) */
 function reactPrefixedSidebarItem(rest: string) {
@@ -231,9 +228,14 @@ config.vite = {
   ...config.vite,
   resolve: {
     dedupe: ['react', 'react-dom'],
+    alias: {
+      'mobx-view-model': resolve(pkgsRoot, 'core/dist/index.js'),
+      'mobx-view-model-react': resolve(pkgsRoot, 'react/dist/index.js'),
+      'mobx-view-model-devtools': resolve(pkgsRoot, 'devtools/dist/index.js'),
+    },
   },
   ssr: {
-    noExternal: workspacePackages,
+    noExternal: ['mobx-view-model', 'mobx-view-model-react', 'mobx-view-model-devtools'],
   },
 };
 
