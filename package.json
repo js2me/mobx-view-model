@@ -15,7 +15,7 @@
     "test:coverage": "pnpm -r --filter './packages/*' run test:coverage",
     "test:type-regression": "node ./scripts/test-type-regression.mjs",
     "docs": "pnpm build && pnpm --filter mobx-view-model-docs run dev",
-    "docs:build": "pnpm --filter mobx-view-model-docs run build",
+    "docs:build": "pnpm build && pnpm --filter mobx-view-model-docs run build",
     "docs:serve": "pnpm --filter mobx-view-model-docs run preview",
     "examples:build": "pnpm -r --filter './examples/*' run build",
     "example:ssr:install": "pnpm --dir examples/ssr-nextjs install",
