@@ -1,5 +1,12 @@
 # mobx-view-model-vite-plugin
 
+## 1.4.1
+
+### Patch Changes
+
+- Updated dependencies [[`98e294b`](https://github.com/js2me/mobx-view-model/commit/98e294ba692c8bdc473b59a402290e887e727967)]:
+  - mobx-view-model-devtools@0.1.1
+
 ## 1.4.0
 
 ### Minor Changes
