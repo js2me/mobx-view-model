@@ -1,10 +1,11 @@
 import { makeObservable, reaction } from 'mobx';
 import type { Mock } from 'vitest';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, expectTypeOf, it, vi } from 'vitest';
 
 import type { AnyObject, EmptyObject } from 'yummies/types';
 
 import { ViewModelBase } from './view-model.base.js';
+import type { InferViewModelParams } from './view-model.base.types.js';
 import type {
   AnyViewModel,
   AnyViewModelSimple,
@@ -339,6 +340,20 @@ describe('ViewModelBase', () => {
 
       expect(root.hasParentPublic(child, true)).toBe(false);
       expect(root.hasParentPublic(root, true)).toBe(false);
+    });
+  });
+
+  describe('ViewModelParams type', () => {
+    it('constructor(params: InferViewModelParams<VM>) should work', () => {
+      class TestVM extends ViewModelBase<{ x: number }> {
+        constructor(params: InferViewModelParams<TestVM>) {
+          super(params);
+        }
+      }
+
+      const vm = new TestVM({ id: '1', payload: { x: 1 } });
+      expect(vm.id).toBe('1');
+      expect(vm.payload).toEqual({ x: 1 });
     });
   });
 });
