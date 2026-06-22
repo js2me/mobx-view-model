@@ -32,7 +32,7 @@
   "homepage": "https://github.com/js2me/mobx-view-model",
   "repository": {
     "type": "git",
-    "url": "git://github.com/js2me/mobx-view-model"
+    "url": "https://github.com/js2me/mobx-view-model"
   },
   "publishConfig": {
     "directory": "dist"

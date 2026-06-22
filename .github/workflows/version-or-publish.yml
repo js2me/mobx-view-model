@@ -29,6 +29,7 @@ jobs:
         with:
           check-latest: true
           node-version-file: .nvmrc
+          registry-url: https://registry.npmjs.org
 
       - name: Enabling Corepack!
         run: corepack enable
@@ -39,6 +40,8 @@ jobs:
       - name: Building packages
         run: pnpm run build
 
+      - run: npm install -g npm@latest
+
       - name: Create Release Pull Request Or Publish
         uses: changesets/action@v1
         continue-on-error: false
@@ -46,9 +49,7 @@ jobs:
         with:
           version: pnpm run changeset:version
           publish: pnpm exec sborshik ci
-          createGithubReleases: true
+          createGithubReleases: false
         env:
           CI: true
           GITHUB_TOKEN: ${{ github.token }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-          NPM_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
