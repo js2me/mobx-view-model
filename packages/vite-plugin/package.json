@@ -1,6 +1,6 @@
 {
   "name": "mobx-view-model-vite-plugin",
-  "version": "1.4.1",
+  "version": "1.4.2",
   "description": "Vite 8 plugin for mobx-view-model — smart HMR and auto displayName for observer components",
   "keywords": [
     "hmr",
@@ -42,8 +42,8 @@
   },
   "devDependencies": {},
   "peerDependencies": {
-    "mobx-view-model": "^10.0.0",
-    "mobx-view-model-react": "^10.0.0",
+    "mobx-view-model": "^10.2.2",
+    "mobx-view-model-react": "^10.2.2",
     "vite": "^6.0.0 || ^7.0.0 || ^8.0.0"
   }
 }

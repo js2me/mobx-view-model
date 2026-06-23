@@ -1,5 +1,15 @@
 # mobx-view-model-vite-plugin
 
+## 1.4.2
+
+### Patch Changes
+
+- 8641eb3: migration npm publish to trusted gh actions
+- Updated dependencies [8641eb3]
+  - mobx-view-model-react@10.2.2
+  - mobx-view-model@10.2.2
+  - mobx-view-model-devtools@0.1.2
+
 ## 1.4.1
 
 ### Patch Changes
