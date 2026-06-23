@@ -1,5 +1,13 @@
 # mobx-view-model-devtools
 
+## 0.1.2
+
+### Patch Changes
+
+- 8641eb3: migration npm publish to trusted gh actions
+- Updated dependencies [8641eb3]
+  - mobx-view-model@10.2.2
+
 ## 0.1.1
 
 ### Patch Changes
