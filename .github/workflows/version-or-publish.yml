@@ -48,7 +48,7 @@ jobs:
         id: pub-or-release-pr
         with:
           version: pnpm version-packages
-          publish: pnpm exec sborshik ci
+          publish: pnpm exec sborshik ci --github-releases
           createGithubReleases: false
         env:
           CI: true
