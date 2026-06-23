@@ -23,8 +23,7 @@
     "example:ssr": "pnpm build && pnpm example:ssr:install && pnpm --dir examples/ssr-nextjs dev",
     "example:ssr:build": "pnpm build && pnpm example:ssr:build:example",
     "dev": "pnpm test:watch",
-    "dev:install-hooks": "if [ -z \"$CI\" ]; then lefthook install; fi",
-    "changeset:version": "pnpm exec changeset version && pnpm install --lockfile-only --no-frozen-lockfile"
+    "dev:install-hooks": "if [ -z \"$CI\" ]; then lefthook install; fi"
   },
   "author": "js2me",
   "license": "MIT",

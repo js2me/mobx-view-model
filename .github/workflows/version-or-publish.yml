@@ -35,7 +35,7 @@ jobs:
         run: corepack enable
 
       - name: Installing Deps
-        run: pnpm i
+        run: pnpm i --frozen-lockfile
 
       - name: Building packages
         run: pnpm run build
@@ -47,7 +47,7 @@ jobs:
         continue-on-error: false
         id: pub-or-release-pr
         with:
-          version: pnpm run changeset:version
+          version: pnpm exec changeset version && pnpm install --lockfile-only
           publish: pnpm exec sborshik ci
           createGithubReleases: false
         env:
