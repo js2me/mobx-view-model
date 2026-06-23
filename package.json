@@ -24,7 +24,7 @@
     "example:ssr:build": "pnpm build && pnpm example:ssr:build:example",
     "dev": "pnpm test:watch",
     "dev:install-hooks": "if [ -z \"$CI\" ]; then lefthook install; fi",
-    "changeset:version": "bash scripts/changeset-version.sh"
+    "changeset:version": "pnpm exec changeset version && pnpm install --lockfile-only --no-frozen-lockfile"
   },
   "author": "js2me",
   "license": "MIT",
