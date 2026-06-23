@@ -10,6 +10,14 @@
   ],
   "author": "js2me",
   "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/js2me/mobx-view-model/issues"
+  },
+  "homepage": "https://github.com/js2me/mobx-view-model",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/js2me/mobx-view-model"
+  },
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
