@@ -23,15 +23,13 @@
     "example:ssr": "pnpm build && pnpm example:ssr:install && pnpm --dir examples/ssr-nextjs dev",
     "example:ssr:build": "pnpm build && pnpm example:ssr:build:example",
     "dev": "pnpm test:watch",
-    "dev:install-hooks": "if [ -z \"$CI\" ]; then lefthook install; fi",
-    "changeset:version": "pnpm exec changeset version && pnpm install --lockfile-only"
+    "dev:install-hooks": "if [ -z \"$CI\" ]; then lefthook install; fi"
   },
   "author": "js2me",
   "license": "MIT",
   "type": "module",
   "devDependencies": {
     "@biomejs/biome": "2.2.6",
-    "@changesets/changelog-github": "^0.6.0",
     "@changesets/cli": "^2.30.0",
     "@types/node": "^25.9.2",
     "@vitejs/plugin-react-swc": "^4.3.1",
