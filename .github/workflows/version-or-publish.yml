@@ -47,7 +47,7 @@ jobs:
         continue-on-error: false
         id: pub-or-release-pr
         with:
-          version: sh -c "pnpm exec changeset version && pnpm install --lockfile-only"
+          version: pnpm run changeset:version
           publish: pnpm exec sborshik ci
           createGithubReleases: false
         env:
