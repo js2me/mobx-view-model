@@ -48,7 +48,10 @@
     "magic-string": "^0.30.17",
     "mobx-view-model-devtools": "workspace:*"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "mobx-view-model": "workspace:*",
+    "mobx-view-model-react": "workspace:*"
+  },
   "peerDependencies": {
     "mobx-view-model": "^10.2.2",
     "mobx-view-model-react": "^10.2.2",
