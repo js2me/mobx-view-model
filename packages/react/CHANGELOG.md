@@ -1,5 +1,19 @@
 # mobx-view-model-react
 
+## 10.3.0
+
+### Minor Changes
+
+- 3bd28fa: new React HOC `withPropsViewModel` (same as `withViewModel` but sugar for props)
+
+### Patch Changes
+
+- 3bd28fa: [internal] update pnpm to latest for internal builds
+- 3bd28fa: update yummies to latest (better tree shaking)
+- Updated dependencies [3bd28fa]
+- Updated dependencies [3bd28fa]
+  - mobx-view-model@10.2.3
+
 ## 10.2.2
 
 ### Patch Changes

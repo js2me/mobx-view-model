@@ -1,5 +1,17 @@
 # mobx-view-model-vite-plugin
 
+## 2.0.0
+
+### Patch Changes
+
+- 3bd28fa: [internal] update pnpm to latest for internal builds
+- Updated dependencies [3bd28fa]
+- Updated dependencies [3bd28fa]
+- Updated dependencies [3bd28fa]
+  - mobx-view-model-devtools@0.1.3
+  - mobx-view-model-react@10.3.0
+  - mobx-view-model@10.2.3
+
 ## 1.4.2
 
 ### Patch Changes
