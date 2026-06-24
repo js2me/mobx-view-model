@@ -6,7 +6,7 @@
     "prepare": "pnpm dev:install-hooks",
     "clean": "pnpm -r --filter './packages/*' run clean",
     "lint:check": "pnpm exec biome check --write --no-errors-on-unmatched --files-ignore-unknown=true packages",
-    "check": "pnpm run lint:check && pnpm -r run check",
+    "check": "pnpm run lint:check && pnpm --filter mobx-view-model --filter mobx-view-model-react run build && pnpm -r run check",
     "prebuild": "pnpm run clean",
     "build": "pnpm --filter mobx-view-model-react run build && pnpm --filter mobx-view-model run build && pnpm --filter mobx-view-model-devtools run build && pnpm --filter mobx-view-model-vite-plugin run build",
     "build:watch": "pnpm -r --filter './packages/*' run build:watch",

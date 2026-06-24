@@ -35,14 +35,14 @@
   "scripts": {
     "clean": "rimraf dist",
     "check": "tsc --noEmit --project tsconfig.check.json",
-    "build": "cross-env NODE_ENV=development tsx scripts/build",
-    "build:prod": "tsc --noEmit --project tsconfig.check.json && cross-env NODE_ENV=production tsx scripts/build",
-    "build:dev-global-only": "cross-env NODE_ENV=development GLOBAL_ONLY=true tsx scripts/build",
-    "build:watch": "nodemon --watch src --delay 600ms --ext ts,tsx,css --exec \"pnpm build\"",
-    "build:watch-global-only": "nodemon --watch src --delay 600ms --ext ts,tsx,css --exec \"pnpm build:dev-global-only\"",
+    "build:dev": "cross-env NODE_ENV=development tsx scripts/build",
+    "build": "tsc --noEmit --project tsconfig.check.json && cross-env NODE_ENV=production tsx scripts/build",
+    "build:dev:global-only": "cross-env NODE_ENV=development GLOBAL_ONLY=true tsx scripts/build",
+    "build:dev:watch": "nodemon --watch src --delay 600ms --ext ts,tsx,css --exec \"pnpm build:dev\"",
+    "build:dev:watch-global-only": "nodemon --watch src --delay 600ms --ext ts,tsx,css --exec \"pnpm build:dev:global-only\"",
     "serve": "pnpm exec http-server dist -p 15000",
     "build:watch-server": "nodemon --watch src --delay 600ms --ext ts,tsx,css --exec \"pnpm build && pnpm serve\"",
-    "build:watch-server-global-only": "nodemon --watch src --delay 600ms --ext ts,tsx,css --exec \"pnpm build:dev-global-only && pnpm serve\""
+    "build:watch-server-global-only": "nodemon --watch src --delay 600ms --ext ts,tsx,css --exec \"pnpm build:dev:global-only && pnpm serve\""
   },
   "dependencies": {
     "@gravity-ui/icons": "^2.18.0",
