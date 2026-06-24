@@ -27,8 +27,8 @@ importers:
         specifier: ^19.1.0
         version: 19.2.4(react@19.2.4)
       yummies:
-        specifier: ^7.14.2
-        version: 7.14.2(mobx@6.15.0)(react@19.2.4)
+        specifier: ^7.20.1
+        version: 7.20.1(mobx@6.15.0)(react@19.2.4)
     devDependencies:
       '@tailwindcss/postcss':
         specifier: ^4.2.2
@@ -617,19 +617,8 @@ packages:
     peerDependencies:
       react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
 
-  yummies@7.14.2:
-    resolution: {integrity: sha512-a9+jjV7nDTrgw8VbuqBEDRfl5H3e5FB1YKUA0jwOsrJma+UaGjfrZfGhmgBfier2cUaRNiBp0H0IBuMxE+xq2g==}
-    peerDependencies:
-      mobx: ^6.12.4
-      react: ^18 || ^19
-    peerDependenciesMeta:
-      mobx:
-        optional: true
-      react:
-        optional: true
-
-  yummies@7.15.0:
-    resolution: {integrity: sha512-DA7VasFg3BiVi9e9eZowTeZvsr4c8GZSUSDRDKPQ7MyK6HeVQDKlkokkvCvIQ3S3skZY035owxlgaxd2Wgix7g==}
+  yummies@7.20.1:
+    resolution: {integrity: sha512-H/AxRy+SjVlfpeI0TkiVkU/M2n+XpR1XGt5yS5r7GsP9Iz3mr17dbq9DLW18PmMlyKO78+yvH/9Z9VAnVuV3og==}
     peerDependencies:
       mobx: ^6.12.4
       react: ^18 || ^19
@@ -971,7 +960,7 @@ snapshots:
   mobx-view-model@file:../../dist(mobx-react-lite@4.1.1(mobx@6.15.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(mobx@6.15.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
     dependencies:
       mobx: 6.15.0
-      yummies: 7.15.0(mobx@6.15.0)(react@19.2.4)
+      yummies: 7.20.1(mobx@6.15.0)(react@19.2.4)
     optionalDependencies:
       mobx-react-lite: 4.1.1(mobx@6.15.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       react: 19.2.4
@@ -1087,26 +1076,14 @@ snapshots:
     dependencies:
       react: 19.2.4
 
-  yummies@7.14.2(mobx@6.15.0)(react@19.2.4):
+  yummies@7.20.1(mobx@6.15.0)(react@19.2.4):
     dependencies:
       class-variance-authority: 0.7.1
       clsx: 2.1.1
-      dayjs: 1.11.20
-      dompurify: 3.3.3
-      nanoid: 5.1.7
-      tailwind-merge: 3.5.0
-    optionalDependencies:
-      mobx: 6.15.0
-      react: 19.2.4
-
-  yummies@7.15.0(mobx@6.15.0)(react@19.2.4):
-    dependencies:
-      class-variance-authority: 0.7.1
-      clsx: 2.1.1
-      dayjs: 1.11.20
-      dompurify: 3.3.3
-      nanoid: 5.1.7
-      tailwind-merge: 3.5.0
+      dayjs: 1.11.21
+      dompurify: 3.4.11
+      nanoid: 5.1.15
+      tailwind-merge: 3.6.0
     optionalDependencies:
       mobx: 6.15.0
       react: 19.2.4

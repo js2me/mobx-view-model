@@ -20,7 +20,7 @@
     "mobx-view-model-react": "workspace:*",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
-    "yummies": "^7.14.2"
+    "yummies": "^7.20.1"
   },
   "devDependencies": {
     "@tailwindcss/cli": "^4.1.14",

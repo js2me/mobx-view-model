@@ -63,6 +63,22 @@ function getBasedReactVersion<T>(values: { 18: T; 19: T }): T {
   return values[reactMajorVersion] ?? values[18];
 }
 
+/**
+ * Expected `View` render count when:
+ * - view is wrapped in `observer()`
+ * - view reads `model.payload` in JSX
+ * - parent triggers 3 payload updates + 3 `forceUpdate` clicks
+ *
+ * React 19 runs extra renders in the ConnectedViewModel + observer chain.
+ */
+const EXPECTED_RERENDERS_OBSERVER_VIEW_WITH_PAYLOAD_IN_VIEW =
+  getBasedReactVersion({
+    // 1 mount + 3 payload-driven observer updates (forceUpdate does not rerender view)
+    18: 4,
+    // React 19: additional rerenders from ConnectedViewModel observer wrapper
+    19: 7,
+  });
+
 describe('withViewModel', () => {
   test('renders', async () => {
     class VM extends ViewModelBaseMock {
@@ -999,10 +1015,7 @@ describe('withViewModel', () => {
       fireEvent.click(incrementButton);
 
       expect(View).toHaveBeenCalledTimes(
-        getBasedReactVersion({
-          18: 4,
-          19: 7,
-        }),
+        EXPECTED_RERENDERS_OBSERVER_VIEW_WITH_PAYLOAD_IN_VIEW,
       );
     });
 
@@ -1116,10 +1129,8 @@ describe('withViewModel', () => {
     test('View should have actual payload state (default isPayloadEqual + observer view wrap() + render payload in view)', async () => {
       await createTestPayloadChanges({
         expectedCounterInPayload: 3,
-        expectedRerendersCountInVMComponentView: getBasedReactVersion({
-          18: 4,
-          19: 7,
-        }),
+        expectedRerendersCountInVMComponentView:
+          EXPECTED_RERENDERS_OBSERVER_VIEW_WITH_PAYLOAD_IN_VIEW,
         wrapViewInObserver: true,
         renderPayloadInView: true,
       });
@@ -1146,10 +1157,8 @@ describe('withViewModel', () => {
       await createTestPayloadChanges({
         vmConfig: { comparePayload: 'strict' },
         expectedCounterInPayload: 3,
-        expectedRerendersCountInVMComponentView: getBasedReactVersion({
-          18: 4,
-          19: 7,
-        }),
+        expectedRerendersCountInVMComponentView:
+          EXPECTED_RERENDERS_OBSERVER_VIEW_WITH_PAYLOAD_IN_VIEW,
         wrapViewInObserver: true,
         renderPayloadInView: true,
       });
@@ -1176,10 +1185,8 @@ describe('withViewModel', () => {
       await createTestPayloadChanges({
         vmConfig: { comparePayload: 'shallow' },
         expectedCounterInPayload: 3,
-        expectedRerendersCountInVMComponentView: getBasedReactVersion({
-          18: 4,
-          19: 7,
-        }),
+        expectedRerendersCountInVMComponentView:
+          EXPECTED_RERENDERS_OBSERVER_VIEW_WITH_PAYLOAD_IN_VIEW,
         wrapViewInObserver: true,
         renderPayloadInView: true,
       });
@@ -1206,10 +1213,8 @@ describe('withViewModel', () => {
       await createTestPayloadChanges({
         vmConfig: { comparePayload: false },
         expectedCounterInPayload: 3,
-        expectedRerendersCountInVMComponentView: getBasedReactVersion({
-          18: 4,
-          19: 7,
-        }),
+        expectedRerendersCountInVMComponentView:
+          EXPECTED_RERENDERS_OBSERVER_VIEW_WITH_PAYLOAD_IN_VIEW,
         wrapViewInObserver: true,
         renderPayloadInView: true,
       });
@@ -1236,10 +1241,8 @@ describe('withViewModel', () => {
       await createTestPayloadChanges({
         vmConfig: { comparePayload: comparer.shallow },
         expectedCounterInPayload: 3,
-        expectedRerendersCountInVMComponentView: getBasedReactVersion({
-          18: 4,
-          19: 7,
-        }),
+        expectedRerendersCountInVMComponentView:
+          EXPECTED_RERENDERS_OBSERVER_VIEW_WITH_PAYLOAD_IN_VIEW,
         wrapViewInObserver: true,
         renderPayloadInView: true,
       });
@@ -1266,10 +1269,8 @@ describe('withViewModel', () => {
       await createTestPayloadChanges({
         vmConfig: { comparePayload: comparer.structural },
         expectedCounterInPayload: 3,
-        expectedRerendersCountInVMComponentView: getBasedReactVersion({
-          18: 4,
-          19: 7,
-        }),
+        expectedRerendersCountInVMComponentView:
+          EXPECTED_RERENDERS_OBSERVER_VIEW_WITH_PAYLOAD_IN_VIEW,
         wrapViewInObserver: true,
         renderPayloadInView: true,
       });
@@ -1296,10 +1297,8 @@ describe('withViewModel', () => {
       await createTestPayloadChanges({
         vmConfig: { comparePayload: comparer.identity },
         expectedCounterInPayload: 3,
-        expectedRerendersCountInVMComponentView: getBasedReactVersion({
-          18: 4,
-          19: 7,
-        }),
+        expectedRerendersCountInVMComponentView:
+          EXPECTED_RERENDERS_OBSERVER_VIEW_WITH_PAYLOAD_IN_VIEW,
         wrapViewInObserver: true,
         renderPayloadInView: true,
       });
@@ -1326,10 +1325,8 @@ describe('withViewModel', () => {
       await createTestPayloadChanges({
         vmConfig: { comparePayload: comparer.default },
         expectedCounterInPayload: 3,
-        expectedRerendersCountInVMComponentView: getBasedReactVersion({
-          18: 4,
-          19: 7,
-        }),
+        expectedRerendersCountInVMComponentView:
+          EXPECTED_RERENDERS_OBSERVER_VIEW_WITH_PAYLOAD_IN_VIEW,
         wrapViewInObserver: true,
         renderPayloadInView: true,
       });
@@ -2518,6 +2515,39 @@ describe('withViewModel', () => {
 
       const screen = await act(async () => render(<TestApp />));
       expect(screen.getByText('vmc2')).toBeDefined();
+    });
+
+    describe('ViewModelProps', () => {
+      it('default TForwardedRef (unknown) exposes only model', () => {
+        class YourVM extends ViewModelBase {}
+
+        type Props = ViewModelProps<YourVM>;
+
+        expectTypeOf<Props>().toEqualTypeOf<{ model: YourVM }>();
+        expectTypeOf<Props>().not.toHaveProperty('forwardedRef');
+      });
+
+      it('TForwardedRef any adds optional forwardedRef', () => {
+        class YourVM extends ViewModelBase {}
+
+        type Props = ViewModelProps<YourVM, any>;
+
+        expectTypeOf<Props['model']>().toEqualTypeOf<YourVM>();
+        expectTypeOf<Props['forwardedRef']>().toEqualTypeOf<
+          React.ForwardedRef<any> | undefined
+        >();
+      });
+
+      it('concrete TForwardedRef adds typed optional forwardedRef', () => {
+        class YourVM extends ViewModelBase {}
+
+        type Props = ViewModelProps<YourVM, HTMLDivElement>;
+
+        expectTypeOf<Props['model']>().toEqualTypeOf<YourVM>();
+        expectTypeOf<Props['forwardedRef']>().toEqualTypeOf<
+          React.ForwardedRef<HTMLDivElement> | undefined
+        >();
+      });
     });
   });
 

@@ -12,7 +12,7 @@ slug: /react/integration
 
 ## Import path `mobx-view-model-react`
 
-React integration APIs — [`withViewModel`](/react/api/with-view-model), [`useCreateViewModel`](/react/api/use-create-view-model), [`useViewModel`](/react/api/use-view-model), [`ViewModelsProvider`](/react/api/view-models-provider), [`OnlyViewModel`](/react/api/only-view-model), and related types such as `ViewModelProps` — are published under the **`mobx-view-model-react`** subpath.
+React integration APIs — [`withViewModel`](/react/api/with-view-model), [`withPropsViewModel`](/react/api/with-props-view-model), [`useCreateViewModel`](/react/api/use-create-view-model), [`useViewModel`](/react/api/use-view-model), [`ViewModelsProvider`](/react/api/view-models-provider), [`OnlyViewModel`](/react/api/only-view-model), and related types such as `ViewModelProps` — are published under the **`mobx-view-model-react`** subpath.
 
 Keep importing view-model classes, stores, and global configuration from **`mobx-view-model`**:
 
@@ -27,8 +27,9 @@ Integration consists of **2-3 steps**.
 
 ## 1. Connect ViewModel with View 
 Your [ViewModel](/api/view-models/interface) should be connected to a React view component.  
-To achieve this you can use:  
-- [`withViewModel()` HOC](/react/api/with-view-model) - recommended way  
+To achieve this you can use:
+- [`withViewModel()` HOC](/react/api/with-view-model) - recommended way
+- [`withPropsViewModel()` HOC](/react/api/with-props-view-model) - same as `withViewModel`, but all component props become `payload` (no `payload` prop)
 - [`useCreateViewModel()` hook](/react/api/use-create-view-model) - simplest way, more performant in many cases  
 
 ## 2. Render in React tree   

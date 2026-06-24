@@ -2,3 +2,12 @@ packages:
   - 'packages/*'
   - 'examples/*'
   - 'docs'
+allowBuilds:
+  '@parcel/watcher': true
+  '@swc/core': true
+  esbuild: true
+  lefthook: true
+  sharp: false
+minimumReleaseAgeExclude:
+  - mobx-view-model-react@10.2.2
+  - mobx-view-model@10.2.2

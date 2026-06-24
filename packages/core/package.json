@@ -45,7 +45,7 @@
   },
   "dependencies": {
     "mobx-view-model-react": "workspace:^10.2.2",
-    "yummies": "^7.10.0"
+    "yummies": "^7.20.1"
   },
   "peerDependencies": {
     "mobx": "^6.12.4",

@@ -151,6 +151,10 @@ const config = defineDocsVitepressConfig(configs, {
                 link: '/react/api/with-view-model',
               },
               {
+                text: 'withPropsViewModel',
+                link: '/react/api/with-props-view-model',
+              },
+              {
                 text: 'ViewModelsProvider',
                 link: '/react/api/view-models-provider',
               },

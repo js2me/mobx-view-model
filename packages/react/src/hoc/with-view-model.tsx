@@ -33,7 +33,7 @@ import {
   RReactNode,
 } from '../lib/react-types.js';
 
-type FixedComponentType<P extends AnyObject = {}> =
+export type FixedComponentType<P extends AnyObject = {}> =
   /**
    * Fixes typings loss with use `withViewModel` with inline function component
    */
@@ -63,7 +63,7 @@ export type ViewModelProps<
     ? { model: VM }
     : { model: VM; forwardedRef?: RForwardedRef<TForwardedRef> };
 
-type ViewModelPropsChargedProps<
+export type ViewModelPropsChargedProps<
   TComponentOriginProps extends AnyObject,
   TViewModel,
   TForwardedRef = unknown,
