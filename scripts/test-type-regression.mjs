@@ -146,30 +146,37 @@ for (const { dir: fixtureDir, label } of consumerFixtures) {
     'mobx-view-model': coreTarball,
     'mobx-view-model-react': reactTarball,
   };
-  fixturePackageJson.pnpm = {
-    ...(fixturePackageJson.pnpm ?? {}),
-    overrides: {
-      ...(fixturePackageJson.pnpm?.overrides ?? {}),
-      // Transitive dep from packed mobx-view-model-react (semver ^x.y.z) must not
-      // hit the registry — CI often runs before that version is published.
-      'mobx-view-model': coreTarball,
-      'mobx-view-model-react': reactTarball,
-    },
-  };
   writeFileSync(
     fixturePackageJsonPath,
     `${JSON.stringify(fixturePackageJson, null, 2)}\n`,
   );
 
+  const fixtureWorkspaceYamlPath = join(fixtureDir, 'pnpm-workspace.yaml');
+  const fixtureWorkspaceYamlSource = readFileSync(
+    fixtureWorkspaceYamlPath,
+    'utf8',
+  );
+  writeFileSync(
+    fixtureWorkspaceYamlPath,
+    `packages:
+  - .
+minimumReleaseAgeExclude:
+  - mobx-view-model-react@${reactPackageJson.version}
+  - mobx-view-model@${corePackageJson.version}
+overrides:
+  mobx-view-model: ${JSON.stringify(coreTarball)}
+  mobx-view-model-react: ${JSON.stringify(reactTarball)}
+`,
+  );
+
   try {
-    run('pnpm', ['install', '--ignore-workspace', '--no-frozen-lockfile'], {
+    run('pnpm', ['install', '--no-frozen-lockfile'], {
       cwd: fixtureDir,
     });
 
     const tscResult = run(
       'pnpm',
       [
-        '--ignore-workspace',
         'exec',
         'tsc',
         '--noEmit',
@@ -232,6 +239,7 @@ for (const { dir: fixtureDir, label } of consumerFixtures) {
     console.log(`[${label}] Consumer type regression check passed (green-state)`);
   } finally {
     writeFileSync(fixturePackageJsonPath, fixturePackageJsonSource);
+    writeFileSync(fixtureWorkspaceYamlPath, fixtureWorkspaceYamlSource);
   }
 }
 

@@ -3,6 +3,8 @@ clean:
 	rm -rf node_modules && \
 	rm -rf ./examples/**/node_modules && \
 	rm -rf ./packages/**/node_modules && \
+	rm -rf ./tests/**/node_modules && \
+	rm -rf ./tests/**/*/node_modules && \
 	rm -rf ./examples/**/dist && \
 	rm -rf ./packages/**/dist && \
 	rm -rf ./docs/.vitepress/dist && \
