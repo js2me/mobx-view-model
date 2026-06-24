@@ -8,13 +8,11 @@
   min-width: 325px;
   min-height: 250px;
   box-shadow: 0 3px 6px #0000001f;
-  transition: 250ms ease;
-  transition-property: opacity, box-shadow;
+  transition: none;
 
   &.dragging,
   &.resizing {
     opacity: 0.8;
-    box-shadow: 0 5px 20px #00000066;
   }
 
   &.dragging {
