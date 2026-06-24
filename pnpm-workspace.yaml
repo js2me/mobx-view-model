@@ -2,6 +2,11 @@ packages:
   - 'packages/*'
   - 'examples/*'
   - 'docs'
+autoInstallPeers: false
+linkWorkspacePackages: true
+preferWorkspacePackages: true
+shamefullyHoist: true
+frozenLockfile: false
 allowBuilds:
   '@parcel/watcher': true
   '@swc/core': true

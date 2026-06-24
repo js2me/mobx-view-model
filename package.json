@@ -25,7 +25,7 @@
     "example:ssr:build": "pnpm build && pnpm example:ssr:build:example",
     "dev": "pnpm test:watch",
     "dev:install-hooks": "if [ -z \"$CI\" ]; then lefthook install; fi",
-    "version-packages": "pnpm exec changeset version && pnpm install --lockfile-only --config.auto-install-peers=false"
+    "version-packages": "pnpm exec changeset version && pnpm install --lockfile-only"
   },
   "author": "js2me",
   "license": "MIT",
