@@ -1,5 +1,15 @@
 # mobx-view-model-devtools
 
+## 0.1.3
+
+### Patch Changes
+
+- 3bd28fa: [internal] update pnpm to latest for internal builds
+- 3bd28fa: update yummies to latest (better tree shaking)
+- Updated dependencies [3bd28fa]
+- Updated dependencies [3bd28fa]
+  - mobx-view-model@10.2.3
+
 ## 0.1.2
 
 ### Patch Changes
