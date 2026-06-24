@@ -1,0 +1,3 @@
+minimumReleaseAgeExclude:
+  - mobx-view-model-react@10.2.2
+  - mobx-view-model@10.2.2
