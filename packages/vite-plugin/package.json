@@ -1,6 +1,6 @@
 {
   "name": "mobx-view-model-vite-plugin",
-  "version": "1.4.2",
+  "version": "1.4.3",
   "description": "Vite 8 plugin for mobx-view-model — smart HMR and auto displayName for observer components",
   "keywords": [
     "hmr",
