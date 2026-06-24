@@ -5,8 +5,7 @@ export default defineLibViteConfig(
   ConfigsManager.create(process.cwd(), { tsconfigName: 'tsconfig.build' }),
   {
     omitStrangeExportEntries: true,
-    distExtraFilesRoot: '../..',
-    distExtraFilesNames: ['LICENSE', 'README.md'],
+    distExtraFiles: [{ from: '../../LICENSE' }],
     rewritePackagePaths: true,
     externalDeps: [
       'node:module',

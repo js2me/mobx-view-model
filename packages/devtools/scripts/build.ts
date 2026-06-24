@@ -209,8 +209,7 @@ const main = async () => {
     configs,
     ignoredModuleNamesForExport: ['auto.global'],
     omitStrangeExportEntries: true,
-    distExtraFilesRoot: '../..',
-    distExtraFilesNames: ['LICENSE', 'README.md'],
+    distExtraFiles: [{ from: '../../LICENSE' }],
     rewritePackagePaths: true,
   });
 
