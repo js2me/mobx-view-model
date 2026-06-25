@@ -18,10 +18,10 @@ _Example with integration mobx-tanstack-query with mobx-view-model_
 Links:
   - Source: https://github.com/js2me/mobx-tanstack-query-mvvm-example 
 
-## mobx-tanstack-query-mvvm-example   
-_Example with integration mobx-tanstack-query with mobx-view-model_  
+## githome   
+_Mini electron app for working with gitlab_  
 Links:
-  - Source: https://github.com/js2me/mobx-tanstack-query-mvvm-example 
+  - Source: https://github.com/js2me/githome
 
 ## **GitlabActivityAnalyzer**  
 _Links_:
