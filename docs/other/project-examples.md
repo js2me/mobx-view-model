@@ -11,7 +11,12 @@ _Links_ (source tree: [`mobx-view-model`](https://github.com/js2me/mobx-view-mod
 
 ## **GOZON (product marketplace)**  
 _Links_:  
-  - Source: https://github.com/js2me/gozon — **Express** + SSR (`react-dom/server`, client hydration), `RootStore` / `withRootStoreProps` / `withViewModel` — a fuller app than the in-repo [`examples/ssr-expressjs`](https://github.com/js2me/mobx-view-model/tree/master/examples/ssr-expressjs) sample.  
+  - Source: https://github.com/js2me/gozon — **Express** + SSR (`react-dom/server`, client hydration).
+
+## mobx-tanstack-query-mvvm-example   
+_Example with integration mobx-tanstack-query with mobx-view-model_  
+Links:
+  - Source: https://github.com/js2me/mobx-tanstack-query-mvvm-example 
 
 ## mobx-tanstack-query-mvvm-example   
 _Example with integration mobx-tanstack-query with mobx-view-model_  
