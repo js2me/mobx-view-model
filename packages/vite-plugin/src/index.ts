@@ -27,6 +27,26 @@ const MOBX_VM_IMPORT_RE = /from\s+['"]mobx-view-model(?:\/react|\/core)?['"]/;
 
 const DEFAULT_OBSERVER_SOURCES = ['mobx-react-lite', 'mobx-react'];
 
+/**
+ * Resolves a package to its ESM entry point using the plugin's own
+ * node_modules context. This is needed because the virtual runtime module
+ * has no resolution context — Vite can't follow bare imports from it.
+ */
+function resolveEsmEntry(bareImport: string): string | undefined {
+  try {
+    const cjsPath = _require.resolve(bareImport);
+    const pkgDir = dirname(cjsPath);
+    const pkgJson = JSON.parse(
+      fs.readFileSync(join(pkgDir, 'package.json'), 'utf8'),
+    );
+    const esmEntry =
+      pkgJson.exports?.['.']?.import ?? pkgJson.module ?? 'index.js';
+    return join(pkgDir, esmEntry);
+  } catch {
+    return undefined;
+  }
+}
+
 export function mobxVmVitePlugin(options?: MobxVmVitePluginOptions): Plugin {
   const hmr = options?.hmr ?? true;
   const autoDisplayName = options?.autoDisplayName ?? true;
@@ -46,6 +66,26 @@ export function mobxVmVitePlugin(options?: MobxVmVitePluginOptions): Plugin {
   return {
     name: PLUGIN_NAME,
 
+    config() {
+      // Force Vite to always resolve these packages from the project root,
+      // preventing pnpm's nested node_modules from creating duplicate
+      // instances. A single MobX instance is critical — two separate copies
+      // break reactivity (the devtools' computed properties can't observe
+      // observables created by the app's MobX).
+      return {
+        resolve: {
+          dedupe: [
+            'mobx',
+            'mobx-view-model',
+            'mobx-view-model-react',
+            'react',
+            'react-dom',
+            'mobx-react-lite',
+          ],
+        },
+      };
+    },
+
     configResolved(config) {
       isProduction = config.command === 'build';
       _root = config.root;
@@ -55,26 +95,27 @@ export function mobxVmVitePlugin(options?: MobxVmVitePluginOptions): Plugin {
       if (id === RUNTIME_MODULE_ID) {
         return RUNTIME_MODULE_RESOLVED;
       }
-      // Resolve devtools when imported from the virtual runtime module
-      // (which has no resolution context). We must resolve the ESM entry
-      // (not CJS) because the virtual module uses named imports.
+      // Resolve devtools and its external deps when imported from the virtual
+      // runtime module (which has no resolution context). We must resolve the
+      // ESM entry (not CJS) because the virtual module uses named imports.
       // pnpm isolates deps, so this.resolve(id, root) fails — the package
       // is only accessible from the plugin's own node_modules context.
       // We use createRequire (which resolves from the plugin's location)
       // to find the CJS path, then read the adjacent package.json to
       // determine the correct ESM entry point.
-      if (
-        id === 'mobx-view-model-devtools' &&
-        importer === RUNTIME_MODULE_RESOLVED
-      ) {
-        const cjsPath = _require.resolve('mobx-view-model-devtools');
-        const pkgDir = dirname(cjsPath);
-        const pkgJson = JSON.parse(
-          fs.readFileSync(join(pkgDir, 'package.json'), 'utf8'),
-        );
-        const esmEntry =
-          pkgJson.exports?.['.']?.import ?? pkgJson.module ?? 'index.js';
-        return join(pkgDir, esmEntry);
+      if (importer === RUNTIME_MODULE_RESOLVED) {
+        // mobx-view-model-devtools
+        if (id === 'mobx-view-model-devtools') {
+          return resolveEsmEntry(id);
+        }
+        // mobx-view-model (imported by the runtime module)
+        if (id === 'mobx-view-model') {
+          return resolveEsmEntry(id);
+        }
+        // mobx — needed by the bridge autorun to observe the host's store
+        if (id === 'mobx') {
+          return resolveEsmEntry(id);
+        }
       }
     },
 

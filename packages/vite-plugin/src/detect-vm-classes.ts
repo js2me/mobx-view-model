@@ -6,6 +6,81 @@ import type { VMClassInfo } from './types.js';
 const MOBX_VM_IMPORT_RE = /from\s+['"]mobx-view-model(?:\/react|\/core)?['"]/;
 
 /**
+ * Collapses generic type parameters (<...>) into a single line so that
+ * class declarations spanning multiple lines can be matched by regex.
+ * e.g. "class VM<\n  Payload,\n> extends ViewModelBase" →
+ *      "class VM<Payload,> extends ViewModelBase"
+ */
+function collapseGenerics(code: string): string {
+  let result = '';
+  let i = 0;
+  while (i < code.length) {
+    if (code[i] !== '<') {
+      result += code[i];
+      i++;
+      continue;
+    }
+
+    // Try to find the matching '>' for this '<', handling nested <> and
+    // skipping balanced {} / () / [] blocks and string literals inside.
+    let depth = 0;
+    let j = i;
+    let found = false;
+
+    while (j < code.length) {
+      const ch = code[j];
+      if (ch === '<') {
+        depth++;
+        j++;
+      } else if (ch === '>') {
+        depth--;
+        if (depth === 0) {
+          found = true;
+          break;
+        }
+        j++;
+      } else if (ch === '{' || ch === '(' || ch === '[') {
+        const close = ch === '{' ? '}' : ch === '(' ? ')' : ']';
+        let innerDepth = 1;
+        j++;
+        while (j < code.length && innerDepth > 0) {
+          if (code[j] === ch) innerDepth++;
+          else if (code[j] === close) innerDepth--;
+          j++;
+        }
+      } else if (ch === '"' || ch === "'" || ch === '`') {
+        const quote = ch;
+        j++;
+        while (j < code.length) {
+          if (code[j] === '\\') {
+            j += 2;
+            continue;
+          }
+          if (code[j] === quote) {
+            j++;
+            break;
+          }
+          j++;
+        }
+      } else {
+        j++;
+      }
+    }
+
+    if (found) {
+      const generic = code.slice(i, j + 1);
+      result += generic.replace(/\s+/g, ' ');
+      i = j + 1;
+    } else {
+      // No matching '>' — treat '<' as a comparison operator
+      result += code[i];
+      i++;
+    }
+  }
+  return result;
+}
+
+/**
  * Imported VM class from another file — local name and its type.
  */
 export type ImportedVmClass = { localName: string; type: VMClassInfo['type'] };
@@ -27,12 +102,17 @@ export function detectViewModelClasses(
     return [];
   }
 
+  // Collapse generic type parameters to single lines so that multi-line
+  // class declarations like `class VM<\n  Payload,\n> extends ViewModelBase`
+  // can be matched by the line-oriented regexes below.
+  const flatCode = collapseGenerics(code);
+
   const classes: VMClassInfo[] = [];
 
   // class X extends ViewModelBase
-  const extendsBaseRe = /class\s+(\w+)\s+extends\s+\w*ViewModelBase\b/g;
+  const extendsBaseRe = /class\s+(\w+)(?:\s*<[^>]*?>)?\s+extends\s+\w*ViewModelBase\b/g;
   let match: RegExpExecArray | null;
-  while ((match = extendsBaseRe.exec(code)) !== null) {
+  while ((match = extendsBaseRe.exec(flatCode)) !== null) {
     classes.push({
       name: match[1],
       type: 'ViewModelBase',
@@ -41,8 +121,8 @@ export function detectViewModelClasses(
   }
 
   // class X extends ViewModelSimple
-  const extendsSimpleRe = /class\s+(\w+)\s+extends\s+\w*ViewModelSimple\b/g;
-  while ((match = extendsSimpleRe.exec(code)) !== null) {
+  const extendsSimpleRe = /class\s+(\w+)(?:\s*<[^>]*?>)?\s+extends\s+\w*ViewModelSimple\b/g;
+  while ((match = extendsSimpleRe.exec(flatCode)) !== null) {
     if (!classes.some((c) => c.name === match![1])) {
       classes.push({
         name: match[1],
@@ -54,8 +134,8 @@ export function detectViewModelClasses(
 
   // class X implements ... ViewModel ...
   const implementsVMRe =
-    /class\s+(\w+)[^;{]*?\bimplements\b[^{]*?\bViewModel\b(?!Simple|Base)/g;
-  while ((match = implementsVMRe.exec(code)) !== null) {
+    /class\s+(\w+)(?:\s*<[^>]*?>)?[^;{]*?\bimplements\b[^{]*?\bViewModel\b(?!Simple|Base)/g;
+  while ((match = implementsVMRe.exec(flatCode)) !== null) {
     // Avoid duplicating if already found via extends ViewModelBase
     if (!classes.some((c) => c.name === match![1])) {
       classes.push({
@@ -68,8 +148,8 @@ export function detectViewModelClasses(
 
   // class X implements ... ViewModelSimple ...
   const implementsSimpleRe =
-    /class\s+(\w+)[^;{]*?\bimplements\b[^{]*?\bViewModelSimple\b/g;
-  while ((match = implementsSimpleRe.exec(code)) !== null) {
+    /class\s+(\w+)(?:\s*<[^>]*?>)?[^;{]*?\bimplements\b[^{]*?\bViewModelSimple\b/g;
+  while ((match = implementsSimpleRe.exec(flatCode)) !== null) {
     if (!classes.some((c) => c.name === match![1])) {
       classes.push({
         name: match[1],
@@ -81,12 +161,12 @@ export function detectViewModelClasses(
 
   // class X extends SomeBase (where SomeBase was already detected as VM in this file
   // or is an imported VM class from another file)
-  const extendsAnyRe = /class\s+(\w+)\s+extends\s+(\w+)/g;
+  const extendsAnyRe = /class\s+(\w+)(?:\s*<[^>]*?>)?\s+extends\s+(\w+)/g;
   const knownNames = new Set(classes.map((c) => c.name));
   const importedByName = new Map(
     importedVmClasses.map((v) => [v.localName, v.type]),
   );
-  while ((match = extendsAnyRe.exec(code)) !== null) {
+  while ((match = extendsAnyRe.exec(flatCode)) !== null) {
     const [, className, baseName] = match;
     if (knownNames.has(className)) continue;
 

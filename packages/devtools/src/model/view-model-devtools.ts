@@ -1,6 +1,7 @@
 import {
   action,
   computed,
+  createAtom,
   makeObservable,
   type ObservableSet,
   observable,
@@ -93,7 +94,21 @@ export class ViewModelDevtools {
 
   anyCache = observable.map<string, any>();
 
+  /**
+   * Signaled by the host bridge (vite-plugin runtime or auto.global.ts)
+   * whenever the project store's viewModels map changes.
+   * Since the devtools bundles its own MobX, it can't observe the host's
+   * observables directly — so the host watches the map and calls
+   * reportChanged(), which allVms observes via reportObserved().
+   */
+  private _vmChangeAtom = createAtom('vmChange');
+
+  notifyVmChange() {
+    this._vmChangeAtom.reportChanged();
+  }
+
   get allVms() {
+    this._vmChangeAtom.reportObserved();
     const vmStore = this.projectVmStore as Maybe<ViewModelStoreBase>;
     const viewModelsMap =
       ((vmStore as any)?.viewModels as Map<string, AnyVM>) ?? new Map();
@@ -297,9 +312,21 @@ export class ViewModelDevtools {
     // this.expandedVmsMap.clear();
   }
 
+  private popupOpenCallbacks: Array<() => void> = [];
+  private popupCloseCallbacks: Array<() => void> = [];
+
+  onPopupOpen(cb: () => void) {
+    this.popupOpenCallbacks.push(cb);
+  }
+
+  onPopupClose(cb: () => void) {
+    this.popupCloseCallbacks.push(cb);
+  }
+
   showPopup() {
     this.isPopupOpened = true;
     this.expandAllVMs();
+    this.popupOpenCallbacks.forEach((cb) => cb());
   }
 
   get notifications() {
@@ -308,6 +335,7 @@ export class ViewModelDevtools {
 
   hidePopup() {
     this.isPopupOpened = false;
+    this.popupCloseCallbacks.forEach((cb) => cb());
   }
 
   private init() {

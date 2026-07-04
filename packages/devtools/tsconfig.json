@@ -28,6 +28,7 @@
   "exclude": [
     "*.mock.ts",
     "*.mock.tsx",
+    "**/*.test.ts"
   ],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

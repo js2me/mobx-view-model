@@ -305,4 +305,53 @@ describe('extractImportBindings', () => {
       { localName: 'Foo', importedName: 'Foo', source: './module' },
     ]);
   });
+
+  it('detects ViewModelBase with multi-line generic type params', () => {
+    const code = `
+import { ViewModelBase } from 'mobx-view-model';
+
+export class VM<
+  Payload extends AnyObject = EmptyObject,
+  ParentViewModel extends AnyViewModel | null = null,
+> extends ViewModelBase<Payload, ParentViewModel> {
+  constructor() { super(); }
+}`;
+    const classes = detectViewModelClasses(code);
+    expect(classes).toHaveLength(1);
+    expect(classes[0].name).toBe('VM');
+    expect(classes[0].type).toBe('ViewModelBase');
+  });
+
+  it('detects indirect inheritance with multi-line generics', () => {
+    const code = `
+import { VM } from './vm';
+
+export class HomeVM<
+  Payload = {},
+> extends VM<Payload> {
+  constructor() { super(); }
+}`;
+    const importedVmClasses: ImportedVmClass[] = [
+      { localName: 'VM', type: 'ViewModelBase' },
+    ];
+    const classes = detectViewModelClasses(code, importedVmClasses);
+    expect(classes).toHaveLength(1);
+    expect(classes[0].name).toBe('HomeVM');
+    expect(classes[0].type).toBe('ViewModelBase');
+  });
+
+  it('detects ViewModelSimple with multi-line generics', () => {
+    const code = `
+import { ViewModelSimple } from 'mobx-view-model';
+
+export class MyVM<
+  T = unknown,
+> extends ViewModelSimple<T> {
+  constructor() { super(); }
+}`;
+    const classes = detectViewModelClasses(code);
+    expect(classes).toHaveLength(1);
+    expect(classes[0].name).toBe('MyVM');
+    expect(classes[0].type).toBe('ViewModelSimple');
+  });
 });

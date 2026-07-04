@@ -8,6 +8,16 @@ export const RUNTIME_MODULE_RESOLVED = '\0mobx-view-model-vite-plugin/runtime';
  * via the official viewModelsConfig.hooks.storeCreate PubSub hook.
  * Exposes globalThis.__MOBX_VM_PLUGIN_STORES__ for HMR callbacks.
  * When devtools is enabled, also auto-connects mobx-view-model-devtools.
+ *
+ * ## Bridge pattern for MobX reactivity
+ *
+ * The devtools bundles its own copy of MobX, so its computed properties
+ * cannot observe the host app's ObservableMap (e.g. store.viewModels).
+ * To bridge the two MobX instances, the runtime module imports `autorun`
+ * from the HOST's `mobx` and sets up a reaction that watches the store's
+ * `viewModels` map. When the map changes, the reaction calls
+ * `devtools.notifyVmChange()`, which signals a MobX atom inside
+ * the devtools' own MobX — forcing `allVms` to re-read the map.
  */
 export function getRuntimeModuleSource(
   devtools?: boolean | DevtoolsConfig,
@@ -18,6 +28,10 @@ export function getRuntimeModuleSource(
 
   const devtoolsImport = devtoolsEnabled
     ? `import { ViewModelDevtools } from 'mobx-view-model-devtools';`
+    : '';
+
+  const mobxBridgeImport = devtoolsEnabled
+    ? `import { autorun } from 'mobx';`
     : '';
 
   const devtoolsSetup = devtoolsEnabled
@@ -40,6 +54,16 @@ const __devtoolsInternalCtor__ = __devtools__.vmStore.constructor;
 const __connectDevtools__ = (store) => {
   if (store.constructor !== __devtoolsInternalCtor__) {
     ViewModelDevtools.connectViewModels(store);
+    // Bridge: use the HOST's autorun to watch the store's viewModels map.
+    // When the map changes, notify the devtools so its own MobX
+    // computed (allVms) re-reads the latest values.
+    autorun(() => {
+      // Reading .size tracks additions/removals in the HOST's MobX.
+      // Iterating keys tracks key-level changes too.
+      void (store).viewModels?.size;
+      for (const _key of (store).viewModels?.keys() ?? []) { void _key; }
+      __devtools__.notifyVmChange();
+    });
   }
 };
 
@@ -57,6 +81,7 @@ if (__lastStoreBeforeDefine__) {
 
   return `import { viewModelsConfig } from 'mobx-view-model';
 ${devtoolsImport}
+${mobxBridgeImport}
 
 const __stores__ = [];
 

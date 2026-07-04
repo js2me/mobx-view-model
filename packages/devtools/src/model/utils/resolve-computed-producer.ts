@@ -3,6 +3,7 @@ import { PropertyListItem } from '../list-item/property-list-item';
 import { VMListItem } from '../list-item/vm-list-item';
 import type { ListItem } from '../list-item/list-item';
 import {
+  ensureMobxPropertyAtomLoaded,
   findMobxAdministration,
   getMobxComputedPropertyKeys,
   isMobxComputedProperty,
@@ -30,13 +31,29 @@ type ComputedProducerCandidate = {
   depth: number;
 };
 
+function isLiveMobxEditHost(value: unknown): value is object {
+  return !!value && typeof value === 'object' && !!findMobxAdministration(value);
+}
+
+function canEditPropertyDirectlyOnHost(host: object, propertyKey: string) {
+  const adm = ensureMobxPropertyAtomLoaded(host, propertyKey);
+
+  if (!adm) {
+    return false;
+  }
+
+  return adm.values_.has(propertyKey);
+}
+
 function isSameComputedSnapshot(
   computedValue: unknown,
   parentValue: unknown,
   editedKey: string,
 ): boolean {
   if (computedValue === parentValue) {
-    return true;
+    // @computedModel and similar patterns return the same live model instance;
+    // nested edits must target that instance, not replace the parent computed.
+    return !isLiveMobxEditHost(parentValue);
   }
 
   if (
@@ -90,7 +107,10 @@ function collectComputedProducerCandidates(
 
   while (current instanceof PropertyListItem && current.property != null) {
     const host = getPropertyOwnerHost(current);
-    addCandidate(host, current.property, depth);
+
+    if (!(depth === 0 && isLiveMobxEditHost(parentValue))) {
+      addCandidate(host, current.property, depth);
+    }
 
     for (const computedKey of getMobxComputedPropertyKeys(host)) {
       try {
@@ -284,9 +304,18 @@ export function resolveComputedProducerForEdit(
     return null;
   }
 
+  const parentValue = parentItem.data;
+
+  if (
+    isLiveMobxEditHost(parentValue) &&
+    canEditPropertyDirectlyOnHost(parentValue, propertyKey)
+  ) {
+    return null;
+  }
+
   const candidates = collectComputedProducerCandidates(
     parentItem,
-    parentItem.data,
+    parentValue,
     propertyKey,
   );
   const producer = pickBestComputedProducerCandidate(candidates);
