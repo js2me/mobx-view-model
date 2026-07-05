@@ -35,25 +35,23 @@ export const formatCopyableValue = (value: unknown): string => {
     return 'undefined';
   }
 
-  const valueType = typeof value;
-
-  if (valueType === 'string') {
+  if (typeof value === 'string') {
     return value;
   }
 
-  if (valueType === 'number' || valueType === 'boolean') {
+  if (typeof value === 'number' || typeof value === 'boolean') {
     return String(value);
   }
 
-  if (valueType === 'bigint') {
+  if (typeof value === 'bigint') {
     return `${String(value)}n`;
   }
 
-  if (valueType === 'symbol') {
+  if (typeof value === 'symbol') {
     return String(value);
   }
 
-  if (valueType === 'function') {
+  if (typeof value === 'function') {
     const fn = value as (...args: unknown[]) => unknown;
     return fn.name || 'anonymous';
   }
@@ -85,7 +83,7 @@ export const formatPropertyWatchValue = (value: unknown): string => {
     return JSON.stringify(value);
   }
 
-  if (valueType === 'number' || valueType === 'boolean') {
+  if (typeof value === 'number' || typeof value === 'boolean') {
     return String(value);
   }
 

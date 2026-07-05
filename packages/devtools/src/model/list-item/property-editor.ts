@@ -292,17 +292,7 @@ export class PropertyEditor {
   }
 
   private parseEditContent(): unknown {
-    const h = this.host;
     const content = this.editContent.trim();
-
-    if (
-      h.type === 'object' ||
-      h.type === 'array' ||
-      (h.collectionEntryKind != null &&
-        (h.nestedValueType === 'object' || h.nestedValueType === 'array'))
-    ) {
-      return JSON.parse(content);
-    }
 
     // biome-ignore lint/security/noGlobalEval: devtools edit field, same as function call args
     return eval(`(${content})`);
