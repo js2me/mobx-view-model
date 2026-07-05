@@ -55,6 +55,7 @@ export class ExtraListItem extends ListItem<AnyVM> {
     computed.struct(this, 'propertyListItems');
     makeObservable(this);
 
+    // ExtraListItem is always at depth 0 — safe to auto-expand.
     untracked(() => {
       if (!this.cache.has(this.expandKey)) {
         this.expand();

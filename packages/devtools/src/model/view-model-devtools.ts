@@ -6,6 +6,7 @@ import {
   type ObservableSet,
   observable,
   reaction,
+  untracked,
 } from 'mobx';
 import { Storage } from 'mobx-swiss-knife';
 import { colorScheme } from 'mobx-web-api';
@@ -63,9 +64,12 @@ export interface ViewModelDevtoolsConfig {
   buttonClassName?: string;
   extras?: AnyObject;
   display?: ViewModelDevtoolsDisplayConfig;
+  debug?: boolean;
 }
 
 export class ViewModelDevtools {
+  private readonly _debug: boolean;
+  private readonly _log: (...args: unknown[]) => void;
   isPopupOpened: boolean;
   displayType: string;
   vmStore: ViewModelStoreBase;
@@ -103,19 +107,50 @@ export class ViewModelDevtools {
    */
   private _vmChangeAtom = createAtom('vmChange');
 
+  /**
+   * Guard against re-entrant notifications.  When the devtools
+   * re-renders after notifyVmChange(), it reads VM property values
+   * via Reflect.get().  If a VM getter lazily creates a child VM,
+   * the host's viewModels map changes, the bridge reaction fires,
+   * and notifyVmChange() is called again — inside the current
+   * render cycle.  The re-entrant call is redundant because the
+   * atom was already signaled, so we skip it.
+   */
+  private _isNotifyingVmChange = false;
+
   notifyVmChange() {
-    this._vmChangeAtom.reportChanged();
+    if (this._isNotifyingVmChange) {
+      this._log('notifyVmChange skipped (re-entrant)');
+      return;
+    }
+    this._isNotifyingVmChange = true;
+    try {
+      this._log('notifyVmChange called');
+      this._vmChangeAtom.reportChanged();
+    } finally {
+      this._isNotifyingVmChange = false;
+    }
   }
 
   get allVms() {
     this._vmChangeAtom.reportObserved();
     const vmStore = this.projectVmStore as Maybe<ViewModelStoreBase>;
+    // Read viewModels inside untracked() to avoid creating a MobX dependency
+    // on the host's ObservableMap.  Without this, every viewModels.set()
+    // (e.g. from attach()) triggers endBatch → this computed invalidates →
+    // devtools observer reaction → forceStoreRerender DURING the host's
+    // render cycle → React cross-component update warning → cascading
+    // unmount/remount → infinite VM creation loop.
+    // Changes are still detected via the bridge's observe() callback which
+    // calls notifyVmChange() → _vmChangeAtom.reportChanged().
     const viewModelsMap =
-      ((vmStore as any)?.viewModels as Map<string, AnyVM>) ?? new Map();
+      untracked(() => (vmStore as any)?.viewModels as Map<string, AnyVM>) ??
+      new Map();
 
-    return [...viewModelsMap.values()].filter(
+    const result = [...viewModelsMap.values()].filter(
       (vm) => !Object.prototype.isPrototypeOf.call(ViewModelImpl, vm.constructor),
     );
+    return result;
   }
 
   private get rootVmListItems() {
@@ -230,6 +265,12 @@ export class ViewModelDevtools {
   }
 
   setStore(viewModels: ViewModelStoreBase<AnyViewModel> | undefined) {
+    if (this.projectVmStore === viewModels) return;
+    this._log(
+      'setStore called, old:', this.projectVmStore?.constructor?.name, '(size:', (this.projectVmStore as any)?.viewModels?.size, ')',
+      'new:', viewModels?.constructor?.name, '(size:', (viewModels as any)?.viewModels?.size, ')',
+      'sameRef:', this.projectVmStore === viewModels,
+    );
     this.projectVmStore = viewModels;
   }
 
@@ -401,6 +442,10 @@ export class ViewModelDevtools {
   private static _instance: ViewModelDevtools | null = null;
 
   private constructor(public config: ViewModelDevtoolsConfig) {
+    this._debug = !!config.debug;
+    this._log = this._debug
+      ? (...args: unknown[]) => console.log('[mobx-vm-devtools]', ...args)
+      : () => {};
     this.isPopupOpened =
       this.storage.get({ key: 'isPopupOpened' }) ??
       !!this.config.defaultIsOpened;

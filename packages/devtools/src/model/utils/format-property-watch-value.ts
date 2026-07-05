@@ -22,6 +22,50 @@ const replacer = (_key: string, value: unknown) => {
   return value;
 };
 
+export const formatCopyableValue = (value: unknown): string => {
+  if (isInaccessible(value)) {
+    return '';
+  }
+
+  if (value === null) {
+    return 'null';
+  }
+
+  if (value === undefined) {
+    return 'undefined';
+  }
+
+  const valueType = typeof value;
+
+  if (valueType === 'string') {
+    return value;
+  }
+
+  if (valueType === 'number' || valueType === 'boolean') {
+    return String(value);
+  }
+
+  if (valueType === 'bigint') {
+    return `${String(value)}n`;
+  }
+
+  if (valueType === 'symbol') {
+    return String(value);
+  }
+
+  if (valueType === 'function') {
+    const fn = value as (...args: unknown[]) => unknown;
+    return fn.name || 'anonymous';
+  }
+
+  try {
+    const plain = toJS(value);
+    return JSON.stringify(plain, replacer, 2);
+  } catch {
+    return formatPropertyWatchFallback(value);
+  }
+};
+
 export const formatPropertyWatchValue = (value: unknown): string => {
   if (isInaccessible(value)) {
     return INACCESSIBLE_DISPLAY_LABEL;

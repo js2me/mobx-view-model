@@ -503,6 +503,29 @@ export class PropertyListItem extends ListItem<any> {
     }
   }
 
+  get copyableValue() {
+    if (this.isInaccessible) {
+      return '';
+    }
+
+    switch (this.type) {
+      case 'object':
+      case 'array': {
+        try {
+          return JSON.stringify(this.data, null, 2);
+        } catch (_) {
+          runInAction(() => {
+            this.failedStringify = true;
+          });
+          return super.stringifiedData;
+        }
+      }
+      default: {
+        return String(this.data);
+      }
+    }
+  }
+
   get operations() {
     const operations: ListItemOperation<any>[] = [];
 
@@ -570,7 +593,7 @@ export class PropertyListItem extends ListItem<any> {
       operations.push({
         title: 'Copy',
         icon: Copy,
-        action: () => navigator.clipboard.writeText(this.stringifiedData),
+        action: () => navigator.clipboard.writeText(this.copyableValue),
       });
     }
 
@@ -646,6 +669,7 @@ export class PropertyListItem extends ListItem<any> {
     computed(this, 'propertyClosingTag');
     computed(this, 'dataType');
     computed(this, 'stringifiedDataType');
+    computed(this, 'copyableValue');
     computed(this, 'instanceClassName');
     computed(this, 'nestedValueType');
     computed(this, 'mapEntryKey');

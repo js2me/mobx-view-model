@@ -128,10 +128,24 @@ export class VMListItem extends ListItem<AnyVM> {
     computed.struct(this, 'propertyListItems');
     makeObservable(this);
 
-    untracked(() => {
-      if (!this.cache.has(this.expandKey)) {
-        this.expand();
-      }
-    });
+    // Auto-expand VM items up to AUTO_EXPAND_MAX_DEPTH levels deep.
+    // Deeper items stay collapsed as a circuit-breaker: if a VM
+    // getter lazily creates a child VM (side-effect), each
+    // auto-expand level can trigger one more VM creation cycle.
+    // Without the depth cap the feedback loop would cascade
+    // indefinitely; with it, the chain stops after N levels and
+    // store.get() idempotency prevents further growth.
+    const AUTO_EXPAND_MAX_DEPTH = 10;
+    let depth = 0;
+    let p = parent;
+    while (p) { depth++; p = (p as VMListItem).parent; }
+
+    if (depth < AUTO_EXPAND_MAX_DEPTH) {
+      untracked(() => {
+        if (!this.cache.has(this.expandKey)) {
+          this.expand();
+        }
+      });
+    }
   }
 }

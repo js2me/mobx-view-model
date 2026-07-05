@@ -121,7 +121,7 @@ export function mobxVmVitePlugin(options?: MobxVmVitePluginOptions): Plugin {
 
     load(id) {
       if (id === RUNTIME_MODULE_RESOLVED) {
-        return getRuntimeModuleSource(devtools);
+        return getRuntimeModuleSource(devtools, debug);
       }
     },
 

@@ -6,7 +6,10 @@ import {
   detectPropertyValueType,
   getPropertyInstanceClassName,
 } from '../utils/detect-property-value-type';
-import { formatPropertyWatchValue } from '../utils/format-property-watch-value';
+import {
+  formatCopyableValue,
+  formatPropertyWatchValue,
+} from '../utils/format-property-watch-value';
 import { isInaccessible } from '../utils/safe-access';
 import type { PropertyWatchHistoryEntry } from '../utils/property-watcher';
 import type { ViewModelDevtools } from '../view-model-devtools';
@@ -141,7 +144,7 @@ export class PropertyWatchHistoryListItem extends ListItem<any> {
         title: 'Copy',
         icon: Copy,
         action: () =>
-          navigator.clipboard.writeText(this.entry.formattedValue),
+          navigator.clipboard.writeText(formatCopyableValue(this.data)),
       },
     ];
   }
