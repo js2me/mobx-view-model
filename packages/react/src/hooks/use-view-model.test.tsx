@@ -1,8 +1,10 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
+import { observer } from 'mobx-react-lite';
+import { observable, reaction, runInAction } from 'mobx';
 import { useState, type ReactNode } from 'react';
 import { beforeEach, describe, expect, test } from 'vitest';
 import { createCounter } from 'yummies/complex';
-import type { ViewModelStore } from 'mobx-view-model';
+import type { ViewModelStore, ViewModelParams } from 'mobx-view-model';
 import { ViewModelBaseMock } from '../../../core/src/view-model/view-model.base.test.js';
 import { ViewModelStoreBaseMock } from '../../../core/src/view-model/view-model.store.base.test.js';
 import { ViewModelsProvider } from '../components/index.js';
@@ -304,5 +306,157 @@ describe('useViewModel', () => {
         `../../../../tests/snapshots/hooks/use-view-model/scenarios/${task.name}.html`,
       );
     });
+  });
+
+  test('shell withViewModel + child useViewModel(class) keeps a single VM when store updates during render', async () => {
+    class RepositoryPageVM extends ViewModelBaseMock {}
+
+    const RepositoryPage = observer(() => {
+      const model = useViewModel(RepositoryPageVM);
+      return <div data-testid="page">{model.id}</div>;
+    });
+
+    const RepositoryShell = withViewModel(
+      RepositoryPageVM,
+      observer(({ children }: { children?: ReactNode }) => (
+        <div data-testid="shell">{children}</div>
+      )),
+    );
+
+    const vmStore = new ViewModelStoreBaseMock({
+      vmConfig: { useReactIds: true },
+    });
+
+    const App = () => {
+      const [tick, setTick] = useState(0);
+      return (
+        <div>
+          <button
+            data-testid="rerender"
+            type="button"
+            onClick={() => setTick((value) => value + 1)}
+          >
+            {tick}
+          </button>
+          <RepositoryShell>
+            <RepositoryPage />
+          </RepositoryShell>
+        </div>
+      );
+    };
+
+    render(<App />, { wrapper: createVMStoreWrapper(vmStore) });
+
+    const page = screen.getByTestId('page');
+    const initialId = page.textContent;
+
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('rerender'));
+      fireEvent.click(screen.getByTestId('rerender'));
+      fireEvent.click(screen.getByTestId('rerender'));
+    });
+
+    expect(page.textContent).toBe(initialId);
+    expect(vmStore.getIds(RepositoryPageVM)).toHaveLength(1);
+    expect(vmStore._viewModels.size).toBe(1);
+  });
+
+  test('deferred registry: shell withViewModel + observer child keeps one VM when globals mutate during VM construction', async () => {
+    const globals = observable({ tick: 0 });
+
+    class RepositoryPageVM extends ViewModelBaseMock {
+      constructor(params: ViewModelParams) {
+        super(params);
+        reaction(
+          () => globals.tick,
+          () => {
+            globals.tick;
+          },
+          { fireImmediately: true },
+        );
+      }
+    }
+
+    const RepositoryPage = observer(() => {
+      globals.tick;
+      const model = useViewModel(RepositoryPageVM);
+      return <div data-testid="page">{model.id}</div>;
+    });
+
+    const RepositoryShell = withViewModel(
+      RepositoryPageVM,
+      observer(({ children }: { children?: ReactNode }) => (
+        <div data-testid="shell">{children}</div>
+      )),
+    );
+
+    const vmStore = new ViewModelStoreBaseMock({
+      vmConfig: { useReactIds: true },
+    });
+
+    render(
+      <RepositoryShell>
+        <RepositoryPage />
+      </RepositoryShell>,
+      { wrapper: createVMStoreWrapper(vmStore) },
+    );
+
+    const page = screen.getByTestId('page');
+    const initialId = page.textContent;
+
+    await act(async () => {
+      runInAction(() => {
+        globals.tick++;
+      });
+      runInAction(() => {
+        globals.tick++;
+      });
+    });
+
+    expect(page.textContent).toBe(initialId);
+    expect(vmStore.getIds(RepositoryPageVM)).toHaveLength(1);
+    expect(vmStore._viewModels.size).toBe(1);
+  });
+
+  test('nested child withViewModel keeps single parent VM after navigation-style rerender', async () => {
+    class RepositoryPageVM extends ViewModelBaseMock {}
+    class MergeRequestsVM extends ViewModelBaseMock {}
+
+    const MergeRequestsPage = withViewModel(
+      MergeRequestsVM,
+      observer(({ children }: { children?: ReactNode }) => (
+        <div data-testid="mr-page">{children}</div>
+      )),
+    );
+
+    const RepositoryShell = withViewModel(
+      RepositoryPageVM,
+      observer(({ children }: { children?: ReactNode }) => (
+        <div data-testid="shell">{children}</div>
+      )),
+    );
+
+    const vmStore = new ViewModelStoreBaseMock({
+      vmConfig: { useReactIds: true },
+    });
+
+    const App = ({ showMergeRequests }: { showMergeRequests: boolean }) => (
+      <RepositoryShell>
+        {showMergeRequests ? <MergeRequestsPage /> : null}
+      </RepositoryShell>
+    );
+
+    const { rerender } = render(<App showMergeRequests={false} />, {
+      wrapper: createVMStoreWrapper(vmStore),
+    });
+
+    await act(async () => {
+      rerender(<App showMergeRequests={true} />);
+      rerender(<App showMergeRequests={true} />);
+    });
+
+    expect(vmStore.getIds(RepositoryPageVM)).toHaveLength(1);
+    expect(vmStore.getIds(MergeRequestsVM)).toHaveLength(1);
+    expect(vmStore._viewModels.size).toBe(2);
   });
 });

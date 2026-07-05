@@ -1,4 +1,4 @@
-import { action, computed, observable, runInAction } from 'mobx';
+import { action, computed, observable, runInAction, untracked } from 'mobx';
 import type { ObservableAnnotationsArray } from 'yummies/mobx';
 import type { Class, Maybe, MaybePromise } from 'yummies/types';
 import {
@@ -10,6 +10,7 @@ import type { ViewModelBase } from './view-model.base.js';
 import type { ViewModelStore } from './view-model.store.js';
 import type {
   ViewModelCreateConfig,
+  ViewModelAttachOptions,
   ViewModelGenerateIdConfig,
   ViewModelLookup,
   ViewModelStoreConfig,
@@ -22,7 +23,7 @@ import type {
 
 const baseAnnotations: ObservableAnnotationsArray = [
   [computed, 'mountedViewsCount'],
-  [
+    [
     action,
     'mount',
     'unmount',
@@ -68,7 +69,9 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
     // @ts-ignore ObservableMap is missing getOrInsert/getOrInsertComputed added in TS 6.0
     this.linkedAnchorVMClasses = observable.map([], { deep: false });
     // @ts-ignore ObservableMap is missing getOrInsert/getOrInsertComputed added in TS 6.0
-    this.viewModelIdsByClasses = observable.map([], { deep: true });
+    // Shallow map: array updates go through `set()` so `push()` does not
+    // notify observers that read `getIds()` during another component's render.
+    this.viewModelIdsByClasses = observable.map([], { deep: false });
     // @ts-ignore ObservableMap is missing getOrInsert/getOrInsertComputed added in TS 6.0
     this.instanceAttachedCount = observable.map([], { deep: false });
     this.mountingViews = observable.set([], { deep: false });
@@ -192,9 +195,25 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
     const viewModelClass = (this.linkedAnchorVMClasses.get(vmLookup as any) ||
       vmLookup) as Class<T>;
 
-    const viewModelIds = this.viewModelIdsByClasses.get(viewModelClass) || [];
+    const registeredIds = this.viewModelIdsByClasses.get(viewModelClass) || [];
 
-    return viewModelIds;
+    const liveRegisteredIds = registeredIds.filter(
+      (id) => this.viewModels.has(id) || this.viewModelsTempHeap.has(id),
+    );
+
+    if (liveRegisteredIds.length > 0) {
+      return liveRegisteredIds;
+    }
+
+    // Instances pending registry still live in the non-observable temp heap.
+    const pendingIds: string[] = [];
+    for (const [id, vm] of this.viewModelsTempHeap) {
+      if ((vm as VMBase).constructor === viewModelClass) {
+        pendingIds.push(id);
+      }
+    }
+
+    return pendingIds;
   }
 
   /**
@@ -335,7 +354,7 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
     if (this.viewModelIdsByClasses.has(constructor)) {
       const vmIds = this.viewModelIdsByClasses.get(constructor)!;
       if (!vmIds.includes(modelId)) {
-        vmIds.push(modelId);
+        this.viewModelIdsByClasses.set(constructor, [...vmIds, modelId]);
       }
     } else {
       this.viewModelIdsByClasses.set(constructor, [modelId]);
@@ -367,7 +386,9 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
       model.attachViewModelStore!(this as ViewModelStore);
     }
 
-    this.attachVMConstructor(model);
+    // Class registry (`viewModelIdsByClasses.set`) is deferred to commit phase of
+    // `attach()` so render-phase `markToBeAttached` does not notify observers
+    // that resolve VMs by class during another attach.
   }
 
   /**
@@ -377,64 +398,98 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
    * If `mount()` returns a thenable, returns a `Promise` that settles after mount; the first paint
    * may still show fallback until then. Otherwise returns `void`.
    */
-  attach(model: VMBase | AnyViewModelSimple): MaybePromise<void> {
+  attach(
+    model: VMBase | AnyViewModelSimple,
+    options?: ViewModelAttachOptions,
+  ): MaybePromise<void> {
+    if (options?.commitOnly) {
+      const modelId = this.getOrCreateVmId(model);
+      const attachedCount = this.instanceAttachedCount.get(modelId) ?? 0;
+      if (attachedCount > 0) {
+        this.commitAttachedViewModel(model);
+      }
+      return;
+    }
+
+    const mount = this.mountAttachedViewModel(model);
+
+    if (!options?.deferCommit) {
+      this.commitAttachedViewModel(model);
+    }
+
+    return mount;
+  }
+
+  /** Mount + attach counters; instance stays in tempHeap until commit. */
+  protected mountAttachedViewModel(
+    model: VMBase | AnyViewModelSimple,
+  ): MaybePromise<void> {
     const modelId = this.getOrCreateVmId(model);
 
     const attachedCount = this.instanceAttachedCount.get(modelId) ?? 0;
 
     this.instanceAttachedCount.set(modelId, attachedCount + 1);
 
-    if (this.viewModels.has(modelId)) {
+    if (attachedCount > 0 || this.viewModels.has(modelId)) {
       return;
     }
 
-    this.viewModels.set(modelId, model);
+    return this.mount(model);
+  }
 
-    this.attachVMConstructor(model);
+  /** Writes the view model into the observable registry (idempotent). */
+  protected commitAttachedViewModel(model: VMBase | AnyViewModelSimple): void {
+    const modelId = this.getOrCreateVmId(model);
 
-    try {
-      const mount = this.mount(model);
-
-      if (mount instanceof Promise) {
-        return mount.finally(() => {
-          this.viewModelsTempHeap.delete(modelId);
-        });
-      }
-    } catch (error) {
-      this.viewModelsTempHeap.delete(modelId);
-      throw error;
+    if (!this.viewModels.has(modelId)) {
+      this.viewModels.set(modelId, model);
     }
 
+    this.attachVMConstructor(model);
     this.viewModelsTempHeap.delete(modelId);
   }
 
   async detach(id: string) {
     const attachedCount = this.instanceAttachedCount.get(id) ?? 0;
 
+    if (attachedCount <= 0) {
+      this.viewModelsTempHeap.delete(id);
+      return;
+    }
+
+    const model =
+      this.viewModels.get(id) ??
+      (this.viewModelsTempHeap.get(id) as Maybe<VMBase | AnyViewModelSimple>);
+
     this.viewModelsTempHeap.delete(id);
 
-    const model = this.viewModels.get(id);
+    const nextInstanceAttachedCount = attachedCount - 1;
+
+    if (nextInstanceAttachedCount > 0) {
+      this.instanceAttachedCount.set(id, nextInstanceAttachedCount);
+      return;
+    }
+
+    this.instanceAttachedCount.delete(id);
 
     if (!model) {
       return;
     }
 
-    const nextInstanceAttachedCount = attachedCount - 1;
-
-    this.instanceAttachedCount.set(id, nextInstanceAttachedCount);
-
-    if (nextInstanceAttachedCount <= 0) {
-      this.instanceAttachedCount.delete(id);
+    if (this.viewModels.has(id)) {
       this.viewModels.delete(id);
       this.dettachVMConstructor(model);
-
-      await this.unmount(model);
     }
+
+    await this.unmount(model);
   }
 
   isAbleToRenderView(id: Maybe<string>): boolean {
     const isViewMounting = this.mountingViews.has(id!);
-    const hasViewModel = this.viewModels.has(id!);
+    const hasViewModel = untracked(
+      () =>
+        this.viewModels.has(id!) || this.viewModelsTempHeap.has(id!),
+    );
     return !!id && hasViewModel && !isViewMounting;
   }
 

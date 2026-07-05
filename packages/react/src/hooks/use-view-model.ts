@@ -3,6 +3,7 @@ import type {
   AnyViewModelSimple,
   ViewModelLookup,
 } from 'mobx-view-model';
+import { untracked } from 'mobx';
 import { useContext, useRef } from 'react';
 import type { AnyObject } from 'yummies/types';
 import {
@@ -20,7 +21,10 @@ export const useViewModel = <T extends AnyViewModel | AnyViewModelSimple>(
 ): T => {
   const viewModels = useContext(ViewModelsContext);
   const activeViewModel = useContext(ActiveViewModelContext);
-  const model = viewModels?.get(vmLookup);
+  // Untracked: subscribing to the store during render means another
+  // component's `attach()` (viewModels.set / viewModelIdsByClasses.set)
+  // can forceStoreRerender this observer mid-render → remount → new useId → loop.
+  const model = untracked(() => viewModels?.get(vmLookup));
 
   // This ref is needed only for development
   // support better HMR in vite

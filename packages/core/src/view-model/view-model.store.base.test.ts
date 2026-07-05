@@ -33,6 +33,9 @@ export class ViewModelStoreBaseMock extends ViewModelStoreBase {
   get _viewModels() {
     return this.viewModels;
   }
+  get _viewModelsTempHeap() {
+    return this.viewModelsTempHeap;
+  }
   get _linkedAnchorVMClasses() {
     return this.linkedAnchorVMClasses;
   }

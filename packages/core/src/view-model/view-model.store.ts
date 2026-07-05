@@ -1,6 +1,7 @@
 import type { Class, Maybe, MaybePromise } from 'yummies/types';
 import type {
   ViewModelCreateConfig,
+  ViewModelAttachOptions,
   ViewModelGenerateIdConfig,
   ViewModelLookup,
 } from './view-model.store.types.js';
@@ -79,9 +80,13 @@ export interface ViewModelStore<VMBase extends AnyViewModel = AnyViewModel> {
   /**
    * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#attach-viewmodel)
    * @param model - The view model to attach.
+   * @param options - Optional split lifecycle: `deferCommit` (mount in render) then `commitOnly` (registry after commit).
    * @returns `void` when `mount()` completed synchronously, otherwise a promise that settles after async `mount()`.
    */
-  attach(model: VMBase | AnyViewModelSimple): MaybePromise<void>;
+  attach(
+    model: VMBase | AnyViewModelSimple,
+    options?: ViewModelAttachOptions,
+  ): MaybePromise<void>;
 
   /**
    * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#detach-viewmodelid)
