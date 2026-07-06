@@ -6,7 +6,7 @@ import type {
   ViewModelsConfig,
 } from 'mobx-view-model';
 import { viewModelsConfig } from 'mobx-view-model';
-import { use, useContext, useEffect, useId, useRef } from 'react';
+import { use, useContext, useId, useRef } from 'react';
 import { untracked } from 'mobx';
 import { flushPendingReactions } from 'yummies/mobx';
 import type { AnyObject, Class, IsPartial, Maybe } from 'yummies/types';
@@ -97,14 +97,22 @@ export function useCreateViewModel(
   config?: any,
 ) {
   if (isViewModelClass(VM)) {
-    // scenario for ViewModelBase
     return useCreateViewModelBase(VM, payload, config);
   }
 
-  // scenario for ViewModelSimple
   return useCreateViewModelSimple(VM, payload);
 }
 
+/**
+ * React hook lifecycle for ViewModel attach:
+ *
+ * 1. **Render** — create/reuse instance (`useValue`), then `attach()` (mount + registry).
+ *    Same render pass as SSR / first client frame so `withViewModel` can render immediately.
+ * 2. **Layout cleanup** — `detach()` on unmount or when the hook's `instance` identity changes.
+ *
+ * Loop prevention lives in the store (`untracked` registry reads in `isAbleToRenderView`,
+ * deferred `attachVMConstructor`) and devtools bridge — not in a split defer/commit hook API.
+ */
 const useCreateViewModelBase = (
   VM: Class<AnyViewModel>,
   payload?: any,
@@ -112,12 +120,14 @@ const useCreateViewModelBase = (
 ) => {
   const viewModels = useContext(ViewModelsContext);
   const parentViewModel = useContext(ActiveViewModelContext);
-  /** Last VM this hook instance attached in render; per-hook, not keyed by `instance.id`. */
   const lastAttachedInstanceRef = useRef<AnyViewModel | null>(null);
 
   const ctx = config?.ctx ?? {};
 
-  const useReactIds = config?.vmConfig?.useReactIds ?? viewModels?.vmConfig?.useReactIds ?? viewModelsConfig.useReactIds;
+  const useReactIds =
+    config?.vmConfig?.useReactIds ??
+    viewModels?.vmConfig?.useReactIds ??
+    viewModelsConfig.useReactIds;
   const renderId = useReactIds ? useId() : undefined;
 
   const instance = useValue(() => {
@@ -139,37 +149,38 @@ const useCreateViewModelBase = (
 
     if (instanceFromStore) {
       return instanceFromStore as AnyViewModel;
-    } else {
-      const configCreate: ViewModelCreateConfig<any> = {
-        ...config,
-        vmConfig: config?.vmConfig,
-        id,
-        parentViewModelId: parentViewModel?.id,
-        payload: payload ?? {},
-        VM,
-        viewModels,
-        parentViewModel,
-        ctx,
-      };
-
-      viewModels?.processCreateConfig(configCreate);
-
-      const instance: AnyViewModel =
-        config?.factory?.(configCreate) ??
-        viewModels?.createViewModel<any>(configCreate) ??
-        viewModelsConfig.factory(configCreate);
-
-      flushPendingReactions(viewModelsConfig.flushPendingReactions);
-
-      viewModels?.markToBeAttached(instance);
-
-      return instance;
     }
+
+    const configCreate: ViewModelCreateConfig<any> = {
+      ...config,
+      vmConfig: config?.vmConfig,
+      id,
+      parentViewModelId: parentViewModel?.id,
+      payload: payload ?? {},
+      VM,
+      viewModels,
+      parentViewModel,
+      ctx,
+    };
+
+    viewModels?.processCreateConfig(configCreate);
+
+    const created: AnyViewModel =
+      config?.factory?.(configCreate) ??
+      viewModels?.createViewModel<any>(configCreate) ??
+      viewModelsConfig.factory(configCreate);
+
+    flushPendingReactions(viewModelsConfig.flushPendingReactions);
+
+    viewModels?.markToBeAttached(created);
+
+    return created;
   });
 
   useIsomorphicLayoutEffect(() => {
     const id = instance.id;
     const vm = instance;
+
     if (viewModels) {
       return () => {
         void viewModels.detach(id);
@@ -178,6 +189,7 @@ const useCreateViewModelBase = (
         }
       };
     }
+
     return () => {
       vm.unmount();
       if (lastAttachedInstanceRef.current === vm) {
@@ -186,24 +198,9 @@ const useCreateViewModelBase = (
     };
   }, [instance, viewModels]);
 
-  // Registry commit after paint (useEffect), not in the layout-effect chain — avoids
-  // navigation delete/add loops when devtools observe `viewModels`. First paint still
-  // renders via `tempHeap` (`isAbleToRenderView`). `commitOnly` is a no-op when detach
-  // already ran (StrictMode / fast unmount).
-  useEffect(() => {
-    if (viewModels) {
-      viewModels.attach(instance, { commitOnly: true });
-    }
-  }, [instance, viewModels]);
-
-  // Same render pass as deferred attach (SSR + first client frame). `flushPendingMobxReactions` is
-  // required when the VM is created under mobx-react `observer`: nested `reaction()` otherwise
-  // runs after `mount()` in the same tick.
-  // `viewModels.set` is deferred via `attach(..., { deferCommit: true })`; registry
-  // commit runs in the passive effect above.
   if (lastAttachedInstanceRef.current !== instance) {
     if (viewModels) {
-      void viewModels.attach(instance, { deferCommit: true });
+      void viewModels.attach(instance);
     } else {
       void instance.mount();
     }
@@ -233,25 +230,25 @@ const useCreateViewModelSimple = (
 ) => {
   const viewModels = useContext(ViewModelsContext);
   const parentViewModel = useContext(ActiveViewModelContext);
-  /** Last VM this hook instance attached in render; per-hook, not keyed by `instance.id`. */
   const lastAttachedInstanceRef = useRef<AnyViewModelSimple | null>(null);
 
   const instance = useValue(() => {
-    const instance = new VM();
+    const created = new VM();
 
-    instance.parentViewModel =
-      parentViewModel as unknown as (typeof instance)['parentViewModel'];
+    created.parentViewModel =
+      parentViewModel as unknown as (typeof created)['parentViewModel'];
 
     flushPendingReactions(viewModelsConfig.flushPendingReactions);
 
-    viewModels?.markToBeAttached(instance);
+    viewModels?.markToBeAttached(created);
 
-    return instance;
+    return created;
   });
 
   useIsomorphicLayoutEffect(() => {
     const id = instance.id;
     const vm = instance;
+
     if (viewModels) {
       return () => {
         void viewModels.detach(id);
@@ -260,6 +257,7 @@ const useCreateViewModelSimple = (
         }
       };
     }
+
     return () => {
       vm.unmount?.();
       if (lastAttachedInstanceRef.current === vm) {
@@ -268,15 +266,9 @@ const useCreateViewModelSimple = (
     };
   }, [instance, viewModels]);
 
-  useEffect(() => {
-    if (viewModels) {
-      viewModels.attach(instance, { commitOnly: true });
-    }
-  }, [instance, viewModels]);
-
   if (lastAttachedInstanceRef.current !== instance) {
     if (viewModels) {
-      void viewModels.attach(instance, { deferCommit: true });
+      void viewModels.attach(instance);
     } else {
       void instance.mount?.();
     }

@@ -14,6 +14,7 @@ import { act, render, screen } from '@testing-library/react';
 import { observer } from 'mobx-react-lite';
 import { observable, observe, reaction, runInAction } from 'mobx';
 import type { ReactNode } from 'react';
+import { Suspense, lazy } from 'react';
 import { afterEach, describe, expect, test } from 'vitest';
 import type { ViewModelParams, ViewModelStore } from 'mobx-view-model';
 import { ViewModelBaseMock } from '../../../core/src/view-model/view-model.base.test.js';
@@ -194,9 +195,8 @@ describe('devtools feedback loop regression (githome repository)', () => {
 
   /**
    * Fix 8: githome `/merge-requests` → `/merge-requests/:id` showed a blank page when
-   * Registry commit ran synchronously in a layout effect — `viewModels.set` during the
-   * layout-effect chain caused delete/add loops on navigation (Fix 7). First paint must
-   * still work via `tempHeap` until passive-effect commit.
+   * Registry commit ran in a passive effect — VM could stay only in `tempHeap` until
+   * `useEffect`, while `isMounted` blocked render (blank page on lazy navigation).
    */
   test('Fix 8: MR list → MR detail commits VM synchronously (no blank page, no microtask flush)', async () => {
     class RepositoryPageVM extends ViewModelBaseMock {}
@@ -238,7 +238,7 @@ describe('devtools feedback loop regression (githome repository)', () => {
       rerender(<App route="detail" />);
     });
 
-    // After act(), passive-effect commit must have run — VM in registry, not only tempHeap.
+    // Sync `attach()` in render — VM must be in registry immediately after navigation.
     const detailId = vmStore.getId(MergeRequestPageVM);
     expect(detailId).toBeTruthy();
     expect(vmStore._viewModels.has(detailId!)).toBe(true);
@@ -365,5 +365,57 @@ describe('devtools feedback loop regression (githome repository)', () => {
     } finally {
       disposeObserve();
     }
+  });
+
+  test('lazy + Suspense(null): MR list → detail renders without reload (githome layout)', async () => {
+    class RepositoryPageVM extends ViewModelBaseMock {}
+    class MergeRequestPageVM extends ViewModelBaseMock {}
+
+    const MergeRequestDetailPage = withViewModel(
+      MergeRequestPageVM,
+      ({ model }) => <div data-testid="mr-detail">{model.id}</div>,
+    );
+
+    const LazyMergeRequestPage = lazy(async () => ({
+      default: MergeRequestDetailPage,
+    }));
+
+    const MergeRequestsList = observer(() => (
+      <div data-testid="mr-list">merge-requests</div>
+    ));
+
+    const RepositoryShell = withViewModel(
+      RepositoryPageVM,
+      observer(({ children }: { children?: ReactNode }) => (
+        <div data-testid="shell">{children}</div>
+      )),
+    );
+
+    const vmStore = new ViewModelStoreBaseMock({
+      vmConfig: { useReactIds: true },
+    });
+
+    const App = ({ route }: { route: 'list' | 'detail' }) => (
+      <RepositoryShell>
+        {route === 'list' ? (
+          <MergeRequestsList />
+        ) : (
+          <Suspense fallback={null}>
+            <LazyMergeRequestPage />
+          </Suspense>
+        )}
+      </RepositoryShell>
+    );
+
+    const { rerender } = render(<App route="list" />, {
+      wrapper: createVMStoreWrapper(vmStore),
+    });
+
+    await act(async () => {
+      rerender(<App route="detail" />);
+    });
+
+    expect(screen.getByTestId('mr-detail')).toBeDefined();
+    expect(vmStore.getIds(MergeRequestPageVM)).toHaveLength(1);
   });
 });

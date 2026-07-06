@@ -386,7 +386,7 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
       model.attachViewModelStore!(this as ViewModelStore);
     }
 
-    // Class registry (`viewModelIdsByClasses.set`) is deferred to commit phase of
+    // Class registry (`viewModelIdsByClasses.set`) is deferred to finalize phase of
     // `attach()` so render-phase `markToBeAttached` does not notify observers
     // that resolve VMs by class during another attach.
   }
@@ -406,39 +406,38 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
       const modelId = this.getOrCreateVmId(model);
       const attachedCount = this.instanceAttachedCount.get(modelId) ?? 0;
       if (attachedCount > 0) {
-        this.commitAttachedViewModel(model);
+        this.finalizeAttachViewModel(model);
       }
       return;
     }
 
-    const mount = this.mountAttachedViewModel(model);
-
-    if (!options?.deferCommit) {
-      this.commitAttachedViewModel(model);
-    }
-
-    return mount;
-  }
-
-  /** Mount + attach counters; instance stays in tempHeap until commit. */
-  protected mountAttachedViewModel(
-    model: VMBase | AnyViewModelSimple,
-  ): MaybePromise<void> {
     const modelId = this.getOrCreateVmId(model);
 
     const attachedCount = this.instanceAttachedCount.get(modelId) ?? 0;
 
     this.instanceAttachedCount.set(modelId, attachedCount + 1);
 
+    let mount: MaybePromise<void>;
+
     if (attachedCount > 0 || this.viewModels.has(modelId)) {
-      return;
+      if ('isMounted' in model && (model as VMBase).isMounted === false) {
+        mount = this.mount(model);
+      } else {
+        mount = undefined;
+      }
+    } else {
+      mount = this.mount(model);
     }
 
-    return this.mount(model);
+    if (!options?.deferCommit) {
+      this.finalizeAttachViewModel(model);
+    }
+
+    return mount;
   }
 
   /** Writes the view model into the observable registry (idempotent). */
-  protected commitAttachedViewModel(model: VMBase | AnyViewModelSimple): void {
+  private finalizeAttachViewModel(model: VMBase | AnyViewModelSimple): void {
     const modelId = this.getOrCreateVmId(model);
 
     if (!this.viewModels.has(modelId)) {
