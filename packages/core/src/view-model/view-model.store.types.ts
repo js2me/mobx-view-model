@@ -13,21 +13,6 @@ export interface ViewModelStoreConfig {
   vmConfig?: ViewModelsRawConfig;
 }
 
-/**
- * Options for {@link ViewModelStore.attach} split lifecycle (React render vs commit).
- */
-export interface ViewModelAttachOptions {
-  /**
-   * Mount and bump attach counters but skip writing to the observable `viewModels` map.
-   * Use in render; pair with `{ commitOnly: true }` after commit (e.g. layout effect).
-   */
-  deferCommit?: boolean;
-  /**
-   * Register the model in `viewModels` only (idempotent). No mount / counter change.
-   */
-  commitOnly?: boolean;
-}
-
 export interface ViewModelGenerateIdConfig<VM extends AnyViewModel> {
   VM: Class<VM>;
   id?: Maybe<string>;

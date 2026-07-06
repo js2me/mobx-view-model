@@ -10,7 +10,6 @@ import type { ViewModelBase } from './view-model.base.js';
 import type { ViewModelStore } from './view-model.store.js';
 import type {
   ViewModelCreateConfig,
-  ViewModelAttachOptions,
   ViewModelGenerateIdConfig,
   ViewModelLookup,
   ViewModelStoreConfig,
@@ -400,17 +399,7 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
    */
   attach(
     model: VMBase | AnyViewModelSimple,
-    options?: ViewModelAttachOptions,
   ): MaybePromise<void> {
-    if (options?.commitOnly) {
-      const modelId = this.getOrCreateVmId(model);
-      const attachedCount = this.instanceAttachedCount.get(modelId) ?? 0;
-      if (attachedCount > 0) {
-        this.finalizeAttachViewModel(model);
-      }
-      return;
-    }
-
     const modelId = this.getOrCreateVmId(model);
 
     const attachedCount = this.instanceAttachedCount.get(modelId) ?? 0;
@@ -429,9 +418,7 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
       mount = this.mount(model);
     }
 
-    if (!options?.deferCommit) {
-      this.finalizeAttachViewModel(model);
-    }
+    this.finalizeAttachViewModel(model);
 
     return mount;
   }
