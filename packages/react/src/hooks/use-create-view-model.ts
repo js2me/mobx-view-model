@@ -165,16 +165,16 @@ const useCreateViewModelBase = (
 
     viewModels?.processCreateConfig(configCreate);
 
-    const created: AnyViewModel =
+    const instance: AnyViewModel =
       config?.factory?.(configCreate) ??
       viewModels?.createViewModel<any>(configCreate) ??
       viewModelsConfig.factory(configCreate);
 
     flushPendingReactions(viewModelsConfig.flushPendingReactions);
 
-    viewModels?.markToBeAttached(created);
+    viewModels?.markToBeAttached(instance);
 
-    return created;
+    return instance;
   });
 
   useIsomorphicLayoutEffect(() => {
@@ -233,16 +233,16 @@ const useCreateViewModelSimple = (
   const lastAttachedInstanceRef = useRef<AnyViewModelSimple | null>(null);
 
   const instance = useValue(() => {
-    const created = new VM();
+    const instance = new VM();
 
-    created.parentViewModel =
-      parentViewModel as unknown as (typeof created)['parentViewModel'];
+    instance.parentViewModel =
+      parentViewModel as unknown as (typeof instance)['parentViewModel'];
 
     flushPendingReactions(viewModelsConfig.flushPendingReactions);
 
-    viewModels?.markToBeAttached(created);
+    viewModels?.markToBeAttached(instance);
 
-    return created;
+    return instance;
   });
 
   useIsomorphicLayoutEffect(() => {
