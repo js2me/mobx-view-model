@@ -1,4 +1,4 @@
-import { cpSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, isAbsolute, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -8,11 +8,11 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const rootDir = resolve(__dirname, '..');
 const consumerFixtures = [
   {
-    dir: resolve(rootDir, 'tests/type-regressions/consumer-react19'),
+    dir: resolve(rootDir, 'tests/react-regressions/react19'),
     label: 'React 19',
   },
   {
-    dir: resolve(rootDir, 'tests/type-regressions/consumer-react18'),
+    dir: resolve(rootDir, 'tests/react-regressions/react18'),
     label: 'React 18',
   },
 ];
@@ -152,10 +152,10 @@ for (const { dir: fixtureDir, label } of consumerFixtures) {
   );
 
   const fixtureWorkspaceYamlPath = join(fixtureDir, 'pnpm-workspace.yaml');
-  const fixtureWorkspaceYamlSource = readFileSync(
-    fixtureWorkspaceYamlPath,
-    'utf8',
-  );
+  const fixtureWorkspaceYamlExisted = existsSync(fixtureWorkspaceYamlPath);
+  const fixtureWorkspaceYamlSource = fixtureWorkspaceYamlExisted
+    ? readFileSync(fixtureWorkspaceYamlPath, 'utf8')
+    : null;
   writeFileSync(
     fixtureWorkspaceYamlPath,
     `packages:
@@ -166,6 +166,8 @@ minimumReleaseAgeExclude:
 overrides:
   mobx-view-model: ${JSON.stringify(coreTarball)}
   mobx-view-model-react: ${JSON.stringify(reactTarball)}
+allowBuilds:
+  '@swc/core': true
 `,
   );
 
@@ -239,7 +241,11 @@ overrides:
     console.log(`[${label}] Consumer type regression check passed (green-state)`);
   } finally {
     writeFileSync(fixturePackageJsonPath, fixturePackageJsonSource);
-    writeFileSync(fixtureWorkspaceYamlPath, fixtureWorkspaceYamlSource);
+    if (fixtureWorkspaceYamlExisted) {
+      writeFileSync(fixtureWorkspaceYamlPath, fixtureWorkspaceYamlSource);
+    } else {
+      rmSync(fixtureWorkspaceYamlPath, { force: true });
+    }
   }
 }
 

@@ -104,6 +104,15 @@ export function useCreateViewModel(
   return useCreateViewModelSimple(VM, payload);
 }
 
+/**
+ * Tracks VMs whose layout effect has committed. A VM created during a render
+ * that was discarded by Suspense will NOT be in this set (layout effect never
+ * ran). This lets the orphan-reuse logic distinguish true orphans from VMs
+ * that are still actively managed by a mounted component (e.g. key-change
+ * remounts where the old component's cleanup will run).
+ */
+const committedVMs = new WeakSet<AnyViewModel>();
+
 const useCreateViewModelBase = (
   VM: Class<AnyViewModel>,
   payload?: any,
@@ -113,6 +122,8 @@ const useCreateViewModelBase = (
   const parentViewModel = useContext(ActiveViewModelContext);
   /** Last VM this hook instance attached in render; per-hook, not keyed by `instance.id`. */
   const lastAttachedInstanceRef = useRef<AnyViewModel | null>(null);
+  /** Whether this VM was reused from a discarded Suspense render (orphan). */
+  const reusedFromDiscardedRef = useRef(false);
 
   const ctx = config?.ctx ?? {};
 
@@ -138,37 +149,72 @@ const useCreateViewModelBase = (
 
     if (instanceFromStore) {
       return instanceFromStore as AnyViewModel;
-    } else {
-      const configCreate: ViewModelCreateConfig<any> = {
-        ...config,
-        vmConfig: config?.vmConfig,
-        id,
-        parentViewModelId: parentViewModel?.id,
-        payload: payload ?? {},
-        VM,
-        viewModels,
-        parentViewModel,
-        ctx,
-      };
-
-      viewModels?.processCreateConfig(configCreate);
-
-      const instance: AnyViewModel =
-        config?.factory?.(configCreate) ??
-        viewModels?.createViewModel<any>(configCreate) ??
-        viewModelsConfig.factory(configCreate);
-
-      flushPendingReactions(viewModelsConfig.flushPendingReactions);
-
-      viewModels?.markToBeAttached(instance);
-
-      return instance;
     }
+
+    // Before creating a new VM, check for an existing VM of the same class
+    // with the same parent that is a true Suspense orphan — i.e. its layout
+    // effect never committed. We skip VMs that have been committed because
+    // they are still managed by a mounted component (e.g. a key-change
+    // remount where the old component's cleanup will properly detach them).
+    // if (viewModels && parentViewModel) {
+    //   const vmIds = viewModels.getIds(VM);
+    //   for (const existingId of vmIds) {
+    //     const existingInstance = viewModels.get(existingId);
+    //     if (
+    //       existingInstance &&
+    //       existingInstance.parentViewModel === parentViewModel &&
+    //       !committedVMs.has(existingInstance)
+    //     ) {
+    //       reusedFromDiscardedRef.current = true;
+    //       return existingInstance;
+    //     }
+    //   }
+    // }
+
+    reusedFromDiscardedRef.current = false;
+
+    const configCreate: ViewModelCreateConfig<any> = {
+      ...config,
+      vmConfig: config?.vmConfig,
+      id,
+      parentViewModelId: parentViewModel?.id,
+      payload: payload ?? {},
+      VM,
+      viewModels,
+      parentViewModel,
+      ctx,
+    };
+
+    viewModels?.processCreateConfig(configCreate);
+
+    const instance: AnyViewModel =
+      config?.factory?.(configCreate) ??
+      viewModels?.createViewModel<any>(configCreate) ??
+      viewModelsConfig.factory(configCreate);
+
+    flushPendingReactions(viewModelsConfig.flushPendingReactions);
+
+    viewModels?.markToBeAttached(instance);
+
+    return instance;
   });
 
   useIsomorphicLayoutEffect(() => {
     const id = instance.id;
     const vm = instance;
+
+    // Mark this VM as committed so the orphan-reuse logic knows its layout
+    // effect has run and its cleanup will fire on unmount.
+    committedVMs.add(instance);
+
+    // If this VM was reused from a discarded Suspense render, detach once
+    // to balance the "ghost" attachment from the discarded render. Without this,
+    // instanceAttachedCount is too high and the VM is never fully removed on unmount.
+    if (reusedFromDiscardedRef.current && viewModels) {
+      void viewModels.detach(id);
+      reusedFromDiscardedRef.current = false;
+    }
+
     if (viewModels) {
       return () => {
         void viewModels.detach(id);

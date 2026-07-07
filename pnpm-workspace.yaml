@@ -1,6 +1,7 @@
 packages:
   - 'packages/*'
   - 'examples/*'
+  - 'tests/react-regressions/*'
   - 'docs'
 autoInstallPeers: false
 linkWorkspacePackages: true
