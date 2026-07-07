@@ -163,10 +163,10 @@ const useCreateViewModelBase = (
         if (
           existingInstance &&
           existingInstance.parentViewModel === parentViewModel &&
-          !committedVMs.has(existingInstance)
+          !committedVMs.has(existingInstance as AnyViewModel)
         ) {
           reusedFromDiscardedRef.current = true;
-          return existingInstance;
+          return existingInstance as AnyViewModel;
         }
       }
     }
