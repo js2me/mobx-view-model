@@ -207,13 +207,10 @@ const useCreateViewModelBase = (
     // effect has run and its cleanup will fire on unmount.
     committedVMs.add(instance);
 
-    // If this VM was reused from a discarded Suspense render, detach once
-    // to balance the "ghost" attachment from the discarded render. Without this,
-    // instanceAttachedCount is too high and the VM is never fully removed on unmount.
-    if (reusedFromDiscardedRef.current && viewModels) {
-      void viewModels.detach(id);
-      reusedFromDiscardedRef.current = false;
-    }
+    // Reset the reused-from-discarded flag. No detach is needed here because
+    // we skip the extra attach() when reusing an orphan — attachedCount
+    // stays at 1 (from the original attach in the discarded render).
+    reusedFromDiscardedRef.current = false;
 
     if (viewModels) {
       return () => {
@@ -234,10 +231,13 @@ const useCreateViewModelBase = (
   // Same render pass as attach (SSR + first client frame). `flushPendingMobxReactions` is
   // required when the VM is created under mobx-react `observer`: nested `reaction()` otherwise
   // runs after `mount()` in the same tick.
+  // Skip attach if this VM was reused from a discarded Suspense render —
+  // it was already attached during the discarded render and never detached
+  // (layout effect cleanup never ran), so attachedCount is already correct.
   if (lastAttachedInstanceRef.current !== instance) {
-    if (viewModels) {
+    if (viewModels && !reusedFromDiscardedRef.current) {
       void viewModels.attach(instance);
-    } else {
+    } else if (!viewModels) {
       void instance.mount();
     }
     lastAttachedInstanceRef.current = instance;
