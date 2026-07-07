@@ -156,20 +156,20 @@ const useCreateViewModelBase = (
     // effect never committed. We skip VMs that have been committed because
     // they are still managed by a mounted component (e.g. a key-change
     // remount where the old component's cleanup will properly detach them).
-    // if (viewModels && parentViewModel) {
-    //   const vmIds = viewModels.getIds(VM);
-    //   for (const existingId of vmIds) {
-    //     const existingInstance = viewModels.get(existingId);
-    //     if (
-    //       existingInstance &&
-    //       existingInstance.parentViewModel === parentViewModel &&
-    //       !committedVMs.has(existingInstance)
-    //     ) {
-    //       reusedFromDiscardedRef.current = true;
-    //       return existingInstance;
-    //     }
-    //   }
-    // }
+    if (viewModels && parentViewModel) {
+      const vmIds = viewModels.getIds(VM);
+      for (const existingId of vmIds) {
+        const existingInstance = viewModels.get(existingId);
+        if (
+          existingInstance &&
+          existingInstance.parentViewModel === parentViewModel &&
+          !committedVMs.has(existingInstance)
+        ) {
+          reusedFromDiscardedRef.current = true;
+          return existingInstance;
+        }
+      }
+    }
 
     reusedFromDiscardedRef.current = false;
 
