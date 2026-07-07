@@ -1,5 +1,13 @@
 # mobx-view-model
 
+## 10.2.4
+
+### Patch Changes
+
+- 87bb630: fixed bug with infinite loops in lazy VM charged components caused by unstable 19 React
+- Updated dependencies [87bb630]
+  - mobx-view-model-react@10.3.1
+
 ## 10.2.3
 
 ### Patch Changes

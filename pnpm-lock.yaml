@@ -282,7 +282,7 @@ importers:
   packages/core:
     dependencies:
       mobx-view-model-react:
-        specifier: workspace:^10.3.0
+        specifier: workspace:^10.3.1
         version: link:../react/dist
       yummies:
         specifier: ^7.20.1
