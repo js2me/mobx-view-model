@@ -6,7 +6,6 @@ import type {
   ViewModelsConfig,
 } from 'mobx-view-model';
 import { viewModelsConfig } from 'mobx-view-model';
-import { runInAction } from 'mobx';
 import { use, useContext, useId, useRef } from 'react';
 import { flushPendingReactions } from 'yummies/mobx';
 import type { AnyObject, Class, IsPartial, Maybe } from 'yummies/types';
@@ -178,32 +177,7 @@ const useCreateViewModelBase = (
   // on Offscreen reappear.
   if (lastAttachedInstanceRef.current !== instance) {
     if (viewModels) {
-      // Detach orphan VMs from previous mounts BEFORE attaching the new one.
-      // React 19 can remount a component inside Suspense with a new useId(),
-      // leaving the old VM in the store.  If we attach the new VM first, both
-      // exist simultaneously, causing extra MobX reactions and duplicate VMs.
-      // The store-level attach() handles tempHeap orphans; this handles
-      // main-store orphans that were attached by a previous render.
-      //
-      // Batch all store mutations in a single MobX action so that observer
-      // components don't re-render synchronously during this render pass.
-      // Without runInAction, each detach/attach triggers a separate MobX
-      // reaction, which can cause React 19 to re-evaluate the Suspense
-      // boundary and remount the component — creating an infinite loop.
-      runInAction(() => {
-        const vmIds = viewModels.getIds(VM);
-        for (const existingId of vmIds) {
-          if (existingId === instance.id) continue;
-          const existingVm = viewModels.get(existingId);
-          if (
-            existingVm &&
-            existingVm.parentViewModel === parentViewModel
-          ) {
-            void viewModels.detach(existingId);
-          }
-        }
-        void viewModels.attach(instance);
-      });
+      void viewModels.attach(instance);
     } else {
       void instance.mount();
     }

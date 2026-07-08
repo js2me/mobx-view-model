@@ -385,8 +385,14 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
     // then remounts it with a new useId().  The old VM sits in tempHeap and
     // viewModelIdsByClasses but is never claimed; clean it up so only the
     // current VM exists for this class + parent combination.
-    // Only clean tempHeap orphans — VMs already in the main store are
-    // legitimately attached and must not be evicted here.
+    // Also detach VMs already in the main store that share the same parent,
+    // but only when the incoming model is in tempHeap (i.e. was just created
+    // via markToBeAttached). This handles the React 19 remount scenario where
+    // a component gets a new useId(), leaving the old VM in the store.
+    // Without the tempHeap guard, legitimate same-class/same-parent VMs
+    // (e.g. multiple instances of the same VM class under one parent) would
+    // be incorrectly evicted.
+    const isInTempHeap = this.viewModelsTempHeap.has(modelId);
     const constructor = (model as any).constructor as Class<any, any>;
     const vmIds = this.viewModelIdsByClasses.get(constructor);
     if (vmIds) {
@@ -396,18 +402,21 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
           : null;
       for (const existingId of [...vmIds]) {
         if (existingId === modelId) continue;
-        // Only clean up VMs stuck in tempHeap (created but never attached).
-        // VMs in the main store are legitimately attached — don't evict them.
-        if (this.viewModels.has(existingId)) continue;
-        const existingVm = this.viewModelsTempHeap.get(existingId);
+        const existingVm =
+          this.viewModels.get(existingId) ??
+          this.viewModelsTempHeap.get(existingId);
         if (!existingVm) continue;
         const existingParentId =
           'parentViewModel' in existingVm
             ? (existingVm.parentViewModel as any)?.id ?? null
             : null;
         if (existingParentId === parentId) {
-          this.viewModelsTempHeap.delete(existingId);
-          this.dettachVMConstructor(existingVm);
+          if (isInTempHeap && this.viewModels.has(existingId)) {
+            void this.detach(existingId);
+          } else if (this.viewModelsTempHeap.has(existingId)) {
+            this.viewModelsTempHeap.delete(existingId);
+            this.dettachVMConstructor(existingVm);
+          }
         }
       }
     }
