@@ -1,4 +1,4 @@
-import { action, computed, observable, runInAction } from 'mobx';
+import { action, computed, observable, runInAction, untracked } from 'mobx';
 import type { ObservableAnnotationsArray } from 'yummies/mobx';
 import type { Class, Maybe, MaybePromise } from 'yummies/types';
 import {
@@ -366,7 +366,7 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
     if ('attachViewModelStore' in model) {
       model.attachViewModelStore!(this as ViewModelStore);
     }
-
+7
     this.attachVMConstructor(model);
   }
 
@@ -380,6 +380,38 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
   attach(model: VMBase | AnyViewModelSimple): MaybePromise<void> {
     const modelId = this.getOrCreateVmId(model);
 
+    // Clean up orphan VMs that were created (markToBeAttached) but never
+    // attached — e.g. when React 19 suspends a component before attach(),
+    // then remounts it with a new useId().  The old VM sits in tempHeap and
+    // viewModelIdsByClasses but is never claimed; clean it up so only the
+    // current VM exists for this class + parent combination.
+    // Only clean tempHeap orphans — VMs already in the main store are
+    // legitimately attached and must not be evicted here.
+    const constructor = (model as any).constructor as Class<any, any>;
+    const vmIds = this.viewModelIdsByClasses.get(constructor);
+    if (vmIds) {
+      const parentId =
+        'parentViewModel' in model
+          ? (model.parentViewModel as any)?.id ?? null
+          : null;
+      for (const existingId of [...vmIds]) {
+        if (existingId === modelId) continue;
+        // Only clean up VMs stuck in tempHeap (created but never attached).
+        // VMs in the main store are legitimately attached — don't evict them.
+        if (this.viewModels.has(existingId)) continue;
+        const existingVm = this.viewModelsTempHeap.get(existingId);
+        if (!existingVm) continue;
+        const existingParentId =
+          'parentViewModel' in existingVm
+            ? (existingVm.parentViewModel as any)?.id ?? null
+            : null;
+        if (existingParentId === parentId) {
+          this.viewModelsTempHeap.delete(existingId);
+          this.dettachVMConstructor(existingVm);
+        }
+      }
+    }
+
     const attachedCount = this.instanceAttachedCount.get(modelId) ?? 0;
 
     this.instanceAttachedCount.set(modelId, attachedCount + 1);
@@ -391,6 +423,14 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
     this.viewModels.set(modelId, model);
 
     this.attachVMConstructor(model);
+
+    // Skip mount() if the model is already mounted (e.g. mount() was called
+    // during render for SSR / first-paint, and attach() runs later in the
+    // layout effect).  This prevents double-firing willMount/onMount/didMount.
+    if ('isMounted' in model && model.isMounted) {
+      this.viewModelsTempHeap.delete(modelId);
+      return;
+    }
 
     try {
       const mount = this.mount(model);

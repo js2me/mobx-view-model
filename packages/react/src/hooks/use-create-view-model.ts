@@ -6,6 +6,7 @@ import type {
   ViewModelsConfig,
 } from 'mobx-view-model';
 import { viewModelsConfig } from 'mobx-view-model';
+import { runInAction } from 'mobx';
 import { use, useContext, useId, useRef } from 'react';
 import { flushPendingReactions } from 'yummies/mobx';
 import type { AnyObject, Class, IsPartial, Maybe } from 'yummies/types';
@@ -104,15 +105,6 @@ export function useCreateViewModel(
   return useCreateViewModelSimple(VM, payload);
 }
 
-/**
- * Tracks VMs whose layout effect has committed. A VM created during a render
- * that was discarded by Suspense will NOT be in this set (layout effect never
- * ran). This lets the orphan-reuse logic distinguish true orphans from VMs
- * that are still actively managed by a mounted component (e.g. key-change
- * remounts where the old component's cleanup will run).
- */
-const committedVMs = new WeakSet<AnyViewModel>();
-
 const useCreateViewModelBase = (
   VM: Class<AnyViewModel>,
   payload?: any,
@@ -120,10 +112,11 @@ const useCreateViewModelBase = (
 ) => {
   const viewModels = useContext(ViewModelsContext);
   const parentViewModel = useContext(ActiveViewModelContext);
-  /** Last VM this hook instance attached in render; per-hook, not keyed by `instance.id`. */
+  /** Tracks whether this hook instance has already attached the current VM.
+   *  Prevents double-attach when React 19 re-runs layout effects on
+   *  Suspense/Offscreen reappear — which would otherwise trigger a MobX
+   *  reaction → observer re-render → reappear → infinite loop. */
   const lastAttachedInstanceRef = useRef<AnyViewModel | null>(null);
-  /** Whether this VM was reused from a discarded Suspense render (orphan). */
-  const reusedFromDiscardedRef = useRef(false);
 
   const ctx = config?.ctx ?? {};
 
@@ -151,28 +144,6 @@ const useCreateViewModelBase = (
       return instanceFromStore as AnyViewModel;
     }
 
-    // Before creating a new VM, check for an existing VM of the same class
-    // with the same parent that is a true Suspense orphan — i.e. its layout
-    // effect never committed. We skip VMs that have been committed because
-    // they are still managed by a mounted component (e.g. a key-change
-    // remount where the old component's cleanup will properly detach them).
-    if (viewModels && parentViewModel) {
-      const vmIds = viewModels.getIds(VM);
-      for (const existingId of vmIds) {
-        const existingInstance = viewModels.get(existingId);
-        if (
-          existingInstance &&
-          existingInstance.parentViewModel === parentViewModel &&
-          !committedVMs.has(existingInstance as AnyViewModel)
-        ) {
-          reusedFromDiscardedRef.current = true;
-          return existingInstance as AnyViewModel;
-        }
-      }
-    }
-
-    reusedFromDiscardedRef.current = false;
-
     const configCreate: ViewModelCreateConfig<any> = {
       ...config,
       vmConfig: config?.vmConfig,
@@ -199,49 +170,62 @@ const useCreateViewModelBase = (
     return instance;
   });
 
+  // Attach during render (same phase as mount) so that MobX reactions fire
+  // in a single batch.  Calling attach() in the layout effect splits the
+  // reactions across two frames, causing extra re-renders and — when React 19
+  // re-evaluates a Suspense boundary — an infinite remount loop.
+  // The lastAttachedInstanceRef guard prevents double-attach on re-renders and
+  // on Offscreen reappear.
+  if (lastAttachedInstanceRef.current !== instance) {
+    if (viewModels) {
+      // Detach orphan VMs from previous mounts BEFORE attaching the new one.
+      // React 19 can remount a component inside Suspense with a new useId(),
+      // leaving the old VM in the store.  If we attach the new VM first, both
+      // exist simultaneously, causing extra MobX reactions and duplicate VMs.
+      // The store-level attach() handles tempHeap orphans; this handles
+      // main-store orphans that were attached by a previous render.
+      //
+      // Batch all store mutations in a single MobX action so that observer
+      // components don't re-render synchronously during this render pass.
+      // Without runInAction, each detach/attach triggers a separate MobX
+      // reaction, which can cause React 19 to re-evaluate the Suspense
+      // boundary and remount the component — creating an infinite loop.
+      runInAction(() => {
+        const vmIds = viewModels.getIds(VM);
+        for (const existingId of vmIds) {
+          if (existingId === instance.id) continue;
+          const existingVm = viewModels.get(existingId);
+          if (
+            existingVm &&
+            existingVm.parentViewModel === parentViewModel
+          ) {
+            void viewModels.detach(existingId);
+          }
+        }
+        void viewModels.attach(instance);
+      });
+    } else {
+      void instance.mount();
+    }
+    lastAttachedInstanceRef.current = instance;
+  }
+
   useIsomorphicLayoutEffect(() => {
-    const id = instance.id;
-    const vm = instance;
-
-    // Mark this VM as committed so the orphan-reuse logic knows its layout
-    // effect has run and its cleanup will fire on unmount.
-    committedVMs.add(instance);
-
-    // Reset the reused-from-discarded flag. No detach is needed here because
-    // we skip the extra attach() when reusing an orphan — attachedCount
-    // stays at 1 (from the original attach in the discarded render).
-    reusedFromDiscardedRef.current = false;
-
     if (viewModels) {
       return () => {
-        void viewModels.detach(id);
-        if (lastAttachedInstanceRef.current === vm) {
+        void viewModels.detach(instance.id);
+        if (lastAttachedInstanceRef.current === instance) {
           lastAttachedInstanceRef.current = null;
         }
       };
     }
     return () => {
-      vm.unmount();
-      if (lastAttachedInstanceRef.current === vm) {
+      instance.unmount();
+      if (lastAttachedInstanceRef.current === instance) {
         lastAttachedInstanceRef.current = null;
       }
     };
   }, [instance]);
-
-  // Same render pass as attach (SSR + first client frame). `flushPendingMobxReactions` is
-  // required when the VM is created under mobx-react `observer`: nested `reaction()` otherwise
-  // runs after `mount()` in the same tick.
-  // Skip attach if this VM was reused from a discarded Suspense render —
-  // it was already attached during the discarded render and never detached
-  // (layout effect cleanup never ran), so attachedCount is already correct.
-  if (lastAttachedInstanceRef.current !== instance) {
-    if (viewModels && !reusedFromDiscardedRef.current) {
-      void viewModels.attach(instance);
-    } else if (!viewModels) {
-      void instance.mount();
-    }
-    lastAttachedInstanceRef.current = instance;
-  }
 
   instance.setPayload(payload ?? {});
 
@@ -266,7 +250,6 @@ const useCreateViewModelSimple = (
 ) => {
   const viewModels = useContext(ViewModelsContext);
   const parentViewModel = useContext(ActiveViewModelContext);
-  /** Last VM this hook instance attached in render; per-hook, not keyed by `instance.id`. */
   const lastAttachedInstanceRef = useRef<AnyViewModelSimple | null>(null);
 
   const instance = useValue(() => {
@@ -282,25 +265,6 @@ const useCreateViewModelSimple = (
     return instance;
   });
 
-  useIsomorphicLayoutEffect(() => {
-    const id = instance.id;
-    const vm = instance;
-    if (viewModels) {
-      return () => {
-        void viewModels.detach(id);
-        if (lastAttachedInstanceRef.current === vm) {
-          lastAttachedInstanceRef.current = null;
-        }
-      };
-    }
-    return () => {
-      vm.unmount?.();
-      if (lastAttachedInstanceRef.current === vm) {
-        lastAttachedInstanceRef.current = null;
-      }
-    };
-  }, [instance]);
-
   if (lastAttachedInstanceRef.current !== instance) {
     if (viewModels) {
       void viewModels.attach(instance);
@@ -308,7 +272,24 @@ const useCreateViewModelSimple = (
       void instance.mount?.();
     }
     lastAttachedInstanceRef.current = instance;
-  }
+  } 
+
+  useIsomorphicLayoutEffect(() => {
+    if (viewModels) {
+      return () => {
+        void viewModels.detach(instance.id);
+        if (lastAttachedInstanceRef.current === instance) {
+          lastAttachedInstanceRef.current = null;
+        }
+      };
+    }
+    return () => {
+      instance.unmount?.();
+      if (lastAttachedInstanceRef.current === instance) {
+        lastAttachedInstanceRef.current = null;
+      }
+    };
+  }, [instance]);
 
   instance.setPayload?.(payload);
 
