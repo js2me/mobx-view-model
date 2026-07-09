@@ -367,10 +367,6 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
     model: VMBase | AnyViewModelSimple,
     modelId: string,
   ): void {
-
-    if (isViewModel(model)) {
-      model.parentViewModel
-    }
     const isInTempHeap = this.viewModelsTempHeap.has(modelId);
     const constructor = (model as any).constructor as Class<any, any>;
     const vmIds = this.viewModelIdsByClasses.get(constructor);
