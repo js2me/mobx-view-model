@@ -1,4 +1,4 @@
-import { action, computed, observable, runInAction, untracked } from 'mobx';
+import { action, computed, observable, runInAction } from 'mobx';
 import type { ObservableAnnotationsArray } from 'yummies/mobx';
 import type { Class, Maybe, MaybePromise } from 'yummies/types';
 import {
@@ -19,6 +19,7 @@ import type {
   AnyViewModelSimple,
   ViewModelParams,
 } from './view-model.types.js';
+import { isViewModel } from '../utils/typeguards.js';
 
 const baseAnnotations: ObservableAnnotationsArray = [
   [computed, 'mountedViewsCount'],
@@ -358,6 +359,42 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
     }
   }
 
+  protected getParentId(vm: VMBase | AnyViewModelSimple) {
+    return isViewModel(vm) ? vm.parentViewModel?.id : null
+  }
+
+  protected evictOrphans(
+    model: VMBase | AnyViewModelSimple,
+    modelId: string,
+  ): void {
+
+    if (isViewModel(model)) {
+      model.parentViewModel
+    }
+    const isInTempHeap = this.viewModelsTempHeap.has(modelId);
+    const constructor = (model as any).constructor as Class<any, any>;
+    const vmIds = this.viewModelIdsByClasses.get(constructor);
+    if (!vmIds) return;
+
+    const parentId = this.getParentId(model);
+
+    for (const existingId of [...vmIds]) {
+      if (existingId === modelId) continue;
+      const existingVm =
+        this.viewModels.get(existingId) ??
+        this.viewModelsTempHeap.get(existingId);
+      if (!existingVm) continue;
+      if (this.getParentId(existingVm) !== parentId) continue;
+
+      if (isInTempHeap && this.viewModels.has(existingId)) {
+        void this.detach(existingId);
+      } else if (this.viewModelsTempHeap.has(existingId)) {
+        this.viewModelsTempHeap.delete(existingId);
+        this.dettachVMConstructor(existingVm);
+      }
+    }
+  }
+
   markToBeAttached(model: VMBase | AnyViewModelSimple) {
     const modelId = this.getOrCreateVmId(model);
 
@@ -366,7 +403,7 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
     if ('attachViewModelStore' in model) {
       model.attachViewModelStore!(this as ViewModelStore);
     }
-7
+
     this.attachVMConstructor(model);
   }
 
@@ -380,75 +417,34 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
   attach(model: VMBase | AnyViewModelSimple): MaybePromise<void> {
     const modelId = this.getOrCreateVmId(model);
 
-    // Evict same-class/same-parent orphans left by React 19 Suspense remounts.
-    // When a component is suspended then remounted with a new useId(), the old
-    // VM may be stuck in tempHeap (never attached) or still in the main store
-    // (from a previous render). Only detach main-store VMs when the incoming
-    // model is in tempHeap — otherwise legitimate same-class/same-parent
-    // instances (e.g. multiple list items under one parent) would be evicted.
-    const isInTempHeap = this.viewModelsTempHeap.has(modelId);
-    const constructor = (model as any).constructor as Class<any, any>;
-    const vmIds = this.viewModelIdsByClasses.get(constructor);
-    if (vmIds) {
-      const parentId =
-        'parentViewModel' in model
-          ? (model.parentViewModel as any)?.id ?? null
-          : null;
-      for (const existingId of [...vmIds]) {
-        if (existingId === modelId) continue;
-        const existingVm =
-          this.viewModels.get(existingId) ??
-          this.viewModelsTempHeap.get(existingId);
-        if (!existingVm) continue;
-        const existingParentId =
-          'parentViewModel' in existingVm
-            ? (existingVm.parentViewModel as any)?.id ?? null
-            : null;
-        if (existingParentId === parentId) {
-          if (isInTempHeap && this.viewModels.has(existingId)) {
-            void this.detach(existingId);
-          } else if (this.viewModelsTempHeap.has(existingId)) {
-            this.viewModelsTempHeap.delete(existingId);
-            this.dettachVMConstructor(existingVm);
-          }
-        }
-      }
-    }
+    this.evictOrphans(model, modelId);
 
     const attachedCount = this.instanceAttachedCount.get(modelId) ?? 0;
-
     this.instanceAttachedCount.set(modelId, attachedCount + 1);
 
-    if (this.viewModels.has(modelId)) {
-      return;
-    }
+    if (this.viewModels.has(modelId)) return;
 
     this.viewModels.set(modelId, model);
-
     this.attachVMConstructor(model);
 
-    // Skip mount() if the model is already mounted (e.g. mount() was called
-    // during render for SSR / first-paint, and attach() runs later in the
-    // layout effect).  This prevents double-firing willMount/onMount/didMount.
+    const cleanup = () => this.viewModelsTempHeap.delete(modelId);
+
     if ('isMounted' in model && model.isMounted) {
-      this.viewModelsTempHeap.delete(modelId);
+      cleanup()
       return;
     }
 
     try {
-      const mount = this.mount(model);
-
-      if (mount instanceof Promise) {
-        return mount.finally(() => {
-          this.viewModelsTempHeap.delete(modelId);
-        });
+      const result = this.mount(model);
+      if (result instanceof Promise) {
+        return result.finally(cleanup);
       }
     } catch (error) {
-      this.viewModelsTempHeap.delete(modelId);
+      cleanup();
       throw error;
     }
 
-    this.viewModelsTempHeap.delete(modelId);
+    cleanup();
   }
 
   async detach(id: string) {
