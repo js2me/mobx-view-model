@@ -111,10 +111,7 @@ const useCreateViewModelBase = (
 ) => {
   const viewModels = useContext(ViewModelsContext);
   const parentViewModel = useContext(ActiveViewModelContext);
-  /** Tracks whether this hook instance has already attached the current VM.
-   *  Prevents double-attach when React 19 re-runs layout effects on
-   *  Suspense/Offscreen reappear — which would otherwise trigger a MobX
-   *  reaction → observer re-render → reappear → infinite loop. */
+  /** Prevents double-attach on React 19 Offscreen reappear. */
   const lastAttachedInstanceRef = useRef<AnyViewModel | null>(null);
 
   const ctx = config?.ctx ?? {};
@@ -169,12 +166,9 @@ const useCreateViewModelBase = (
     return instance;
   });
 
-  // Attach during render (same phase as mount) so that MobX reactions fire
-  // in a single batch.  Calling attach() in the layout effect splits the
-  // reactions across two frames, causing extra re-renders and — when React 19
-  // re-evaluates a Suspense boundary — an infinite remount loop.
-  // The lastAttachedInstanceRef guard prevents double-attach on re-renders and
-  // on Offscreen reappear.
+  // Attach during render so MobX reactions fire in a single batch.
+  // Calling attach() in the layout effect splits reactions across two frames,
+  // causing extra re-renders and infinite remount loops with React 19 Suspense.
   if (lastAttachedInstanceRef.current !== instance) {
     if (viewModels) {
       void viewModels.attach(instance);

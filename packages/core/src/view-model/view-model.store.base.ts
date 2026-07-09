@@ -380,18 +380,12 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
   attach(model: VMBase | AnyViewModelSimple): MaybePromise<void> {
     const modelId = this.getOrCreateVmId(model);
 
-    // Clean up orphan VMs that were created (markToBeAttached) but never
-    // attached — e.g. when React 19 suspends a component before attach(),
-    // then remounts it with a new useId().  The old VM sits in tempHeap and
-    // viewModelIdsByClasses but is never claimed; clean it up so only the
-    // current VM exists for this class + parent combination.
-    // Also detach VMs already in the main store that share the same parent,
-    // but only when the incoming model is in tempHeap (i.e. was just created
-    // via markToBeAttached). This handles the React 19 remount scenario where
-    // a component gets a new useId(), leaving the old VM in the store.
-    // Without the tempHeap guard, legitimate same-class/same-parent VMs
-    // (e.g. multiple instances of the same VM class under one parent) would
-    // be incorrectly evicted.
+    // Evict same-class/same-parent orphans left by React 19 Suspense remounts.
+    // When a component is suspended then remounted with a new useId(), the old
+    // VM may be stuck in tempHeap (never attached) or still in the main store
+    // (from a previous render). Only detach main-store VMs when the incoming
+    // model is in tempHeap — otherwise legitimate same-class/same-parent
+    // instances (e.g. multiple list items under one parent) would be evicted.
     const isInTempHeap = this.viewModelsTempHeap.has(modelId);
     const constructor = (model as any).constructor as Class<any, any>;
     const vmIds = this.viewModelIdsByClasses.get(constructor);
