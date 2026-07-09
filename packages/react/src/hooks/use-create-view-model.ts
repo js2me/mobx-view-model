@@ -116,7 +116,10 @@ const useCreateViewModelBase = (
 
   const ctx = config?.ctx ?? {};
 
-  const useReactIds = config?.vmConfig?.useReactIds ?? viewModels?.vmConfig?.useReactIds ?? viewModelsConfig.useReactIds;
+  const useReactIds =
+    config?.vmConfig?.useReactIds ??
+    viewModels?.vmConfig?.useReactIds ??
+    viewModelsConfig.useReactIds;
   const renderId = useReactIds ? useId() : undefined;
 
   const instance = useValue(() => {
@@ -179,21 +182,21 @@ const useCreateViewModelBase = (
   }
 
   useIsomorphicLayoutEffect(() => {
-    if (viewModels) {
-      return () => {
-        void viewModels.detach(instance.id);
-        if (lastAttachedInstanceRef.current === instance) {
+    return () => {
+      const detachInstance = instance;
+        const detachId = instance.id;
+        requestAnimationFrame(() => {
+        if (lastAttachedInstanceRef.current === detachInstance) {
+          if (viewModels) {
+            void viewModels.detach(detachId);
+          } else {
+          detachInstance.unmount();
+          }
           lastAttachedInstanceRef.current = null;
         }
-      };
-    }
-    return () => {
-      instance.unmount();
-      if (lastAttachedInstanceRef.current === instance) {
-        lastAttachedInstanceRef.current = null;
-      }
+      });
     };
-  }, [instance]);
+  }, [instance, viewModels]);
 
   instance.setPayload(payload ?? {});
 
@@ -240,24 +243,24 @@ const useCreateViewModelSimple = (
       void instance.mount?.();
     }
     lastAttachedInstanceRef.current = instance;
-  } 
+  }
 
   useIsomorphicLayoutEffect(() => {
-    if (viewModels) {
-      return () => {
-        void viewModels.detach(instance.id);
-        if (lastAttachedInstanceRef.current === instance) {
+    return () => {
+      const detachInstance = instance;
+        const detachId = instance.id;
+        requestAnimationFrame(() => {
+        if (lastAttachedInstanceRef.current === detachInstance) {
+          if (viewModels) {
+            void viewModels.detach(detachId);
+          } else {
+            detachInstance.unmount?.();
+          }
           lastAttachedInstanceRef.current = null;
         }
-      };
-    }
-    return () => {
-      instance.unmount?.();
-      if (lastAttachedInstanceRef.current === instance) {
-        lastAttachedInstanceRef.current = null;
-      }
+      });
     };
-  }, [instance]);
+  }, [instance, viewModels]);
 
   instance.setPayload?.(payload);
 
