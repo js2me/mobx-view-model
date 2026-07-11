@@ -93,19 +93,28 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
     );
   }
 
-  /**
-   * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#processcreateconfig-config)
-   * Process the configuration for creating a view model.
-   * This method is called just before creating a new view model instance.
-   * It's useful for initializing the configuration, like linking anchors to the view model class.
-   * @param config - The configuration for creating the view model.
-   */
-  processCreateConfig<VM extends VMBase>(
-    config: ViewModelCreateConfig<VM>,
-  ): void {
-    const fromConfig = config.anchors ?? [];
+  protected connect(instance: any, config: ViewModelCreateConfig<any>): void {
+    this.link(config.VM, ...(config.anchors ?? []));
+    this.viewModels.set(config.id, instance!);
+  }
 
-    this.link(config.VM, config.component, ...fromConfig);
+  getOrCreate(config: ViewModelCreateConfig<any>, connectIfNeeded?: boolean): any {
+    let instance = this.viewModels.get(config.id);
+
+    if (!instance) {
+      instance = this.create(config);
+      if (connectIfNeeded) {
+        this.connect(instance, config);
+      }
+    }
+
+    return instance;
+  }
+
+  unmountNew(instance: VMBase) {
+    instance.unmount();
+    this.unlink()
+    this.viewModels.delete(instance.id);
   }
 
   /**
@@ -114,7 +123,7 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
    * @param config - The configuration for creating the view model.
    * @returns The newly created view model instance.
    */
-  createViewModel<VM extends VMBase>(config: ViewModelCreateConfig<VM>): VM {
+  create<VM extends VMBase>(config: ViewModelCreateConfig<VM>): VM {
     const VMConstructor = config.VM as unknown as typeof ViewModelBase;
     const vmConfig = mergeVMConfigs(this.vmConfig, config.vmConfig);
     const vmParams: ViewModelParams<any, any> & ViewModelCreateConfig<VM> = {
@@ -122,11 +131,15 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
       vmConfig,
     };
 
+    let instance: VM
+
     if (vmConfig.factory) {
-      return vmConfig.factory(vmParams) as VM;
+      instance= vmConfig.factory(vmParams) as VM;
+    } else {
+      instance = new VMConstructor(vmParams) as unknown as VM
     }
 
-    return new VMConstructor(vmParams) as unknown as VM;
+    return instance;
   }
 
   /**
@@ -138,15 +151,7 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
   generateViewModelId<VM extends VMBase>(
     config: ViewModelGenerateIdConfig<VM>,
   ): string {
-    if (config.id) {
-      return config.id;
-    } else {
-      return this.vmConfig.generateId({
-        ...config.ctx,
-        VM: config.VM,
-        renderId: config.renderId,
-      });
-    }
+    return config.id;
   }
 
   /**
@@ -363,45 +368,6 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
     return isViewModel(vm) ? vm.parentViewModel?.id : null
   }
 
-  protected evictOrphans(
-    model: VMBase | AnyViewModelSimple,
-    modelId: string,
-  ): void {
-    const isInTempHeap = this.viewModelsTempHeap.has(modelId);
-    const constructor = (model as any).constructor as Class<any, any>;
-    const vmIds = this.viewModelIdsByClasses.get(constructor);
-    if (!vmIds) return;
-
-    const parentId = this.getParentId(model);
-
-    for (const existingId of [...vmIds]) {
-      if (existingId === modelId) continue;
-      const existingVm =
-        this.viewModels.get(existingId) ??
-        this.viewModelsTempHeap.get(existingId);
-      if (!existingVm) continue;
-      if (this.getParentId(existingVm) !== parentId) continue;
-
-      if (isInTempHeap && this.viewModels.has(existingId)) {
-        void this.detach(existingId);
-      } else if (this.viewModelsTempHeap.has(existingId)) {
-        this.viewModelsTempHeap.delete(existingId);
-        this.dettachVMConstructor(existingVm);
-      }
-    }
-  }
-
-  markToBeAttached(model: VMBase | AnyViewModelSimple) {
-    const modelId = this.getOrCreateVmId(model);
-
-    this.viewModelsTempHeap.set(modelId, model as VMBase);
-
-    if ('attachViewModelStore' in model) {
-      model.attachViewModelStore!(this as ViewModelStore);
-    }
-
-    this.attachVMConstructor(model);
-  }
 
   /**
    * Registers the view model and runs `model.mount()` in the same stack when it is synchronous,
@@ -413,7 +379,7 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
   attach(model: VMBase | AnyViewModelSimple): MaybePromise<void> {
     const modelId = this.getOrCreateVmId(model);
 
-    this.evictOrphans(model, modelId);
+    // this.evictOrphans(model, modelId);
 
     const attachedCount = this.instanceAttachedCount.get(modelId) ?? 0;
     this.instanceAttachedCount.set(modelId, attachedCount + 1);
@@ -425,7 +391,7 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
 
     const cleanup = () => this.viewModelsTempHeap.delete(modelId);
 
-    if ('isMounted' in model && model.isMounted) {
+    if (isViewModel(model) && model.isMounted) {
       cleanup()
       return;
     }

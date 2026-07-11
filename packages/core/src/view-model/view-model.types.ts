@@ -30,7 +30,6 @@ export interface ViewModelParams<
   id: string;
   payload: Payload;
   viewModels?: Maybe<ViewModelStore>;
-  parentViewModelId?: Maybe<string>;
   parentViewModel?: Maybe<ParentViewModel>;
   /**
    * Additional data that may be useful when creating the VM

@@ -8,6 +8,7 @@ import type {
   ViewModelCreateConfig,
   ViewModelStore,
 } from '../view-model/index.js';
+import { RRenderFn } from 'mobx-view-model-react';
 
 export interface ViewModelObservableConfig {
   /**
@@ -85,12 +86,12 @@ export interface ViewModelsConfig<
     >;
   };
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#processviewcomponent) */
-  processViewComponent?: (
-    component: import('mobx-view-model-react').RComponentType<any> | undefined,
+  processRender?: (
+    renderFn: import('mobx-view-model-react').RRenderFn<AnyObject> | undefined,
     VM: Class<TViewModel>,
     /** Полный тип HOC — `ViewModelHocConfig` в `mobx-view-model-react`. */
     config: AnyObject,
-  ) => Maybe<import('mobx-view-model-react').RComponentType<any>>;
+  ) => Maybe<import('mobx-view-model-react').RRenderFn<any>>;
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#wrapviewsinobserver) */
   wrapViewsInObserver?: boolean;
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#observable) */

@@ -8,3 +8,5 @@ export type InferViewModelParams<T> = T extends ViewModelBase<
 >
   ? ViewModelParams<T1, T2, T3>
   : never;
+
+export type ViewModelState = 'mounted' | 'unmounted' | 'init'  |'unmounting'

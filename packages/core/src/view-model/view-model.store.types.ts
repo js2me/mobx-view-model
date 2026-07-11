@@ -15,18 +15,15 @@ export interface ViewModelStoreConfig {
 
 export interface ViewModelGenerateIdConfig<VM extends AnyViewModel> {
   VM: Class<VM>;
-  id?: Maybe<string>;
+  /** tree render id (received and generated from view) */
+  id: string;
   ctx: AnyObject;
-  parentViewModelId: string | null;
-  fallback?: import('mobx-view-model-react').RComponentType;
-  renderId?: string;
+  parentViewModel?: AnyViewModel | AnyViewModelSimple;
 }
 
 export interface ViewModelCreateConfig<VM extends AnyViewModel>
   extends ViewModelParams<VM['payload'], VM['parentViewModel']> {
   VM: Class<VM>;
-  fallback?: import('mobx-view-model-react').RComponentType;
-  component?: import('mobx-view-model-react').VMComponent<AnyViewModel, any>;
   /**
    * Additional component anchors for the same VM instance.
    * useViewModel(AnchorComponent) will return this VM when mounted.

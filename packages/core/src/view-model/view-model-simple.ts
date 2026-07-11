@@ -22,6 +22,7 @@ export interface ViewModelSimple<
    */
   parentViewModel?: ParentViewModel;
 
+  init?(): void;
   mount?(): void;
   unmount?(): void;
   setPayload?(payload: Payload): void;

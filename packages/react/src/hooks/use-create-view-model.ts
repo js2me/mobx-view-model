@@ -5,16 +5,14 @@ import type {
   ViewModelSimple,
   ViewModelsConfig,
 } from 'mobx-view-model';
-import { viewModelsConfig } from 'mobx-view-model';
-import { use, useContext, useId, useRef } from 'react';
-import { flushPendingReactions } from 'yummies/mobx';
-import type { AnyObject, Class, IsPartial, Maybe } from 'yummies/types';
-import { isViewModelClass } from 'mobx-view-model';
+import { isViewModelClass, viewModelsConfig } from 'mobx-view-model';
+import { useContext, useEffect, useId, useRef } from 'react';
+import type { AnyObject, Class, Dict, IsPartial, Maybe } from 'yummies/types';
 import {
   ActiveViewModelContext,
   ViewModelsContext,
 } from '../contexts/index.js';
-import { useIsomorphicLayoutEffect, useValue } from '../lib/hooks/index.js';
+import { untracked } from 'mobx';
 
 export interface UseCreateViewModelConfig<TViewModel extends AnyViewModel>
   extends Pick<
@@ -95,184 +93,117 @@ export function useCreateViewModel(
   payload?: any,
   config?: any,
 ) {
+  let instance: AnyViewModel | AnyViewModelSimple;
+
   if (isViewModelClass(VM)) {
     // scenario for ViewModelBase
-    return useCreateViewModelBase(VM, payload, config);
-  }
-
-  // scenario for ViewModelSimple
-  return useCreateViewModelSimple(VM, payload);
-}
-
-const useCreateViewModelBase = (
-  VM: Class<AnyViewModel>,
-  payload?: any,
-  config?: Maybe<UseCreateViewModelConfig<AnyViewModel>>,
-) => {
-  const viewModels = useContext(ViewModelsContext);
-  const parentViewModel = useContext(ActiveViewModelContext);
-  /** Prevents double-attach on React 19 Offscreen reappear. */
-  const lastAttachedInstanceRef = useRef<AnyViewModel | null>(null);
-
-  const ctx = config?.ctx ?? {};
-
-  const useReactIds =
-    config?.vmConfig?.useReactIds ??
-    viewModels?.vmConfig?.useReactIds ??
-    viewModelsConfig.useReactIds;
-  const renderId = useReactIds ? useId() : undefined;
-
-  const instance = useValue(() => {
-    const id =
-      viewModels?.generateViewModelId({
-        ...config,
-        ctx,
-        VM,
-        renderId,
-        parentViewModelId: parentViewModel?.id ?? null,
-      }) ??
-      config?.id ??
-      viewModelsConfig.generateId({
-        ...ctx,
-        renderId,
-      });
-
-    const instanceFromStore = viewModels?.get(id);
-
-    if (instanceFromStore) {
-      return instanceFromStore as AnyViewModel;
-    }
-
-    const configCreate: ViewModelCreateConfig<any> = {
-      ...config,
-      vmConfig: config?.vmConfig,
-      id,
-      parentViewModelId: parentViewModel?.id,
-      payload: payload ?? {},
-      VM,
-      viewModels,
-      parentViewModel,
-      ctx,
-    };
-
-    viewModels?.processCreateConfig(configCreate);
-
-    const instance: AnyViewModel =
-      config?.factory?.(configCreate) ??
-      viewModels?.createViewModel<any>(configCreate) ??
-      viewModelsConfig.factory(configCreate);
-
-    flushPendingReactions(viewModelsConfig.flushPendingReactions);
-
-    viewModels?.markToBeAttached(instance);
-
-    return instance;
-  });
-
-  // Attach during render so MobX reactions fire in a single batch.
-  // Calling attach() in the layout effect splits reactions across two frames,
-  // causing extra re-renders and infinite remount loops with React 19 Suspense.
-  if (lastAttachedInstanceRef.current !== instance) {
-    if (viewModels) {
-      void viewModels.attach(instance);
-    } else {
-      void instance.mount();
-    }
-    lastAttachedInstanceRef.current = instance;
-  }
-
-  useIsomorphicLayoutEffect(() => {
-    return () => {
-      const detachInstance = instance;
-        const detachId = instance.id;
-        requestAnimationFrame(() => {
-        if (lastAttachedInstanceRef.current === detachInstance) {
-          if (viewModels) {
-            void viewModels.detach(detachId);
-          } else {
-          detachInstance.unmount();
-          }
-          lastAttachedInstanceRef.current = null;
-        }
-      });
-    };
-  }, [instance, viewModels]);
-
-  instance.setPayload(payload ?? {});
-
-  const suspendUntil =
-    config?.vmConfig?.suspendUntil ??
-    viewModels?.vmConfig?.suspendUntil ??
-    viewModelsConfig.suspendUntil;
-
-  if (suspendUntil != null) {
-    const usable = suspendUntil(instance);
-    if (usable) {
-      use(usable);
-    }
+    instance = useCreateViewModelBase(VM, payload, config);
+  } else {
+    // scenario for ViewModelSimple
+    instance = useCreateViewModelSimple(VM, payload, config);
   }
 
   return instance;
+}
+
+const EMPTY_ARR: any[] = []
+
+const useCreateViewModelBase = (
+  VM: Class<AnyViewModel>,
+  payload: Dict,
+  rawCfg?: Maybe<UseCreateViewModelConfig<AnyViewModel>>,
+) => {
+  const viewModels = useContext(ViewModelsContext);
+  const parentViewModel = useContext(ActiveViewModelContext);
+  // @ts-ignore
+  const modelRef = useRef<AnyViewModel>();
+  let model: AnyViewModel = modelRef.current;
+
+  const treeRenderId = process.env.NODE_ENV === 'production' ? useId() : `${useId()}:${VM.name}`;
+
+  if (!model) {
+    const config = {
+      ...rawCfg,
+      id: treeRenderId,
+      payload,
+      VM,
+      viewModels,
+      parentViewModel,
+      ctx: rawCfg?.ctx ?? {},
+    } satisfies ViewModelCreateConfig<any>;
+
+    if (viewModels) {
+      config.id = viewModels.generateViewModelId(config)
+      model = untracked(() => viewModels.get(config.id)!);
+      if (!model) {
+        model = viewModels.create(config);
+        viewModels.connect(instance, config);
+      }
+      model = viewModels.getOrCreate(config, true);
+    } else {
+      model = config?.factory?.(config) ?? viewModelsConfig.factory(config);
+    }
+
+    modelRef.current = model;
+  } else {
+    model.setPayload(payload)
+  }
+
+  useEffect(() => () => {
+    if (viewModels) {
+      viewModels.unmountNew(model)
+    } else {
+      model.unmount()
+    }
+  }, EMPTY_ARR)
+
+  return model;
 };
 
 const useCreateViewModelSimple = (
   VM: Class<AnyViewModelSimple>,
-  payload?: any,
+  payload: Dict,
+  config?: Maybe<UseCreateViewModelConfig<AnyViewModel>>,
 ) => {
   const viewModels = useContext(ViewModelsContext);
   const parentViewModel = useContext(ActiveViewModelContext);
-  const lastAttachedInstanceRef = useRef<AnyViewModelSimple | null>(null);
+  // @ts-ignore
+  const modelRef = useRef<AnyViewModelSimple>();
+  let model: AnyViewModelSimple = modelRef.current;
 
-  const instance = useValue(() => {
-    const instance = new VM();
+  if (!model) {
+    modelRef.current = model = new VM();
 
-    instance.parentViewModel =
-      parentViewModel as unknown as (typeof instance)['parentViewModel'];
+    model.parentViewModel =
+      parentViewModel as unknown as (typeof model)['parentViewModel'];
 
-    flushPendingReactions(viewModelsConfig.flushPendingReactions);
-
-    viewModels?.markToBeAttached(instance);
-
-    return instance;
-  });
-
-  if (lastAttachedInstanceRef.current !== instance) {
     if (viewModels) {
-      void viewModels.attach(instance);
+      model.attachViewModelStore?.(viewModels);
+    }
+    
+      /**
+    // логика работы простых вью моделей со стором
+    const modelId = viewModels.getOrCreateVmId(model);
+
+    viewModels.viewModelsTempHeap.set(modelId, model as VMBase);
+
+    if ('attachViewModelStore' in model) {
+      model.attachViewModelStore?.(this as ViewModelStore);
+    }
+
+    viewModels.attachVMConstructor(model);
+    */
+  }
+
+  useEffect(() => () => {
+    if (viewModels) {
+      viewModels.unmountNew(model)
     } else {
-      void instance.mount?.();
+      model.unmount?.()
     }
-    lastAttachedInstanceRef.current = instance;
-  }
+  }, EMPTY_ARR)
 
-  useIsomorphicLayoutEffect(() => {
-    return () => {
-      const detachInstance = instance;
-        const detachId = instance.id;
-        requestAnimationFrame(() => {
-        if (lastAttachedInstanceRef.current === detachInstance) {
-          if (viewModels) {
-            void viewModels.detach(detachId);
-          } else {
-            detachInstance.unmount?.();
-          }
-          lastAttachedInstanceRef.current = null;
-        }
-      });
-    };
-  }, [instance, viewModels]);
+    model.setPayload?.(payload)
 
-  instance.setPayload?.(payload);
-
-  const suspendUntil =
-    viewModels?.vmConfig?.suspendUntil ?? viewModelsConfig.suspendUntil;
-
-  if (suspendUntil != null) {
-    const usable = suspendUntil(instance);
-    if (usable) {
-      use(usable);
-    }
-  }
-
-  return instance;
+  return model;
 };

@@ -1,26 +1,23 @@
-import { observer } from 'mobx-react-lite';
 import type {
   AnyViewModel,
-  AnyViewModelSimple,
+  AnyViewModelSimple, RRenderFn,
   ViewModel,
   ViewModelSimple,
-  ViewModelStore,
+  ViewModelStore
 } from 'mobx-view-model';
 import { viewModelsConfig } from 'mobx-view-model';
-import { forwardRef, useContext } from 'react';
+import { forwardRef } from 'react';
 import type {
   AnyObject,
   Class,
-  Defined,
-  EmptyObject,
+  Defined, EmptyObject,
   HasKey,
   IsAny,
   IsPartial,
   IsUnknown,
-  Maybe,
+  Maybe
 } from 'yummies/types';
 import { ActiveViewModelProvider } from '../components/index.js';
-import { ViewModelsContext } from '../contexts/index.js';
 import {
   type UseCreateViewModelConfig,
   useCreateViewModel,
@@ -32,6 +29,8 @@ import {
   RLegacyRef,
   RReactNode,
 } from '../lib/react-types.js';
+import { observer } from 'mobx-react-lite';
+import { noop } from '../lib/noop.js';
 
 export type FixedComponentType<P extends AnyObject = {}> =
   /**
@@ -222,6 +221,10 @@ export interface VMComponent<
   ): VMComponent<TViewModel, TComponentOriginProps, TForwardedRef>;
 }
 
+type VMHocFullConfig = ViewModelSimpleHocConfig<any> & ViewModelHocConfig<any> & {
+  component: VMComponent<any>;
+}
+
 /**
  * A Higher-Order Component that connects React components to their ViewModels, providing seamless MobX integration.
  *
@@ -233,59 +236,12 @@ export function withViewModel<
   TForwardedRef = unknown,
 >(
   model: Class<TViewModel>,
-  component: RComponentType<
+  renderFn: RRenderFn<
     ViewModelPropsChargedProps<TComponentOriginProps, TViewModel, TForwardedRef>
   >,
   config?: ViewModelHocConfig<TViewModel>,
 ): VMComponent<TViewModel, TComponentOriginProps, TForwardedRef>;
 
-/**
- * A Higher-Order Component that connects React components to their ViewModels, providing seamless MobX integration.
- *
- * [**Documentation**](https://js2me.github.io/mobx-view-model/react/api/with-view-model.html)
- */
-export function withViewModel<
-  TViewModel extends AnyViewModel,
-  TForwardedRef = unknown,
->(
-  model: Class<TViewModel>,
-  config?: ViewModelHocConfig<TViewModel>,
-): <TComponentOriginProps extends AnyObject = ViewModelProps<TViewModel>>(
-  Component?: RComponentType<
-    ViewModelPropsChargedProps<TComponentOriginProps, TViewModel, TForwardedRef>
-  >,
-) => VMComponent<TViewModel, TComponentOriginProps, TForwardedRef>;
-
-/**
- * A Higher-Order Component that connects React components to their ViewModels, providing seamless MobX integration.
- *
- * [**Documentation**](https://js2me.github.io/mobx-view-model/react/api/with-view-model.html)
- */
-export function withViewModel<TViewModel, TForwardedRef = unknown>(
-  model: Class<TViewModel>,
-  config?: ViewModelSimpleHocConfig<TViewModel>,
-): <TComponentOriginProps extends AnyObject = ViewModelProps<TViewModel>>(
-  Component?: FixedComponentType<
-    ViewModelPropsChargedProps<TComponentOriginProps, TViewModel, TForwardedRef>
-  >,
-) => VMComponent<TViewModel, TComponentOriginProps, TForwardedRef>;
-
-/**
- * A Higher-Order Component that connects React components to their ViewModels, providing seamless MobX integration.
- *
- * [**Documentation**](https://js2me.github.io/mobx-view-model/react/api/with-view-model.html)
- */
-export function withViewModel<
-  TViewModel extends AnyViewModelSimple,
-  TComponentOriginProps extends AnyObject = AnyObject,
-  TForwardedRef = unknown,
->(
-  model: Class<TViewModel>,
-  component: FixedComponentType<
-    ViewModelPropsChargedProps<TComponentOriginProps, TViewModel, TForwardedRef>
-  >,
-  config?: ViewModelSimpleHocConfig<TViewModel>,
-): VMComponent<TViewModel, TComponentOriginProps, TForwardedRef>;
 
 /**
  * A Higher-Order Component that connects React components to their ViewModels, providing seamless MobX integration.
@@ -298,9 +254,7 @@ export function withViewModel<
   TForwardedRef = unknown,
 >(
   model: Class<TViewModel>,
-  component: FixedComponentType<
-    ViewModelPropsChargedProps<TComponentOriginProps, TViewModel, TForwardedRef>
-  >,
+  renderFn: RRenderFn<ViewModelPropsChargedProps<TComponentOriginProps, TViewModel, TForwardedRef>>,
   config?: ViewModelSimpleHocConfig<TViewModel>,
 ): VMComponent<TViewModel, TComponentOriginProps, TForwardedRef>;
 
@@ -311,87 +265,25 @@ export function withViewModel<
  */
 export function withViewModel(
   VM: Class<any>,
-  configOrComponent?: any,
-  configOrNothing?: any,
+  rawRenderFn?: RRenderFn<AnyObject>,
+  rawConfig?: ViewModelSimpleHocConfig<any> & ViewModelHocConfig<any>,
 ): any {
-  if (
-    typeof configOrComponent === 'function' ||
-    (configOrComponent && configOrComponent.$$typeof !== undefined)
-  ) {
-    const config = configOrNothing ?? {};
-    return withViewModelWrapper(
-      VM,
-      {
-        ...config,
-        ctx: {
-          VM,
-          generateId: config.generateId,
-          ...config.ctx,
-        },
-      },
-      configOrComponent,
-    );
-  } else {
-    const config = configOrComponent ?? {};
-    const finalConfig = {
-      ...config,
-      ctx: {
-        VM,
-        generateId: config.generateId,
-        ...config.ctx,
-      },
-    };
+  const config = (rawConfig??{}) as VMHocFullConfig;
+  const anchors = config.anchors ??= [];
 
-    return (Component: RComponentType<any>) =>
-      withViewModelWrapper(VM, finalConfig, Component);
-  }
-}
-
-const REACT_MEMO_SYMBOL = Symbol.for('react.memo');
-
-const withViewModelWrapper = (
-  VM: Class<any>,
-  config: ViewModelHocConfig<any>,
-  OriginalComponent?: RComponentType<any>,
-) => {
   const processViewComponent =
-    config.vmConfig?.processViewComponent ??
-    viewModelsConfig.processViewComponent;
+    config.vmConfig?.processRender ??
+    viewModelsConfig.processRender;
 
-  const wrapViewsInObserver =
-    config.vmConfig?.wrapViewsInObserver ??
-    viewModelsConfig.wrapViewsInObserver;
+  let renderFn =
+    processViewComponent?.(rawRenderFn, VM, config) ?? rawRenderFn ?? noop;
 
-  let Component =
-    processViewComponent?.(OriginalComponent, VM, config) ?? OriginalComponent;
-
-
-  if (process.env.NODE_ENV !== 'production' && Component) {
-    Component.displayName = `ConnectedViewModel(${VM.name}->${Component.name || 'View'})`;
-  }
-
-  if (
-    wrapViewsInObserver &&
-    Component &&
-    (Component as any).$$typeof !== REACT_MEMO_SYMBOL
-  ) {
-    // `observer` плохо выводит типы для union (FunctionComponent | ComponentClass),
-    // поэтому здесь используем безопасный runtime-cast, чтобы не ломать `tsc`.
-    Component = observer(Component as any) as any;
-  }
-
-  const reactHook = config.reactHook ?? viewModelsConfig.reactHook;
   const getPayload = config.getPayload;
-  const FallbackComponent =
-    config.fallback ?? viewModelsConfig.fallbackComponent;
 
+  // original component where happens all rendering and processing
   const RawComponent = (allProps: any, ref: any) => {
-    const viewModels = useContext(ViewModelsContext);
-
-    reactHook?.(allProps, config.ctx!, viewModels, ref);
-
     const { payload: rawPayload, ...componentProps } = allProps;
-    const payload = getPayload?.(allProps) ?? rawPayload;
+    const payload = getPayload?.(allProps) ?? rawPayload ?? {};
 
     if (config.forwardRef && !('forwardedRef' in componentProps)) {
       componentProps.forwardedRef = ref;
@@ -402,66 +294,37 @@ const withViewModelWrapper = (
       props: componentProps,
     }) as unknown as AnyViewModel | AnyViewModelSimple;
 
-    const isRenderAllowedByStore =
-      !viewModels || viewModels.isAbleToRenderView(model.id);
-
-    // This condition is works for AnyViewModelSimple too
-    // All other variants will be bad for performance
-    const isRenderAllowed =
-      isRenderAllowedByStore && (model as AnyViewModel).isMounted !== false;
-
-    if (isRenderAllowed) {
-      return (
-        <ActiveViewModelProvider value={model}>
-          {Component && <Component {...componentProps} model={model} />}
-        </ActiveViewModelProvider>
-      );
-    }
-
+    const node = renderFn({ ...componentProps, model });
+    
     return (
-      FallbackComponent && <FallbackComponent {...allProps} payload={payload} />
+      <ActiveViewModelProvider value={model}>
+        {node}
+      </ActiveViewModelProvider>
     );
   };
 
-  let ConnectedViewModel = RawComponent;
+  let VMComponent = observer(RawComponent as any) as VMComponent<typeof VM>;
 
   if (config.forwardRef) {
-    ConnectedViewModel = forwardRef(ConnectedViewModel) as any;
+    VMComponent = forwardRef(VMComponent) as any;
   }
-
-  ConnectedViewModel = observer(ConnectedViewModel);
 
   if (process.env.NODE_ENV !== 'production') {
-    (ConnectedViewModel as RComponentType).displayName =
-      `ConnectedViewModel(${VM.name}->Observer)`;
+    (VMComponent as RComponentType).displayName = `${VM.name}`;
   }
 
-  // There is no problem to just assign it here to config
-  // This property is needed to pass in `useCreateViewModel()` hook
-  // @ts-expect-error
-  config.component = ConnectedViewModel as unknown as VMComponent<
-    AnyViewModel,
-    any
-  >;
+  anchors.push(VMComponent);
 
-  config.anchors ??= [];
-
-  const anchors = config.anchors;
-
-  const ConnectedWithConnect =
-    ConnectedViewModel as typeof ConnectedViewModel & {
-      connect: (anchor: RComponentType) => typeof ConnectedWithConnect;
-    };
   /**
    * Registers an anchor component for the same VM instance.
    * Adds the anchor to config.anchors — useViewModel(anchor) will return this VM when mounted.
    */
-  ConnectedWithConnect.connect = (anchor: RComponentType) => {
+  VMComponent.connect = (anchor: RComponentType) => {
     if (!anchors.includes(anchor)) {
       anchors.push(anchor);
     }
-    return ConnectedWithConnect;
+    return VMComponent;
   };
 
-  return ConnectedWithConnect;
-};
+  return VMComponent;
+}

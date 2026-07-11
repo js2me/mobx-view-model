@@ -67,14 +67,11 @@ export interface ViewModelStore<VMBase extends AnyViewModel = AnyViewModel> {
   getAll<T extends VMBase | AnyViewModelSimple>(
     vmLookup: Maybe<ViewModelLookup<T>>,
   ): T[];
+  
 
-  /**
-   * This is specific method to be called when a view model is about to be attached to view.
-   * This method is the first method where the created view model instance is passed to the view model store.
-   *
-   * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#marktobeattached-viewmodel)
-   */
-  markToBeAttached(model: VMBase | AnyViewModelSimple): void;
+  getOrCreate(config: ViewModelCreateConfig<any>,connectIfNeeded?: boolean): any
+
+  unmountNew(instance: any): any;
 
   /**
    * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#attach-viewmodel)
@@ -104,18 +101,8 @@ export interface ViewModelStore<VMBase extends AnyViewModel = AnyViewModel> {
    * @param config - The configuration for creating the view model.
    * @returns The newly created view model instance.
    */
-  createViewModel<VM extends VMBase>(config: ViewModelCreateConfig<VM>): VM;
+  create<VM extends VMBase>(config: ViewModelCreateConfig<VM>): VM;
 
-  /**
-   * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#processcreateconfig-config)
-   * Process the configuration for creating a view model.
-   * This method is called just before creating a new view model instance.
-   * It's useful for initializing the configuration, like linking anchors to the view model class.
-   * @param config - The configuration for creating the view model.
-   */
-  processCreateConfig<VM extends VMBase>(
-    config: ViewModelCreateConfig<VM>,
-  ): void;
 
   /**
    * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#link)

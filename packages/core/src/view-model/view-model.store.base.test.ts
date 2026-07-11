@@ -7,12 +7,12 @@ import { ViewModelBaseMock } from './view-model.base.test.js';
 import type { ViewModel } from './view-model.js';
 import { ViewModelStoreBase } from './view-model.store.base.js';
 import type {
-  ViewModelGenerateIdConfig,
-  ViewModelLookup,
+    ViewModelGenerateIdConfig,
+    ViewModelLookup,
 } from './view-model.store.types.js';
 import type {
-  AnyViewModel,
-  AnyViewModelSimple,
+    AnyViewModel,
+    AnyViewModelSimple,
 } from './view-model.types.js';
 
 export class ViewModelStoreBaseMock extends ViewModelStoreBase {
@@ -77,7 +77,7 @@ describe('ViewModelStoreBase', () => {
   });
   it('has createViewModel method', () => {
     const vmStore = new ViewModelStoreBaseMock();
-    expect(vmStore.createViewModel).toBeDefined();
+    expect(vmStore.create).toBeDefined();
   });
 
   it('create instance', () => {
