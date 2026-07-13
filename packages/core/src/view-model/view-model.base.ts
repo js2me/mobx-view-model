@@ -134,10 +134,6 @@ export class ViewModelBase<
     /* Empty method to be overridden */
   }
 
-  init() {
-    /* Empty method to be overridden */
-  }
-
   /**
    * The method is called when the view starts mounting
    */

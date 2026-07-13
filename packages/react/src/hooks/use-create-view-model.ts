@@ -164,7 +164,8 @@ const useCreateViewModelSimple = (
   let model: AnyViewModelSimple = modelRef.current;
 
   if (!model) {
-    modelRef.current = model = new VM();
+    // аналогично сделать как и базовой вью модели 
+    modelRef.current = model = viewModels ? viewModels.define() : new VM();
 
     model.parentViewModel =
       parentViewModel as unknown as (typeof model)['parentViewModel'];
