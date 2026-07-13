@@ -254,5 +254,7 @@ export class ViewModelBase<
     return isEqual;
   }
 
-  [VIEW_MODEL_MARKER] = true;
+  static {
+    this.prototype[VIEW_MODEL_MARKER] = true;
+  }
 }
