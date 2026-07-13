@@ -22,7 +22,8 @@ import { VIEW_MODEL_MARKER } from '../symbols/index.js';
 declare const process: { env: { NODE_ENV?: string } };
 
 const baseAnnotations: ObservableAnnotationsArray = [
-  [computed, 'vmState', 'isMounted', 'parentViewModel'],
+  [observable.ref, 'vmState'],
+  [computed, 'isMounted', 'parentViewModel'],
   [action, 'willMount', 'didMount', 'didUnmount', 'willUnmount', 'mount', 'unmount'],
 ];
 
@@ -255,6 +256,7 @@ export class ViewModelBase<
   }
 
   static {
+    // @ts-ignore
     this.prototype[VIEW_MODEL_MARKER] = true;
   }
 }
