@@ -1,5 +1,5 @@
 import type { AnyObject, Class, Maybe } from 'yummies/types';
-import type { ViewModelsRawConfig } from '../config/index.js';
+import type { ViewModelsConfig, ViewModelsRawConfig } from '../config/index.js';
 import type {
   AnyViewModel,
   AnyViewModelSimple,
@@ -30,6 +30,7 @@ export interface ViewModelCreateConfig<VM extends AnyViewModel>
    */
   anchors?: import('mobx-view-model-react').RComponentType[];
   props?: AnyObject;
+  factory?: ViewModelsConfig['factory']
 }
 
 /**

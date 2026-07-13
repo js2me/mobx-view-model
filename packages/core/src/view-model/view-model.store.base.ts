@@ -93,7 +93,7 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
     );
   }
 
-  protected connect(instance: any, config: ViewModelCreateConfig<any>): void {
+  connect(instance: any, config: ViewModelCreateConfig<any>): void {
     this.link(config.VM, ...(config.anchors ?? []));
     this.viewModels.set(config.id, instance!);
   }
@@ -124,22 +124,13 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
    * @returns The newly created view model instance.
    */
   create<VM extends VMBase>(config: ViewModelCreateConfig<VM>): VM {
-    const VMConstructor = config.VM as unknown as typeof ViewModelBase;
     const vmConfig = mergeVMConfigs(this.vmConfig, config.vmConfig);
     const vmParams: ViewModelParams<any, any> & ViewModelCreateConfig<VM> = {
       ...config,
       vmConfig,
     };
 
-    let instance: VM
-
-    if (vmConfig.factory) {
-      instance= vmConfig.factory(vmParams) as VM;
-    } else {
-      instance = new VMConstructor(vmParams) as unknown as VM
-    }
-
-    return instance;
+    return (config?.factory?.(config) ?? vmConfig.factory(vmParams)) as VM;
   }
 
   /**

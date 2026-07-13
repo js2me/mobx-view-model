@@ -137,9 +137,8 @@ const useCreateViewModelBase = (
       model = untracked(() => viewModels.get(config.id)!);
       if (!model) {
         model = viewModels.create(config);
-        viewModels.connect(instance, config);
+        viewModels.connect(model, config);
       }
-      model = viewModels.getOrCreate(config, true);
     } else {
       model = config?.factory?.(config) ?? viewModelsConfig.factory(config);
     }

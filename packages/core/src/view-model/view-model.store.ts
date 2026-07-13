@@ -67,9 +67,6 @@ export interface ViewModelStore<VMBase extends AnyViewModel = AnyViewModel> {
   getAll<T extends VMBase | AnyViewModelSimple>(
     vmLookup: Maybe<ViewModelLookup<T>>,
   ): T[];
-  
-
-  getOrCreate(config: ViewModelCreateConfig<any>,connectIfNeeded?: boolean): any
 
   unmountNew(instance: any): any;
 
@@ -103,6 +100,7 @@ export interface ViewModelStore<VMBase extends AnyViewModel = AnyViewModel> {
    */
   create<VM extends VMBase>(config: ViewModelCreateConfig<VM>): VM;
 
+  connect(instance: any, config: ViewModelCreateConfig<any>): void
 
   /**
    * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#link)
