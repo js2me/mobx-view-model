@@ -1,4 +1,4 @@
-import { action, computed, observable, runInAction } from 'mobx';
+import { action, computed, observable, runInAction, untracked } from 'mobx';
 import type { ObservableAnnotationsArray } from 'yummies/mobx';
 import type { Class, Maybe, MaybePromise } from 'yummies/types';
 import {
@@ -98,15 +98,24 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
     this.viewModels.set(config.id, instance!);
   }
 
-  getOrCreate(config: ViewModelCreateConfig<any>, connectIfNeeded?: boolean): any {
-    let instance = this.viewModels.get(config.id);
+  /**
+   * Defines a view model: returns the existing instance if one with the same ID
+   * is already registered, otherwise creates a new instance, connects it to the
+   * store, and returns it.
+   *
+   * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#define)
+   */
+  define<VM extends VMBase>(config: ViewModelCreateConfig<VM>): VM {
+    config.id = this.generateViewModelId(config);
 
-    if (!instance) {
-      instance = this.create(config);
-      if (connectIfNeeded) {
-        this.connect(instance, config);
-      }
+    const existing = untracked(() => this.viewModels.get(config.id)) as VM | undefined;
+
+    if (existing) {
+      return existing;
     }
+
+    const instance = this.create(config);
+    this.connect(instance, config);
 
     return instance;
   }

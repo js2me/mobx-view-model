@@ -12,12 +12,11 @@ import {
   ActiveViewModelContext,
   ViewModelsContext,
 } from '../contexts/index.js';
-import { untracked } from 'mobx';
 
 export interface UseCreateViewModelConfig<TViewModel extends AnyViewModel>
   extends Pick<
     ViewModelCreateConfig<TViewModel>,
-    'vmConfig' | 'ctx' | 'component' | 'anchors' | 'props'
+    'vmConfig' | 'ctx' | 'anchors' | 'props'
   > {
   /**
    * Unique identifier for the view
@@ -100,7 +99,7 @@ export function useCreateViewModel(
     instance = useCreateViewModelBase(VM, payload, config);
   } else {
     // scenario for ViewModelSimple
-    instance = useCreateViewModelSimple(VM, payload, config);
+    instance = useCreateViewModelSimple(VM, payload);
   }
 
   return instance;
@@ -133,12 +132,7 @@ const useCreateViewModelBase = (
     } satisfies ViewModelCreateConfig<any>;
 
     if (viewModels) {
-      config.id = viewModels.generateViewModelId(config)
-      model = untracked(() => viewModels.get(config.id)!);
-      if (!model) {
-        model = viewModels.create(config);
-        viewModels.connect(model, config);
-      }
+      model = viewModels.define(config);
     } else {
       model = config?.factory?.(config) ?? viewModelsConfig.factory(config);
     }
@@ -162,7 +156,6 @@ const useCreateViewModelBase = (
 const useCreateViewModelSimple = (
   VM: Class<AnyViewModelSimple>,
   payload: Dict,
-  config?: Maybe<UseCreateViewModelConfig<AnyViewModel>>,
 ) => {
   const viewModels = useContext(ViewModelsContext);
   const parentViewModel = useContext(ActiveViewModelContext);
@@ -179,19 +172,6 @@ const useCreateViewModelSimple = (
     if (viewModels) {
       model.attachViewModelStore?.(viewModels);
     }
-    
-      /**
-    // логика работы простых вью моделей со стором
-    const modelId = viewModels.getOrCreateVmId(model);
-
-    viewModels.viewModelsTempHeap.set(modelId, model as VMBase);
-
-    if ('attachViewModelStore' in model) {
-      model.attachViewModelStore?.(this as ViewModelStore);
-    }
-
-    viewModels.attachVMConstructor(model);
-    */
   }
 
   useEffect(() => () => {

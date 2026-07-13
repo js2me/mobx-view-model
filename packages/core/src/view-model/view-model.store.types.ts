@@ -17,8 +17,8 @@ export interface ViewModelGenerateIdConfig<VM extends AnyViewModel> {
   VM: Class<VM>;
   /** tree render id (received and generated from view) */
   id: string;
-  ctx: AnyObject;
-  parentViewModel?: AnyViewModel | AnyViewModelSimple;
+  ctx?: AnyObject;
+  parentViewModel?: Maybe<AnyViewModel | AnyViewModelSimple>;
 }
 
 export interface ViewModelCreateConfig<VM extends AnyViewModel>

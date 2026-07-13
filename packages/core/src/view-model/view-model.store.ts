@@ -100,7 +100,17 @@ export interface ViewModelStore<VMBase extends AnyViewModel = AnyViewModel> {
    */
   create<VM extends VMBase>(config: ViewModelCreateConfig<VM>): VM;
 
-  connect(instance: any, config: ViewModelCreateConfig<any>): void
+  /**
+   * Defines a view model: returns the existing instance if one with the same ID
+   * is already registered, otherwise creates a new instance, connects it to the
+   * store, and returns it.
+   *
+   * This is the recommended way to obtain a VM from the store — it replaces the
+   * manual `generateViewModelId` → `get` → `create` → `connect` flow.
+   *
+   * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#define)
+   */
+  define<VM extends VMBase>(config: ViewModelCreateConfig<VM>): VM;
 
   /**
    * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#link)

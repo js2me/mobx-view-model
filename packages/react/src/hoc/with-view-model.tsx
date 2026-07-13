@@ -281,7 +281,7 @@ export function withViewModel(
   const getPayload = config.getPayload;
 
   // original component where happens all rendering and processing
-  const RawComponent = (allProps: any, ref: any) => {
+  const Component = (allProps: any, ref: any) => {
     const { payload: rawPayload, ...componentProps } = allProps;
     const payload = getPayload?.(allProps) ?? rawPayload ?? {};
 
@@ -303,7 +303,7 @@ export function withViewModel(
     );
   };
 
-  let VMComponent = observer(RawComponent as any) as VMComponent<typeof VM>;
+  let VMComponent = observer(Component as any) as VMComponent<typeof VM>;
 
   if (config.forwardRef) {
     VMComponent = forwardRef(VMComponent) as any;
