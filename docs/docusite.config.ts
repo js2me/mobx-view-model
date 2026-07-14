@@ -228,11 +228,7 @@ export default defineConfig({
       value: circularVmPayloadDependencyTestCases
         .filter(it => it.isRecursion)
         .map(it => JSON.stringify(it.vmConfig, null, 2))
-        .map(it => `
-    \`\`\`json
-    ${it}
-    \`\`\`
-    `)
+        .map(it => `\n\`\`\`json\n${it}\n\`\`\`\n`)
         .join('\n')
     }
   ],

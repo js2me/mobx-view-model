@@ -17,7 +17,7 @@ hero:
 
 features:
   - title: MobX-based
-    icon: <span class="i-logos:mobx-icon"></span>
+    icon: <span class="i-logos:mobx"></span>
     details: Experience the power of MobX
   - title: TypeScript
     icon: <span class="i-logos:typescript-icon"></span>
