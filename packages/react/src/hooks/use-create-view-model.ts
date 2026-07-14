@@ -121,9 +121,11 @@ export function useCreateViewModel(
       model.init?.(config)
     }
 
+    void model.mount?.();
+
     if (isViewModelSimple(model)) {
-      model.setPayload?.(payload)
       model.parentViewModel = parentViewModel;
+      model.setPayload?.(payload)
     }
 
     modelRef.current = model;
