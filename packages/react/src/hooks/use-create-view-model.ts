@@ -54,10 +54,12 @@ export function useCreateViewModel<TViewModel extends AnyViewModel>(
     ? [
         payload?: TViewModel['payload'],
         config?: UseCreateViewModelConfig<TViewModel>,
+        _props?: any,
       ]
     : [
         payload: TViewModel['payload'],
         config?: UseCreateViewModelConfig<TViewModel>,
+        _props?: any,
       ]
 ): TViewModel;
 
@@ -72,8 +74,8 @@ export function useCreateViewModel<
 >(
   VM: Class<TViewModelSimple>,
   ...args: IsPartial<TPayload> extends true
-    ? [payload?: TPayload]
-    : [payload: TPayload]
+    ? [payload?: TPayload, config?: ViewModelCreateConfig<TViewModelSimple>]
+    : [payload: TPayload, config?: ViewModelCreateConfig<TViewModelSimple>]
 ): TViewModelSimple;
 
 /**
@@ -94,6 +96,7 @@ export function useCreateViewModel(
   VM: Class<any>,
   payload?: any,
   rawCfg?: any,
+  props?: any,
 ) {
   const viewModels = useContext(ViewModelsContext);
   const parentViewModel = useContext(ActiveViewModelContext);
@@ -112,6 +115,7 @@ export function useCreateViewModel(
       viewModels,
       parentViewModel,
       ctx: rawCfg?.ctx ?? {},
+      props: props ?? rawCfg?.props,
     } satisfies ViewModelCreateConfig<any>;
 
     if (viewModels) {

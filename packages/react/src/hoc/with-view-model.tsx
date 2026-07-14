@@ -279,26 +279,28 @@ export function withViewModel(
     processViewComponent?.(rawRenderFn, VM, config) ?? rawRenderFn ?? noop;
 
   const getPayload = config.getPayload;
+  const Fallback = config.fallback ?? config.vmConfig?.fallbackComponent ?? noop
 
   // original component where happens all rendering and processing
   const Component = (allProps: any, ref: any) => {
-    const { payload: rawPayload, ...componentProps } = allProps;
+    const { payload: rawPayload, ...propsToForward } = allProps;
     const payload = getPayload?.(allProps) ?? rawPayload ?? {};
 
-    if (config.forwardRef && !('forwardedRef' in componentProps)) {
-      componentProps.forwardedRef = ref;
+    if (config.forwardRef && !('forwardedRef' in propsToForward)) {
+      propsToForward.forwardedRef = ref;
     }
 
-    const model = useCreateViewModel(VM, payload, {
-      ...config,
-      props: componentProps,
-    }) as unknown as AnyViewModel | AnyViewModelSimple;
+    const model = useCreateViewModel(VM, payload, config, propsToForward) as AnyViewModel | AnyViewModelSimple;
 
-    const node = renderFn({ ...componentProps, model });
+    propsToForward.model = model;
+
+    const node = renderFn(propsToForward);
+
+    const isReadyToRender = !('isMounted' in model) || model.isMounted
     
     return (
       <ActiveViewModelProvider value={model}>
-        {node}
+        {isReadyToRender ? node : <Fallback />}
       </ActiveViewModelProvider>
     );
   };

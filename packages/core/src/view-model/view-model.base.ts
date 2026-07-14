@@ -141,11 +141,14 @@ export class ViewModelBase<
     this.willMount();
     this.vmConfig.onMount?.(this);
     startViewTransitionSafety(
-      () => (this.vmState = 'mounted'),
+      () => {
+        runInAction(() => {
+          this.vmState = 'mounted';
+          this.didMount();
+        })
+      },
       { disabled: !this.vmConfig.startViewTransitions.mount },
     );
-
-    this.didMount();
   }
 
   /**
