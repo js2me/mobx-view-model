@@ -5,6 +5,7 @@ import type {
   AnyViewModelSimple,
   ViewModelParams,
 } from './view-model.types.js';
+import { InferViewModelPayload, InferViewModelProps } from './view-model.base.types.js';
 
 export interface ViewModelStoreConfig {
   /**
@@ -13,7 +14,7 @@ export interface ViewModelStoreConfig {
   vmConfig?: ViewModelsRawConfig;
 }
 
-export interface ViewModelGenerateIdConfig<VM extends AnyViewModel> {
+export interface ViewModelGenerateIdConfig<VM extends AnyViewModel | AnyViewModelSimple> {
   VM: Class<VM>;
   /** tree render id (received and generated from view) */
   id: string;
@@ -21,15 +22,14 @@ export interface ViewModelGenerateIdConfig<VM extends AnyViewModel> {
   parentViewModel?: Maybe<AnyViewModel | AnyViewModelSimple>;
 }
 
-export interface ViewModelCreateConfig<VM extends AnyViewModel>
-  extends ViewModelParams<VM['payload'], VM['parentViewModel']> {
+export interface ViewModelCreateConfig<VM extends AnyViewModel | AnyViewModelSimple>
+  extends ViewModelParams<InferViewModelPayload<VM>, AnyViewModelSimple | AnyViewModel | null, InferViewModelProps<VM>> {
   VM: Class<VM>;
   /**
    * Additional component anchors for the same VM instance.
    * useViewModel(AnchorComponent) will return this VM when mounted.
    */
   anchors?: import('mobx-view-model-react').RComponentType[];
-  props?: AnyObject;
   factory?: ViewModelsConfig['factory']
 }
 

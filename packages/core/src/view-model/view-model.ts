@@ -1,7 +1,8 @@
 import type { AnyObject, EmptyObject, MaybePromise } from 'yummies/types';
 import type { ViewModelsConfig } from '../config/types.js';
 
-import type { AnyViewModel, AnyViewModelSimple } from './view-model.types.js';
+import type { AnyViewModel, AnyViewModelSimple, ViewModelInitConfig } from './view-model.types.js';
+import { ViewModelCreateConfig, ViewModelStore } from './index.js';
 
 /**
  * The main interface for all view models.
@@ -20,6 +21,7 @@ export interface ViewModel<
   readonly isMounted: boolean;
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/interface#parentviewmodel-parentviewmodel-null) */
   readonly parentViewModel: ParentViewModel;
+  init?(config: ViewModelInitConfig<this>): void;
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/interface#mount-void-promise-void) */
   mount(): MaybePromise<void>;
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/interface#unmount-void-promise-void) */

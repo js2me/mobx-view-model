@@ -3,7 +3,7 @@
 layout: home
 
 hero:
-  name: '{packageJson.name}'
+  name: '@{packageJson.name}'
   text: '⚡ Clean MVVM for React + MobX ⚡'
   image:
     src: /logo.png
@@ -13,7 +13,7 @@ hero:
       link: /introduction/overview.md
     - theme: alt
       text: View on GitHub
-      link: https://github.com/{packageJson.author}/{packageJson.name}
+      link: https://github.com/@{packageJson.author}/@{packageJson.name}
 
 features:
   - title: MobX-based

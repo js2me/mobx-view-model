@@ -6,7 +6,6 @@ import {
   mergeVMConfigs,
   type ViewModelsConfig,
 } from '../config/index.js';
-import type { ViewModelBase } from './view-model.base.js';
 import type { ViewModelStore } from './view-model.store.js';
 import type {
   ViewModelCreateConfig,
@@ -19,7 +18,7 @@ import type {
   AnyViewModelSimple,
   ViewModelParams,
 } from './view-model.types.js';
-import { isViewModel } from '../utils/typeguards.js';
+import { isViewModel, isViewModelSimple, isViewModelSimpleClass } from '../utils/typeguards.js';
 
 const baseAnnotations: ObservableAnnotationsArray = [
   [computed, 'mountedViewsCount'],
@@ -93,9 +92,13 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
     );
   }
 
-  connect(instance: any, config: ViewModelCreateConfig<any>): void {
+  connect(instance: AnyViewModel | AnyViewModelSimple, config: ViewModelCreateConfig<any>): void {
     this.link(config.VM, ...(config.anchors ?? []));
     this.viewModels.set(config.id, instance!);
+
+    if (isViewModelSimple(instance)) {
+      instance.init?.({ ...config, viewModels: this })
+    }
   }
 
   /**
@@ -105,7 +108,7 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
    *
    * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#define)
    */
-  define<VM extends VMBase>(config: ViewModelCreateConfig<VM>): VM {
+  define<VM extends VMBase | AnyViewModelSimple>(config: ViewModelCreateConfig<VM>): VM {
     config.id = this.generateViewModelId(config);
 
     const existing = untracked(() => this.viewModels.get(config.id)) as VM | undefined;
@@ -115,6 +118,7 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
     }
 
     const instance = this.create(config);
+
     this.connect(instance, config);
 
     return instance;
@@ -132,7 +136,7 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
    * @param config - The configuration for creating the view model.
    * @returns The newly created view model instance.
    */
-  create<VM extends VMBase>(config: ViewModelCreateConfig<VM>): VM {
+  create<VM extends VMBase | AnyViewModelSimple>(config: ViewModelCreateConfig<VM>): VM {
     const vmConfig = mergeVMConfigs(this.vmConfig, config.vmConfig);
     const vmParams: ViewModelParams<any, any> & ViewModelCreateConfig<VM> = {
       ...config,
@@ -148,7 +152,7 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
    * @param config - The configuration for generating the ID.
    * @returns The generated unique ID.
    */
-  generateViewModelId<VM extends VMBase>(
+  generateViewModelId<VM extends VMBase | AnyViewModelSimple>(
     config: ViewModelGenerateIdConfig<VM>,
   ): string {
     return config.id;

@@ -12,15 +12,15 @@ The `mobx-view-model` source code is written in TypeScript and compiled with the
 ::: code-group
 
 ```bash [npm]
-npm install {packageJson.name}
+npm install @{packageJson.name}
 ```
 
 ```bash [pnpm]
-pnpm add {packageJson.name}
+pnpm add @{packageJson.name}
 ```
 
 ```bash [yarn]
-yarn add {packageJson.name}
+yarn add @{packageJson.name}
 ```
 
 :::

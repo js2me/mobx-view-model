@@ -1,6 +1,5 @@
 import type { AnyObject, EmptyObject } from 'yummies/types';
-import type { AnyViewModel, AnyViewModelSimple } from './index.js';
-import type { ViewModelStore } from './view-model.store.js';
+import type { AnyViewModel, AnyViewModelSimple, ViewModelInitConfig } from './index.js';
 
 /**
  * Interface for creating simple view models
@@ -22,9 +21,8 @@ export interface ViewModelSimple<
    */
   parentViewModel?: ParentViewModel;
 
+  init?(config: ViewModelInitConfig<this>): void;
   mount?(): void;
   unmount?(): void;
   setPayload?(payload: Payload): void;
-
-  attachViewModelStore?(viewModelStore: ViewModelStore): void;
 }

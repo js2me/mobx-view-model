@@ -5,13 +5,16 @@ import type {
   ViewModelSimple,
   ViewModelsConfig,
 } from 'mobx-view-model';
-import { isViewModelClass, viewModelsConfig } from 'mobx-view-model';
+import { isViewModelSimple, viewModelsConfig } from 'mobx-view-model';
 import { useContext, useEffect, useId, useRef } from 'react';
-import type { AnyObject, Class, Dict, IsPartial, Maybe } from 'yummies/types';
+import type { AnyObject, Class, IsPartial, Maybe } from 'yummies/types';
 import {
   ActiveViewModelContext,
   ViewModelsContext,
 } from '../contexts/index.js';
+
+
+const EMPTY_ARR: any[] = []
 
 export interface UseCreateViewModelConfig<TViewModel extends AnyViewModel>
   extends Pick<
@@ -90,33 +93,13 @@ export function useCreateViewModel<TViewModelSimple>(
 export function useCreateViewModel(
   VM: Class<any>,
   payload?: any,
-  config?: any,
+  rawCfg?: any,
 ) {
-  let instance: AnyViewModel | AnyViewModelSimple;
-
-  if (isViewModelClass(VM)) {
-    // scenario for ViewModelBase
-    instance = useCreateViewModelBase(VM, payload, config);
-  } else {
-    // scenario for ViewModelSimple
-    instance = useCreateViewModelSimple(VM, payload);
-  }
-
-  return instance;
-}
-
-const EMPTY_ARR: any[] = []
-
-const useCreateViewModelBase = (
-  VM: Class<AnyViewModel>,
-  payload: Dict,
-  rawCfg?: Maybe<UseCreateViewModelConfig<AnyViewModel>>,
-) => {
   const viewModels = useContext(ViewModelsContext);
   const parentViewModel = useContext(ActiveViewModelContext);
   // @ts-ignore
-  const modelRef = useRef<AnyViewModel>();
-  let model: AnyViewModel = modelRef.current;
+  const modelRef = useRef<AnyViewModel | AnyViewModelSimple>();
+  let model: AnyViewModel | AnyViewModelSimple = modelRef.current;
 
   const treeRenderId = process.env.NODE_ENV === 'production' ? useId() : `${useId()}:${VM.name}`;
 
@@ -135,44 +118,17 @@ const useCreateViewModelBase = (
       model = viewModels.define(config);
     } else {
       model = config?.factory?.(config) ?? viewModelsConfig.factory(config);
+      model.init?.(config)
+    }
+
+    if (isViewModelSimple(model)) {
+      model.setPayload?.(payload)
+      model.parentViewModel = parentViewModel;
     }
 
     modelRef.current = model;
   } else {
-    model.setPayload(payload)
-  }
-
-  useEffect(() => () => {
-    if (viewModels) {
-      viewModels.unmountNew(model)
-    } else {
-      model.unmount()
-    }
-  }, EMPTY_ARR)
-
-  return model;
-};
-
-const useCreateViewModelSimple = (
-  VM: Class<AnyViewModelSimple>,
-  payload: Dict,
-) => {
-  const viewModels = useContext(ViewModelsContext);
-  const parentViewModel = useContext(ActiveViewModelContext);
-  // @ts-ignore
-  const modelRef = useRef<AnyViewModelSimple>();
-  let model: AnyViewModelSimple = modelRef.current;
-
-  if (!model) {
-    // аналогично сделать как и базовой вью модели 
-    modelRef.current = model = viewModels ? viewModels.define() : new VM();
-
-    model.parentViewModel =
-      parentViewModel as unknown as (typeof model)['parentViewModel'];
-
-    if (viewModels) {
-      model.attachViewModelStore?.(viewModels);
-    }
+    model.setPayload?.(payload)
   }
 
   useEffect(() => () => {
@@ -183,7 +139,5 @@ const useCreateViewModelSimple = (
     }
   }, EMPTY_ARR)
 
-    model.setPayload?.(payload)
-
   return model;
-};
+}

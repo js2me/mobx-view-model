@@ -378,4 +378,4 @@ This happens when the payload is changing every time the component is re-rendere
 
 The following ViewModel configurations can cause this problem:  
 
-{circularVmPayloadDependencyTestCases}
+@{circularVmPayloadDependencyTestCases}

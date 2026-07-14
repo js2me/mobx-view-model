@@ -31,7 +31,7 @@ export interface ViewModelObservableConfig {
 export type GenerateViewModelIdFn = (ctx: AnyObject) => string;
 
 export type CreateViewModelFactoryFn<
-  TViewModel extends AnyViewModel = AnyViewModel,
+  TViewModel extends AnyViewModel | AnyViewModelSimple = AnyViewModel | AnyViewModelSimple,
 > = (config: ViewModelCreateConfig<TViewModel>) => TViewModel;
 
 /**
@@ -56,7 +56,7 @@ export interface ViewModelsConfig<
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#generateid) */
   generateId: GenerateViewModelIdFn;
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#factory) */
-  factory: CreateViewModelFactoryFn<TViewModel>;
+  factory: CreateViewModelFactoryFn<AnyViewModel | AnyViewModelSimple>;
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#flushpendingreactions) */
   flushPendingReactions: number;
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#fallbackcomponent) */

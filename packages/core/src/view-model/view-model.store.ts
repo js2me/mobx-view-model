@@ -98,7 +98,7 @@ export interface ViewModelStore<VMBase extends AnyViewModel = AnyViewModel> {
    * @param config - The configuration for creating the view model.
    * @returns The newly created view model instance.
    */
-  create<VM extends VMBase>(config: ViewModelCreateConfig<VM>): VM;
+  create<VM extends VMBase | AnyViewModelSimple>(config: ViewModelCreateConfig<VM>): VM;
 
   /**
    * Defines a view model: returns the existing instance if one with the same ID
@@ -110,7 +110,7 @@ export interface ViewModelStore<VMBase extends AnyViewModel = AnyViewModel> {
    *
    * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#define)
    */
-  define<VM extends VMBase>(config: ViewModelCreateConfig<VM>): VM;
+  define<VM extends VMBase | AnyViewModelSimple>(config: ViewModelCreateConfig<VM>): VM;
 
   /**
    * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#link)

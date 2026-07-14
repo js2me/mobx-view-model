@@ -1,40 +1,32 @@
-import { defineDocsVitepressConfig } from "sborshik/vitepress";
-import { ConfigsManager } from "sborshik/utils/configs-manager";
-import { resolve } from "node:path";
-import { REACT_LOGO_SVG } from "./shared/react-logo-svg";
+import { defineConfig } from 'docusite';
 
-const configs = ConfigsManager.create('../packages/core');
+import { circularVmPayloadDependencyTestCases } from '../packages/react/src/hoc/with-view-model.test.fixture';
+import { resolve } from 'path';
 
 const pkgsRoot = resolve(import.meta.dirname, '../../packages');
 
-/** React logo + comma before label (errors / warnings related to React integration) */
-function reactPrefixedSidebarItem(rest: string) {
-  return `<span class="vp-sidebar-error-react-item"><span class="vp-sidebar-error-react-lead">${REACT_LOGO_SVG}</span> ${rest}</span>`;
-}
-
-const config = defineDocsVitepressConfig(configs, {
-  createdYear: '2024',
-  themeConfig: {
-    nav: [
-      { text: 'LLM', 'link': `https://${configs.package.author}.github.io/${configs.package.name}/llms-full.txt` },
-      { text: 'Home', link: '/' },
-      { text: 'Introduction', link: '/introduction/overview' },
-      { text: 'Changelog', link: `https://github.com/${configs.package.author}/${configs.package.name}/releases` },
-      {
-        text: `${configs.package.version}`,
-        items: [
-          {
-            items: [
-              {
-                text: `${configs.package.version}`,
-                link: `https://github.com/${configs.package.author}/${configs.package.name}/releases/tag/${configs.package.version}`,
-              },
-            ],
-          },
-        ],
-      },
-    ],
-    sidebar: [
+export default defineConfig({
+  packageJsonPath: '../packages/core',
+  base: `/@{packageJson.description}/`,
+  title: '@{packageJson.name}',
+  description: '@{packageJson.description}',
+  github: 'https://github.com/@{packageJson.author}/@{packageJson.name}',
+  colors: {
+    light: ['#3ba235', '#ff8a4f', '#ff6a07'],
+    dark: ['#128223', '#fb681f', '#9e321a'],
+  },
+  logos: {
+    main: '/public/logo.png',
+  },
+  docsDir: '.',
+  runtimeScript: () => {
+    import('./.internal/scripts/load-devtools').then(m => m.loadDevtools());
+  },
+  nav: [
+    { text: 'Guide', link: '/guide/getting-started' },
+  ],
+  sidebar: {
+    '/': [
       {
         text: 'Introduction 👋',
         link: '/introduction/overview',
@@ -131,7 +123,7 @@ const config = defineDocsVitepressConfig(configs, {
         ],
       },
       {
-        text: `<span class="vp-sidebar-react-heading">React ${REACT_LOGO_SVG}</span>`,
+        text: `React <ReactMark />`,
         link: '/react/integration',
         items: [
           {
@@ -201,15 +193,15 @@ const config = defineDocsVitepressConfig(configs, {
         link: '/errors/1',
         items: [
           {
-            text: reactPrefixedSidebarItem('#1: Active ViewModel not found'),
+            text: '<ReactMark /> #1: Active ViewModel not found',
             link: '/errors/1',
           },
           {
-            text: reactPrefixedSidebarItem('#2: ViewModel not found'),
+            text: '<ReactMark /> #2: ViewModel not found',
             link: '/errors/2',
           },
           {
-            text: reactPrefixedSidebarItem('#3: No access to ViewModelStore'),
+            text: '<ReactMark /> #3: No access to ViewModelStore',
             link: '/errors/3',
           },
         ]
@@ -219,28 +211,38 @@ const config = defineDocsVitepressConfig(configs, {
         link: '/warnings/1',
         items: [
           {
-            text: reactPrefixedSidebarItem('#1: ViewModelStore not found'),
+            text: '<ReactMark /> #1: ViewModelStore not found',
             link: '/warnings/1',
           }
         ]
       }
-    ],
+    ]
   },
-});
-
-config.vite = {
-  ...config.vite,
-  resolve: {
-    dedupe: ['react', 'react-dom'],
-    alias: {
-      'mobx-view-model': resolve(pkgsRoot, 'core/dist/index.js'),
-      'mobx-view-model-react': resolve(pkgsRoot, 'react/dist/index.js'),
-      'mobx-view-model-devtools': resolve(pkgsRoot, 'devtools/dist/index.js'),
+  contentInjections: [
+    {
+      key: 'circularVmPayloadDependencyTestCases',
+      value: circularVmPayloadDependencyTestCases
+        .filter(it => it.isRecursion)
+        .map(it => JSON.stringify(it.vmConfig, null, 2))
+        .map(it => `
+    \`\`\`json
+    ${it}
+    \`\`\`
+    `)
+        .join('\n')
+    }
+  ],
+  siteConfigOverrides: {
+    resolve: {
+      dedupe: ['react', 'react-dom'],
+      alias: {
+        'mobx-view-model': resolve(pkgsRoot, 'core/dist/index.js'),
+        'mobx-view-model-react': resolve(pkgsRoot, 'react/dist/index.js'),
+        'mobx-view-model-devtools': resolve(pkgsRoot, 'devtools/dist/index.js'),
+      },
     },
-  },
-  ssr: {
-    noExternal: ['mobx-view-model', 'mobx-view-model-react', 'mobx-view-model-devtools'],
-  },
-};
-
-export default config;
+    ssr: {
+      noExternal: ['mobx-view-model', 'mobx-view-model-react', 'mobx-view-model-devtools'],
+    },
+  }
+})

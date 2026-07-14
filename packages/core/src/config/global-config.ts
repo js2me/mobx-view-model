@@ -3,6 +3,7 @@ import { generateVmId } from '../utils/generate-vm-id.js';
 import type { ViewModelStore } from '../view-model/view-model.store.js';
 import type { ViewModelsConfig } from './types.js';
 import { mergeVMConfigs } from './utils/merge-vm-configs.js';
+import { isViewModelSimpleClass } from '../utils/typeguards.js';
 
 /**
  * Global configuration options for view models
@@ -31,6 +32,11 @@ export const viewModelsConfig = createGlobalConfig<ViewModelsConfig>(
     flushPendingReactions: 100,
     factory: (config) => {
       const VM = config.VM;
+
+      if (isViewModelSimpleClass(VM)) {
+        return new VM()
+      }
+
       return new VM({
         ...config,
         vmConfig: mergeVMConfigs(config.vmConfig),

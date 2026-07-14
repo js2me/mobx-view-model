@@ -10,7 +10,7 @@ import { VIEW_MODEL_MARKER } from '../symbols/index.js';
 
 export const isViewModel = <
   TPayload extends AnyObject = EmptyObject,
-  ParentViewModel extends AnyViewModel | AnyViewModelSimple | null = null,
+  ParentViewModel extends AnyViewModel | AnyViewModelSimple | null = AnyViewModel | AnyViewModelSimple | null ,
 >(
   value: AnyObject,
 ): value is ViewModel<TPayload, ParentViewModel> =>
@@ -18,7 +18,7 @@ export const isViewModel = <
 
 export const isViewModelClass = <
   TPayload extends AnyObject = EmptyObject,
-  ParentViewModel extends AnyViewModel | AnyViewModelSimple | null = null,
+  ParentViewModel extends AnyViewModel | AnyViewModelSimple | null = AnyViewModel | AnyViewModelSimple | null,
 >(
   value: Function,
 ): value is Class<ViewModel<TPayload, ParentViewModel>> =>
@@ -26,7 +26,7 @@ export const isViewModelClass = <
 
 export const isViewModelSimple = <
   TPayload extends AnyObject = EmptyObject,
-  ParentViewModel extends AnyViewModel | AnyViewModelSimple | null = null,
+  ParentViewModel extends AnyViewModel | AnyViewModelSimple | null = AnyViewModel | AnyViewModelSimple | null,
 >(
   value: AnyObject,
 ): value is ViewModelSimple<TPayload, ParentViewModel> =>
@@ -34,7 +34,7 @@ export const isViewModelSimple = <
 
 export const isViewModelSimpleClass = <
   TPayload extends AnyObject = EmptyObject,
-  ParentViewModel extends AnyViewModel | AnyViewModelSimple | null = null,
+  ParentViewModel extends AnyViewModel | AnyViewModelSimple | null = AnyViewModel | AnyViewModelSimple | null,
 >(
   value: Function,
 ): value is Class<ViewModelSimple<TPayload, ParentViewModel>> =>
