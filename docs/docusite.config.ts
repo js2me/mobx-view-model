@@ -7,9 +7,12 @@ const pkgsRoot = resolve(import.meta.dirname, '../../packages');
 
 export default defineConfig({
   packageJsonPath: '../packages/core',
-  base: `/@{packageJson.description}/`,
+  base: `/@{packageJson.name}/`,
   title: '@{packageJson.name}',
   description: '@{packageJson.description}',
+  changelog: {
+    src: '../packages/core/CHANGELOG.md'
+  },
   github: 'https://github.com/@{packageJson.author}/@{packageJson.name}',
   colors: {
     light: ['#3ba235', '#ff8a4f', '#ff6a07'],
