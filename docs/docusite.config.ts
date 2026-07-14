@@ -26,7 +26,8 @@ export default defineConfig({
     import('./.internal/scripts/load-devtools').then(m => m.loadDevtools());
   },
   nav: [
-    { text: 'Guide', link: '/guide/getting-started' },
+    { text: 'Home', link: '/' },
+    { text: 'Introduction', link: '/introduction/overview' },
   ],
   sidebar: {
     '/': [
