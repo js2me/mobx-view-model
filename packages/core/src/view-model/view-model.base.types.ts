@@ -13,4 +13,4 @@ export type InferViewModelParams<T> = T extends ViewModelBase<
 export type InferViewModelPayload<T> = InferViewModelParams<T>['payload']
 export type InferViewModelProps<T> = Defined<InferViewModelParams<T>['props']>
 
-export type ViewModelState = 'mounted' | 'unmounted' | 'init'  |'unmounting'
+export type ViewModelState =  'init' | 'mounting' | 'mounted' | 'unmounting' | 'unmounted'

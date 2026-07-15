@@ -21,6 +21,7 @@ export interface ViewModel<
   readonly isMounted: boolean;
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/interface#parentviewmodel-parentviewmodel-null) */
   readonly parentViewModel: ParentViewModel;
+  /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/interface#init) */
   init?(config: ViewModelInitConfig<this>): void;
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/interface#mount-void-promise-void) */
   mount(): MaybePromise<void>;

@@ -11,12 +11,14 @@ import {
 } from '../lib/react-types.js';
 import {
   type AllViewModelPropsKeys,
-  type FixedComponentType,
   type ViewModelHocConfig,
   type ViewModelPropsChargedProps,
   type ViewModelSimpleHocConfig,
   withViewModel,
 } from './with-view-model.js';
+import {
+  type RRenderFn
+} from "../lib/react-types.js";
 
 type InferPropsViewModelPayload<TViewModel> = TViewModel extends AnyViewModel
   ? TViewModel['payload']
@@ -95,14 +97,14 @@ export function withPropsViewModel<
   TForwardedRef = unknown,
 >(
   model: Class<TViewModel>,
-  component: FixedComponentType<
+  renderFn: RRenderFn<
     ViewModelPropsChargedProps<TComponentOriginProps, TViewModel, TForwardedRef>
   >,
   config?: TViewModel extends AnyViewModel
     ? PropsViewModelHocConfig<TViewModel>
     : PropsViewModelSimpleHocConfig<TViewModel>,
 ): PropsVMComponent<TViewModel, TComponentOriginProps, TForwardedRef> {
-  return withViewModel(model, component, {
+  return withViewModel(model, renderFn, {
     ...config,
     getPayload: allPropsAsPayload,
   }) as unknown as PropsVMComponent<TViewModel, TComponentOriginProps, TForwardedRef>;

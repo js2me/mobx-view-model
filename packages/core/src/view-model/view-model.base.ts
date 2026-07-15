@@ -2,7 +2,7 @@ import { action, comparer, computed, observable, runInAction } from 'mobx';
 import { isShallowEqual } from 'yummies/data';
 import { startViewTransitionSafety } from 'yummies/html';
 import type { ObservableAnnotationsArray } from 'yummies/mobx';
-import type { AnyObject, EmptyObject, Maybe } from 'yummies/types';
+import type { AnyObject, EmptyObject, Maybe, MaybePromise } from 'yummies/types';
 import {
   applyObservable,
   mergeVMConfigs,
@@ -18,8 +18,6 @@ import type {
 } from './view-model.types.js';
 import { ViewModelState } from './view-model.base.types.js';
 import { VIEW_MODEL_MARKER } from '../symbols/index.js';
-
-declare const process: { env: { NODE_ENV?: string } };
 
 const baseAnnotations: ObservableAnnotationsArray = [
   [observable.ref, 'vmState'],
@@ -130,7 +128,7 @@ export class ViewModelBase<
   /**
    * Empty method to be overridden
    */
-  protected willMount(): void {
+  protected willMount(): MaybePromise<void> {
     /* Empty method to be overridden */
   }
 
@@ -138,17 +136,28 @@ export class ViewModelBase<
    * The method is called when the view starts mounting
    */
   mount() {
-    this.willMount();
-    this.vmConfig.onMount?.(this);
-    startViewTransitionSafety(
-      () => {
-        runInAction(() => {
-          this.vmState = 'mounted';
-          this.didMount();
-        })
-      },
-      { disabled: !this.vmConfig.startViewTransitions.mount },
-    );
+    this.vmState = 'mounting';
+    const result = this.willMount();
+
+    const finalizeMount = () => {
+      this.vmConfig.onMount?.(this);
+      startViewTransitionSafety(
+        () => {
+          runInAction(() => {
+            console.log('success mounted');
+            this.vmState = 'mounted';
+            this.didMount();
+          });
+        },
+        { disabled: !this.vmConfig.startViewTransitions.mount },
+      );
+    }
+
+    if (result instanceof Promise) {
+      return result.then(finalizeMount)
+    } else {
+      return finalizeMount()
+    }
   }
 
   /**
