@@ -29,8 +29,7 @@ export class ViewModelBase<
   Payload extends AnyObject = EmptyObject,
   ParentViewModel extends AnyViewModel | AnyViewModelSimple | null = null,
   ComponentProps extends AnyObject = AnyObject,
-> implements ViewModel<Payload, ParentViewModel>
-{
+> implements ViewModel<Payload, ParentViewModel> {
   private abortController: AbortController;
 
   public unmountSignal: AbortSignal;
@@ -109,8 +108,8 @@ export class ViewModelBase<
     if (process.env.NODE_ENV !== 'production' && !this.vmParams.viewModels) {
       console.error(
         `Error #3: No access to ViewModelStore.\n` +
-          'This happened because [viewModels] param is not provided during to creating instance ViewModelBase.\n' +
-          'More info: https://js2me.github.io/mobx-view-model/errors/3',
+        'This happened because [viewModels] param is not provided during to creating instance ViewModelBase.\n' +
+        'More info: https://js2me.github.io/mobx-view-model/errors/3',
       );
     }
 
@@ -140,6 +139,7 @@ export class ViewModelBase<
     const result = this.willMount();
 
     const finalizeMount = () => {
+      if (this.vmState !== 'mounting') return;
       this.vmConfig.onMount?.(this);
       startViewTransitionSafety(
         () => {
