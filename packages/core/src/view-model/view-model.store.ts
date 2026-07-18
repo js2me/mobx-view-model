@@ -1,11 +1,10 @@
-import type { Class, Maybe, MaybePromise } from 'yummies/types';
+import type { Class, Maybe } from 'yummies/types';
 import type {
   ViewModelCreateConfig,
   ViewModelGenerateIdConfig,
   ViewModelLookup,
 } from './view-model.store.types.js';
 import type { AnyViewModel, AnyViewModelSimple } from './view-model.types.js';
-import type { ViewModelSimple } from './view-model-simple.js';
 import type { ViewModelsConfig } from '../config/types.js';
 
 /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface) */
@@ -70,19 +69,10 @@ export interface ViewModelStore<VMBase extends AnyViewModel = AnyViewModel> {
 
   unmountNew(instance: any): any;
 
-  /**
-   * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#attach-viewmodel)
-   * @param model - The view model to attach.
-   * @returns `void` when `mount()` completed synchronously, otherwise a promise that settles after async `mount()`.
-   */
-  attach(model: VMBase | AnyViewModelSimple): MaybePromise<void>;
 
-  /**
-   * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#detach-viewmodelid)
-   * @param id - The ID of the view model to detach.
-   * @returns A promise that resolves when the operation is complete.
-   */
-  detach(id: VMBase['id'] | ViewModelSimple['id']): Promise<void>;
+  readonly hasMountingVms: boolean
+
+  waitMount(...vms: (AnyViewModel | AnyViewModelSimple)[]): Promise<void>
 
   /**
    * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#isabletorenderview-viewmodelid)

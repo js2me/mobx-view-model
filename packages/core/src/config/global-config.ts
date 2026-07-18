@@ -1,5 +1,4 @@
 import { createGlobalConfig, createPubSub } from 'yummies/complex';
-import { generateVmId } from '../utils/generate-vm-id.js';
 import type { ViewModelStore } from '../view-model/view-model.store.js';
 import type { ViewModelsConfig } from './types.js';
 import { mergeVMConfigs } from './utils/merge-vm-configs.js';
@@ -10,11 +9,10 @@ import { isViewModelSimpleClass } from '../utils/typeguards.js';
  */
 export const viewModelsConfig = createGlobalConfig<ViewModelsConfig>(
   {
+    mode: 'csr',
     comparePayload: false,
     payloadComputed: 'struct',
     payloadObservable: 'ref',
-    wrapViewsInObserver: true,
-    useReactIds: false,
     startViewTransitions: {
       mount: false,
       payloadChange: false,
@@ -28,8 +26,6 @@ export const viewModelsConfig = createGlobalConfig<ViewModelsConfig>(
         useDecorators: true,
       },
     },
-    generateId: generateVmId,
-    flushPendingReactions: 100,
     factory: (config) => {
       const VM = config.VM;
 

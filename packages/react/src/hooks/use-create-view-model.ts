@@ -5,8 +5,8 @@ import type {
   ViewModelSimple,
   ViewModelsConfig,
 } from 'mobx-view-model';
-import { isViewModelSimple, viewModelsConfig } from 'mobx-view-model';
-import { useContext, useEffect, useId, useRef } from 'react';
+import { isViewModel, isViewModelSimple, viewModelsConfig } from 'mobx-view-model';
+import { use, useContext, useEffect, useId, useRef } from 'react';
 import type { AnyObject, Class, IsPartial, Maybe } from 'yummies/types';
 import {
   ActiveViewModelContext,
@@ -27,13 +27,6 @@ export interface UseCreateViewModelConfig<TViewModel extends AnyViewModel>
    * [**Documentation**](https://js2me.github.io/mobx-view-model/react/api/with-view-model.html#id)
    */
   id?: Maybe<string>;
-
-  /**
-   * Function to generate an identifier for the view model
-   *
-   * [**Documentation**](https://js2me.github.io/mobx-view-model/react/api/with-view-model.html#generateid)
-   */
-  generateId?: ViewModelsConfig<TViewModel>['generateId'];
 
   /**
    * Function to create an instance of the VM class
@@ -101,8 +94,8 @@ export function useCreateViewModel(
   const viewModels = useContext(ViewModelsContext);
   const parentViewModel = useContext(ActiveViewModelContext);
   // @ts-ignore
-  const modelRef = useRef<AnyViewModel | AnyViewModelSimple>();
-  let model: AnyViewModel | AnyViewModelSimple = modelRef.current;
+  const cache = useRef<{ vm: AnyViewModel | AnyViewModelSimple, promise?: any }>();
+  let model: AnyViewModel | AnyViewModelSimple = cache.current?.vm;
 
   const treeRenderId = process.env.NODE_ENV === 'production' ? useId() : `${useId()}:${VM.name}`;
 
@@ -125,14 +118,17 @@ export function useCreateViewModel(
       model.init?.(config)
     }
 
-    void model.mount?.();
+    let result = model.mount?.();
 
     if (isViewModelSimple(model)) {
       model.parentViewModel = parentViewModel;
       model.setPayload?.(payload)
     }
 
-    modelRef.current = model;
+    cache.current = {
+      vm: model,
+      promise: result,
+    };
   } else {
     model.setPayload?.(payload)
   }
@@ -143,7 +139,11 @@ export function useCreateViewModel(
     } else {
       model.unmount?.()
     }
-  }, EMPTY_ARR)
+  }, EMPTY_ARR);
+
+  if (viewModelsConfig.mode === 'ssr' && use && cache.current.promise)  {
+    use(cache.current.promise)
+  }
 
   return model;
 }

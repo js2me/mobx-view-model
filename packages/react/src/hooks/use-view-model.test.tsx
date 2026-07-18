@@ -32,10 +32,7 @@ describe('useViewModel', () => {
       depth = `${depth}`;
     }
 
-    const Component = withViewModel(VM1, {
-      id: accessUsing === 'id' ? `depth-${depth}` : undefined,
-      generateId,
-    })(({ children }: { children?: ReactNode }) => {
+    const Component = withViewModel(VM1, ({ children }: { children?: ReactNode }) => {
       let model!: VM1;
 
       if (accessUsing) {
@@ -74,6 +71,8 @@ describe('useViewModel', () => {
           {children}
         </div>
       );
+    },{
+      id: accessUsing === 'id' ? `depth-${depth}` : undefined,
     });
 
     Object.assign(Component, { VM: VM1, depth, id: `depth-${depth}` });

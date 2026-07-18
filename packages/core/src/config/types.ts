@@ -41,6 +41,7 @@ export type CreateViewModelFactoryFn<
 export interface ViewModelsConfig<
   TViewModel extends AnyViewModel = AnyViewModel,
 > {
+  mode: 'csr' | 'ssr';
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#startviewtransitions) */
   startViewTransitions: {
     mount: boolean;
@@ -53,18 +54,12 @@ export interface ViewModelsConfig<
   payloadObservable: 'ref' | 'deep' | 'shallow' | 'struct' | false;
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#payloadcomputed) */
   payloadComputed: 'struct' | boolean | ((a: any, b: any) => boolean);
-  /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#generateid) */
-  generateId: GenerateViewModelIdFn;
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#factory) */
   factory: CreateViewModelFactoryFn<AnyViewModel | AnyViewModelSimple>;
-  /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#flushpendingreactions) */
-  flushPendingReactions: number;
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#fallbackcomponent) */
   fallbackComponent?: import('mobx-view-model-react').RComponentType;
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/react/api/with-view-model.html#reacthook) */
   reactHook?: import('mobx-view-model-react').WithViewModelReactHook;
-  /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#usereactids) */
-  useReactIds?: boolean;
   /**
    * Wait until the returned value is ready before continuing render.
    * Return nothing to skip waiting for this call (e.g. when suspension is not needed).
@@ -92,8 +87,6 @@ export interface ViewModelsConfig<
     /** Полный тип HOC — `ViewModelHocConfig` в `mobx-view-model-react`. */
     config: AnyObject,
   ) => Maybe<import('mobx-view-model-react').RRenderFn<any>>;
-  /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#wrapviewsinobserver) */
-  wrapViewsInObserver?: boolean;
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#observable) */
   observable: {
     viewModels: ViewModelObservableConfig;
@@ -108,12 +101,11 @@ export type ViewModelsRawConfig<
   TViewModel extends AnyViewModel = AnyViewModel,
 > = PartialKeys<Omit<
 ViewModelsConfig<TViewModel>,
-'startViewTransitions' | 'observable' | 'factory' | 'generateId' | 'hooks'
->, 'payloadObservable' | 'payloadComputed' | 'flushPendingReactions'> & {
+'startViewTransitions' | 'observable' | 'factory' | 'generateId' | 'hooks' | 'mode'
+>, 'payloadObservable' | 'payloadComputed'> & {
   startViewTransitions?:
     | DeepPartial<ViewModelsConfig['startViewTransitions']>
     | boolean;
   observable?: DeepPartial<ViewModelsConfig['observable']>;
   factory?: ViewModelsConfig['factory'];
-  generateId?: ViewModelsConfig['generateId'];
 };
