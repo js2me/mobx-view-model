@@ -5,7 +5,7 @@ import type {
   ViewModelSimple,
   ViewModelsConfig,
 } from 'mobx-view-model';
-import { isViewModel, isViewModelSimple, viewModelsConfig } from 'mobx-view-model';
+import { isViewModelSimple, viewModelsConfig } from 'mobx-view-model';
 import { use, useContext, useEffect, useId, useRef } from 'react';
 import type { AnyObject, Class, IsPartial, Maybe } from 'yummies/types';
 import {
@@ -15,6 +15,11 @@ import {
 
 
 const EMPTY_ARR: any[] = []
+
+const isThenable = (value: unknown): value is PromiseLike<unknown> =>
+  typeof value === 'object' &&
+  value !== null &&
+  typeof (value as PromiseLike<unknown>).then === 'function';
 
 export interface UseCreateViewModelConfig<TViewModel extends AnyViewModel>
   extends Pick<
@@ -127,7 +132,7 @@ export function useCreateViewModel(
 
     cache.current = {
       vm: model,
-      promise: result,
+      promise: isThenable(result) ? result : undefined,
     };
   } else {
     model.setPayload?.(payload)
@@ -141,8 +146,8 @@ export function useCreateViewModel(
     }
   }, EMPTY_ARR);
 
-  if (viewModelsConfig.mode === 'ssr' && use && cache.current.promise)  {
-    use(cache.current.promise)
+  if (viewModelsConfig.mode === 'ssr' && use && cache.current?.promise) {
+    use(cache.current.promise);
   }
 
   return model;

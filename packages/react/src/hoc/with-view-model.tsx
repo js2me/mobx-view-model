@@ -26,11 +26,12 @@ import {
   RComponentClass,
   RComponentType,
   RForwardedRef,
+  RFunctionComponent,
   RLegacyRef,
   RRenderFn,
   RReactNode,
 } from '../lib/react-types.js';
-import { observer } from 'mobx-react-lite';
+import { Observer, observer } from 'mobx-react-lite';
 import { noop } from '../lib/noop.js';
 
 export type FixedComponentType<P extends AnyObject = {}> =
@@ -277,10 +278,17 @@ export function withViewModel(
   let renderFn =
     processViewComponent?.(rawRenderFn, VM, config) ?? rawRenderFn ?? noop;
 
+  // Single observer layer on the view. Shell stays plain; `<Observer>` tracks
+  // only the `isMounted` computed for Fallback ↔ View (useObserver is deprecated).
+  const View = observer(renderFn as RFunctionComponent<any>);
+
+  if (process.env.NODE_ENV !== 'production') {
+    View.displayName = `View(${VM.name})`;
+  }
+
   const getPayload = config.getPayload;
   const Fallback = config.fallback ?? config.vmConfig?.fallbackComponent ?? noop
 
-  // original component where happens all rendering and processing
   const Component = (allProps: any, ref: any) => {
     const { payload: rawPayload, ...propsToForward } = allProps;
     const payload = getPayload?.(allProps) ?? rawPayload ?? {};
@@ -293,35 +301,28 @@ export function withViewModel(
 
     propsToForward.model = model;
 
-    const node = renderFn(propsToForward);
-
-    const isReadyToRender = (model as AnyViewModel).isMounted !== false;
-
-    console.log('isReadyToRender', isReadyToRender, model.id, VM.name, model);
-    
     return (
       <ActiveViewModelProvider value={model}>
-        {isReadyToRender ? node : <Fallback />}
+        <Observer>
+          {() =>
+            (model as AnyViewModel).isMounted !== false ? (
+              <View {...propsToForward} />
+            ) : (
+              <Fallback />
+            )
+          }
+        </Observer>
       </ActiveViewModelProvider>
     );
   };
-
 
   if (process.env.NODE_ENV !== 'production') {
     (Component as RComponentType).displayName = `view(${VM.name})`;
   }
 
-  let ConnectVMComponent = observer(Component as any) as VMComponent<typeof VM>;
-
-  if (config.forwardRef) {
-    ConnectVMComponent = forwardRef(ConnectVMComponent) as any;
-  }
-
-  if (process.env.NODE_ENV !== 'production') {
-    // @ts-ignore
-    (ConnectVMComponent as RComponentType).displayName = `Observer(${VM.name})`;
-  }
-
+  let ConnectVMComponent = (
+    config.forwardRef ? forwardRef(Component) : Component
+  ) as VMComponent<typeof VM>;
 
   anchors.push(ConnectVMComponent);
 

@@ -144,7 +144,6 @@ export class ViewModelBase<
       startViewTransitionSafety(
         () => {
           runInAction(() => {
-            console.log('success mounted');
             this.vmState = 'mounted';
             this.didMount();
           });
