@@ -108,6 +108,7 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
   connect(instance: AnyViewModel | AnyViewModelSimple, config: ViewModelCreateConfig<any>): void {
     this.link(config.VM, ...(config.anchors ?? []));
     this.viewModels.set(config.id, instance!);
+    this.attachVMConstructor(instance);
 
     if (isViewModelSimple(instance)) {
       instance.init?.({ ...config, viewModels: this })
@@ -139,7 +140,7 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
 
   unmountNew(instance: VMBase) {
     instance.unmount();
-    this.unlink()
+    this.dettachVMConstructor(instance);
     this.viewModels.delete(instance.id);
   }
 
@@ -295,6 +296,23 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
     });
   }
 
+
+  /**
+   * Indexes the instance id by its class so `get(CartPageVM)` / `useViewModel(CartPageVM)` work.
+   */
+  protected attachVMConstructor(model: VMBase | AnyViewModelSimple) {
+    const constructor = (model as any).constructor as Class<any, any>;
+    const modelId = model.id!;
+    const vmIds = this.viewModelIdsByClasses.get(constructor);
+
+    if (vmIds) {
+      if (!vmIds.includes(modelId)) {
+        vmIds.push(modelId);
+      }
+    } else {
+      this.viewModelIdsByClasses.set(constructor, [modelId]);
+    }
+  }
 
   protected dettachVMConstructor(model: VMBase | AnyViewModelSimple) {
     const constructor = (model as any).constructor as Class<any, any>;

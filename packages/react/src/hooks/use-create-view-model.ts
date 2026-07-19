@@ -5,7 +5,11 @@ import type {
   ViewModelSimple,
   ViewModelsConfig,
 } from 'mobx-view-model';
-import { isViewModelSimple, viewModelsConfig } from 'mobx-view-model';
+import {
+  isViewModel,
+  isViewModelSimple,
+  viewModelsConfig,
+} from 'mobx-view-model';
 import { use, useContext, useEffect, useId, useRef } from 'react';
 import type { AnyObject, Class, IsPartial, Maybe } from 'yummies/types';
 import {
@@ -13,12 +17,11 @@ import {
   ViewModelsContext,
 } from '../contexts/index.js';
 
-
-const EMPTY_ARR: any[] = []
+const EMPTY_ARR: any[] = [];
+const EMPTY_OBJECT: AnyObject = Object.freeze({});
 
 const isThenable = (value: unknown): value is PromiseLike<unknown> =>
-  typeof value === 'object' &&
-  value !== null &&
+  !!value &&
   typeof (value as PromiseLike<unknown>).then === 'function';
 
 export interface UseCreateViewModelConfig<TViewModel extends AnyViewModel>
@@ -92,62 +95,75 @@ export function useCreateViewModel<TViewModelSimple>(
  */
 export function useCreateViewModel(
   VM: Class<any>,
-  payload?: any,
+  payload: any = EMPTY_OBJECT,
   rawCfg?: any,
   props?: any,
 ) {
   const viewModels = useContext(ViewModelsContext);
   const parentViewModel = useContext(ActiveViewModelContext);
-  // @ts-ignore
-  const cache = useRef<{ vm: AnyViewModel | AnyViewModelSimple, promise?: any }>();
-  let model: AnyViewModel | AnyViewModelSimple = cache.current?.vm;
+  const cache = useRef<{
+    vm: AnyViewModel | AnyViewModelSimple;
+    promise?: PromiseLike<unknown>;
+  }>(null!);
 
-  const treeRenderId = process.env.NODE_ENV === 'production' ? useId() : `${useId()}:${VM.name}`;
+  const reactId = useId();
+  let model = cache.current?.vm;
 
   if (!model) {
+    const id =
+      process.env.NODE_ENV === 'production' ? reactId : `${reactId}:${VM.name}`;
+
     const config = {
       ...rawCfg,
-      id: treeRenderId,
+      id,
       payload,
       VM,
       viewModels,
       parentViewModel,
-      ctx: rawCfg?.ctx ?? {},
+      ctx: rawCfg?.ctx ?? EMPTY_OBJECT,
       props: props ?? rawCfg?.props,
     } satisfies ViewModelCreateConfig<any>;
 
     if (viewModels) {
       model = viewModels.define(config);
     } else {
-      model = config?.factory?.(config) ?? viewModelsConfig.factory(config);
-      model.init?.(config)
+      model = config.factory?.(config) ?? viewModelsConfig.factory(config);
+      model.init?.(config);
     }
 
-    let result = model.mount?.();
+    // Suspense remounts reset useRef but reuse the store instance. Calling
+    // async mount() again would create a new Promise → use() suspends → remount loop.
+    const mountResult =
+      isViewModel(model) && model.isMounted ? undefined : model.mount?.();
 
     if (isViewModelSimple(model)) {
       model.parentViewModel = parentViewModel;
-      model.setPayload?.(payload)
+      model.setPayload?.(payload);
     }
 
     cache.current = {
       vm: model,
-      promise: isThenable(result) ? result : undefined,
+      promise: isThenable(mountResult) ? mountResult : undefined,
     };
   } else {
-    model.setPayload?.(payload)
+    model.setPayload?.(payload);
   }
 
-  useEffect(() => () => {
-    if (viewModels) {
-      viewModels.unmountNew(model)
-    } else {
-      model.unmount?.()
-    }
-  }, EMPTY_ARR);
+  useEffect(
+    () => () => {
+      if (viewModels) {
+        viewModels.unmountNew(model);
+      } else {
+        model.unmount?.();
+      }
+    },
+    EMPTY_ARR,
+  );
 
-  if (viewModelsConfig.mode === 'ssr' && use && cache.current?.promise) {
-    use(cache.current.promise);
+  // Suspend until async mount finishes (ssr mode only).
+  const pending = cache.current!.promise;
+  if (viewModelsConfig.mode === 'ssr' && use && pending) {
+    use(pending);
   }
 
   return model;

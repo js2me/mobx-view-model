@@ -6,7 +6,7 @@ import type {
   ViewModelStore
 } from 'mobx-view-model';
 import { viewModelsConfig } from 'mobx-view-model';
-import { forwardRef } from 'react';
+import { createElement, forwardRef } from 'react';
 import type {
   AnyObject,
   Class,
@@ -31,8 +31,10 @@ import {
   RRenderFn,
   RReactNode,
 } from '../lib/react-types.js';
-import { Observer, observer } from 'mobx-react-lite';
+import { observer } from 'mobx-react-lite';
 import { noop } from '../lib/noop.js';
+
+const EMPTY_OBJECT: AnyObject = Object.freeze({});
 
 export type FixedComponentType<P extends AnyObject = {}> =
   /**
@@ -268,61 +270,70 @@ export function withViewModel(
   rawRenderFn?: RRenderFn<AnyObject>,
   rawConfig?: ViewModelSimpleHocConfig<any> & ViewModelHocConfig<any>,
 ): any {
-  const config = (rawConfig??{}) as VMHocFullConfig;
-  const anchors = config.anchors ??= [];
+  const config = (rawConfig ?? {}) as VMHocFullConfig;
+  const anchors = (config.anchors ??= []);
+  const getPayload = config.getPayload;
+  const forwardRefMode = !!config.forwardRef;
+  const Fallback =
+    config.fallback ?? config.vmConfig?.fallbackComponent ?? noop;
+  const hasFallback = Fallback !== noop;
 
   const processViewComponent =
-    config.vmConfig?.processRender ??
-    viewModelsConfig.processRender;
+    config.vmConfig?.processRender ?? viewModelsConfig.processRender;
 
-  let renderFn =
+  const renderFn =
     processViewComponent?.(rawRenderFn, VM, config) ?? rawRenderFn ?? noop;
 
-  // Single observer layer on the view. Shell stays plain; `<Observer>` tracks
-  // only the `isMounted` computed for Fallback ↔ View (useObserver is deprecated).
+  // View tracks model observables. Shell (below) only tracks `isMounted` —
+  // after mount that reaction is idle, so this is not nested hot-path cost.
+  // `<Observer>` is intentionally avoided: it adds an extra fiber + per-render lambda.
   const View = observer(renderFn as RFunctionComponent<any>);
 
   if (process.env.NODE_ENV !== 'production') {
     View.displayName = `View(${VM.name})`;
   }
 
-  const getPayload = config.getPayload;
-  const Fallback = config.fallback ?? config.vmConfig?.fallbackComponent ?? noop
+  // Custom hook: keeps Rules of Hooks valid while sharing body for ref / non-ref shells.
+  const useShell = (allProps: any, ref?: any): RReactNode => {
+    const payload = getPayload
+      ? getPayload(allProps)
+      : (allProps.payload ?? EMPTY_OBJECT);
 
-  const Component = (allProps: any, ref: any) => {
-    const { payload: rawPayload, ...propsToForward } = allProps;
-    const payload = getPayload?.(allProps) ?? rawPayload ?? {};
+    const model = useCreateViewModel(
+      VM,
+      payload,
+      config,
+      allProps,
+    ) as AnyViewModel | AnyViewModelSimple;
 
-    if (config.forwardRef && !('ref' in propsToForward)) {
-      propsToForward.ref = ref;
+    let child: RReactNode = null;
+
+    if ((model as AnyViewModel).isMounted !== false) {
+      // One shallow copy only on the ready path (fallback skips this alloc).
+      const viewProps = { ...allProps, model };
+      delete viewProps.payload;
+      if (forwardRefMode) {
+        viewProps.ref = ref;
+      }
+      child = createElement(View, viewProps);
+    } else if (hasFallback) {
+      child = createElement(Fallback);
     }
 
-    const model = useCreateViewModel(VM, payload, config, propsToForward) as AnyViewModel | AnyViewModelSimple;
-
-    propsToForward.model = model;
-
-    return (
-      <ActiveViewModelProvider value={model}>
-        <Observer>
-          {() =>
-            (model as AnyViewModel).isMounted !== false ? (
-              <View {...propsToForward} />
-            ) : (
-              <Fallback />
-            )
-          }
-        </Observer>
-      </ActiveViewModelProvider>
-    );
+    return createElement(ActiveViewModelProvider, { value: model }, child);
   };
 
-  if (process.env.NODE_ENV !== 'production') {
-    (Component as RComponentType).displayName = `view(${VM.name})`;
-  }
-
-  let ConnectVMComponent = (
-    config.forwardRef ? forwardRef(Component) : Component
+  // Shell observes only `isMounted`. After mount that reaction is idle.
+  // No `<Observer>` fiber / per-render lambda.
+  const ConnectVMComponent = (
+    forwardRefMode
+      ? observer(forwardRef(useShell))
+      : observer(useShell)
   ) as VMComponent<typeof VM>;
+
+  if (process.env.NODE_ENV !== 'production') {
+    (ConnectVMComponent as RComponentType).displayName = `Component(${VM.name})`;
+  }
 
   anchors.push(ConnectVMComponent);
 
