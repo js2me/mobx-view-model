@@ -8,7 +8,6 @@ import type {
   ViewModelCreateConfig,
   ViewModelStore,
 } from '../view-model/index.js';
-import { RRenderFn } from 'mobx-view-model-react';
 
 export interface ViewModelObservableConfig {
   /**
@@ -41,6 +40,7 @@ export type CreateViewModelFactoryFn<
 export interface ViewModelsConfig<
   TViewModel extends AnyViewModel = AnyViewModel,
 > {
+  getPayload: (allProps: any) => any;
   mode: 'csr' | 'ssr';
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#startviewtransitions) */
   startViewTransitions: {
@@ -57,7 +57,7 @@ export interface ViewModelsConfig<
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#factory) */
   factory: CreateViewModelFactoryFn<AnyViewModel | AnyViewModelSimple>;
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#fallbackcomponent) */
-  fallbackComponent?: import('mobx-view-model-react').RComponentType;
+  fallbackComponent: import('mobx-view-model-react').RComponentType;
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/react/api/with-view-model.html#reacthook) */
   reactHook?: import('mobx-view-model-react').WithViewModelReactHook;
   /**
@@ -101,8 +101,8 @@ export type ViewModelsRawConfig<
   TViewModel extends AnyViewModel = AnyViewModel,
 > = PartialKeys<Omit<
 ViewModelsConfig<TViewModel>,
-'startViewTransitions' | 'observable' | 'factory' | 'generateId' | 'hooks' | 'mode'
->, 'payloadObservable' | 'payloadComputed'> & {
+'startViewTransitions' | 'observable' | 'factory' | 'generateId' | 'hooks' | 'mode' | 'getPayload'
+>, 'payloadObservable' | 'payloadComputed' | 'fallbackComponent'> & {
   startViewTransitions?:
     | DeepPartial<ViewModelsConfig['startViewTransitions']>
     | boolean;
