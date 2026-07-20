@@ -279,7 +279,6 @@ export function withViewModel(
   const forwardRefMode = !!config.forwardRef;
   const Fallback =
     config.fallback ?? config.vmConfig?.fallbackComponent ?? viewModelsConfig.fallbackComponent;
-  const hasFallback = Fallback !== _internals.noop;
 
   const processViewComponent =
     config.vmConfig?.processRender ?? viewModelsConfig.processRender;
@@ -305,37 +304,36 @@ export function withViewModel(
       allProps,
     ) as AnyViewModel | AnyViewModelSimple;
 
-    // [0] subscribe, [1] getSnapshot, [2] model
+    // Stable props for Provider (`value`) + useSyncExternalStore.
     // @ts-expect-error it's ok
-    const cacheRef = useRef<
-      [
-        (onStoreChange: () => void) => () => void,
-        () => boolean,
-        typeof model,
-      ]
-    >();
+    const cacheRef = useRef<{
+      value: typeof model;
+      subscribe: (onStoreChange: () => void) => () => void;
+      getSnapshot: () => boolean;
+    }>();
 
     if (cacheRef.current) {
-      cacheRef.current[2] = model;
+      cacheRef.current.value = model;
     } else {
-      cacheRef.current = [
-        (onStoreChange) =>
+      cacheRef.current = {
+        value: model,
+        subscribe: (onStoreChange) =>
           reaction(
             () => {
-              const current = cacheRef.current[2];
+              const current = cacheRef.current.value;
               return !isViewModel(current) || current.isMounted;
             },
             onStoreChange,
           ),
-        () => (cacheRef.current[2] as AnyViewModel).isMounted !== false,
-        model,
-      ];
+        getSnapshot: () =>
+          (cacheRef.current.value as AnyViewModel).isMounted !== false,
+      };
     }
 
     const isReadyToRender = useSyncExternalStore(
-      cacheRef.current[0],
-      cacheRef.current[1],
-      cacheRef.current[1],
+      cacheRef.current.subscribe,
+      cacheRef.current.getSnapshot,
+      cacheRef.current.getSnapshot,
     );
 
     let child: RReactNode = null;
@@ -348,11 +346,11 @@ export function withViewModel(
         viewProps.ref = ref;
       }
       child = createElement(View, viewProps);
-    } else if (hasFallback) {
+    } else if (Fallback) {
       child = createElement(Fallback);
     }
 
-    return createElement(ActiveViewModelProvider, { value: model }, child);
+    return createElement(ActiveViewModelProvider, cacheRef.current, child);
   };
 
   if (process.env.NODE_ENV !== 'production') {

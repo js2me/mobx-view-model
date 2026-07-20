@@ -28,7 +28,6 @@ export const viewModelsConfig = createGlobalConfig<ViewModelsConfig>(
       },
     },
     getPayload: (allProps) => allProps.payload ?? _internals.emptyObject,
-    fallbackComponent: _internals.noop,
     factory: (config) => {
       const VM = config.VM;
 
