@@ -138,10 +138,12 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
     return instance;
   }
 
-  unmountNew(instance: VMBase) {
-    instance.unmount();
+  unmountNew(instance: VMBase | AnyViewModelSimple) {
+    instance.unmount?.();
     this.dettachVMConstructor(instance);
-    this.viewModels.delete(instance.id);
+    if (instance.id) {
+      this.viewModels.delete(instance.id);
+    }
   }
 
   /**
