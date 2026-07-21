@@ -83,8 +83,8 @@ importers:
         version: 19.2.5(react@19.2.5)
     devDependencies:
       docusite:
-        specifier: 0.1.1
-        version: 0.1.1(@algolia/client-search@5.50.1)(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@types/node@25.9.2)(@types/react@19.2.14)(lightningcss@1.32.0)(postcss@8.5.15)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(terser@5.46.1)(typescript@6.0.3)(vite@8.0.16(@types/node@25.9.2)(esbuild@0.27.7)(jiti@2.6.1)(terser@5.46.1)(tsx@4.21.0))
+        specifier: 0.1.2
+        version: 0.1.2(@algolia/client-search@5.50.1)(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@types/node@25.9.2)(@types/react@19.2.14)(lightningcss@1.32.0)(postcss@8.5.15)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(terser@5.46.1)(typescript@6.0.3)(vite@8.0.16(@types/node@25.9.2)(esbuild@0.27.7)(jiti@2.6.1)(terser@5.46.1)(tsx@4.21.0))
 
   examples/csr-react18:
     dependencies:
@@ -3352,8 +3352,8 @@ packages:
     resolution: {integrity: sha512-WkrWp9GR4KXfKGYzOLmTuGVi1UWFfws377n9cc55/tb6DuqyF6pcQ5AbiHEshaDpY9v6oaSr2XCDidGmMwdzIA==}
     engines: {node: '>=8'}
 
-  docusite@0.1.1:
-    resolution: {integrity: sha512-W8OIHc1OzmTfWTNfJ9ipwqFk2c+0tKIA/KSk0VN+c/V4O5xUC14rKiwwBGGc2rOGI+wN+m4/dObNlUSTO4trrQ==}
+  docusite@0.1.2:
+    resolution: {integrity: sha512-53bBzu+YCAxF5IK2UPv0BSk8vApX7n1tJiLWOhyG5rBoX51/CoAPKNjxhHZGQqjVD8KoZrjsAF3ZVlZUAC7iTw==}
     hasBin: true
 
   dom-accessibility-api@0.5.16:
@@ -8523,7 +8523,7 @@ snapshots:
     dependencies:
       path-type: 4.0.0
 
-  docusite@0.1.1(@algolia/client-search@5.50.1)(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@types/node@25.9.2)(@types/react@19.2.14)(lightningcss@1.32.0)(postcss@8.5.15)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(terser@5.46.1)(typescript@6.0.3)(vite@8.0.16(@types/node@25.9.2)(esbuild@0.27.7)(jiti@2.6.1)(terser@5.46.1)(tsx@4.21.0)):
+  docusite@0.1.2(@algolia/client-search@5.50.1)(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@types/node@25.9.2)(@types/react@19.2.14)(lightningcss@1.32.0)(postcss@8.5.15)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(terser@5.46.1)(typescript@6.0.3)(vite@8.0.16(@types/node@25.9.2)(esbuild@0.27.7)(jiti@2.6.1)(terser@5.46.1)(tsx@4.21.0)):
     dependencies:
       '@iconify-json/logos': 1.2.11
       cac: 6.7.14

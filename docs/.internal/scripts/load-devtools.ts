@@ -409,6 +409,8 @@ export async function loadDevtools() {
     }
   }
 
+  try {
+
   const navVM = new DocsDemoNavVM();
   store.attach(navVM);
   store.attach(new DocsDemoNavBreadcrumbVM(navVM));
@@ -444,4 +446,5 @@ export async function loadDevtools() {
       simple: ['home', 'counter'],
     },
   });
+  } catch(_) {}
 }
