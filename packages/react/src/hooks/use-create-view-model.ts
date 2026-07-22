@@ -10,8 +10,15 @@ import {
   isViewModelSimple,
   viewModelsConfig,
 } from 'mobx-view-model';
-import { use, useContext, useEffect, useId, useRef } from 'react';
-import type { AnyObject, Class, IsPartial, Maybe } from 'yummies/types';
+import {
+  use,
+  useContext,
+  useEffect,
+  useId,
+  useRef,
+  useSyncExternalStore,
+} from 'react';
+import type { AnyObject, Class, IsPartial, Maybe, MaybePromise } from 'yummies/types';
 import {
   ActiveViewModelContext,
   ViewModelsContext,
@@ -23,6 +30,10 @@ const EMPTY_OBJECT: AnyObject = Object.freeze({});
 const isThenable = (value: unknown): value is PromiseLike<unknown> =>
   !!value &&
   typeof (value as PromiseLike<unknown>).then === 'function';
+
+const subscribeNoop = () => () => {};
+const getClientHydrated = () => true;
+const getServerHydrated = () => false;
 
 export interface UseCreateViewModelConfig<TViewModel extends AnyViewModel>
   extends Pick<
@@ -103,7 +114,9 @@ export function useCreateViewModel(
   const parentViewModel = useContext(ActiveViewModelContext);
   const cache = useRef<{
     vm: AnyViewModel | AnyViewModelSimple;
-    promise?: PromiseLike<unknown>;
+    promise?: PromiseLike<void>;
+    isSSR?: boolean
+    cleanup: () => VoidFunction;
   }>(null!);
 
   const reactId = useId();
@@ -143,27 +156,37 @@ export function useCreateViewModel(
 
     cache.current = {
       vm: model,
-      promise: isThenable(mountResult) ? mountResult : undefined,
+      promise: mountResult as (PromiseLike<void> | undefined),
+      isSSR: viewModelsConfig.mode === 'ssr',
+      cleanup: () => () => {
+        if (viewModels) {
+          viewModels.unmountNew(model);
+        } else {
+          model.unmount?.();
+        }
+      }
     };
   } else {
     model.setPayload?.(payload);
   }
 
-  useEffect(
-    () => () => {
-      if (viewModels) {
-        viewModels.unmountNew(model);
-      } else {
-        model.unmount?.();
-      }
-    },
-    EMPTY_ARR,
-  );
+  useEffect(cache.current.cleanup, EMPTY_ARR);
 
-  // Suspend until async mount finishes (ssr mode only).
-  const pending = cache.current!.promise;
-  if (viewModelsConfig.mode === 'ssr' && use && pending) {
-    use(pending);
+  if (cache.current.isSSR) {
+    // `ssr`, or client still hydrating (`useSyncExternalStore` server snapshot).
+    const pending = cache.current!.promise;
+    const isHydrated = useSyncExternalStore(
+      subscribeNoop,
+      getClientHydrated,
+      getServerHydrated,
+    );
+    if (
+      use &&
+      pending &&
+      (typeof window === 'undefined' || !isHydrated)
+    ) {
+      use(pending);
+    } 
   }
 
   return model;

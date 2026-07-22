@@ -27,9 +27,9 @@ skip consumer-driven validation.
 2. Do not “fix tests in this repo” when that would diverge from consumer behavior.
 3. Suspense: keep Layout **outside** page Suspense (see githome-style
    `routing.tsx` + `widgets/layout`). Do not wrap all of
-   `RouteViewGroup layout={Layout}` — otherwise `use(mountPromise)` in ssr mode
-   remounts Layout and loops on async mount.
-4. `useCreateViewModel` in ssr mode: a remount with a new `useId` must reuse the
-   in-flight VM and the same mount Promise.
-5. Sibling VMs of the same class must not steal each other — reuse only a single
-   async-mount-in-flight orphan.
+   `RouteViewGroup layout={Layout}`.
+4. `useCreateViewModel`: `use(mountPromise)` in `ssr` mode and while the client
+   is still hydrating (`useSyncExternalStore` server snapshot). After hydration
+   — no `use()` on client nav. Do not force `mode = 'ssr'` on the client.
+5. Page `willMount` may be `async` (gozon style); hydration is handled by (4).
+6. `ViewModelBase.mount` must reuse an in-flight `#mountPromise` on re-entrant calls.

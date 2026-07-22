@@ -10,7 +10,7 @@ import { _internals } from '../internals.js';
  */
 export const viewModelsConfig = createGlobalConfig<ViewModelsConfig>(
   {
-    mode: 'csr',
+    mode: 'csr-only',
     comparePayload: false,
     payloadComputed: 'struct',
     payloadObservable: 'ref',

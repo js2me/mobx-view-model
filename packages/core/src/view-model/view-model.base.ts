@@ -36,7 +36,10 @@ export class ViewModelBase<
 
   id: string;
 
-  private vmState: ViewModelState
+  private vmState: ViewModelState;
+
+  /** In-flight mount(); re-entrant calls must reuse the same Promise. */
+  #mountPromise?: PromiseLike<void>;
 
   private _payload: Payload;
 
@@ -135,6 +138,13 @@ export class ViewModelBase<
    * The method is called when the view starts mounting
    */
   mount() {
+    if (this.vmState === 'mounted') {
+      return;
+    }
+    if (this.#mountPromise) {
+      return this.#mountPromise;
+    }
+
     this.vmState = 'mounting';
     const result = this.willMount();
 
@@ -150,13 +160,14 @@ export class ViewModelBase<
         },
         { disabled: !this.vmConfig.startViewTransitions.mount },
       );
-    }
+    };
 
     if (result instanceof Promise) {
-      return result.then(finalizeMount)
-    } else {
-      return finalizeMount()
+      this.#mountPromise = result.then(finalizeMount);
+      return this.#mountPromise;
     }
+
+    return finalizeMount();
   }
 
   /**
@@ -170,6 +181,7 @@ export class ViewModelBase<
    * The method is called when the view starts unmounting
    */
   unmount() {
+    this.#mountPromise = undefined;
     runInAction(() => (this.vmState = 'unmounting'));
     this.willUnmount();
     this.vmConfig.onUnmount?.(this);

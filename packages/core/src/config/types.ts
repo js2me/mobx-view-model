@@ -41,7 +41,7 @@ export interface ViewModelsConfig<
   TViewModel extends AnyViewModel = AnyViewModel,
 > {
   getPayload: (allProps: any) => any;
-  mode: 'csr' | 'ssr';
+  mode: 'csr-only' | 'ssr';
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#startviewtransitions) */
   startViewTransitions: {
     mount: boolean;
