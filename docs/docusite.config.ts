@@ -1,9 +1,84 @@
 import { defineConfig } from 'docusite';
 
-import { circularVmPayloadDependencyTestCases } from '../packages/react/src/hoc/with-view-model.test.fixture';
 import { resolve } from 'path';
 import v9docs from './v9/docusite.config';
 import v10docs from './v10/docusite.config';
+
+/** Configs that can cause infinite re-renders via circular payload access (docs injection). */
+const circularVmPayloadDependencyRecursionConfigs = [
+  {
+    wrapViewsInObserver: true,
+    payloadComputed: true,
+    comparePayload: 'shallow',
+    payloadObservable: 'deep',
+  },
+  {
+    wrapViewsInObserver: true,
+    payloadComputed: true,
+    comparePayload: false,
+    payloadObservable: 'deep',
+  },
+  {
+    wrapViewsInObserver: true,
+    payloadComputed: true,
+    comparePayload: false,
+    payloadObservable: 'ref',
+  },
+  {
+    wrapViewsInObserver: true,
+    payloadComputed: false,
+    comparePayload: 'shallow',
+    payloadObservable: 'deep',
+  },
+  {
+    wrapViewsInObserver: true,
+    payloadComputed: false,
+    comparePayload: false,
+    payloadObservable: 'deep',
+  },
+  {
+    wrapViewsInObserver: true,
+    payloadComputed: false,
+    comparePayload: false,
+    payloadObservable: 'ref',
+  },
+  {
+    wrapViewsInObserver: false,
+    payloadComputed: true,
+    comparePayload: 'shallow',
+    payloadObservable: 'deep',
+  },
+  {
+    wrapViewsInObserver: false,
+    payloadComputed: true,
+    comparePayload: false,
+    payloadObservable: 'deep',
+  },
+  {
+    wrapViewsInObserver: false,
+    payloadComputed: true,
+    comparePayload: false,
+    payloadObservable: 'ref',
+  },
+  {
+    wrapViewsInObserver: false,
+    payloadComputed: false,
+    comparePayload: 'shallow',
+    payloadObservable: 'deep',
+  },
+  {
+    wrapViewsInObserver: false,
+    payloadComputed: false,
+    comparePayload: false,
+    payloadObservable: 'deep',
+  },
+  {
+    wrapViewsInObserver: false,
+    payloadComputed: false,
+    comparePayload: false,
+    payloadObservable: 'ref',
+  },
+];
 
 const pkgsRoot = resolve(import.meta.dirname, '../../packages');
 
@@ -241,9 +316,8 @@ export default defineConfig({
   contentInjections: [
     {
       key: 'circularVmPayloadDependencyTestCases',
-      value: circularVmPayloadDependencyTestCases
-        .filter(it => it.isRecursion)
-        .map(it => JSON.stringify(it.vmConfig, null, 2))
+      value: circularVmPayloadDependencyRecursionConfigs
+        .map(it => JSON.stringify(it, null, 2))
         .map(it => `\n\`\`\`json\n${it}\n\`\`\`\n`)
         .join('\n'),
     },
