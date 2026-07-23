@@ -34,9 +34,24 @@ export interface ViewModelCreateConfig<VM extends AnyViewModel | AnyViewModelSim
 }
 
 /**
+ * Type-only brand for components created with `withViewModel` / `withPropsViewModel`
+ * (and their `connect()` anchors when branded). Lets {@link ViewModelLookup} infer `T`
+ * without depending on React/Solid packages from core.
+ *
+ * Never read at runtime.
+ */
+export interface ViewModelComponentRef<
+  T extends AnyViewModel | AnyViewModelSimple = AnyViewModel | AnyViewModelSimple,
+> {
+  readonly $viewModel?: T;
+}
+
+/**
  * [**Documentation**](https://js2me.github.io/mobx-view-model/api/other/view-model-lookup)
  */
 export type ViewModelLookup<T extends AnyViewModel | AnyViewModelSimple> =
   | AnyViewModel['id']
   | Class<T>
+  | ViewModelComponentRef<T>
+  /** Plain anchor components registered via `anchors` / `connect()` */
   | object;

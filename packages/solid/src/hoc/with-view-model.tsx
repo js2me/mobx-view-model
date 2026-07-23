@@ -3,6 +3,7 @@ import type {
   AnyViewModel,
   AnyViewModelSimple,
   ViewModel,
+  ViewModelComponentRef,
   ViewModelSimple,
   ViewModelStore,
 } from 'mobx-view-model';
@@ -102,6 +103,10 @@ export type VMComponentProps<
 export interface VMComponent<
   TViewModel,
   TComponentOriginProps extends AnyObject = AnyObject,
+> extends ViewModelComponentRef<
+  TViewModel extends AnyViewModel | AnyViewModelSimple
+    ? TViewModel
+    : AnyViewModel | AnyViewModelSimple
 > {
   (props: VMComponentProps<TViewModel, TComponentOriginProps>): SJSXElement;
 

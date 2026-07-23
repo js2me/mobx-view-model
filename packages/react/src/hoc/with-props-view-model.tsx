@@ -1,5 +1,7 @@
 import type {
   AnyViewModel,
+  AnyViewModelSimple,
+  ViewModelComponentRef,
   ViewModelSimple,
 } from 'mobx-view-model';
 import type { AnyObject, Class, EmptyObject, HasKey, IsUnknown } from 'yummies/types';
@@ -56,6 +58,10 @@ export interface PropsVMComponent<
   TViewModel,
   TComponentOriginProps extends AnyObject = ExtractVMPayload<TViewModel>,
   TForwardedRef = unknown,
+> extends ViewModelComponentRef<
+  TViewModel extends AnyViewModel | AnyViewModelSimple
+    ? TViewModel
+    : AnyViewModel | AnyViewModelSimple
 > {
   (
     props: PropsVMComponentProps<TViewModel, TComponentOriginProps, TForwardedRef>,

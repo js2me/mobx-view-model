@@ -3,6 +3,7 @@ import type {
   AnyViewModel,
   AnyViewModelSimple,
   ViewModel,
+  ViewModelComponentRef,
   ViewModelSimple,
   ViewModelStore
 } from 'mobx-view-model';
@@ -208,6 +209,10 @@ export interface VMComponent<
   TViewModel,
   TComponentOriginProps extends AnyObject = AnyObject,
   TForwardedRef = unknown,
+> extends ViewModelComponentRef<
+  TViewModel extends AnyViewModel | AnyViewModelSimple
+    ? TViewModel
+    : AnyViewModel | AnyViewModelSimple
 > {
   (
     props: VMComponentProps<TViewModel, TComponentOriginProps, TForwardedRef>,

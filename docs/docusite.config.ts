@@ -272,6 +272,46 @@ export default defineConfig({
         ],
       },
       {
+        text: 'SolidJS',
+        link: '/solid/integration',
+        items: [
+          {
+            text: 'Integration',
+            link: '/solid/integration',
+          },
+          {
+            text: 'API',
+            link: '/solid/api/with-view-model',
+            items: [
+              {
+                text: 'withViewModel',
+                link: '/solid/api/with-view-model',
+              },
+              {
+                text: 'withPropsViewModel',
+                link: '/solid/api/with-props-view-model',
+              },
+              {
+                text: 'ViewModelsProvider',
+                link: '/solid/api/view-models-provider',
+              },
+              {
+                text: 'useViewModel',
+                link: '/solid/api/use-view-model',
+              },
+              {
+                text: 'useCreateViewModel',
+                link: '/solid/api/use-create-view-model',
+              },
+              {
+                text: 'OnlyViewModel',
+                link: '/solid/api/only-view-model',
+              },
+            ],
+          },
+        ],
+      },
+      {
         text: 'Other 🛸',
         link: '/other/project-examples',
         items: [
@@ -328,11 +368,17 @@ export default defineConfig({
       alias: {
         'mobx-view-model': resolve(pkgsRoot, 'core/dist/index.js'),
         'mobx-view-model-react': resolve(pkgsRoot, 'react/dist/index.js'),
+        'mobx-view-model-solid': resolve(pkgsRoot, 'solid/dist/index.js'),
         'mobx-view-model-devtools': resolve(pkgsRoot, 'devtools/dist/index.js'),
       },
     },
     ssr: {
-      noExternal: ['mobx-view-model', 'mobx-view-model-react', 'mobx-view-model-devtools'],
+      noExternal: [
+        'mobx-view-model',
+        'mobx-view-model-react',
+        'mobx-view-model-solid',
+        'mobx-view-model-devtools',
+      ],
     },
   },
 });

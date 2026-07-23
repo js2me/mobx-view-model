@@ -74,6 +74,7 @@ export async function loadDevtools() {
             { id: 'introduction', label: 'Introduction', path: '/introduction/overview' },
             { id: 'api', label: 'Core API', path: '/api/view-models/overview' },
             { id: 'react', label: 'React', path: '/react/integration' },
+            { id: 'solid', label: 'Solid', path: '/solid/integration' },
             { id: 'recipes', label: 'Recipes', path: '/recipes/all-props-as-payload' },
             { id: 'other', label: 'Other', path: '/other/dev-tools' },
           ],

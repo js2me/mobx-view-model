@@ -4,7 +4,7 @@ layout: home
 
 hero:
   name: '@{packageJson.name}'
-  text: '⚡ Clean MVVM for React + MobX ⚡'
+  text: '⚡ Clean MVVM for React / Solid + MobX ⚡'
   image:
     src: /logo.png
   actions:

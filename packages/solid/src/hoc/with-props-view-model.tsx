@@ -1,4 +1,9 @@
-import type { AnyViewModel, ViewModelSimple } from 'mobx-view-model';
+import type {
+  AnyViewModel,
+  AnyViewModelSimple,
+  ViewModelComponentRef,
+  ViewModelSimple,
+} from 'mobx-view-model';
 import type { AnyObject, Class, EmptyObject } from 'yummies/types';
 import type { SComponent, SJSXElement, SRenderFn } from '../lib/solid-types.js';
 import {
@@ -33,6 +38,10 @@ export type PropsVMComponentProps<
 export interface PropsVMComponent<
   TViewModel,
   TComponentOriginProps extends AnyObject = ExtractVMPayload<TViewModel>,
+> extends ViewModelComponentRef<
+  TViewModel extends AnyViewModel | AnyViewModelSimple
+    ? TViewModel
+    : AnyViewModel | AnyViewModelSimple
 > {
   (props: PropsVMComponentProps<TViewModel, TComponentOriginProps>): SJSXElement;
 
