@@ -76,13 +76,11 @@ export type ViewModelPropsChargedProps<
 > = HasKey<TComponentOriginProps, 'ref'> extends true
   ? Omit<TComponentOriginProps, 'ref'> &
       ViewModelProps<TViewModel, ExtractReactRef<TComponentOriginProps['ref']>>
-  : HasKey<TComponentOriginProps, 'ref'> extends true
-    ? TComponentOriginProps
-    : TComponentOriginProps &
-        ViewModelProps<
-          TViewModel,
-          IsUnknown<TForwardedRef> extends true ? any : TForwardedRef
-        >;
+  : TComponentOriginProps &
+      ViewModelProps<
+        TViewModel,
+        IsUnknown<TForwardedRef> extends true ? any : TForwardedRef
+      >;
 
 type VMInputPayloadPropObj<VM> = VM extends ViewModel<infer TPayload, any>
   ? TPayload extends EmptyObject
@@ -197,16 +195,14 @@ export type VMComponentProps<
 > = Omit<TComponentOriginProps, AllViewModelPropsKeys> &
   VMInputPayloadPropObj<TViewModel> &
   (HasKey<TComponentOriginProps, 'ref'> extends true
-    ? {}
-    : HasKey<TComponentOriginProps, 'ref'> extends true
-      ? Required<TComponentOriginProps>['ref'] extends RLegacyRef<any>
-        ? {
-            ref?: TComponentOriginProps['ref'];
-          }
-        : Pick<TComponentOriginProps, 'ref'>
-      : IsUnknown<TForwardedRef> extends true
-        ? {}
-        : { ref?: RLegacyRef<TForwardedRef> });
+    ? Required<TComponentOriginProps>['ref'] extends RForwardedRef<infer R>
+      ? { ref?: RLegacyRef<R> }
+      : Required<TComponentOriginProps>['ref'] extends RLegacyRef<infer R>
+        ? { ref?: RLegacyRef<R> }
+        : { ref?: RLegacyRef<ExtractReactRef<TComponentOriginProps['ref']>> }
+    : IsUnknown<TForwardedRef> extends true
+      ? {}
+      : { ref?: RLegacyRef<TForwardedRef> });
 
 export interface VMComponent<
   TViewModel,

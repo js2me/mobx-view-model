@@ -11,6 +11,7 @@ import {
 } from '../lib/react-types.js';
 import {
   type AllViewModelPropsKeys,
+  type ExtractReactRef,
   type ViewModelHocConfig,
   type ViewModelPropsChargedProps,
   type ViewModelSimpleHocConfig,
@@ -42,22 +43,14 @@ export type PropsVMComponentProps<
     AllViewModelPropsKeys | keyof ExtractVMPayload<TViewModel>
   > &
   (HasKey<TComponentOriginProps, 'ref'> extends true
-    ? {}
-    : HasKey<TComponentOriginProps, 'forwardedRef'> extends true
-      ? Required<TComponentOriginProps>['forwardedRef'] extends RForwardedRef<
-          infer R
-        >
-        ? {
-            ref?: RLegacyRef<R>;
-          }
-        : Required<TComponentOriginProps>['forwardedRef'] extends RLegacyRef<any>
-          ? {
-              ref?: TComponentOriginProps['forwardedRef'];
-            }
-          : Pick<TComponentOriginProps, 'forwardedRef'>
-      : IsUnknown<TForwardedRef> extends true
-        ? {}
-        : { ref?: RLegacyRef<TForwardedRef> });
+    ? Required<TComponentOriginProps>['ref'] extends RForwardedRef<infer R>
+      ? { ref?: RLegacyRef<R> }
+      : Required<TComponentOriginProps>['ref'] extends RLegacyRef<infer R>
+        ? { ref?: RLegacyRef<R> }
+        : { ref?: RLegacyRef<ExtractReactRef<TComponentOriginProps['ref']>> }
+    : IsUnknown<TForwardedRef> extends true
+      ? {}
+      : { ref?: RLegacyRef<TForwardedRef> });
 
 export interface PropsVMComponent<
   TViewModel,

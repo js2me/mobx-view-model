@@ -39,7 +39,7 @@ export class ViewModelBase<
   private vmState: ViewModelState;
 
   /** In-flight mount(); re-entrant calls must reuse the same Promise. */
-  #mountPromise?: PromiseLike<void>;
+  #mountPromise?: Promise<void>;
 
   private _payload: Payload;
 
@@ -137,7 +137,7 @@ export class ViewModelBase<
   /**
    * The method is called when the view starts mounting
    */
-  mount() {
+  mount(): MaybePromise<void> {
     if (this.vmState === 'mounted') {
       return;
     }
@@ -162,8 +162,11 @@ export class ViewModelBase<
       );
     };
 
-    if (result instanceof Promise) {
-      this.#mountPromise = result.then(finalizeMount);
+    if (
+      result != null &&
+      typeof (result as PromiseLike<void>).then === 'function'
+    ) {
+      this.#mountPromise = Promise.resolve(result).then(finalizeMount);
       return this.#mountPromise;
     }
 

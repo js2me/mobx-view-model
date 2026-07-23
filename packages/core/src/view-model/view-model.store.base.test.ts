@@ -4,7 +4,6 @@ import { describe, expect, it, vi } from 'vitest';
 import type { Maybe } from 'yummies/types';
 import type { ViewModelsConfig } from '../config/types.js';
 import { ViewModelBaseMock } from './view-model.base.test.js';
-import type { ViewModel } from './view-model.js';
 import { ViewModelStoreBase } from './view-model.store.base.js';
 import type {
   ViewModelGenerateIdConfig,
@@ -18,7 +17,7 @@ import type {
 export class ViewModelStoreBaseMock extends ViewModelStoreBase {
   spies: {
     generateViewModelId: Mock<
-      (config: ViewModelGenerateIdConfig<ViewModel>) => string
+      (config: ViewModelGenerateIdConfig<AnyViewModel | AnyViewModelSimple>) => string
     >;
     get: Mock<
       (
@@ -40,11 +39,11 @@ export class ViewModelStoreBaseMock extends ViewModelStoreBase {
     return this.viewModelIdsByClasses;
   }
 
-  generateViewModelId<VM extends ViewModel>(
+  generateViewModelId<VM extends AnyViewModel | AnyViewModelSimple>(
     config: ViewModelGenerateIdConfig<VM>,
   ): string {
     const result = super.generateViewModelId(config);
-    this.spies.generateViewModelId.mockReturnValue(result)(config);
+    this.spies.generateViewModelId.mockReturnValue(result)(config as any);
     return result;
   }
 

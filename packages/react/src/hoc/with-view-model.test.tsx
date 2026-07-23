@@ -1021,7 +1021,7 @@ describe('withViewModel', () => {
         VMConnectedComponentView = VMConnectedComponentView;
       }
 
-      const Component = withViewModel(VM, VMConnectedComponentView, {
+      const Component = withViewModel(VM, VMConnectedComponentView as any, {
         vmConfig
 });
 
@@ -1728,16 +1728,16 @@ describe('withViewModel', () => {
         }
       }
 
-      const Jedi = withViewModel(JediVM<JediType>, ({ model, forwardedRef }) => {
+      const Jedi = withViewModel(JediVM<JediType>, ({ model, ref }) => {
           expectTypeOf(model.jediType).toEqualTypeOf<JediType>();
-          expectTypeOf(forwardedRef).toEqualTypeOf<
+          expectTypeOf(ref).toEqualTypeOf<
             React.ForwardedRef<any> | undefined
           >();
 
-          expect(forwardedRef).toBeUndefined();
+          expect(ref).toBeUndefined();
 
           return <div>{model.jediType}</div>;
-        }, );
+        });
 
       const data = {
         payload: {
@@ -1748,18 +1748,18 @@ describe('withViewModel', () => {
 
       await act(async () => render(<Jedi {...data} />));
     });
-    it('Using second generic type in ViewModelProps to define forwardedRef', async () => {
+    it('Using second generic type in ViewModelProps to define ref', async () => {
       class YourVM extends ViewModelBase {}
 
       interface ComponentProps extends ViewModelProps<YourVM, HTMLDivElement> {}
 
       const Component = withViewModel(
         YourVM,
-        ({ forwardedRef }: ComponentProps) => {
-          expectTypeOf(forwardedRef).toEqualTypeOf<
+        ({ ref }: ComponentProps) => {
+          expectTypeOf(ref).toEqualTypeOf<
             React.ForwardedRef<HTMLDivElement> | undefined
           >();
-          return <div ref={forwardedRef}>hello</div>;
+          return <div ref={ref}>hello</div>;
         },
         { forwardRef: true },
       );
@@ -1771,66 +1771,6 @@ describe('withViewModel', () => {
 
       await act(async () => render(<TestApp />));
     });
-    it('forwardedRef already defined (overrided) in ComponentProps (number)', async () => {
-      class YourVM extends ViewModelBase {}
-
-      interface ComponentProps
-        extends Omit<ViewModelProps<YourVM>, 'forwardedRef'> {
-        forwardedRef: number;
-      }
-
-      const Component = withViewModel(YourVM, ({ forwardedRef }: ComponentProps) => {
-          expectTypeOf(forwardedRef).toEqualTypeOf<number>();
-          return <div>hello {forwardedRef}</div>;
-        }, );
-
-      const TestApp = () => {
-        return <Component forwardedRef={1} />;
-      };
-
-      const screen = await act(async () => render(<TestApp />));
-      expect(screen.getByText('hello 1')).toBeDefined();
-    });
-    it('forwardedRef already defined (overrided) in ComponentProps (number | undefined) (no prop passed)', async () => {
-      class YourVM extends ViewModelBase {}
-
-      interface ComponentProps
-        extends Omit<ViewModelProps<YourVM>, 'forwardedRef'> {
-        forwardedRef?: number;
-      }
-
-      const Component = withViewModel(YourVM, ({ forwardedRef }: ComponentProps) => {
-          expectTypeOf(forwardedRef).toEqualTypeOf<number | undefined>();
-          return <div>{`hello ${forwardedRef}`}</div>;
-        }, );
-
-      const TestApp = () => {
-        return <Component />;
-      };
-
-      const screen = await act(async () => render(<TestApp />));
-      expect(screen.getByText('hello undefined')).toBeDefined();
-    });
-    it('forwardedRef already defined (overrided) in ComponentProps (number | undefined) (prop passed)', async () => {
-      class YourVM extends ViewModelBase {}
-
-      interface ComponentProps
-        extends Omit<ViewModelProps<YourVM>, 'forwardedRef'> {
-        forwardedRef?: number;
-      }
-
-      const Component = withViewModel(YourVM, ({ forwardedRef }: ComponentProps) => {
-          expectTypeOf(forwardedRef).toEqualTypeOf<number | undefined>();
-          return <div>{`hello ${forwardedRef}`}</div>;
-        }, );
-
-      const TestApp = () => {
-        return <Component forwardedRef={666} />;
-      };
-
-      const screen = await act(async () => render(<TestApp />));
-      expect(screen.getByText('hello 666')).toBeDefined();
-    });
     it('ref already defined in ComponentProps', async () => {
       class YourVM extends ViewModelBase {}
 
@@ -1840,8 +1780,8 @@ describe('withViewModel', () => {
 
       const Component = withViewModel<YourVM, ComponentProps>(
         YourVM,
-        ({ forwardedRef }) => {
-          expectTypeOf(forwardedRef).toEqualTypeOf<
+        ({ ref }) => {
+          expectTypeOf(ref).toEqualTypeOf<
             React.ForwardedRef<number> | undefined
           >();
           return <div>hello</div>;
@@ -1908,27 +1848,27 @@ describe('withViewModel', () => {
         type Props = ViewModelProps<YourVM>;
 
         expectTypeOf<Props>().toEqualTypeOf<{ model: YourVM }>();
-        expectTypeOf<Props>().not.toHaveProperty('forwardedRef');
+        expectTypeOf<Props>().not.toHaveProperty('ref');
       });
 
-      it('TForwardedRef any adds optional forwardedRef', () => {
+      it('TForwardedRef any adds optional ref', () => {
         class YourVM extends ViewModelBase {}
 
         type Props = ViewModelProps<YourVM, any>;
 
         expectTypeOf<Props['model']>().toEqualTypeOf<YourVM>();
-        expectTypeOf<Props['forwardedRef']>().toEqualTypeOf<
+        expectTypeOf<Props['ref']>().toEqualTypeOf<
           React.ForwardedRef<any> | undefined
         >();
       });
 
-      it('concrete TForwardedRef adds typed optional forwardedRef', () => {
+      it('concrete TForwardedRef adds typed optional ref', () => {
         class YourVM extends ViewModelBase {}
 
         type Props = ViewModelProps<YourVM, HTMLDivElement>;
 
         expectTypeOf<Props['model']>().toEqualTypeOf<YourVM>();
-        expectTypeOf<Props['forwardedRef']>().toEqualTypeOf<
+        expectTypeOf<Props['ref']>().toEqualTypeOf<
           React.ForwardedRef<HTMLDivElement> | undefined
         >();
       });

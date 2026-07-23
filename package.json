@@ -15,6 +15,7 @@
     "test:watch": "pnpm -r --filter './packages/*' run test:watch",
     "test:coverage": "pnpm -r --filter './packages/*' run test:coverage",
     "test:react-regression": "node ./scripts/test-react-type-regression.mjs && pnpm -r --filter './tests/react-regressions/*' run test",
+    "test:type-regression": "pnpm test:react-regression",
     "docs": "pnpm build && pnpm --filter mobx-view-model-docs run dev",
     "docs:build": "pnpm build && pnpm --filter mobx-view-model-docs run build",
     "docs:serve": "pnpm --filter mobx-view-model-docs run preview",
