@@ -275,14 +275,19 @@ export function withViewModel(
   const anchors = (config.anchors ??= []);
   const getPayload: Defined<VMHocFullConfig['getPayload']> = config.getPayload ?? viewModelsConfig.getPayload;
   const forwardRefMode = !!config.forwardRef;
-  const Fallback =
-    config.fallback ?? config.vmConfig?.fallbackComponent ?? viewModelsConfig.fallbackComponent;
+  const Fallback = (config.fallback ??
+    config.vmConfig?.fallbackComponent ??
+    viewModelsConfig.fallbackComponent) as RComponentType | undefined;
 
   const processViewComponent =
     config.vmConfig?.processRender ?? viewModelsConfig.processRender;
 
   const renderFn =
-    processViewComponent?.(rawRenderFn, VM, config) ?? rawRenderFn ?? _internals.noop;
+    (processViewComponent?.(rawRenderFn, VM, config) as
+      | RRenderFn<AnyObject>
+      | undefined) ??
+    rawRenderFn ??
+    _internals.noop;
 
   // Single observer layer — tracks model observables in the view.
   const View = observer(renderFn as RFunctionComponent<any>);

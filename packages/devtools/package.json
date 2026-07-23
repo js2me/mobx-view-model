@@ -52,6 +52,7 @@
     "mobx-react-lite": "^4.1.1",
     "mobx-swiss-knife": "^1.15.0",
     "mobx-view-model": "workspace:*",
+    "mobx-view-model-react": "workspace:*",
     "mobx-web-api": "^1.13.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",

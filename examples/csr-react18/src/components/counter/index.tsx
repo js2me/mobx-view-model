@@ -1,5 +1,5 @@
 import { observer } from 'mobx-react-lite';
-import { useViewModel, withViewModel } from 'mobx-view-model';
+import { useViewModel, withViewModel } from 'mobx-view-model-react';
 import { CounterVM } from './model.js';
 
 const CounterBody = observer(() => {

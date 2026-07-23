@@ -1,5 +1,5 @@
 import { ViewModelBase, type ViewModelParams } from 'mobx-view-model';
-import { withViewModel, type ViewModelProps } from 'mobx-view-model';
+import { withViewModel, type ViewModelProps } from 'mobx-view-model-react';
 
 class VM extends ViewModelBase<{ foo: string }> {
   constructor(params: ViewModelParams<{ foo: string }>) {

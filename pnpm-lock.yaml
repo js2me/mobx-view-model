@@ -275,16 +275,10 @@ importers:
 
   packages/core:
     dependencies:
-      mobx-view-model-react:
-        specifier: workspace:^10.3.0
-        version: link:../react/dist
       yummies:
         specifier: ^7.20.1
         version: 7.20.1(mobx@6.15.0)(react@19.2.5)
     devDependencies:
-      '@types/react':
-        specifier: 19.2.14
-        version: 19.2.14
       jsdom:
         specifier: ^26.1.0
         version: 26.1.0(supports-color@5.5.0)
@@ -307,6 +301,9 @@ importers:
       mobx-view-model:
         specifier: workspace:*
         version: link:../core/dist
+      mobx-view-model-react:
+        specifier: workspace:*
+        version: link:../react/dist
       mobx-web-api:
         specifier: ^1.13.0
         version: 1.13.0(mobx@6.15.0)(react@18.3.1)

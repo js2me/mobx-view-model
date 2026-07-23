@@ -1,4 +1,4 @@
-import { ViewModelsProvider } from 'mobx-view-model';
+import { ViewModelsProvider } from 'mobx-view-model-react';
 import type { ReactNode } from 'react';
 import { RootStoreContext } from '../context.js';
 import type { RootStore } from '../index.js';

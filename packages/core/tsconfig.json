@@ -19,10 +19,8 @@
     "isolatedModules": true,
     "typeRoots": ["./node_modules/@types/", "./types", "../../node_modules/@types"],
     "noEmit": false,
-    "jsx": "react-jsx",
     "paths": {
-      "mobx-view-model": ["./src/index.ts"],
-      "mobx-view-model/react": ["./src/react-subpath.ts"]
+      "mobx-view-model": ["./src/index.ts"]
     }
   },
   "include": ["src"],

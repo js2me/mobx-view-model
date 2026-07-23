@@ -29,7 +29,7 @@ export interface ViewModelCreateConfig<VM extends AnyViewModel | AnyViewModelSim
    * Additional component anchors for the same VM instance.
    * useViewModel(AnchorComponent) will return this VM when mounted.
    */
-  anchors?: import('mobx-view-model-react').RComponentType[];
+  anchors?: unknown[];
   factory?: ViewModelsConfig['factory']
 }
 
@@ -39,6 +39,4 @@ export interface ViewModelCreateConfig<VM extends AnyViewModel | AnyViewModelSim
 export type ViewModelLookup<T extends AnyViewModel | AnyViewModelSimple> =
   | AnyViewModel['id']
   | Class<T>
-  | (T extends AnyViewModel
-      ? import('mobx-view-model-react').VMComponent<T, any> | import('mobx-view-model-react').RComponentType<any>
-      : import('mobx-view-model-react').RComponentType<any>);
+  | object;

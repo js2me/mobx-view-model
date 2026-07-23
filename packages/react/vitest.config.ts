@@ -12,13 +12,6 @@ export default mergeConfig(
     resolve: {
       alias: [
         {
-          find: 'mobx-view-model/react',
-          replacement: path.resolve(
-            __dirname,
-            '../core/src/react-subpath.ts',
-          ),
-        },
-        {
           find: 'mobx-view-model',
           replacement: path.resolve(
             __dirname,

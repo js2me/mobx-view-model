@@ -8,7 +8,7 @@
     "check": "pnpm run ts:check && pnpm ts-test-types:check",
     "prebuild": "pnpm run clean",
     "build:watch": "pnpm build && nodemon --watch src --ext ts,tsx --exec \"pnpm build\"",
-    "build": "vite build && node ./scripts/patch-dist-package-json.mjs",
+    "build": "vite build",
     "test": "vitest run --config vitest.config.ts",
     "test:watch": "vitest watch --config vitest.config.ts",
     "test:coverage": "vitest run --config vitest.config.ts --coverage"
@@ -44,21 +44,12 @@
     "directory": "dist"
   },
   "dependencies": {
-    "mobx-view-model-react": "workspace:^10.3.0",
     "yummies": "^7.20.1"
   },
   "peerDependencies": {
-    "mobx": "^6.12.4",
-    "react": "^18.0.0 || ^19.0.0"
-  },
-  "peerDependenciesMeta": {
-    "react": {
-      "optional": true
-    }
+    "mobx": "^6.12.4"
   },
   "devDependencies": {
-    "@types/react": "^19.2.14",
-    "jsdom": "^26.1.0",
-    "mobx-view-model-react": "workspace:^10.3.0"
+    "jsdom": "^26.1.0"
   }
 }

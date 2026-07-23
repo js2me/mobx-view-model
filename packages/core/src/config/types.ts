@@ -55,9 +55,14 @@ export interface ViewModelsConfig<
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#factory) */
   factory: CreateViewModelFactoryFn<AnyViewModel | AnyViewModelSimple>;
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#fallbackcomponent) */
-  fallbackComponent?: import('mobx-view-model-react').RComponentType;
+  fallbackComponent?: unknown;
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/react/api/with-view-model.html#reacthook) */
-  reactHook?: import('mobx-view-model-react').WithViewModelReactHook;
+  reactHook?: (
+    allProps: AnyObject,
+    ctx: AnyObject,
+    viewModels: Maybe<ViewModelStore>,
+    ref?: any,
+  ) => void;
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#onmount) */
   onMount?: (viewModel: TViewModel) => void;
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#onunmount) */
@@ -71,11 +76,11 @@ export interface ViewModelsConfig<
   };
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#processviewcomponent) */
   processRender?: (
-    renderFn: import('mobx-view-model-react').RRenderFn<AnyObject> | undefined,
+    renderFn: ((props: AnyObject) => unknown) | undefined,
     VM: Class<TViewModel>,
     /** Полный тип HOC — `ViewModelHocConfig` в `mobx-view-model-react`. */
     config: AnyObject,
-  ) => Maybe<import('mobx-view-model-react').RRenderFn<any>>;
+  ) => Maybe<(props: any) => unknown>;
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#observable) */
   observable: {
     viewModels: ViewModelObservableConfig;
