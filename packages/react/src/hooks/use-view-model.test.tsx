@@ -1,7 +1,6 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { useState, type ReactNode } from 'react';
-import { beforeEach, describe, expect, test } from 'vitest';
-import { createCounter } from 'yummies/complex';
+import { describe, expect, test } from 'vitest';
 import type { ViewModelStore } from 'mobx-view-model';
 import { ViewModelBaseMock } from '../../../core/src/view-model/view-model.base.test.js';
 import { ViewModelStoreBaseMock } from '../../../core/src/view-model/view-model.store.base.test.js';
@@ -10,11 +9,6 @@ import { withViewModel } from '../hoc/index.js';
 import { useViewModel } from './use-view-model.js';
 
 describe('useViewModel', () => {
-  const generateId = createCounter(String);
-
-  beforeEach(() => {
-    generateId.reset();
-  });
 
   const createDepthComponent = (
     depth: number,
@@ -72,7 +66,7 @@ describe('useViewModel', () => {
         </div>
       );
     },{
-      id: accessUsing === 'id' ? `depth-${depth}` : undefined,
+      id: `depth-${depth}`,
     });
 
     Object.assign(Component, { VM: VM1, depth, id: `depth-${depth}` });
@@ -220,15 +214,13 @@ describe('useViewModel', () => {
 
       class LayoutVM extends ViewModelBaseMock {}
 
-      const Layout = withViewModel(LayoutVM, {
-        id: 'layout',
-      })(({ children }: { children?: ReactNode }) => (
+      const Layout = withViewModel(LayoutVM, ({ children }: { children?: ReactNode }) => (
         <div data-testid={'layout'}>{children}</div>
-      ));
+      ), { id: 'layout' });
 
       class ChildVM extends ViewModelBaseMock {}
 
-      const Child = withViewModel(ChildVM)(() => <div data-testid={'child'} />);
+      const Child = withViewModel(ChildVM, () => <div data-testid={'child'} />);
 
       const App = () => {
         return (
@@ -255,18 +247,18 @@ describe('useViewModel', () => {
 
       class LayoutVM extends ViewModelBaseMock {}
 
-      const Layout = withViewModel(LayoutVM, {
+      const Layout = withViewModel(LayoutVM, ({ children }: { children?: ReactNode }) => (
+        <div data-testid={'layout'}>{children}</div>
+      ), {
         id: 'layout',
         fallback: () => <div data-testid={'layout-fallback'}> </div>,
-      })(({ children }: { children?: ReactNode }) => (
-        <div data-testid={'layout'}>{children}</div>
-      ));
+      });
 
       class ChildVM extends ViewModelBaseMock {}
 
-      const Child = withViewModel(ChildVM, {
+      const Child = withViewModel(ChildVM, () => <div data-testid={'child'} />, {
         fallback: () => <div data-testid={'child-fallback'}> </div>,
-      })(() => <div data-testid={'child'} />);
+      });
 
       const App = () => {
         const [key, setKey] = useState(0);

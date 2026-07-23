@@ -34,7 +34,6 @@ class ViewModelBaseMock<
 class ViewModelStoreBaseMock extends ViewModelStoreBase {
   constructor() {
     super({
-      vmConfig: { useReactIds: true },
     });
   }
 }
@@ -59,7 +58,7 @@ afterEach(() => {
 });
 
 describe('Suspense VM duplicate prevention', () => {
-  test('React.lazy + Suspense + observer + useReactIds does not create duplicate VMs', async () => {
+  test('React.lazy + Suspense + observer + useId does not create duplicate VMs', async () => {
     const vmStore = new ViewModelStoreBaseMock();
     const routeStore = new RouteStore();
 
@@ -67,7 +66,7 @@ describe('Suspense VM duplicate prevention', () => {
     class PageVM extends ViewModelBaseMock {}
 
     const PageComponent = observer(() => {
-      const vm = useCreateViewModel(PageVM);
+      const vm = useCreateViewModel(PageVM, {}, { id: 'page-vm' });
       return <span data-testid="page">{vm.id}</span>;
     });
 
@@ -128,20 +127,20 @@ describe('Suspense VM duplicate prevention', () => {
 
   /**
    * Reproduces the REAL infinite-loop bug from githome:
-   * React 19 + lazy + Suspense + withViewModel(observer) + useReactIds: true
+   * React 19 + lazy + Suspense + withViewModel(observer) + useId: true
    *
    * In the real app, the cycle is driven by observer components that read
-   * MobX observables which are mutated by attach(). The full cycle:
+   * MobX observables which are mutated by define()/unmountNew(). The full cycle:
    * 1. RouteView (observer) reads route.isOpened → re-renders when route changes
    * 2. It renders RepositoryPage via React.lazy inside Suspense
-   * 3. withViewModel(observer) creates RepositoryPageVM → attach() mutates MobX
+   * 3. withViewModel(observer) creates RepositoryPageVM → define()/unmountNew() mutates MobX
    *    observables in the store (viewModelIdsByClasses, instanceAttachedCount, etc.)
    * 4. These MobX mutations trigger the observer RouteViewGroup/RouteView to re-render
    * 5. React 19 re-evaluates the Suspense boundary → remounts the component
    * 6. New useId() → new VM id → new VM created → back to step 3
    * 7. Infinite loop: 44+ duplicate RepositoryPageVM instances
    */
-  test('withViewModel + observer + Suspense + useReactIds does not create duplicate VMs', async () => {
+  test('withViewModel + observer + Suspense + useId does not create duplicate VMs', async () => {
     const vmStore = new ViewModelStoreBaseMock();
     const routeStore = new RouteStore();
 

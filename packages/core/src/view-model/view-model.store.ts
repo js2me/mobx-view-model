@@ -11,7 +11,7 @@ import type { ViewModelsConfig } from '../config/types.js';
 export interface ViewModelStore<VMBase extends AnyViewModel = AnyViewModel> {
   /**
    * Effective merged `ViewModelsConfig` for this store: values from the store constructor are layered over the global defaults (see `ViewModelStoreBase` / `mergeVMConfigs`).
-   * Drives `generateId`, `factory`, lifecycle hooks, and other behavior for view models owned by this store.
+   * Drives `factory`, lifecycle hooks, and other behavior for view models owned by this store.
    *
    * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config)
    */
@@ -69,18 +69,9 @@ export interface ViewModelStore<VMBase extends AnyViewModel = AnyViewModel> {
 
   unmountNew(instance: any): any;
 
+  readonly hasMountingVms: boolean;
 
-  readonly hasMountingVms: boolean
-
-  waitMount(...vms: (AnyViewModel | AnyViewModelSimple)[]): Promise<void>
-
-  /**
-   * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#isabletorenderview-viewmodelid)
-   * Determines if a view model is able to render based on its ID.
-   * @param id - The ID of the view model.
-   * @returns True if the view model can render, false otherwise.
-   */
-  isAbleToRenderView(id: Maybe<VMBase['id']>): boolean;
+  waitMount(...vms: (AnyViewModel | AnyViewModelSimple)[]): Promise<void>;
 
   /**
    * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#createviewmodel-config)

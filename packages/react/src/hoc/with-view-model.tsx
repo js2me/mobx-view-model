@@ -11,6 +11,7 @@ import { observer } from 'mobx-react-lite';
 import {
   createElement,
   forwardRef,
+  useContext,
   useRef,
   useSyncExternalStore,
 } from 'react';
@@ -25,6 +26,7 @@ import type {
   Maybe
 } from 'yummies/types';
 import { ActiveViewModelProvider } from '../components/index.js';
+import { ViewModelsContext } from '../contexts/index.js';
 import {
   type UseCreateViewModelConfig,
   useCreateViewModel,
@@ -295,6 +297,7 @@ export function withViewModel(
 
   // Plain shell (no observer): create VM, gate on isMounted, render View / Fallback.
   const Wrapper = (allProps: any, ref?: any): RReactNode => {
+    const viewModels = useContext(ViewModelsContext);
     const payload = getPayload(allProps);
 
     const model = useCreateViewModel(
@@ -303,6 +306,13 @@ export function withViewModel(
       config,
       allProps,
     ) as AnyViewModel | AnyViewModelSimple;
+
+    (config.reactHook ?? viewModelsConfig.reactHook)?.(
+      allProps,
+      config.ctx ?? {},
+      viewModels,
+      ref,
+    );
 
     // Stable props for Provider (`value`) + useSyncExternalStore.
     // @ts-expect-error it's ok

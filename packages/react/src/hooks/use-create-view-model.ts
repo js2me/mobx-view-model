@@ -123,8 +123,9 @@ export function useCreateViewModel(
   let model = cache.current?.vm;
 
   if (!model) {
-    const id =
+    const reactGeneratedId =
       process.env.NODE_ENV === 'production' ? reactId : `${reactId}:${VM.name}`;
+    const id = rawCfg?.id ?? reactGeneratedId;
 
     const config = {
       ...rawCfg,

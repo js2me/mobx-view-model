@@ -34,7 +34,6 @@ class ViewModelBaseMock<
 class ViewModelStoreBaseMock extends ViewModelStoreBase {
   constructor() {
     super({
-      vmConfig: { useReactIds: true },
     });
   }
 }
@@ -60,12 +59,12 @@ afterEach(() => {
 
 describe('Suspense VM duplicate prevention', () => {
   /**
-   * Regression test for React.lazy + Suspense with useReactIds: true.
-   * attach() is called in the layout effect (not during render),
+   * Regression test for React.lazy + Suspense with useId: true.
+   * define()/unmountNew() is called in the layout effect (not during render),
    * so it never triggers a MobX reaction during the render pass,
    * preventing the infinite loop.
    */
-  test('React.lazy + Suspense + observer + useReactIds does not create duplicate VMs', async () => {
+  test('React.lazy + Suspense + observer + useId does not create duplicate VMs', async () => {
     const vmStore = new ViewModelStoreBaseMock();
     const routeStore = new RouteStore();
 
@@ -73,7 +72,7 @@ describe('Suspense VM duplicate prevention', () => {
     class PageVM extends ViewModelBaseMock {}
 
     const PageComponent = observer(() => {
-      const vm = useCreateViewModel(PageVM);
+      const vm = useCreateViewModel(PageVM, {}, { id: 'page-vm' });
       return <span data-testid="page">{vm.id}</span>;
     });
 
@@ -131,7 +130,7 @@ describe('Suspense VM duplicate prevention', () => {
     expect(screen.queryByTestId('loading')).toBeNull();
   });
 
-  test('withViewModel + observer + Suspense + useReactIds does not create duplicate VMs', async () => {
+  test('withViewModel + observer + Suspense + useId does not create duplicate VMs', async () => {
     const vmStore = new ViewModelStoreBaseMock();
     const routeStore = new RouteStore();
 

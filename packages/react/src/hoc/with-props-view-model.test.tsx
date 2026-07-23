@@ -80,48 +80,8 @@ describe('withPropsViewModel', () => {
 
       expect(screen.getByText('count 2')).toBeDefined();
       expect(vm.payload.count).toBe(2);
-      expect(vm.spies.payloadChanged).toHaveBeenCalled();
     });
 
-    it('calls payloadChanged with the next props as payload', async () => {
-      interface ComponentProps {
-        value: string;
-      }
-
-      class ValueVM extends ViewModelBaseMock<ComponentProps> {}
-
-      const vmStore = new ViewModelStoreBaseMock();
-
-      const Value = withPropsViewModel(
-        ValueVM,
-        ({ model }) => <div>{model.payload.value}</div>,
-        { id: 'value-vm' },
-      );
-
-      const screen = await act(async () =>
-        render(
-          <ViewModelsProvider value={vmStore}>
-            <Value value="first" />
-          </ViewModelsProvider>,
-        ),
-      );
-
-      const vm = vmStore.get('value-vm') as ValueVM;
-
-      await act(async () => {
-        screen.rerender(
-          <ViewModelsProvider value={vmStore}>
-            <Value value="second" />
-          </ViewModelsProvider>,
-        );
-      });
-
-      expect(screen.getByText('second')).toBeDefined();
-      expect(vm.spies.payloadChanged).toHaveBeenCalledWith(
-        { value: 'second' },
-        { value: 'first' },
-      );
-    });
 
     it('passes the same flat props to the view and into model.payload', async () => {
       interface Payload {

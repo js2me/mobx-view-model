@@ -31,8 +31,8 @@ export interface ViewModel<
    * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/interface#setpayload-payload-payload-void)
    *
    * The React integration may call this on **every render** while the component is mounted in the tree,
-   * including **before** `mount()` has finished (and while `isMounted` is still `false`), so `payloadChanged`
-   * and side effects should not assume a fully mounted view model.
+   * including **before** `mount()` has finished (and while `isMounted` is still `false`), so
+   * side effects should not assume a fully mounted view model.
    */
   setPayload(payload: Payload): boolean;
 }

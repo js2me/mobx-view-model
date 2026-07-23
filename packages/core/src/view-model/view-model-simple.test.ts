@@ -1,12 +1,12 @@
 import { describe, expect, it, vi } from 'vitest';
-import type { ViewModelStore } from './index.js';
+import type { ViewModelInitConfig } from './index.js';
 import { ViewModelStoreBaseMock } from './view-model.store.base.test.js';
 import type { ViewModelSimple } from './view-model-simple.js';
 
 class ViewModelSimpleImpl implements ViewModelSimple<{ test: number }> {
   spies = {
     mount: vi.fn(),
-    attachViewModelStore: vi.fn(),
+    init: vi.fn(),
     setPayload: vi.fn(),
     unmount: vi.fn(),
   };
@@ -17,12 +17,12 @@ class ViewModelSimpleImpl implements ViewModelSimple<{ test: number }> {
     this.id = id;
   }
 
-  mount(): void {
-    this.spies.mount();
+  init(config: ViewModelInitConfig<this>): void {
+    this.spies.init(config);
   }
 
-  attachViewModelStore(viewModels: ViewModelStore): void {
-    this.spies.attachViewModelStore(viewModels);
+  mount(): void {
+    this.spies.mount();
   }
 
   setPayload(payload: { test: number }): void {
@@ -46,66 +46,86 @@ describe('ViewModelSimple', () => {
   });
 
   describe('work with vm store', () => {
-    it('should call "linkStore"', () => {
+    it('should call init on connect/define', () => {
       const vmStore = new ViewModelStoreBaseMock();
-      const vm = new ViewModelSimpleImpl();
-      vmStore.markToBeAttached(vm);
-      expect(vm.spies.attachViewModelStore).toBeCalledTimes(1);
-      expect(vm.spies.attachViewModelStore).toBeCalledWith(vmStore);
+      const vm = vmStore.define({
+        id: '1',
+        VM: ViewModelSimpleImpl,
+        payload: { test: 1 },
+        factory: () => new ViewModelSimpleImpl('1'),
+      });
+
+      expect(vm.spies.init).toBeCalledTimes(1);
+      expect(vm.spies.init.mock.calls[0]![0].viewModels).toBe(vmStore);
     });
 
-    it('should ok "attach" simple vm to store', async () => {
+    it('should register simple vm via define', () => {
       const vmStore = new ViewModelStoreBaseMock();
-      const vm1 = new ViewModelSimpleImpl('1');
-      const vm2 = new ViewModelSimpleImpl('2');
-
-      await vmStore.attach(vm1);
-      await vmStore.attach(vm2);
-
-      expect(vm1.spies.mount).toBeCalledTimes(1);
-      expect(vm2.spies.mount).toBeCalledTimes(1);
+      const vm1 = vmStore.define({
+        id: '1',
+        VM: ViewModelSimpleImpl,
+        payload: { test: 1 },
+        factory: () => new ViewModelSimpleImpl('1'),
+      });
+      const vm2 = vmStore.define({
+        id: '2',
+        VM: ViewModelSimpleImpl,
+        payload: { test: 2 },
+        factory: () => new ViewModelSimpleImpl('2'),
+      });
 
       expect([...vmStore._viewModels.values()]).toHaveLength(2);
-      expect([...vmStore._mountingViews.values()]).toHaveLength(0);
-      expect([...vmStore._unmountingViews.values()]).toHaveLength(0);
       expect([...vmStore._linkedAnchorVMClasses.values()]).toHaveLength(0);
-      expect([...vmStore._instanceAttachedCount.values()]).toHaveLength(2);
       expect([...vmStore._viewModelIdsByClasses.values()]).toHaveLength(1);
+      expect(vmStore.get('1')).toBe(vm1);
+      expect(vmStore.get('2')).toBe(vm2);
     });
 
-    it('should ok "detach" simple vm to store', async () => {
+    it('should remove simple vm via unmountNew', () => {
       const vmStore = new ViewModelStoreBaseMock();
-      const vm1 = new ViewModelSimpleImpl('1');
-      const vm2 = new ViewModelSimpleImpl('2');
+      const vm1 = vmStore.define({
+        id: '1',
+        VM: ViewModelSimpleImpl,
+        payload: { test: 1 },
+        factory: () => new ViewModelSimpleImpl('1'),
+      });
+      const vm2 = vmStore.define({
+        id: '2',
+        VM: ViewModelSimpleImpl,
+        payload: { test: 2 },
+        factory: () => new ViewModelSimpleImpl('2'),
+      });
 
-      await vmStore.attach(vm1);
-      await vmStore.attach(vm2);
+      vmStore.unmountNew(vm1);
+      vmStore.unmountNew(vm2);
 
-      await vmStore.detach('1');
-      await vmStore.detach('2');
-
+      expect(vm1.spies.unmount).toBeCalledTimes(1);
+      expect(vm2.spies.unmount).toBeCalledTimes(1);
       expect([...vmStore._viewModels.values()]).toHaveLength(0);
-      expect([...vmStore._mountingViews.values()]).toHaveLength(0);
-      expect([...vmStore._unmountingViews.values()]).toHaveLength(0);
       expect([...vmStore._linkedAnchorVMClasses.values()]).toHaveLength(0);
-      expect([...vmStore._instanceAttachedCount.values()]).toHaveLength(0);
       expect([...vmStore._viewModelIdsByClasses.values()]).toHaveLength(0);
     });
 
-    it('should be found by .get() and id', async () => {
+    it('should be found by .get() and id', () => {
       const vmStore = new ViewModelStoreBaseMock();
-      const vm = new ViewModelSimpleImpl('1000');
-
-      await vmStore.attach(vm);
+      const vm = vmStore.define({
+        id: '1000',
+        VM: ViewModelSimpleImpl,
+        payload: { test: 1 },
+        factory: () => new ViewModelSimpleImpl('1000'),
+      });
 
       expect(vmStore.get('1000')).toBe(vm);
     });
 
-    it('should be found by .get() and class ref', async () => {
+    it('should be found by .get() and class ref', () => {
       const vmStore = new ViewModelStoreBaseMock();
-      const vm = new ViewModelSimpleImpl('1000');
-
-      await vmStore.attach(vm);
+      const vm = vmStore.define({
+        id: '1000',
+        VM: ViewModelSimpleImpl,
+        payload: { test: 1 },
+        factory: () => new ViewModelSimpleImpl('1000'),
+      });
 
       expect(vmStore.get(ViewModelSimpleImpl)).toBe(vm);
     });

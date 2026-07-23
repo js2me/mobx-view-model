@@ -1,6 +1,6 @@
 import { makeObservable, reaction } from 'mobx';
 import type { Mock } from 'vitest';
-import { describe, expect, expectTypeOf, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import type { AnyObject, EmptyObject } from 'yummies/types';
 
@@ -19,7 +19,6 @@ export class ViewModelBaseMock<
   spies: {
     mount: Mock<() => void>;
     unmount: Mock<() => void>;
-    payloadChanged: Mock<(payload: any, prevPayload: any) => void>;
     willMount: Mock<() => void>;
     didMount: Mock<() => void>;
     willUnmount: Mock<() => void>;
@@ -27,7 +26,6 @@ export class ViewModelBaseMock<
   } = {
     mount: vi.fn(),
     unmount: vi.fn(),
-    payloadChanged: vi.fn(),
     willMount: vi.fn(),
     didMount: vi.fn(),
     willUnmount: vi.fn(),
@@ -59,10 +57,6 @@ export class ViewModelBaseMock<
   unmount(): void {
     this.spies.unmount();
     super.unmount();
-  }
-
-  payloadChanged(payload: any, prevPayload: any): void {
-    this.spies.payloadChanged(payload, prevPayload);
   }
 
   protected didUnmount(): void {
@@ -219,7 +213,7 @@ describe('ViewModelBase', () => {
     dispose();
   });
 
-  it('setPayload should respect comparePayload and pass prev payload', () => {
+  it('setPayload should respect comparePayload', () => {
     const payload1 = { value: 1 };
     const payload2 = { value: 1 };
     const payload3 = { value: 2 };
@@ -231,32 +225,37 @@ describe('ViewModelBase', () => {
       },
     });
 
-    vm.setPayload(payload2);
+    expect(vm.setPayload(payload2)).toBe(true);
     expect(vm.payload).toBe(payload1);
-    expect(vm.spies.payloadChanged).not.toHaveBeenCalled();
 
-    vm.setPayload(payload3);
+    expect(vm.setPayload(payload3)).toBe(false);
     expect(vm.payload).toBe(payload3);
-    expect(vm.spies.payloadChanged).toHaveBeenCalledOnce();
-    expect(vm.spies.payloadChanged).toHaveBeenCalledWith(payload3, payload1);
   });
 
-  it('isUnmounting should be true during willUnmount and false after', () => {
-    class UnmountStateMock extends ViewModelBaseMock {
-      isUnmountingAtWillUnmount: boolean | null = null;
+  it('re-entrant mount reuses in-flight promise', async () => {
+    let resolveWillMount!: () => void;
+    const willMountPromise = new Promise<void>((resolve) => {
+      resolveWillMount = resolve;
+    });
 
-      protected willUnmount(): void {
-        this.isUnmountingAtWillUnmount = this.isUnmounting;
-        super.willUnmount();
+    class AsyncVM extends ViewModelBaseMock {
+      protected willMount() {
+        super.willMount();
+        return willMountPromise;
       }
     }
 
-    const vm = new UnmountStateMock();
+    const vm = new AsyncVM();
+    const first = vm.mount();
+    const second = vm.mount();
 
-    expect(vm.isUnmounting).toBe(false);
-    vm.unmount();
-    expect(vm.isUnmountingAtWillUnmount).toBe(true);
-    expect(vm.isUnmounting).toBe(false);
+    expect(first).toBe(second);
+    expect(vm.isMounted).toBe(false);
+
+    resolveWillMount();
+    await first;
+
+    expect(vm.isMounted).toBe(true);
   });
 
   it('unmountSignal should be aborted after unmount', () => {

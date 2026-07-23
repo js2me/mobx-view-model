@@ -1,4 +1,4 @@
-import { action, computed, observable, runInAction, untracked, when } from 'mobx';
+import { action, computed, observable, untracked, when } from 'mobx';
 import type { ObservableAnnotationsArray } from 'yummies/mobx';
 import type { Class, Maybe } from 'yummies/types';
 import {
@@ -34,22 +34,6 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
     Class<VMBase> | Class<AnyViewModelSimple>,
     string[]
   >;
-  protected instanceAttachedCount: Map<string, number>;
-
-  /**
-   * It is temp heap which is needed to get access to view model instance before all initializations happens
-   */
-  protected viewModelsTempHeap: Map<string, VMBase>;
-
-  /**
-   * Views waiting for mount
-   */
-  protected mountingViews: Set<string>;
-
-  /**
-   * Views waiting for unmount
-   */
-  protected unmountingViews: Set<string>;
 
   public vmConfig: ViewModelsConfig;
 
@@ -60,12 +44,7 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
     this.linkedAnchorVMClasses = observable.map([], { deep: false });
     // @ts-ignore ObservableMap is missing getOrInsert/getOrInsertComputed added in TS 6.0
     this.viewModelIdsByClasses = observable.map([], { deep: true });
-    // @ts-ignore ObservableMap is missing getOrInsert/getOrInsertComputed added in TS 6.0
-    this.instanceAttachedCount = observable.map([], { deep: false });
-    this.mountingViews = observable.set([], { deep: false });
-    this.unmountingViews = observable.set([], { deep: false });
     this.vmConfig = mergeVMConfigs(config?.vmConfig);
-    this.viewModelsTempHeap = new Map();
 
     applyObservable(
       this,
@@ -77,41 +56,42 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
   }
 
   get mountedViewsCount() {
-    return [...this.instanceAttachedCount.values()].reduce(
-      (sum, count) => sum + count,
-      0,
-    );
+    let count = 0;
+    for (const vm of this.viewModels.values()) {
+      if (!isViewModel(vm) || vm.isMounted) {
+        count += 1;
+      }
+    }
+    return count;
   }
 
   get hasMountingVms() {
-    return [...this.viewModels.values()].some(vm => {
-      if (isViewModel(vm) && !vm.isMounted) {
-        return true;
-      }
-
-      return false;
-    })
+    return [...this.viewModels.values()].some(
+      (vm) => isViewModel(vm) && !vm.isMounted,
+    );
   }
 
   waitMount(...vms: (AnyViewModel | AnyViewModelSimple)[]): Promise<void> {
     return when(() => {
       if (vms.length) {
-        // const ids = vms.flatMap(vm => this.getIds(vm));
-        return vms.every(vm => {
-          return (!isViewModel(vm) || vm.isMounted)
-        })
+        return vms.every((vm) => !isViewModel(vm) || vm.isMounted);
       }
-      return [...this.viewModels.values()].some(vm => !isViewModel(vm) || vm.isMounted)
+      return [...this.viewModels.values()].every(
+        (vm) => !isViewModel(vm) || vm.isMounted,
+      );
     });
   }
 
-  connect(instance: AnyViewModel | AnyViewModelSimple, config: ViewModelCreateConfig<any>): void {
+  connect(
+    instance: AnyViewModel | AnyViewModelSimple,
+    config: ViewModelCreateConfig<any>,
+  ): void {
     this.link(config.VM, ...(config.anchors ?? []));
     this.viewModels.set(config.id, instance!);
     this.attachVMConstructor(instance);
 
     if (isViewModelSimple(instance)) {
-      instance.init?.({ ...config, viewModels: this })
+      instance.init?.({ ...config, viewModels: this });
     }
   }
 
@@ -122,10 +102,14 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
    *
    * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#define)
    */
-  define<VM extends VMBase | AnyViewModelSimple>(config: ViewModelCreateConfig<VM>): VM {
+  define<VM extends VMBase | AnyViewModelSimple>(
+    config: ViewModelCreateConfig<VM>,
+  ): VM {
     config.id = this.generateViewModelId(config);
 
-    const existing = untracked(() => this.viewModels.get(config.id)) as VM | undefined;
+    const existing = untracked(() => this.viewModels.get(config.id)) as
+      | VM
+      | undefined;
 
     if (existing) {
       return existing;
@@ -152,7 +136,9 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
    * @param config - The configuration for creating the view model.
    * @returns The newly created view model instance.
    */
-  create<VM extends VMBase | AnyViewModelSimple>(config: ViewModelCreateConfig<VM>): VM {
+  create<VM extends VMBase | AnyViewModelSimple>(
+    config: ViewModelCreateConfig<VM>,
+  ): VM {
     const vmConfig = mergeVMConfigs(this.vmConfig, config.vmConfig);
     const vmParams: ViewModelParams<any, any> & ViewModelCreateConfig<VM> = {
       ...config,
@@ -267,16 +253,11 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
   get<T extends VMBase | AnyViewModelSimple>(
     vmLookup: Maybe<ViewModelLookup<T>>,
   ): T | null {
-    // helps to users of this method to better observe changes in view models
-    // this.viewModels.keys();
-
     const id = this.getId(vmLookup);
 
     if (!id) return null;
 
-    const observedVM = this.viewModels.get(id) as Maybe<T>;
-
-    return observedVM ?? (this.viewModelsTempHeap.get(id) as Maybe<T>) ?? null;
+    return (this.viewModels.get(id) as Maybe<T>) ?? null;
   }
 
   /**
@@ -291,13 +272,6 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
 
     return viewModelIds.map((id) => this.viewModels.get(id) as T);
   }
-
-  protected finalizeMount(modelId: string) {
-    runInAction(() => {
-      this.mountingViews.delete(modelId);
-    });
-  }
-
 
   /**
    * Indexes the instance id by its class so `get(CartPageVM)` / `useViewModel(CartPageVM)` work.
@@ -332,24 +306,9 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
     }
   }
 
-  protected getParentId(vm: VMBase | AnyViewModelSimple) {
-    return isViewModel(vm) ? vm.parentViewModel?.id : null
-  }
-
-
-  isAbleToRenderView(id: Maybe<string>): boolean {
-    const isViewMounting = this.mountingViews.has(id!);
-    const hasViewModel = this.viewModels.has(id!) || this.viewModelsTempHeap.has(id!);
-    return !!id && hasViewModel && !isViewMounting;
-  }
-
   clean(): void {
     this.viewModels.clear();
     this.linkedAnchorVMClasses.clear();
     this.viewModelIdsByClasses.clear();
-    this.instanceAttachedCount.clear();
-    this.mountingViews.clear();
-    this.unmountingViews.clear();
-    this.viewModelsTempHeap.clear();
   }
 }
