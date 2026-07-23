@@ -1,0 +1,13 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "../..",
+    "types": ["node"],
+    "paths": {
+      "mobx-view-model": ["../core/src/index.ts"],
+      "mobx-view-model-solid": ["./src/index.ts"]
+    }
+  },
+  "include": ["src"],
+  "exclude": ["src/**/*.test.ts", "src/**/*.test.tsx", "src/**/*.fixture.ts"]
+}

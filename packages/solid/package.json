@@ -1,0 +1,58 @@
+{
+  "name": "mobx-view-model-solid",
+  "version": "0.1.0",
+  "scripts": {
+    "clean": "rimraf dist",
+    "ts:check": "tsc --noEmit --project tsconfig.check.json && tsc --noEmit --project tsconfig.test.json",
+    "ts-test-types:check": "tsc --noEmit --project tsconfig.test.json",
+    "check": "pnpm run ts:check",
+    "prebuild": "pnpm run clean",
+    "build:watch": "pnpm build && nodemon --watch src --ext ts,tsx --exec \"pnpm build\"",
+    "build": "vite build && node ./scripts/normalize-dist-dts-imports.mjs && node ./scripts/validate-dist-dts-imports.mjs && node ./scripts/patch-dist-package-json.mjs",
+    "test": "vitest run --config vitest.config.ts",
+    "test:watch": "vitest watch --config vitest.config.ts",
+    "test:coverage": "vitest run --config vitest.config.ts --coverage"
+  },
+  "keywords": [
+    "mobx",
+    "solid",
+    "solidjs",
+    "view-model",
+    "mvvm"
+  ],
+  "author": "js2me",
+  "license": "MIT",
+  "description": "SolidJS bindings for mobx-view-model",
+  "bugs": {
+    "url": "https://github.com/js2me/mobx-view-model/issues"
+  },
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./src/index.ts",
+  "homepage": "https://github.com/js2me/mobx-view-model",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/js2me/mobx-view-model"
+  },
+  "publishConfig": {
+    "directory": "dist"
+  },
+  "dependencies": {
+    "mobx-view-model": "workspace:*"
+  },
+  "peerDependencies": {
+    "mobx": "^6.12.4",
+    "mobx-solid": "^0.0.1",
+    "solid-js": "^1.6.0"
+  },
+  "devDependencies": {
+    "@solidjs/testing-library": "^0.8.10",
+    "jsdom": "^26.1.0",
+    "mobx": "^6.12.4",
+    "mobx-solid": "^0.0.1",
+    "solid-js": "^1.9.9",
+    "vite-plugin-solid": "^2.11.13",
+    "yummies": "^7.20.1"
+  }
+}

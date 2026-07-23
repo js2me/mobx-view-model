@@ -18,6 +18,7 @@ minimumReleaseAgeExclude:
   - mobx-view-model-react@10.2.2
   - mobx-view-model@10.2.2
   - docusite@0.1.0 || 0.1.1 || 0.1.2
+  - mobx-solid@0.0.1
 overrides:
   '@types/react': 19.2.14
   '@types/react-dom': 19.2.3
