@@ -96,11 +96,6 @@ if (
   );
 }
 
-if (corePackageJson.dependencies?.['mobx-view-model-react'] === 'workspace:*') {
-  corePackageJson.dependencies['mobx-view-model-react'] =
-    `^${reactPackageJson.version}`;
-}
-
 if (
   corePackageJson.publishConfig?.directory &&
   corePackageJson.publishConfig.directory === 'dist'
@@ -109,9 +104,6 @@ if (
 }
 
 writeFileSync(corePackageJsonPath, `${JSON.stringify(corePackageJson, null, 2)}\n`);
-if (!corePackageJson.dependencies?.['mobx-view-model-react']) {
-  throw new Error('Expected mobx-view-model-react dependency in core package.');
-}
 
 const reactPack = run(
   'pnpm',
