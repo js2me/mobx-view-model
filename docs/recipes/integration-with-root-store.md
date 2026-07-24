@@ -49,12 +49,11 @@ export class ViewModelImpl<
 ```
 
 
-2. Make your own `ViewModelStore` implementation that accepts `RootStore` as a `constructor` parameter and overrides `createViewModel` to pass `rootStore`   
+2. Make your own `ViewModelStore` implementation that accepts `RootStore` as a `constructor` parameter and overrides `create` to pass `rootStore`   
 
 ```ts{8,9,12,23,24,25}
 // view-model.store.impl.ts
 import {
-  ViewModelParams,
   ViewModelStoreBase,
   ViewModel,
   ViewModelCreateConfig,
@@ -67,7 +66,7 @@ export class ViewModelStoreImpl extends ViewModelStoreBase {
     super();
   }
 
-  createViewModel<VM extends ViewModel<any, ViewModel<any, any>>>(
+  create<VM extends ViewModel>(
     config: ViewModelCreateConfig<VM>,
   ): VM {
     const VM = config.VM;
@@ -80,7 +79,7 @@ export class ViewModelStoreImpl extends ViewModelStoreBase {
 
     // otherwise it will be the default behavior
     // of this method
-    return super.createViewModel(config);
+    return super.create(config);
   }
 }
 ```
@@ -110,18 +109,12 @@ export class MyPageVM extends ViewModelImpl {
   @observable
   accessor state = '';
 
-  async mount() {
-    // this.isMounted = false;
+  protected async willMount() {
     await this.rootStore.beerApi.takeBeer();
-    super.mount(); // this.isMounted = true
   }
 
   protected didMount() {
     console.info('did mount');
-  }
-
-  unmount() {
-    super.unmount();
   }
 }
 

@@ -6,21 +6,14 @@ A Higher-Order Component that connects React components to their [ViewModels](/a
 
 
 ::: info This HOC wraps your view component into `observer()` HOC!
-This works because the [`wrapViewsInObserver` option](/api/view-models/view-models-config#wrapviewsinobserver) is enabled by default.
+The render function is always wrapped with [`observer()`](https://mobx.js.org/api.html#observer) from `mobx-react-lite`.
 :::
 
 ## API Signature
 ```tsx
-function withViewModel<VM extends AnyViewModel>(
-  ViewModelClass: Class<VM>,
-  config?: ViewModelHocConfig<VM>
-):
-  (Component: ComponentType<ComponentProps & ViewModelProps<VM>>) =>
-    VMComponent
-
 function withViewModel<
   TViewModel extends AnyViewModel,
-  TCompProps extends AnyObject = ViewModelProps<TViewModel>,
+  TCompProps extends AnyObject = AnyObject,
 >(
   model: Class<TViewModel>,
   component: ComponentType<TCompProps & ViewModelProps<TViewModel>>,
@@ -33,7 +26,7 @@ function withViewModel<
 ### `getPayload`   
 This parameter sets the `payload` for `ViewModel` attached to view.  
 
-Default: `(props) => props.payload`  
+Default: resolved from [`viewModelsConfig.getPayload`](/api/view-models/view-models-config#getpayload) (`(props) => props.payload ?? {}`).  
 
 Example:   
 _Using all props as "payload" for `ViewModel`_   
@@ -54,11 +47,13 @@ export const YourComponent = withViewModel(VM, () =>{
 <YourComponent foo={'1'} />
 ```
 
+Prefer [`withPropsViewModel`](/react/api/with-props-view-model) for this pattern.
+
 ### `forwardRef`   
 This parameter wraps the React component with the `React.forwardRef` HOC.  
 It might be helpful if you need to forward a ref to your `View` component.   
 
-Using this parameter requires `ViewModelProps<YourVM, RefType>` (second generic type `RefType`) to add the `forwardedRef` prop type.   
+Using this parameter requires `ViewModelProps<YourVM, RefType>` (second generic type `RefType`) to add the `ref` prop type.   
 
 Default: `false`
 
@@ -72,25 +67,25 @@ Examples:
 ```tsx{3,8}
 class YourVM extends ViewModelBase {}
 
-const Component = withViewModel(YourVM, ({ forwardedRef }) => {
-  // forwardedRef: React.ForwardedRef<any>!
+const Component = withViewModel(YourVM, ({ ref }) => {
+  // ref: React.ForwardedRef<any>!
   return (
-    <div ref={forwardedRef}>hello</div>
+    <div ref={ref}>hello</div>
   )
 }, { forwardRef: true })
 ```
 
-_Case with an explicit `forwardedRef` type_  
+_Case with an explicit `ref` type_  
 
 ```tsx{5}
 class YourVM extends ViewModelBase {}
 
 const Component = withViewModel(
   YourVM,
-  ({ forwardedRef }: ViewModelProps<YourVM, HTMLDivElement>) => {
-    // forwardedRef: React.ForwardedRef<HTMLDivElement>!
+  ({ ref }: ViewModelProps<YourVM, HTMLDivElement>) => {
+    // ref: React.ForwardedRef<HTMLDivElement>!
     return (
-      <div ref={forwardedRef}>hello</div>
+      <div ref={ref}>hello</div>
     )
   },
   { forwardRef: true }
@@ -104,10 +99,7 @@ This is a factory function for creating ViewModel instances.
 
 ### `id`  
 Unique identifier for the view.   
-
-### `generateId`   
-Function to generate an identifier for the view model.  
-[Same as `generateId` function in `viewModelsConfig`](/api/view-models/view-models-config.html#generateid)  
+If omitted, React [`useId()`](https://react.dev/reference/react/useId) is used (stable across SSR hydration for the same tree).
 
 ### `reactHook`  
 Function to invoke additional React hooks in the resulting component.   
@@ -135,15 +127,14 @@ const Component = withViewModel(YourVM, () => {
 ```
 
 ### `fallback`   
-Component to render if the view model initialization takes too long.   
+Component to render if the view model is not ready to render yet (for example while async [`willMount()`](/api/view-models/base-implementation#willmount-void) / `mount()` is in progress).   
 
 Example:   
 ```tsx{5,12,13,14}
 class YourVM extends ViewModelBase {
-  async mount() {
+  protected async willMount() {
     await sleep(1000);
     await fetchData();
-    super.mount();
   }
 }
 
@@ -168,7 +159,7 @@ Additional React component anchors for the same VM instance.
 When you pass anchor components here, `useViewModel(AnchorComponent)` will return this VM when the connected component is mounted.  
 Useful when multiple components need to access the same ViewModel instance.
 
-Anchors are stored in config and passed to the store's [`link()`](/api/view-model-store/interface#link) during `processCreateConfig`.
+Anchors are stored in config and passed to the store's [`link()`](/api/view-model-store/interface#link) when the instance is connected via [`define`](/api/view-model-store/interface#define).
 
 Example:
 ```tsx
@@ -182,12 +173,12 @@ const Component = withViewModel(VM, View, {
 ### `connect(anchor)`  
 Registers additional anchors dynamically.  
 Each anchor is added to `config.anchors`; `useViewModel(anchor)` will return this VM when the connected component is mounted.  
-Use `connect()` when the anchor is defined elsewhere or when using the curried form without config.
+Use `connect()` when the anchor is defined elsewhere.
 
 Example:
 ```tsx
 const Anchor = () => null;
-const Component = withViewModel(VM, { generateId: createIdGenerator() })(View).connect(Anchor);
+const Component = withViewModel(VM, View, { id: 'page' }).connect(Anchor);
 
 // In another component:
 const model = useViewModel(Anchor); // returns the same VM as View receives
@@ -198,31 +189,16 @@ const model = useViewModel(Anchor); // returns the same VM as View receives
 ### 1. Basic Usage (Default Configuration)  
 
 ```tsx
-export const YourComponent = withViewModel(VMClass)(ViewComponent);
-
 export const YourComponent = withViewModel(VMClass, ViewComponent);
 ```
 
 ### 2. Custom Configuration   
 ```tsx
-export const YourComponent = withViewModel(VMClass, {
-  vmConfig: {}, // vmConfig
-  ctx: {}, // internal object used as cache key source inside this HOC
-  factory: (config) => new config.VM(config), // factory method for creating VM instances
-  fallback: () => <div>loading</div>, // fallback while your VM is mounting/loading
-  generateId, // custom fn for generating ids for VM instances
-  getPayload: (props) => props.payload, // function to get payload data from props
-  id, // unique id if you need to create 1 instance of your VM
-  anchors: [], // additional components for useViewModel lookup
-  reactHook: (allProps, ctx, viewModels) => void 0, // hook for integration inside render HOC component  
-})(ViewComponent)
-
 export const YourComponent = withViewModel(VMClass, ViewComponent, {
   vmConfig: {}, // vmConfig
   ctx: {}, // internal object used as cache key source inside this HOC
   factory: (config) => new config.VM(config), // factory method for creating VM instances
   fallback: () => <div>loading</div>, // fallback while your VM is mounting/loading
-  generateId, // custom fn for generating ids for VM instances
   getPayload: (props) => props.payload, // function to get payload data from props
   id, // unique id if you need to create 1 instance of your VM
   anchors: [], // additional components for useViewModel lookup
@@ -235,7 +211,6 @@ export const YourComponent = withViewModel(VMClass, ViewComponent, {
 ```tsx
 import { ViewModelBase } from "mobx-view-model";
 import { ViewModelProps, withViewModel } from "mobx-view-model-react";
-import { observer } from "mobx-react-lite";
 import { observable, action } from "mobx";
 
 class VM extends ViewModelBase {
@@ -248,7 +223,7 @@ class VM extends ViewModelBase {
   }
 }
 
-const ComponentView = observer(({ model }: ViewModelProps<VM>) => {
+export const YourComponent = withViewModel(VM, ({ model }: ViewModelProps<VM>) => {
   return (
     <div>
       <input
@@ -257,13 +232,10 @@ const ComponentView = observer(({ model }: ViewModelProps<VM>) => {
       />
     </div>
   )
-})
-
-export const YourComponent = withViewModel(VM)(ComponentView);
+});
 
 
 export const AnotherComponent = withViewModel(VM, ({ model }) => {
-
   return (
     <div>
       <input
@@ -278,17 +250,17 @@ export const AnotherComponent = withViewModel(VM, ({ model }) => {
 
 ## Incompatibility with `<Suspense />` and `lazy()`   
 
-The `withViewModel` HOC is not compatible with the React's built-in [`<Suspense />`](https://react.dev/reference/react/Suspense) component and [`lazy()`](https://react.dev/reference/react/lazy) function.  
+The `withViewModel` HOC is not compatible with React’s built-in [`lazy()`](https://react.dev/reference/react/lazy) in the usual “lazy-wrap the VM component” setup.
 
-Using `Suspense` and `lazy` with `withViewModel` HOC can lead to unexpected behavior and bugs due to double/triple calls of `useMemo` or lazy `useState` hooks inside [`useCreateViewModel`](/react/api/use-create-view-model) hook.
+Using `lazy` with `withViewModel` can lead to unexpected remount / id behavior. Prefer `loadable()` from `react-simple-loadable` (or similar) and register the wrapper via [`connect()`](#connectanchor).
 
-To avoid this issue, either avoid using `Suspense`/`lazy` with this HOC or use `loadable()` from `react-simple-loadable` in your app code.
+When [`viewModelsConfig.mode`](/api/view-models/view-models-config#mode) is `'ssr'`, async `mount()` / `willMount()` is waited via React [`use()`](https://react.dev/reference/react/use) during SSR / hydration — put a [`Suspense`](https://react.dev/reference/react/Suspense) boundary (or `fallback`) around those trees if you need a loading UI.
 
 ### Concurrent Mode
 
 In concurrent mode, React may discard a render without committing it, which means cleanup effects never run. Since `mount()` is called synchronously during render (required for SSR), an orphaned mount could occur if the render is discarded.
 
-This only affects the scenario **without `ViewModelStore`**. When using a store, `viewModels.attach()` simply increments a ref-count, which is safe even if the render is discarded.
+This mainly affects the scenario **without `ViewModelStore`**. With a store, instances are registered via [`define`](/api/view-model-store/interface#define) and cleaned up with [`unmountNew`](/api/view-model-store/interface#unmountnewinstance) in an effect.
 
 **Recommendation:** Use `ViewModelStore` for full concurrent mode safety. The no-store scenario is designed for simple client-side use cases where SSR is not needed.
 

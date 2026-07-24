@@ -114,10 +114,10 @@ const YourApp = () => {
 With this step you can use the [`useViewModel()`](/react/api/use-view-model) hook with the first argument  
 
 ::: tip [`isMounted`](/api/view-models/interface#ismounted-boolean) state  
-This state is based on calling the [`mount()` method](/api/view-models/interface#mount-void-promise-void), which is triggered inside the [`useCreateViewModel()`](/react/api/use-create-view-model) hook or the store lifecycle.  
-Because of this, on the first render `isMounted` will be `false`, since mounting happens inside a `useLayoutEffect`/`useEffect` hook.  
+This state is based on calling the [`mount()` method](/api/view-models/interface#mount-void-promise-void), which runs inside [`useCreateViewModel()`](/react/api/use-create-view-model) during render (after [`define`](/api/view-model-store/interface#define) when a store is present).  
+If `mount()` / [`willMount()`](/api/view-models/base-implementation#willmount-void) finishes synchronously, `isMounted` is already `true` on the first paint. Async mount keeps it `false` until the promise settles — use [`fallback`](/react/api/with-view-model#fallback) / `Suspense` when needed.
 :::
 
-::: warning Do not calls [`mount()`](/api/view-models/interface#mount-void-promise-void), [`unmount()`](/api/view-models/interface#unmount-void-promise-void) manually  
-This methods already calling inside [`ViewModelStore` base implementation](/api/view-model-store/base-implementation) or inside [`useCreateViewModel`](/react/api/use-create-view-model) hook.
+::: warning Do not call [`mount()`](/api/view-models/interface#mount-void-promise-void) / [`unmount()`](/api/view-models/interface#unmount-void) manually  
+These methods are already called inside [`useCreateViewModel`](/react/api/use-create-view-model) (via [`define`](/api/view-model-store/interface#define) / [`unmountNew`](/api/view-model-store/interface#unmountnewinstance) when a store is present).
 :::

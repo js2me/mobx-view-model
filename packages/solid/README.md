@@ -12,7 +12,7 @@
 
 Solid integration layer for the MVVM library — connect ViewModels to components via `withViewModel`, `useCreateViewModel`, `ViewModelsProvider`, and more.
 
-MobX ↔ Solid reactivity is powered by [mobx-solid](https://js2me.github.io/mobx-solid/llms.txt) (`enableObservableTracking` / `obs`). No `observer` wrappers required.
+MobX ↔ Solid reactivity is powered by [mobx-solid](https://js2me.github.io/mobx-solid) (`enableObservableTracking` / `obs`). No `observer` wrappers required.
 
 ## [Read the docs →](https://js2me.github.io/mobx-view-model/solid/integration)
 
