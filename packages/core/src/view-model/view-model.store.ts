@@ -1,18 +1,17 @@
-import type { Class, Maybe, MaybePromise } from 'yummies/types';
+import type { Class, Maybe } from 'yummies/types';
 import type {
   ViewModelCreateConfig,
   ViewModelGenerateIdConfig,
   ViewModelLookup,
 } from './view-model.store.types.js';
 import type { AnyViewModel, AnyViewModelSimple } from './view-model.types.js';
-import type { ViewModelSimple } from './view-model-simple.js';
 import type { ViewModelsConfig } from '../config/types.js';
 
 /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface) */
 export interface ViewModelStore<VMBase extends AnyViewModel = AnyViewModel> {
   /**
    * Effective merged `ViewModelsConfig` for this store: values from the store constructor are layered over the global defaults (see `ViewModelStoreBase` / `mergeVMConfigs`).
-   * Drives `generateId`, `factory`, lifecycle hooks, and other behavior for view models owned by this store.
+   * Drives `factory`, lifecycle hooks, and other behavior for view models owned by this store.
    *
    * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config)
    */
@@ -68,35 +67,11 @@ export interface ViewModelStore<VMBase extends AnyViewModel = AnyViewModel> {
     vmLookup: Maybe<ViewModelLookup<T>>,
   ): T[];
 
-  /**
-   * This is specific method to be called when a view model is about to be attached to view.
-   * This method is the first method where the created view model instance is passed to the view model store.
-   *
-   * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#marktobeattached-viewmodel)
-   */
-  markToBeAttached(model: VMBase | AnyViewModelSimple): void;
+  unmountNew(instance: any): any;
 
-  /**
-   * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#attach-viewmodel)
-   * @param model - The view model to attach.
-   * @returns `void` when `mount()` completed synchronously, otherwise a promise that settles after async `mount()`.
-   */
-  attach(model: VMBase | AnyViewModelSimple): MaybePromise<void>;
+  readonly hasMountingVms: boolean;
 
-  /**
-   * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#detach-viewmodelid)
-   * @param id - The ID of the view model to detach.
-   * @returns A promise that resolves when the operation is complete.
-   */
-  detach(id: VMBase['id'] | ViewModelSimple['id']): Promise<void>;
-
-  /**
-   * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#isabletorenderview-viewmodelid)
-   * Determines if a view model is able to render based on its ID.
-   * @param id - The ID of the view model.
-   * @returns True if the view model can render, false otherwise.
-   */
-  isAbleToRenderView(id: Maybe<VMBase['id']>): boolean;
+  waitMount(...vms: (AnyViewModel | AnyViewModelSimple)[]): Promise<void>;
 
   /**
    * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#createviewmodel-config)
@@ -104,18 +79,19 @@ export interface ViewModelStore<VMBase extends AnyViewModel = AnyViewModel> {
    * @param config - The configuration for creating the view model.
    * @returns The newly created view model instance.
    */
-  createViewModel<VM extends VMBase>(config: ViewModelCreateConfig<VM>): VM;
+  create<VM extends VMBase | AnyViewModelSimple>(config: ViewModelCreateConfig<VM>): VM;
 
   /**
-   * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#processcreateconfig-config)
-   * Process the configuration for creating a view model.
-   * This method is called just before creating a new view model instance.
-   * It's useful for initializing the configuration, like linking anchors to the view model class.
-   * @param config - The configuration for creating the view model.
+   * Defines a view model: returns the existing instance if one with the same ID
+   * is already registered, otherwise creates a new instance, connects it to the
+   * store, and returns it.
+   *
+   * This is the recommended way to obtain a VM from the store — it replaces the
+   * manual `generateViewModelId` → `get` → `create` → `connect` flow.
+   *
+   * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#define)
    */
-  processCreateConfig<VM extends VMBase>(
-    config: ViewModelCreateConfig<VM>,
-  ): void;
+  define<VM extends VMBase | AnyViewModelSimple>(config: ViewModelCreateConfig<VM>): VM;
 
   /**
    * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#link)

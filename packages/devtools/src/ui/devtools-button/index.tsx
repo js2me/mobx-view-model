@@ -1,4 +1,4 @@
-import { withViewModel } from 'mobx-view-model';
+import { withViewModel } from 'mobx-view-model-react';
 import { cx } from 'yummies/css';
 import { VmDevtoolsButtonVM } from './model';
 import css from './styles.module.css';

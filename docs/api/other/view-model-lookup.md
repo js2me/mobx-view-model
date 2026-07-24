@@ -5,12 +5,14 @@ This type declares what data is needed to find your [ViewModel](/api/view-models
 
 It can be:   
   - [ViewModel id](/api/view-models/interface#id-string)  
-  - `ViewModel class reference`  
-  - [`React`](https://react.dev) component created with [`withViewModel()`](/react/api/with-view-model)  
+  - `ViewModel` / `ViewModelSimple` class reference  
+  - Component created with [`withViewModel()`](/react/api/with-view-model) / Solid equivalent (typed via `ViewModelComponentRef<T>` so `get(Component)` infers `T`)  
   - Anchor component registered via [config `anchors`](/react/api/with-view-model#anchors) or method [`connect()`](/react/api/with-view-model#connectanchor)  
 
-[Reference to source code type](/src/view-model/view-model.store.types.ts#L42)  
-[Reference to source code with internal usage of this value](/src/view-model/view-model.store.base.ts#L220)  
+[Reference to source code type](/src/view-model/view-model.store.types.ts)  
+
+### `ViewModelComponentRef<T>`  
+Type-only brand used by framework packages so [`get`](/api/view-model-store/interface#get-vmlookup) / [`useViewModel`](/react/api/use-view-model) can infer the concrete ViewModel type from a HOC component reference. Never read at runtime.
 
 # Example   
 
@@ -21,18 +23,18 @@ import { ViewModelStoreBase, ViewModelBase } from "mobx-view-model"
 
 const vmStore = new ViewModelStoreBase();
 
-
 class MyVM extends ViewModelBase {
   constructor() {
     super({ id: '1', payload: {} });
   }
 }
 
-const vm = new MyVM();
-...
-await vmStore.attach(vm) // this is required thing
-...
-vmStore.get(vm.id) // instance of MyVM
-...
-```
+const vm = vmStore.define({
+  id: '1',
+  payload: {},
+  VM: MyVM,
+});
 
+vmStore.get(vm.id) // instance of MyVM
+vmStore.get(MyVM) // instance of MyVM
+```

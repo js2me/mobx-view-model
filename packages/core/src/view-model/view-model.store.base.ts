@@ -1,12 +1,11 @@
-import { action, computed, observable, runInAction } from 'mobx';
+import { action, computed, observable, untracked, when } from 'mobx';
 import type { ObservableAnnotationsArray } from 'yummies/mobx';
-import type { Class, Maybe, MaybePromise } from 'yummies/types';
+import type { Class, Maybe } from 'yummies/types';
 import {
   applyObservable,
   mergeVMConfigs,
   type ViewModelsConfig,
 } from '../config/index.js';
-import type { ViewModelBase } from './view-model.base.js';
 import type { ViewModelStore } from './view-model.store.js';
 import type {
   ViewModelCreateConfig,
@@ -19,19 +18,11 @@ import type {
   AnyViewModelSimple,
   ViewModelParams,
 } from './view-model.types.js';
+import { isViewModel, isViewModelSimple } from '../utils/typeguards.js';
 
 const baseAnnotations: ObservableAnnotationsArray = [
-  [computed, 'mountedViewsCount'],
-  [
-    action,
-    'mount',
-    'unmount',
-    'attachVMConstructor',
-    'attach',
-    'detach',
-    'link',
-    'unlink',
-  ],
+  [computed, 'mountedViewsCount', 'hasMountingVms'],
+  [action, 'link', 'unlink'],
 ];
 
 export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
@@ -43,22 +34,6 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
     Class<VMBase> | Class<AnyViewModelSimple>,
     string[]
   >;
-  protected instanceAttachedCount: Map<string, number>;
-
-  /**
-   * It is temp heap which is needed to get access to view model instance before all initializations happens
-   */
-  protected viewModelsTempHeap: Map<string, VMBase>;
-
-  /**
-   * Views waiting for mount
-   */
-  protected mountingViews: Set<string>;
-
-  /**
-   * Views waiting for unmount
-   */
-  protected unmountingViews: Set<string>;
 
   public vmConfig: ViewModelsConfig;
 
@@ -69,12 +44,7 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
     this.linkedAnchorVMClasses = observable.map([], { deep: false });
     // @ts-ignore ObservableMap is missing getOrInsert/getOrInsertComputed added in TS 6.0
     this.viewModelIdsByClasses = observable.map([], { deep: true });
-    // @ts-ignore ObservableMap is missing getOrInsert/getOrInsertComputed added in TS 6.0
-    this.instanceAttachedCount = observable.map([], { deep: false });
-    this.mountingViews = observable.set([], { deep: false });
-    this.unmountingViews = observable.set([], { deep: false });
     this.vmConfig = mergeVMConfigs(config?.vmConfig);
-    this.viewModelsTempHeap = new Map();
 
     applyObservable(
       this,
@@ -86,25 +56,78 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
   }
 
   get mountedViewsCount() {
-    return [...this.instanceAttachedCount.values()].reduce(
-      (sum, count) => sum + count,
-      0,
+    let count = 0;
+    for (const vm of this.viewModels.values()) {
+      if (!isViewModel(vm) || vm.isMounted) {
+        count += 1;
+      }
+    }
+    return count;
+  }
+
+  get hasMountingVms() {
+    return [...this.viewModels.values()].some(
+      (vm) => isViewModel(vm) && !vm.isMounted,
     );
   }
 
-  /**
-   * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#processcreateconfig-config)
-   * Process the configuration for creating a view model.
-   * This method is called just before creating a new view model instance.
-   * It's useful for initializing the configuration, like linking anchors to the view model class.
-   * @param config - The configuration for creating the view model.
-   */
-  processCreateConfig<VM extends VMBase>(
-    config: ViewModelCreateConfig<VM>,
-  ): void {
-    const fromConfig = config.anchors ?? [];
+  waitMount(...vms: (AnyViewModel | AnyViewModelSimple)[]): Promise<void> {
+    return when(() => {
+      if (vms.length) {
+        return vms.every((vm) => !isViewModel(vm) || vm.isMounted);
+      }
+      return [...this.viewModels.values()].every(
+        (vm) => !isViewModel(vm) || vm.isMounted,
+      );
+    });
+  }
 
-    this.link(config.VM, config.component, ...fromConfig);
+  connect(
+    instance: AnyViewModel | AnyViewModelSimple,
+    config: ViewModelCreateConfig<any>,
+  ): void {
+    this.link(config.VM, ...(config.anchors ?? []));
+    this.viewModels.set(config.id, instance!);
+    this.attachVMConstructor(instance);
+
+    if (isViewModelSimple(instance)) {
+      instance.init?.({ ...config, viewModels: this });
+    }
+  }
+
+  /**
+   * Defines a view model: returns the existing instance if one with the same ID
+   * is already registered, otherwise creates a new instance, connects it to the
+   * store, and returns it.
+   *
+   * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#define)
+   */
+  define<VM extends VMBase | AnyViewModelSimple>(
+    config: ViewModelCreateConfig<VM>,
+  ): VM {
+    config.id = this.generateViewModelId(config);
+
+    const existing = untracked(() => this.viewModels.get(config.id)) as
+      | VM
+      | undefined;
+
+    if (existing) {
+      return existing;
+    }
+
+    const instance = this.create(config);
+
+    this.connect(instance, config);
+
+    return instance;
+  }
+
+  unmountNew(instance: VMBase | AnyViewModelSimple) {
+    instance.unmount?.();
+    this.dettachVMConstructor(instance);
+    if (instance.id) {
+      this.viewModels.delete(instance.id);
+    }
   }
 
   /**
@@ -113,19 +136,16 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
    * @param config - The configuration for creating the view model.
    * @returns The newly created view model instance.
    */
-  createViewModel<VM extends VMBase>(config: ViewModelCreateConfig<VM>): VM {
-    const VMConstructor = config.VM as unknown as typeof ViewModelBase;
+  create<VM extends VMBase | AnyViewModelSimple>(
+    config: ViewModelCreateConfig<VM>,
+  ): VM {
     const vmConfig = mergeVMConfigs(this.vmConfig, config.vmConfig);
     const vmParams: ViewModelParams<any, any> & ViewModelCreateConfig<VM> = {
       ...config,
       vmConfig,
     };
 
-    if (vmConfig.factory) {
-      return vmConfig.factory(vmParams) as VM;
-    }
-
-    return new VMConstructor(vmParams) as unknown as VM;
+    return (config?.factory?.(config) ?? vmConfig.factory(vmParams)) as VM;
   }
 
   /**
@@ -134,18 +154,10 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
    * @param config - The configuration for generating the ID.
    * @returns The generated unique ID.
    */
-  generateViewModelId<VM extends VMBase>(
+  generateViewModelId<VM extends VMBase | AnyViewModelSimple>(
     config: ViewModelGenerateIdConfig<VM>,
   ): string {
-    if (config.id) {
-      return config.id;
-    } else {
-      return this.vmConfig.generateId({
-        ...config.ctx,
-        VM: config.VM,
-        renderId: config.renderId,
-      });
-    }
+    return config.id;
   }
 
   /**
@@ -241,31 +253,11 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
   get<T extends VMBase | AnyViewModelSimple>(
     vmLookup: Maybe<ViewModelLookup<T>>,
   ): T | null {
-    // helps to users of this method to better observe changes in view models
-    // this.viewModels.keys();
-
     const id = this.getId(vmLookup);
 
     if (!id) return null;
 
-    const observedVM = this.viewModels.get(id) as Maybe<T>;
-
-    return observedVM ?? (this.viewModelsTempHeap.get(id) as Maybe<T>) ?? null;
-  }
-
-  /**
-   * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/base-implementation#getorcreatevmid-model)
-   * @param model - View model instance whose `id` should be defined.
-   * @returns Stable id for the instance (existing or newly generated).
-   */
-  getOrCreateVmId(model: VMBase | AnyViewModelSimple): string {
-    if (!model.id) {
-      (model as AnyViewModelSimple).id = this.vmConfig.generateId({
-        VM: model.constructor,
-      });
-    }
-
-    return model.id!;
+    return (this.viewModels.get(id) as Maybe<T>) ?? null;
   }
 
   /**
@@ -281,59 +273,15 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
     return viewModelIds.map((id) => this.viewModels.get(id) as T);
   }
 
-  protected finalizeMount(modelId: string) {
-    runInAction(() => {
-      this.mountingViews.delete(modelId);
-    });
-  }
-
   /**
-   * Puts the model in {@link mountingViews}, calls `model.mount()`, then {@link finalizeMount}.
-   * {@link attach} delegates here so sync `mount()` finishes in the same turn as `attach` (SSR / first paint).
-   *
-   * Returns `void` when `model.mount()` is synchronous, otherwise a promise that settles after async mount.
+   * Indexes the instance id by its class so `get(CartPageVM)` / `useViewModel(CartPageVM)` work.
    */
-  protected mount(model: VMBase | AnyViewModelSimple): MaybePromise<void> {
-    const modelId = this.getOrCreateVmId(model);
-
-    this.mountingViews.add(modelId);
-
-    try {
-      const maybePromise = model.mount?.();
-
-      if (maybePromise instanceof Promise) {
-        return maybePromise
-          .then(() => undefined)
-          .finally(() => {
-            this.finalizeMount(modelId);
-          });
-      } else {
-        this.finalizeMount(modelId);
-      }
-    } catch (error) {
-      this.finalizeMount(modelId);
-      throw error;
-    }
-  }
-
-  protected async unmount(model: VMBase | AnyViewModelSimple) {
-    const modelId = this.getOrCreateVmId(model);
-
-    this.unmountingViews.add(modelId);
-
-    await model.unmount?.();
-
-    runInAction(() => {
-      this.unmountingViews.delete(modelId);
-    });
-  }
-
   protected attachVMConstructor(model: VMBase | AnyViewModelSimple) {
-    const modelId = this.getOrCreateVmId(model);
     const constructor = (model as any).constructor as Class<any, any>;
+    const modelId = model.id!;
+    const vmIds = this.viewModelIdsByClasses.get(constructor);
 
-    if (this.viewModelIdsByClasses.has(constructor)) {
-      const vmIds = this.viewModelIdsByClasses.get(constructor)!;
+    if (vmIds) {
       if (!vmIds.includes(modelId)) {
         vmIds.push(modelId);
       }
@@ -358,93 +306,9 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
     }
   }
 
-  markToBeAttached(model: VMBase | AnyViewModelSimple) {
-    const modelId = this.getOrCreateVmId(model);
-
-    this.viewModelsTempHeap.set(modelId, model as VMBase);
-
-    if ('attachViewModelStore' in model) {
-      model.attachViewModelStore!(this as ViewModelStore);
-    }
-
-    this.attachVMConstructor(model);
-  }
-
-  /**
-   * Registers the view model and runs `model.mount()` in the same stack when it is synchronous,
-   * so SSR and the first client render can match without a separate API.
-   *
-   * If `mount()` returns a thenable, returns a `Promise` that settles after mount; the first paint
-   * may still show fallback until then. Otherwise returns `void`.
-   */
-  attach(model: VMBase | AnyViewModelSimple): MaybePromise<void> {
-    const modelId = this.getOrCreateVmId(model);
-
-    const attachedCount = this.instanceAttachedCount.get(modelId) ?? 0;
-
-    this.instanceAttachedCount.set(modelId, attachedCount + 1);
-
-    if (this.viewModels.has(modelId)) {
-      return;
-    }
-
-    this.viewModels.set(modelId, model);
-
-    this.attachVMConstructor(model);
-
-    try {
-      const mount = this.mount(model);
-
-      if (mount instanceof Promise) {
-        return mount.finally(() => {
-          this.viewModelsTempHeap.delete(modelId);
-        });
-      }
-    } catch (error) {
-      this.viewModelsTempHeap.delete(modelId);
-      throw error;
-    }
-
-    this.viewModelsTempHeap.delete(modelId);
-  }
-
-  async detach(id: string) {
-    const attachedCount = this.instanceAttachedCount.get(id) ?? 0;
-
-    this.viewModelsTempHeap.delete(id);
-
-    const model = this.viewModels.get(id);
-
-    if (!model) {
-      return;
-    }
-
-    const nextInstanceAttachedCount = attachedCount - 1;
-
-    this.instanceAttachedCount.set(id, nextInstanceAttachedCount);
-
-    if (nextInstanceAttachedCount <= 0) {
-      this.instanceAttachedCount.delete(id);
-      this.viewModels.delete(id);
-      this.dettachVMConstructor(model);
-
-      await this.unmount(model);
-    }
-  }
-
-  isAbleToRenderView(id: Maybe<string>): boolean {
-    const isViewMounting = this.mountingViews.has(id!);
-    const hasViewModel = this.viewModels.has(id!);
-    return !!id && hasViewModel && !isViewMounting;
-  }
-
   clean(): void {
     this.viewModels.clear();
     this.linkedAnchorVMClasses.clear();
     this.viewModelIdsByClasses.clear();
-    this.instanceAttachedCount.clear();
-    this.mountingViews.clear();
-    this.unmountingViews.clear();
-    this.viewModelsTempHeap.clear();
   }
 }

@@ -1,4 +1,4 @@
-import { withViewModel } from 'mobx-view-model';
+import { withViewModel } from 'mobx-view-model-react';
 import { NotificationsVM } from './model';
 import css from './styles.module.css';
 

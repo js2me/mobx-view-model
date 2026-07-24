@@ -9,3 +9,7 @@ import { createContext } from 'react';
 export const ViewModelsContext = createContext<ViewModelStore>(
   null as unknown as ViewModelStore,
 );
+
+if (process.env.NODE_ENV !== 'production') {
+  ViewModelsContext.displayName = 'ViewModels';
+}

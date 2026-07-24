@@ -7,5 +7,5 @@ export const ActiveViewModelContext = createContext<
 >(null as any);
 
 if (process.env.NODE_ENV !== 'production') {
-  ActiveViewModelContext.displayName = 'ActiveViewModelContext';
+  ActiveViewModelContext.displayName = 'ActiveViewModel';
 }

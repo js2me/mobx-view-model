@@ -13,24 +13,35 @@ Here is documentation about **base implementation** methods and properties.
 If you need to read about [`ViewModelStore`](/api/view-model-store/interface) interface methods and properties, [go here](/api/view-model-store/interface).  
 
 ### `viewModels` (_protected_)  
-Map structure with created [ViewModel](/api/view-models/overview) instances in application.  
+Map structure with created [ViewModel](/api/view-models/overview) instances in application (`id` → instance).  
 
-### `instanceAttachedCount` (_protected_)  
-[ViewModel](/api/view-models/interface) instances count attached ([method attach()](/api/view-model-store/interface#attachviewmodel)) to current store  
+### `linkedAnchorVMClasses` (_protected_)  
+Map from anchor / HOC component reference to the linked [ViewModel](/api/view-models/interface) class.  
+Used so `get(MyComponent)` / `useViewModel(MyComponent)` resolve to the same instances as `get(MyVM)`.
 
-### `mountingViews` (_protected_)  
-A `Set` with [ViewModel](/api/view-models/overview) ids which views are waiting for mount
+### `viewModelIdsByClasses` (_protected_)  
+Map from ViewModel class to the list of registered instance ids.
 
-### `unmountingViews` (_protected_)  
-A `Set` with [ViewModel](/api/view-models/overview) ids which views are waiting for unmount
-
-### `viewModelsTempHeap` (_protected_)  
-A `Map` with temp heap vm instances  
-Is needed to get access to view model instance before all initializations happens  
-
-### `vmConfig` (_protected_)  
+### `vmConfig`  
 [ViewModelsConfig](/api/view-models/view-models-config)  
 
-### `getOrCreateVmId(model)`  
-Returns the model’s `id`, assigning one with the store’s configured [`generateId`](/api/view-models/view-models-config) when it was missing. Used by `attach`, `mount`, and related flows; override the store only if you extend `ViewModelStoreBase` and need the same behaviour.  
+### `hasMountingVms`  
+See [interface](/api/view-model-store/interface#hasmountingvms).
 
+### `waitMount(...vms)`  
+See [interface](/api/view-model-store/interface#waitmount-vms).
+
+### `connect(instance, config)`  
+Registers an already created instance in the store: links anchors, indexes the instance by id / class, and for [`ViewModelSimple`](/api/view-models/view-model-simple) calls `init(...)` when present.
+
+### `define(config)`  
+See [interface](/api/view-model-store/interface#define). Creates via [`create`](/api/view-model-store/interface#create-config) and then [`connect`](#connectinstance-config) when needed.
+
+### `create(config)`  
+See [interface](/api/view-model-store/interface#create-config). Uses `config.factory` or `vmConfig.factory`.
+
+### `unmountNew(instance)`  
+See [interface](/api/view-model-store/interface#unmountnewinstance).
+
+### `attachVMConstructor(model)` / `dettachVMConstructor(model)` (_protected_)  
+Maintain `viewModelIdsByClasses` so lookups by class work after connect / unmount.
