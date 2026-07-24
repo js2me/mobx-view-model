@@ -1,5 +1,13 @@
 # mobx-view-model-devtools
 
+## 0.1.4
+
+### Patch Changes
+
+- 17ff760: fix problem with installation devtools via vite-plugin
+- Updated dependencies [87bb630]
+  - mobx-view-model@10.2.4
+
 ## 0.1.3
 
 ### Patch Changes
