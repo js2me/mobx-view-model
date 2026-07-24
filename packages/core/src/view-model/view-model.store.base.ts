@@ -105,7 +105,7 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
   define<VM extends VMBase | AnyViewModelSimple>(
     config: ViewModelCreateConfig<VM>,
   ): VM {
-    config.id = this.generateViewModelId(config);
+    config.id = this.generateId(config);
 
     const existing = untracked(() => this.viewModels.get(config.id)) as
       | VM
@@ -122,7 +122,7 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
     return instance;
   }
 
-  unmountNew(instance: VMBase | AnyViewModelSimple) {
+  unmount(instance: VMBase | AnyViewModelSimple) {
     instance.unmount?.();
     this.dettachVMConstructor(instance);
     if (instance.id) {
@@ -149,12 +149,12 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
   }
 
   /**
-   * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#generateviewmodelid-config)
+   * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#generateid-config)
    * Generates a unique ID for a view model based on the provided configuration.
    * @param config - The configuration for generating the ID.
    * @returns The generated unique ID.
    */
-  generateViewModelId<VM extends VMBase | AnyViewModelSimple>(
+  generateId<VM extends VMBase | AnyViewModelSimple>(
     config: ViewModelGenerateIdConfig<VM>,
   ): string {
     return config.id;

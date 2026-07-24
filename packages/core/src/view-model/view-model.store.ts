@@ -67,7 +67,7 @@ export interface ViewModelStore<VMBase extends AnyViewModel = AnyViewModel> {
     vmLookup: Maybe<ViewModelLookup<T>>,
   ): T[];
 
-  unmountNew(instance: any): any;
+  unmount(instance: any): any;
 
   readonly hasMountingVms: boolean;
 
@@ -87,7 +87,7 @@ export interface ViewModelStore<VMBase extends AnyViewModel = AnyViewModel> {
    * store, and returns it.
    *
    * This is the recommended way to obtain a VM from the store — it replaces the
-   * manual `generateViewModelId` → `get` → `create` → `connect` flow.
+   * manual `generateId` → `get` → `create` → `connect` flow.
    *
    * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#define)
    */
@@ -109,12 +109,12 @@ export interface ViewModelStore<VMBase extends AnyViewModel = AnyViewModel> {
   unlink(...anchors: Maybe<unknown>[]): void;
 
   /**
-   * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#generateviewmodelid-config)
+   * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#generateid-config)
    * Generates a unique ID for a view model based on the provided configuration.
    * @param config - The configuration for generating the ID.
    * @returns The generated unique ID.
    */
-  generateViewModelId<VM extends VMBase>(
+  generateId<VM extends VMBase>(
     config: ViewModelGenerateIdConfig<VM>,
   ): string;
 

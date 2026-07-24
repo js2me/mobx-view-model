@@ -260,7 +260,7 @@ When [`viewModelsConfig.mode`](/api/view-models/view-models-config#mode) is `'ss
 
 In concurrent mode, React may discard a render without committing it, which means cleanup effects never run. Since `mount()` is called synchronously during render (required for SSR), an orphaned mount could occur if the render is discarded.
 
-This mainly affects the scenario **without `ViewModelStore`**. With a store, instances are registered via [`define`](/api/view-model-store/interface#define) and cleaned up with [`unmountNew`](/api/view-model-store/interface#unmountnewinstance) in an effect.
+This mainly affects the scenario **without `ViewModelStore`**. With a store, instances are registered via [`define`](/api/view-model-store/interface#define) and cleaned up with [`unmount`](/api/view-model-store/interface#unmountinstance) in an effect.
 
 **Recommendation:** Use `ViewModelStore` for full concurrent mode safety. The no-store scenario is designed for simple client-side use cases where SSR is not needed.
 

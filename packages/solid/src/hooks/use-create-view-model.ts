@@ -145,7 +145,7 @@ export function useCreateViewModel(
 
   onCleanup(() => {
     if (viewModels) {
-      viewModels.unmountNew(model);
+      viewModels.unmount(model);
     } else {
       model.unmount?.();
     }

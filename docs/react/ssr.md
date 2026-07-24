@@ -20,7 +20,7 @@ Below is a **Next.js (Pages Router)** checklist. A working layout lives in [`exa
 
 ## 1. `next.config`
 
-- **`reactStrictMode: false`** — in dev, React Strict Mode double-mounts components. This library creates / mounts VMs during render and cleans them up in effects (`define` / `unmountNew`), so the extra cycle can **surface bugs** (wrong VM instances or counts). Turn Strict Mode off while debugging SSR if you see that.
+- **`reactStrictMode: false`** — in dev, React Strict Mode double-mounts components. This library creates / mounts VMs during render and cleans them up in effects (`define` / `unmount`), so the extra cycle can **surface bugs** (wrong VM instances or counts). Turn Strict Mode off while debugging SSR if you see that.
 
 ```ts
 import type { NextConfig } from 'next';

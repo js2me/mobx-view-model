@@ -25,7 +25,7 @@ function useCreateViewModel<VM extends AnyViewModel>(
 | `anchors` | Extra lookup anchors for [`useViewModel`](/react/api/use-view-model). |
 | `props` | Original component props forwarded into create config. |
 
-When a [`ViewModelStore`](/api/view-model-store/interface) is present (via [`ViewModelsProvider`](/react/api/view-models-provider)), the hook uses [`define`](/api/view-model-store/interface#define). Otherwise it creates the instance via `factory` / global config and calls `init` / `mount` locally. Cleanup uses [`unmountNew`](/api/view-model-store/interface#unmountnewinstance) (with store) or `unmount()` (without).
+When a [`ViewModelStore`](/api/view-model-store/interface) is present (via [`ViewModelsProvider`](/react/api/view-models-provider)), the hook uses [`define`](/api/view-model-store/interface#define). Otherwise it creates the instance via `factory` / global config and calls `init` / `mount` locally. Cleanup uses [`unmount`](/api/view-model-store/interface#unmountinstance) (with store) or `unmount()` (without).
 
 ::: tip SSR  
 With [`viewModelsConfig.mode = 'ssr'`](/api/view-models/view-models-config#mode), if `mount()` / `willMount()` returns a Promise, the hook waits for it with React [`use()`](https://react.dev/reference/react/use) during SSR and the first client hydration. Wrap the tree in [`Suspense`](https://react.dev/reference/react/Suspense) or provide a [`fallback`](/react/api/with-view-model#fallback) when you need a loading UI.

@@ -90,7 +90,7 @@ Retrieves all [ViewModel](/api/view-models/overview) instances from the store ba
 ### `define(config)`  
 Recommended way to obtain a VM from the store: returns the existing instance if one with the same ID is already registered, otherwise creates a new instance, connects it to the store, and returns it.
 
-Replaces the manual `generateViewModelId` → `get` → `create` → `connect` flow.
+Replaces the manual `generateId` → `get` → `create` → `connect` flow.
 
 ### `create(config)`  
 Creates a new [ViewModel](/api/view-models/overview) instance based on the provided configuration (does **not** register it in the store by itself).  
@@ -113,7 +113,7 @@ export class ViewModelStoreImpl extends ViewModelStoreBase {
 }
 ```
 
-### `unmountNew(instance)`  
+### `unmount(instance)`  
 Unmounts the instance (if it has `unmount`) and removes it from the store indexes.
 
 ### `link()`  
@@ -122,7 +122,7 @@ Links anchors (React / Solid components) with [ViewModel](/api/view-models/overv
 ### `unlink()`   
 Unlinks anchors (React / Solid components) with [ViewModel](/api/view-models/overview) class.  
 
-### `generateViewModelId(config)`   
+### `generateId(config)`   
 Generates a unique ID for a [ViewModel](/api/view-models/overview) based on the provided configuration.  
 In [`ViewModelStoreBase`](/api/view-model-store/base-implementation) the default implementation returns `config.id`.
 

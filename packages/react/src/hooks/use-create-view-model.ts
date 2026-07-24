@@ -161,7 +161,7 @@ export function useCreateViewModel(
       isSSR: viewModelsConfig.mode === 'ssr',
       cleanup: () => () => {
         if (viewModels) {
-          viewModels.unmountNew(model);
+          viewModels.unmount(model);
         } else {
           model.unmount?.();
         }

@@ -40,8 +40,8 @@ See [interface](/api/view-model-store/interface#define). Creates via [`create`](
 ### `create(config)`  
 See [interface](/api/view-model-store/interface#create-config). Uses `config.factory` or `vmConfig.factory`.
 
-### `unmountNew(instance)`  
-See [interface](/api/view-model-store/interface#unmountnewinstance).
+### `unmount(instance)`  
+See [interface](/api/view-model-store/interface#unmountinstance).
 
 ### `attachVMConstructor(model)` / `dettachVMConstructor(model)` (_protected_)  
 Maintain `viewModelIdsByClasses` so lookups by class work after connect / unmount.

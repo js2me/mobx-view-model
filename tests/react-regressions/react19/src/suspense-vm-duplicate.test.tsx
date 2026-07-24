@@ -130,10 +130,10 @@ describe('Suspense VM duplicate prevention', () => {
    * React 19 + lazy + Suspense + withViewModel(observer) + useId: true
    *
    * In the real app, the cycle is driven by observer components that read
-   * MobX observables which are mutated by define()/unmountNew(). The full cycle:
+   * MobX observables which are mutated by define()/unmount(). The full cycle:
    * 1. RouteView (observer) reads route.isOpened → re-renders when route changes
    * 2. It renders RepositoryPage via React.lazy inside Suspense
-   * 3. withViewModel(observer) creates RepositoryPageVM → define()/unmountNew() mutates MobX
+   * 3. withViewModel(observer) creates RepositoryPageVM → define()/unmount() mutates MobX
    *    observables in the store (viewModelIdsByClasses, instanceAttachedCount, etc.)
    * 4. These MobX mutations trigger the observer RouteViewGroup/RouteView to re-render
    * 5. React 19 re-evaluates the Suspense boundary → remounts the component

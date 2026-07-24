@@ -81,7 +81,7 @@ describe('ViewModelSimple', () => {
       expect(vmStore.get('2')).toBe(vm2);
     });
 
-    it('should remove simple vm via unmountNew', () => {
+    it('should remove simple vm via unmount', () => {
       const vmStore = new ViewModelStoreBaseMock();
       const vm1 = vmStore.define({
         id: '1',
@@ -96,8 +96,8 @@ describe('ViewModelSimple', () => {
         factory: () => new ViewModelSimpleImpl('2'),
       });
 
-      vmStore.unmountNew(vm1);
-      vmStore.unmountNew(vm2);
+      vmStore.unmount(vm1);
+      vmStore.unmount(vm2);
 
       expect(vm1.spies.unmount).toBeCalledTimes(1);
       expect(vm2.spies.unmount).toBeCalledTimes(1);

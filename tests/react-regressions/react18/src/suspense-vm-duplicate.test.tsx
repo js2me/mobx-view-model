@@ -60,7 +60,7 @@ afterEach(() => {
 describe('Suspense VM duplicate prevention', () => {
   /**
    * Regression test for React.lazy + Suspense with useId: true.
-   * define()/unmountNew() is called in the layout effect (not during render),
+   * define()/unmount() is called in the layout effect (not during render),
    * so it never triggers a MobX reaction during the render pass,
    * preventing the infinite loop.
    */

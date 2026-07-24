@@ -16,7 +16,7 @@ import type {
 
 export class ViewModelStoreBaseMock extends ViewModelStoreBase {
   spies: {
-    generateViewModelId: Mock<
+    generateId: Mock<
       (config: ViewModelGenerateIdConfig<AnyViewModel | AnyViewModelSimple>) => string
     >;
     get: Mock<
@@ -25,7 +25,7 @@ export class ViewModelStoreBaseMock extends ViewModelStoreBase {
       ) => AnyViewModel | AnyViewModelSimple | null
     >;
   } = {
-    generateViewModelId: vi.fn(),
+    generateId: vi.fn(),
     get: vi.fn(),
   };
 
@@ -39,11 +39,11 @@ export class ViewModelStoreBaseMock extends ViewModelStoreBase {
     return this.viewModelIdsByClasses;
   }
 
-  generateViewModelId<VM extends AnyViewModel | AnyViewModelSimple>(
+  generateId<VM extends AnyViewModel | AnyViewModelSimple>(
     config: ViewModelGenerateIdConfig<VM>,
   ): string {
-    const result = super.generateViewModelId(config);
-    this.spies.generateViewModelId.mockReturnValue(result)(config as any);
+    const result = super.generateId(config);
+    this.spies.generateId.mockReturnValue(result)(config as any);
     return result;
   }
 
@@ -62,11 +62,11 @@ describe('ViewModelStoreBase', () => {
     expect(vmStore.clean).toBeDefined();
   });
 
-  it('has define / create / unmountNew methods', () => {
+  it('has define / create / unmount methods', () => {
     const vmStore = new ViewModelStoreBaseMock();
     expect(vmStore.define).toBeDefined();
     expect(vmStore.create).toBeDefined();
-    expect(vmStore.unmountNew).toBeDefined();
+    expect(vmStore.unmount).toBeDefined();
   });
 
   it('create instance', () => {
@@ -103,7 +103,7 @@ describe('ViewModelStoreBase', () => {
     expect([...vmStore._viewModels.values()]).toHaveLength(1);
   });
 
-  it('unmountNew unmounts and removes the view model', () => {
+  it('unmount unmounts and removes the view model', () => {
     const vmStore = new ViewModelStoreBaseMock();
     const vm = vmStore.define({
       id: '1',
@@ -112,7 +112,7 @@ describe('ViewModelStoreBase', () => {
     });
     vm.mount();
 
-    vmStore.unmountNew(vm);
+    vmStore.unmount(vm);
 
     expect(vmStore.get('1')).toBe(null);
     expect(vm.isMounted).toBe(false);
@@ -128,7 +128,7 @@ describe('ViewModelStoreBase', () => {
     first.mount();
     expect(first.spies.willMount).toHaveBeenCalledTimes(1);
 
-    vmStore.unmountNew(first);
+    vmStore.unmount(first);
     expect(vmStore.get('demo')).toBe(null);
 
     const second = vmStore.define({

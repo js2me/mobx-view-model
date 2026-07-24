@@ -119,5 +119,5 @@ If `mount()` / [`willMount()`](/api/view-models/base-implementation#willmount-vo
 :::
 
 ::: warning Do not call [`mount()`](/api/view-models/interface#mount-void-promise-void) / [`unmount()`](/api/view-models/interface#unmount-void) manually  
-These methods are already called inside [`useCreateViewModel`](/react/api/use-create-view-model) (via [`define`](/api/view-model-store/interface#define) / [`unmountNew`](/api/view-model-store/interface#unmountnewinstance) when a store is present).
+These methods are already called inside [`useCreateViewModel`](/react/api/use-create-view-model) (via [`define`](/api/view-model-store/interface#define) / [`unmount`](/api/view-model-store/interface#unmountinstance) when a store is present).
 :::
