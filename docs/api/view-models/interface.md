@@ -22,7 +22,7 @@ Used for transferring data between view models or views.
 Must be an object type or `EmptyObject` for no payload.
 
 ### 2. `ParentViewModel`   
-Declares the parent `ViewModel` type where current `ViewModel` is rendered in the component hierarchy.  
+Declares the parent `ViewModel` / `ViewModelSimple` type where current `ViewModel` is rendered in the component hierarchy.  
 Enables access to parent view model through the `parentViewModel` property.  
 Optional, defaults to `null` if not specified.
 
@@ -31,10 +31,6 @@ Optional, defaults to `null` if not specified.
 ### `id: string`  
 Unique identifier for the view model instance.  
 Used for tracking and managing view model lifecycle.
-
-### `vmConfig: ViewModelsConfig`  
-Configuration object for the view model.  
-See [ViewModelsConfig](/api/view-models/view-models-config) for detailed configuration options.
 
 ### `payload: Payload`  
 Data object passed from the parent component to the view model.  
@@ -45,11 +41,7 @@ Controls the rendering of the connected view component:
 - `true`: Component is rendered
 - `false`: Component is not rendered
 
-### `isUnmounting: boolean`  
-Indicates whether the `ViewModel` is in the process of unmounting.  
-Used for cleanup and transition states during component unmounting.
-
-### `parentViewModel: ParentViewModel | null`   
+### `parentViewModel: ParentViewModel`   
 Reference to the parent `ViewModel` in the component hierarchy.  
 
 ::: warning   
@@ -75,16 +67,16 @@ class ChildVM extends ViewModelBase<{}, ParentVM> {
 
 ## Lifecycle Methods
 
+### `init?(config: ViewModelInitConfig<this>): void`  
+Optional hook called when the instance is connected to a [`ViewModelStore`](/api/view-model-store/interface) (for example via [`define`](/api/view-model-store/interface#define) / [`connect`](/api/view-model-store/base-implementation#connect)).  
+
+Primarily used by [`ViewModelSimple`](/api/view-models/view-model-simple) instances; full `ViewModel` implementations typically receive store access through constructor params instead.
+
 ### `mount(): void | Promise<void>`  
-Called when the component is mounted in the React tree.  
+Called when the component is mounted in the React / Solid tree.  
 
 ::: tip 
-The behavior depends on your [ViewModelStore](/api/view-model-store/interface) implementation.  
-Base implementation sets `isMounted` to `true` after this method.
-:::
-
-:::tip
-Can return a Promise for asynchronous mounting operations.
+In [`ViewModelBase`](/api/view-models/base-implementation), prefer putting async work in [`willMount()`](/api/view-models/base-implementation#willmount-void) — it may return a `Promise`, and `mount()` waits for it before setting `isMounted` to `true`.
 :::
 
 #### Example: Async Mounting
@@ -92,9 +84,8 @@ Can return a Promise for asynchronous mounting operations.
 import { ViewModelBase } from "mobx-view-model";
 
 class JediProfileVM extends ViewModelBase<{ jediId: string }> {
-  async mount() {
+  protected async willMount() {
     await this.loadJediData();
-    await super.mount();
   }
 
   private async loadJediData() {
@@ -104,29 +95,26 @@ class JediProfileVM extends ViewModelBase<{ jediId: string }> {
 }
 ```
 
-### `unmount(): void | Promise<void>`  
-Called when the component is unmounted from the React tree.  
+### `unmount(): void`  
+Called when the component is unmounted from the React / Solid tree.  
 
 ::: tip 
-Behavior depends on your ViewModelStore implementation.  
-Base implementation sets `isMounted` to `false` after this method.
-:::
-
-:::tip
-Can return a Promise for asynchronous cleanup operations.
+[`ViewModelBase`](/api/view-models/base-implementation) sets `isMounted` to `false` during this method and aborts [`unmountSignal`](/api/view-models/base-implementation#unmountsignal).
 :::
 
 ## Payload Management
 
-### `setPayload(payload: Payload): void`  
+### `setPayload(payload: Payload): boolean`  
 Updates the view model's payload data.  
 
-::: warning React integration
-[`useCreateViewModel`](/react/api/use-create-view-model) and [`withViewModel`](/react/api/with-view-model) can call `setPayload` on **every render** while the component is in the tree. That includes moments **before** [`mount()`](#mount-void-promise-void) has run or finished — so `isMounted` may still be `false`. Do not assume a fully mounted view model inside `setPayload`, [`payloadChanged`](#payloadchanged-payload-payload-prevpayload-payload-void), or logic they trigger (e.g. avoid starting work that must only run after `mount()` unless you guard on `isMounted`).
+Returns `true` when the new payload is considered equal to the current one (no update applied), and `false` when the payload was updated.
+
+::: warning React / Solid integration
+[`useCreateViewModel`](/react/api/use-create-view-model) and [`withViewModel`](/react/api/with-view-model) can call `setPayload` on **every render** while the component is in the tree. That includes moments **before** [`mount()`](#mount-void-promise-void) has run or finished — so `isMounted` may still be `false`. Do not assume a fully mounted view model inside `setPayload` or logic it triggers (e.g. avoid starting work that must only run after `mount()` unless you guard on `isMounted`).
 :::
 
 ::: tip
-When extending [`ViewModelBase`](/api/view-models/base-implementation), do not assign to `this.payload` directly (it is a getter): call `super.setPayload(payload)` or override [`payloadChanged()`](#payloadchanged-payload-payload-prevpayload-payload-void).
+When extending [`ViewModelBase`](/api/view-models/base-implementation), do not assign to `this.payload` directly (it is a getter): call `super.setPayload(payload)` or customize comparison via [`isPayloadEqual`](/api/view-models/base-implementation#ispayloadequal-current-payload-next-payload-boolean) / [`comparePayload`](/api/view-models/view-models-config#comparepayload).
 :::
 
 #### Example: Payload Update with Validation
@@ -143,37 +131,8 @@ class LightsaberVM extends ViewModelBase<{ jediId: string }> {
       runInAction(() => {
         this.currentJediId = payload.jediId;
       });
-      super.setPayload(payload);
     }
-  }
-}
-```
-
-### `payloadChanged(payload: Payload, prevPayload: Payload): void`  
-Called when the payload is updated via [`setPayload()`](/api/view-models/interface#setpayload-payload-payload-void).  
-Use this method to handle payload changes and trigger necessary updates.
-
-#### Example: Handling Payload Changes
-```ts
-import { ViewModelBase } from "mobx-view-model";
-import { runInAction } from "mobx";
-
-class DeathStarVM extends ViewModelBase<{ targetId: string }> {
-  @observable
-  accessor currentTargetId: string | null = null;
-
-  payloadChanged(payload, prevPayload) {
-    if (this.currentTargetId !== payload.targetId) {
-      runInAction(() => {
-        this.currentTargetId = payload.targetId;
-        this.initializeWeapon();
-      });
-    }
-  }
-
-  private async initializeWeapon() {
-    const response = await fetch(`/api/weapons/${this.currentTargetId}`);
-    this.weaponData = await response.json();
+    return super.setPayload(payload);
   }
 }
 ```

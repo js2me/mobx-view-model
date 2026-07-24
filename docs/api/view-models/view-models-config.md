@@ -9,11 +9,11 @@ import { withViewModel } from "mobx-view-model-react";
 
 viewModelsConfig.comparePayload = false;
 
-withViewModel(VM, {
+withViewModel(VM, View, {
   vmConfig: {
     comparePayload: false
   }
-})()
+})
 
 new ViewModelStoreBase({
   vmConfig: {
@@ -22,7 +22,7 @@ new ViewModelStoreBase({
 })
 ```
 
-[Reference to source code](/src/config/global-config.ts#L9)  
+[Reference to source code](/src/config/types.ts)  
 
 ## Recommendations  
 
@@ -30,7 +30,7 @@ These are the recommended settings for the global configuration `viewModelsConfi
 which contain the most optimal values.
 
 ```ts
-import { viewModelsConfig, ViewModelStoreBase } from 'mobx-view-model';
+import { viewModelsConfig } from 'mobx-view-model';
 
 viewModelsConfig.comparePayload = false;
 viewModelsConfig.payloadComputed = 'struct';
@@ -39,6 +39,19 @@ viewModelsConfig.payloadObservable = 'ref';
 viewModelsConfig.observable.viewModels.useDecorators = true; //false
 viewModelsConfig.observable.viewModelStores.useDecorators = true; // false
 ```
+
+## `mode`  
+Runtime mode for the library integration:
+
+- `'csr-only'` — _**(default)**_ client-side only
+- `'ssr'` — enable SSR-oriented behavior in the React / Solid integration
+
+## `getPayload`  
+Extracts the ViewModel payload from component props.  
+
+Default: `(allProps) => allProps.payload ?? {}`.  
+
+Used by [`withViewModel`](/react/api/with-view-model). Override globally or per HOC when you want a different payload shape (see also [`withPropsViewModel`](/react/api/with-props-view-model)).
 
 ## `startViewTransitions`  
 Controls view transitions for view model lifecycle moments.  
@@ -80,28 +93,15 @@ Indicates type of observable for `ViewModel` payload.
 - `'shallow'` - [MobX shallow observable](https://mobx.js.org/api.html#observableshallow)  
 - `false` - no observable wrapping  
 
-## `generateId()`  
-Generates a unique identifier for a [`ViewModel`](/api/view-models/interface).   
-
-::: tip This property has default implementation [here](/src/utils/generate-vm-id.ts#L16)
-:::
-
-#### Example 
-
-_Using `crypto.randomUUID()` to generate view model ids_
-```ts{3}
-import { viewModelsConfig } from "mobx-view-model";
-
-viewModelsConfig.generateId = () => crypto.randomUUID();
-```
-
 ## `factory()`  
-Factory function for creating [`ViewModel`](/api/view-models/interface) instances.  
+Factory function for creating [`ViewModel`](/api/view-models/interface) / [`ViewModelSimple`](/api/view-models/view-model-simple) instances.  
 
 Can be helpful if you want to add some constructor arguments for your own [`ViewModel`](/api/view-models/interface) implementation  
 
 
-::: tip This property has default implementation [here](/src/config/global-config.ts#L25) 
+::: tip Default implementation  
+Creates `ViewModelSimple` with `new VM()`, and full `ViewModel` with `new VM({ ...config, vmConfig })`.  
+See [global-config.ts](/src/config/global-config.ts).  
 :::
 
 #### Example  
@@ -116,10 +116,6 @@ viewModelsConfig.factory = (config) => {
   return new VM(rootStore, config);
 }
 ```
-
-## `flushPendingReactions`  
-
-How many times the library may run MobX’s pending-reaction drain (before `attach`/`mount`) after a view model instance is created. Default: `100`. Use `0` to skip flushing (no-op).
 
 ## <ReactMark /> `fallbackComponent`  
 A component that will be rendered while the view model is in a loading or processing state.  
@@ -136,62 +132,6 @@ viewModelsConfig.fallbackComponent = () => (
 
 ## <ReactMark /> `reactHook` {#reacthook}  
 Optional default for the [`reactHook`](/react/api/with-view-model.html#reacthook) option on [`withViewModel`](/react/api/with-view-model): used when the HOC config does not set `reactHook` (resolved as `config.reactHook ?? viewModelsConfig.reactHook`).  
-
-## <ReactMark /> `useReactIds` {#usereactids}  
-When `true`, [`useCreateViewModel`](/react/api/use-create-view-model) forwards React’s [`useId()`](https://react.dev/reference/react/useId) value into the view-model id pipeline as `renderId`. That id participates in [`generateId`](/api/view-models/view-models-config#generateid) / [`generateVmId`](/src/utils/generate-vm-id.ts) so instance ids can align with React’s stable per-component ids.  
-
-Default: `false`.  
-
-::: tip SSR and hydration  
-Matching server and client markup depends on consistent ids. Enabling `useReactIds` ties VM ids to React’s `useId()` output for that component instance, which is designed to match between SSR and the first client render when the component tree is the same—useful if VM ids must stay stable across hydration or line up with DOM `id` attributes derived from `useId()`.  
-:::
-
-#### Example
-```ts
-import { viewModelsConfig } from 'mobx-view-model';
-
-viewModelsConfig.useReactIds = true;
-```
-
-Per-call override via [`useCreateViewModel`](/react/api/use-create-view-model#usereactids) / [`withViewModel`](/react/api/with-view-model) `vmConfig`:
-
-```tsx
-useCreateViewModel(YourVM, payload, {
-  vmConfig: { useReactIds: true },
-});
-```
-
-## <ReactMark /> `suspendUntil` {#suspenduntil}  
-Lets the tree **wait** until your condition is ready before it keeps rendering—**SSR** is a typical use case. Configure it through `vmConfig` the same way as other options on this page.  
-
-You can **return nothing** from the function (`undefined` / `null`) for a given instance or render—then no wait happens and the view continues as usual. Use that when suspension only applies in some cases (for example only on the server, or only until a flag exists).  
-
-::: tip  
-A promise that resolves when you’re ready is enough (MobX [`when()`](https://mobx.js.org/refguide/when.html) is a common choice). Add [**`Suspense`**](https://react.dev/reference/react/Suspense) if you want a loading or placeholder UI.  
-:::
-
-#### Example (global)
-
-```ts
-import { when } from 'mobx';
-import { viewModelsConfig } from 'mobx-view-model';
-
-viewModelsConfig.suspendUntil = (vm) =>
-  when(() => Boolean(vm.someReadyFlag));
-```
-
-#### Example (store)
-
-```ts
-import { when } from 'mobx';
-import { ViewModelStoreBase } from 'mobx-view-model';
-
-new ViewModelStoreBase({
-  vmConfig: {
-    suspendUntil: (vm) => when(() => Boolean(vm.ctx)),
-  },
-});
-```
 
 ## `onMount`  
 A lifecycle hook that is called when a view model is mounted.  
@@ -225,8 +165,8 @@ Internal event hooks for view model stores.
 Called when a `ViewModelStore` instance is created.  
 Useful for wiring external listeners or diagnostics.
 
-## <ReactMark /> `processViewComponent`  
-A higher-order function that processes and transforms the view component before it is rendered.   
+## <ReactMark /> `processRender`  
+A higher-order function that processes and transforms the view render function before it is wrapped by [`withViewModel`](/react/api/with-view-model) / Solid equivalent.   
 This function enables component composition and modification at the ViewModel level, allowing for:
 - Wrapping components with additional functionality (error boundaries, providers, etc.)
 - Injecting props or context
@@ -235,7 +175,7 @@ This function enables component composition and modification at the ViewModel le
 
 #### Example  
 ```tsx
-viewModelsConfig.processViewComponent = (Component) => {
+viewModelsConfig.processRender = (Component) => {
   return (props) => {
     return (
       <ErrorBoundary>
@@ -245,23 +185,6 @@ viewModelsConfig.processViewComponent = (Component) => {
   }
 }
 ```
-::: warning It works only for [`withViewModel` HOCs](/react/api/with-view-model)  
-:::
-
-## <ReactMark /> `wrapViewsInObserver`  
-
-Wrap View components in [`observer()` MobX HOC](https://mobx.js.org/api.html#observer)  
-This property is enabled by default.   
-
-
-You can turn off this behavior by setting `wrapViewsInObserver` to `false`.   
-Example:    
-```tsx
-import { viewModelsConfig } from "mobx-view-model";
-
-viewModelsConfig.wrapViewsInObserver = false;
-```
-
 ::: warning It works only for [`withViewModel` HOCs](/react/api/with-view-model)  
 :::
 
@@ -282,7 +205,7 @@ Very helpful if you want to write code with "non decorators style".
 
 Example:   
 ```ts
-import { observable, action } from "mobx";
+import { observable, action, makeObservable } from "mobx";
 import {
   viewModelsConfig,
   ViewModelBase,
@@ -315,7 +238,6 @@ import { observable, action } from "mobx";
 import {
   viewModelsConfig,
   ViewModelBase,
-  ViewModelParams
 } from "mobx-view-model";
 
 viewModelsConfig.observable.viewModels.useDecorators = true;
@@ -363,9 +285,7 @@ viewModelsConfig.startViewTransitions = {
 };
 
 // Optional configurations (uncomment to use)
-// viewModelsConfig.generateId = () => crypto.randomUUID();
 // viewModelsConfig.factory = (config) => new config.VM(rootStore, config);
-// viewModelsConfig.flushPendingReactions = 200;
 // viewModelsConfig.fallbackComponent = () => <LoadingSpinner />;
 // viewModelsConfig.onMount = (vm) => console.log('Mounted:', vm.id);
 // viewModelsConfig.onUnmount = (vm) => console.log('Unmounted:', vm.id);

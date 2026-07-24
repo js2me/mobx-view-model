@@ -1,8 +1,24 @@
 # `ViewModelSimple`  
 
-`ViewModelSimple` is a minimal contract aligned with the [ViewModel interface](/api/view-models/interface), designed for lightweight state management with **MobX**. It keeps reactive state initialization simple (for example, via `makeAutoObservable`) while still fitting the library lifecycle in React applications.  
+`ViewModelSimple` is a minimal contract aligned with the [ViewModel interface](/api/view-models/interface), designed for lightweight state management with **MobX**. It keeps reactive state initialization simple (for example, via `makeAutoObservable`) while still fitting the library lifecycle in React / Solid applications.  
 
 [Reference to source code](/src/view-model/view-model-simple.ts)  
+
+## API Signature
+
+```ts
+interface ViewModelSimple<Payload, ParentViewModel>
+```
+
+All members are optional except that you usually keep your own reactive state and actions.
+
+| Member | Description |
+| --- | --- |
+| `id?: string` | Unique instance id. If omitted, the library assigns one. |
+| `parentViewModel?: ParentViewModel` | Set automatically by the library when mounted under a parent VM. |
+| `init?(config)` | Called when the instance is connected to a [`ViewModelStore`](/api/view-model-store/interface). |
+| `mount?()` / `unmount?()` | Optional lifecycle hooks. |
+| `setPayload?(payload)` | Optional payload updates from the view layer. |
 
 ## When to Use  
 Use `ViewModelSimple` when:   
@@ -35,7 +51,7 @@ export class FruitViewModel implements ViewModelSimple {
 ```
 
 ::: tip defining `id` property is optional
-If you do not define the `id` property, a random id will be generated from `viewModelsConfig.generateId`
+If you do not define the `id` property, a random id will be generated when the instance is registered in a store / created by the React / Solid integration.
 :::
 
 ### Example without implementing any interface methods    
@@ -158,4 +174,3 @@ export const FruitComponent = () => {
 
 1. Use [`useViewModel`](/solid/api/use-view-model).
 2. Register instances via [`ViewModelStore`](/api/view-model-store/overview) + [`ViewModelsProvider`](/solid/api/view-models-provider).
-
