@@ -103,7 +103,7 @@ describe('StrictMode', () => {
     expect(store.getIds(CardVM).sort()).toEqual(['card-a', 'card-b']);
     expect(screen.getByTestId('card-a').textContent).toBe('card-a');
     expect(screen.getByTestId('card-b').textContent).toBe('card-b');
-    expect(store.get('card-a')?.isMounted).toBe(true);
-    expect(store.get('card-b')?.isMounted).toBe(true);
+    expect(store.get<CardVM>('card-a')?.isMounted).toBe(true);
+    expect(store.get<CardVM>('card-b')?.isMounted).toBe(true);
   });
 });
