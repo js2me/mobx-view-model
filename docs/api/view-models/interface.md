@@ -41,6 +41,19 @@ Controls the rendering of the connected view component:
 - `true`: Component is rendered
 - `false`: Component is not rendered
 
+### `lifecycleState: ViewModelLifecycleState`  
+The current lifecycle state of the `ViewModel`. Possible values:
+
+| State | Description |
+|---|---|
+| `'init'` | Instance created, `mount()` not yet called |
+| `'mounting'` | `mount()` is in progress (async `willMount()` running) |
+| `'mounted'` | Fully mounted, `isMounted` is `true` |
+| `'unmounting'` | `unmount()` started |
+| `'unmounted'` | Fully unmounted |
+
+This is a MobX `observable.ref` — you can observe it in reactions or use it to distinguish between `init` (not yet mounted) and `mounting` (mount in progress), which `isMounted` alone cannot do.
+
 ### `parentViewModel: ParentViewModel`   
 Reference to the parent `ViewModel` in the component hierarchy.  
 
