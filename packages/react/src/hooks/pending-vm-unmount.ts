@@ -27,7 +27,7 @@ const cancel = (entry: PendingUnmount) => {
 };
 
 export const cancelPendingForVm = (id: string | null | undefined) => {
-  if (id == null) return;
+  if (id == null || pendingById.size === 0) return;
   const entry = pendingById.get(id);
   if (entry) cancel(entry);
 };

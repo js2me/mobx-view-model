@@ -33,8 +33,10 @@ import {
 } from './pending-vm-unmount.js';
 
 const EMPTY_ARR: any[] = [];
+const { emptyObject, noop } = _internals;
+const isProd = process.env.NODE_ENV === 'production';
 
-const subscribeNoop = () => _internals.noop;
+const subscribeNoop = () => noop;
 const getClientHydrated = () => true;
 const getServerHydrated = () => false;
 
@@ -47,8 +49,10 @@ type Cache = {
   fn: () => () => void;
 };
 
-const isDead = (vm: VmInstance, store: ViewModelStore | null) =>
-  (isViewModel(vm) && !vm.isMounted) || (!!store && !!vm.id && !store.has(vm.id));
+const isAlive = (vm: VmInstance, store: ViewModelStore | null) => {
+  if (isViewModel(vm) && !vm.isMounted) return false;
+  return !store || !vm.id || store.has(vm.id);
+};
 
 const destroyVm = (vm: VmInstance, store: ViewModelStore | null) => {
   if (store) store.unmount(vm);
@@ -72,7 +76,7 @@ const instantiateVm = (
       VM,
       viewModels,
       parentViewModel,
-      ctx: rawCfg?.ctx ?? _internals.emptyObject,
+      ctx: rawCfg?.ctx ?? emptyObject,
       props: props ?? rawCfg?.props,
     };
     if (viewModels) return viewModels.define(config);
@@ -168,7 +172,7 @@ export function useCreateViewModel<TViewModelSimple>(
  */
 export function useCreateViewModel(
   VM: Class<any>,
-  payload: any = _internals.emptyObject,
+  payload: any = emptyObject,
   rawCfg?: any,
   props?: any,
 ) {
@@ -179,7 +183,7 @@ export function useCreateViewModel(
 
   let model = cache.current?.vm;
 
-  if (!model || isDead(model, viewModels)) {
+  if (!model || !isAlive(model, viewModels)) {
     const parentId = parentViewModel?.id ?? null;
     const explicitId = rawCfg?.id as string | null | undefined;
     const claimed =
@@ -193,9 +197,7 @@ export function useCreateViewModel(
       cancelPendingForVm(explicitId ?? model?.id);
       model = instantiateVm(
         explicitId ?? model?.id ?? (
-          process.env.NODE_ENV === 'production'
-            ? reactId
-            : `${reactId}:${VM.name}`
+          isProd ? reactId : `${reactId}:${VM.name}`
         ),
         VM,
         payload,
