@@ -2,6 +2,7 @@ import type { AnyObject, EmptyObject, MaybePromise } from 'yummies/types';
 import type { ViewModelsConfig } from '../config/types.js';
 
 import type { AnyViewModel, AnyViewModelSimple, ViewModelInitConfig } from './view-model.types.js';
+import type { ViewModelLifecycleState } from './view-model.base.types.js';
 import { ViewModelCreateConfig, ViewModelStore } from './index.js';
 
 /**
@@ -19,6 +20,8 @@ export interface ViewModel<
   readonly payload: Payload;
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/interface#ismounted-boolean) */
   readonly isMounted: boolean;
+  /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/interface#lifecyclestate-viewmodellifecyclestate) */
+  lifecycleState: ViewModelLifecycleState;
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/interface#parentviewmodel-parentviewmodel-null) */
   readonly parentViewModel: ParentViewModel;
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/interface#init) */

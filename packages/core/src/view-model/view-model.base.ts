@@ -16,11 +16,11 @@ import type {
   PayloadCompareFn,
   ViewModelParams,
 } from './view-model.types.js';
-import { ViewModelState } from './view-model.base.types.js';
+import { ViewModelLifecycleState } from './view-model.base.types.js';
 import { VIEW_MODEL_MARKER } from '../symbols/index.js';
 
 const baseAnnotations: ObservableAnnotationsArray = [
-  [observable.ref, 'vmState'],
+  [observable.ref, 'lifecycleState'],
   [computed, 'isMounted', 'parentViewModel'],
   [action, 'willMount', 'didMount', 'didUnmount', 'willUnmount', 'mount', 'unmount'],
 ];
@@ -36,7 +36,7 @@ export class ViewModelBase<
 
   id: string;
 
-  private vmState: ViewModelState;
+  lifecycleState: ViewModelLifecycleState;
 
   /** In-flight mount(); re-entrant calls must reuse the same Promise. */
   #mountPromise?: Promise<void>;
@@ -57,7 +57,7 @@ export class ViewModelBase<
     >,
   ) {
     this.id = vmParams.id;
-    this.vmState = 'init';
+    this.lifecycleState = 'init';
     this.vmConfig = mergeVMConfigs(vmParams.vmConfig);
     this._payload = vmParams.payload;
     this.props = vmParams.props ?? ({} as ComponentProps);
@@ -120,7 +120,7 @@ export class ViewModelBase<
   }
 
   get isMounted() {
-    return this.vmState === 'mounted';
+    return this.lifecycleState === 'mounted';
   }
 
   protected willUnmount(): void {
@@ -138,23 +138,23 @@ export class ViewModelBase<
    * The method is called when the view starts mounting
    */
   mount(): MaybePromise<void> {
-    if (this.vmState === 'mounted') {
+    if (this.lifecycleState === 'mounted') {
       return;
     }
     if (this.#mountPromise) {
       return this.#mountPromise;
     }
 
-    this.vmState = 'mounting';
+    this.lifecycleState = 'mounting';
     const result = this.willMount();
 
     const finalizeMount = () => {
-      if (this.vmState !== 'mounting') return;
+      if (this.lifecycleState !== 'mounting') return;
       this.vmConfig.onMount?.(this);
       startViewTransitionSafety(
         () => {
           runInAction(() => {
-            this.vmState = 'mounted';
+            this.lifecycleState = 'mounted';
             this.didMount();
           });
         },
@@ -185,12 +185,12 @@ export class ViewModelBase<
    */
   unmount() {
     this.#mountPromise = undefined;
-    runInAction(() => (this.vmState = 'unmounting'));
+    runInAction(() => (this.lifecycleState = 'unmounting'));
     this.willUnmount();
     this.vmConfig.onUnmount?.(this);
     startViewTransitionSafety(
       () => {
-        runInAction(() => (this.vmState = 'unmounted'));
+        runInAction(() => (this.lifecycleState = 'unmounted'));
         this.didUnmount();
         this.abortController.abort();
       },

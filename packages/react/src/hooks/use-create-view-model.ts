@@ -50,9 +50,10 @@ type Cache = {
 };
 
 const isAlive = (vm: VmInstance, store: ViewModelStore | null) => {
-  if (isViewModel(vm) && !vm.isMounted) return false;
+  if (isViewModel(vm) && !vm.isMounted && vm.lifecycleState !== 'mounting') return false;
   return !store || !vm.id || store.has(vm.id);
 };
+
 
 const instantiateVm = (
   id: string,
