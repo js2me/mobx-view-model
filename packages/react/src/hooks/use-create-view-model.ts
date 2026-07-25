@@ -54,11 +54,6 @@ const isAlive = (vm: VmInstance, store: ViewModelStore | null) => {
   return !store || !vm.id || store.has(vm.id);
 };
 
-const destroyVm = (vm: VmInstance, store: ViewModelStore | null) => {
-  if (store) store.unmount(vm);
-  else vm.unmount?.();
-};
-
 const instantiateVm = (
   id: string,
   VM: Class<any>,
@@ -218,12 +213,11 @@ export function useCreateViewModel(
         const vm = cache.current.vm;
         cancelPendingForVm(vm.id);
         return () => {
-          scheduleVmUnmount(vm, VM, parentId, () => destroyVm(vm, viewModels));
+          scheduleVmUnmount(vm, VM, parentId, viewModels);
         };
       },
     };
   } else {
-    cancelPendingForVm(model.id);
     model.setPayload?.(payload);
   }
 

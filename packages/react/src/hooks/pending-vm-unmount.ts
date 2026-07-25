@@ -1,4 +1,8 @@
-import type { AnyViewModel, AnyViewModelSimple } from 'mobx-view-model';
+import type {
+  AnyViewModel,
+  AnyViewModelSimple,
+  ViewModelStore,
+} from 'mobx-view-model';
 import { runInAction } from 'mobx';
 import type { Class } from 'yummies/types';
 
@@ -54,7 +58,7 @@ export const scheduleVmUnmount = (
   vm: VmInstance,
   VM: Class<any>,
   parentId: string | null,
-  unmountFn: () => void,
+  store: ViewModelStore | null,
 ) => {
   const entry: PendingUnmount = { vm, VM, parentId, cancelled: false };
   pendingUnmounts.add(entry);
@@ -63,6 +67,9 @@ export const scheduleVmUnmount = (
     if (entry.cancelled) return;
     pendingUnmounts.delete(entry);
     if (vm.id != null) pendingById.delete(vm.id);
-    runInAction(unmountFn);
+    runInAction(() => {
+      if (store) store.unmount(vm);
+      else vm.unmount?.();
+    });
   });
 };
