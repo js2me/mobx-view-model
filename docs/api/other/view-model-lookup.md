@@ -6,7 +6,7 @@ This type declares what data is needed to find your [ViewModel](/api/view-models
 It can be:   
   - [ViewModel id](/api/view-models/interface#id-string)  
   - `ViewModel` / `ViewModelSimple` class reference  
-  - Component created with [`withViewModel()`](/react/api/with-view-model) / Solid equivalent (typed via `ViewModelComponentRef<T>` so `get(Component)` infers `T`)  
+  - Component created with [`withViewModel()`](/react/api/with-view-model) / [Solid equivalent](/solid/api/with-view-model) (typed via `ViewModelComponentRef<T>` so `get(Component)` infers `T`)  
   - Anchor component registered via [config `anchors`](/react/api/with-view-model#anchors) or method [`connect()`](/react/api/with-view-model#connectanchor)  
 
 [Reference to source code type](/src/view-model/view-model.store.types.ts)  

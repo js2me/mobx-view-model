@@ -76,7 +76,7 @@ See [ViewModelsConfig](/api/view-models/view-models-config) for detailed configu
 ### `isMounted: boolean` <Badge type="tip" text="computed" />  
 Indicates whether the `ViewModel` is currently mounted with its associated component.  
 
-### `willMount(): void | Promise<void>` <Badge type="info" text="protected" />  
+### `willMount(): void | Promise<void>` <Badge type="info" text="protected" /> {#willmount-void}  
 Called when the component begins mounting.  
 Executes before `isMounted` becomes `true`.  
 
@@ -141,7 +141,7 @@ otherwise your view component connected to this `ViewModel` will never be unmoun
 Called after the view model is fully unmounted.  
 Ideal for final cleanup operations.
 
-### [`setPayload(payload: Payload): boolean`](/api/view-models/interface#setpayload-payload-payload-void)  
+### [`setPayload(payload: Payload): boolean`](/api/view-models/interface#setpayload-payload-payload-boolean)  
 
 Updates the view model's payload data.
 

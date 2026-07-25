@@ -14,8 +14,8 @@ All members are optional except that you usually keep your own reactive state an
 
 | Member | Description |
 | --- | --- |
-| `id?: string` | Unique instance id. If omitted, the library assigns one. |
-| `parentViewModel?: ParentViewModel` | Set automatically by the library when mounted under a parent VM. |
+| `id?: string` | Unique instance id. Optional on the class; React / Solid generate one when creating the instance. Pass `config.id` when using `ViewModelStore` directly. |
+| `parentViewModel?: ParentViewModel` | React / Solid integrations assign this to simple VMs from the active parent after calling `mount()`; direct store registration exposes the parent through `init(config)` but does not assign this property. |
 | `init?(config)` | Called when the instance is connected to a [`ViewModelStore`](/api/view-model-store/interface). |
 | `mount?()` / `unmount?()` | Optional lifecycle hooks. |
 | `setPayload?(payload)` | Optional payload updates from the view layer. |
@@ -51,7 +51,7 @@ export class FruitViewModel implements ViewModelSimple {
 ```
 
 ::: tip defining `id` property is optional
-If you do not define the `id` property, a random id will be generated when the instance is registered in a store / created by the React / Solid integration.
+If you do not define the `id` property, the React / Solid integrations generate an instance id. When using `ViewModelStore` directly, pass `config.id`; the default store implementation does not generate one.
 :::
 
 ### Example without implementing any interface methods    

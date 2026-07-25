@@ -49,7 +49,7 @@ Runtime mode for the library integration:
 ## `getPayload`  
 Extracts the ViewModel payload from component props.  
 
-Default: `(allProps) => allProps.payload ?? {}`.  
+Default: Returns `allProps.payload` or a shared frozen empty object when no payload is provided.
 
 Used by [`withViewModel`](/react/api/with-view-model). Override globally or per HOC when you want a different payload shape (see also [`withPropsViewModel`](/react/api/with-props-view-model)).
 
@@ -165,7 +165,7 @@ Internal event hooks for view model stores.
 Called when a `ViewModelStore` instance is created.  
 Useful for wiring external listeners or diagnostics.
 
-## <ReactMark /> `processRender`  
+## `processRender`
 A higher-order function that processes and transforms the view render function before it is wrapped by [`withViewModel`](/react/api/with-view-model) / Solid equivalent.   
 This function enables component composition and modification at the ViewModel level, allowing for:
 - Wrapping components with additional functionality (error boundaries, providers, etc.)
@@ -175,11 +175,16 @@ This function enables component composition and modification at the ViewModel le
 
 #### Example  
 ```tsx
+import { observer } from "mobx-react-lite";
+
 viewModelsConfig.processRender = (Component) => {
+  // `withViewModel` wraps the *result* in `observer`; wrap the inner view
+  // so `model` reads stay tracked when you add outer providers / boundaries.
+  const Observed = observer(Component);
   return (props) => {
     return (
       <ErrorBoundary>
-        <Component {...props} />
+        <Observed {...props} />
       </ErrorBoundary>
     )
   }

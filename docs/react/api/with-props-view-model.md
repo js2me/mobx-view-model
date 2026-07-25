@@ -77,5 +77,5 @@ All [`withViewModel` config options](/react/api/with-view-model#configuration) e
 
 ## Notes
 
-- Not compatible with `<Suspense />` / `lazy()` — [same as `withViewModel`](/react/api/with-view-model#incompatibility-with-suspense-and-lazy).
+- [`lazy()`](https://react.dev/reference/react/lazy) / [`Suspense`](https://react.dev/reference/react/Suspense) — [same as `withViewModel`](/react/api/with-view-model#lazy-and-suspense).
 - Generic ViewModel types — [same caveats as `withViewModel`](/react/api/with-view-model#generic-types-for-your-wrapped-viewmodel-in-this-hoc).

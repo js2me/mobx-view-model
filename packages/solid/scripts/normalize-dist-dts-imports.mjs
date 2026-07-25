@@ -20,7 +20,7 @@ for (const fileName of dtsFiles) {
       // rollup-plugin-dts can generate synthetic aliases like `Type$1`.
       // Normalize them back to canonical import names in emitted declarations.
       normalized = normalized.replace(
-        new RegExp(`\\b${synthetic.replace(/\$/g, '\\$')}\\b`, 'g'),
+        new RegExp(`\\b${synthetic.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'g'),
         canonical,
       );
     }

@@ -86,6 +86,21 @@ describe('ViewModelStoreBase', () => {
     expect(vm.id).toBe('1');
   });
 
+  it('define calls init for ViewModelBase', () => {
+    const vmStore = new ViewModelStoreBaseMock();
+    const vm = vmStore.define({
+      id: '1',
+      VM: ViewModelBaseMock,
+      payload: {},
+    });
+
+    expect(vm.spies.init).toBeCalledTimes(1);
+    expect(vm.spies.init.mock.calls[0]![0]).toMatchObject({
+      id: '1',
+      viewModels: vmStore,
+    });
+  });
+
   it('define returns existing instance for the same id', () => {
     const vmStore = new ViewModelStoreBaseMock();
     const first = vmStore.define({

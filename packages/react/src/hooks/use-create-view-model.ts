@@ -4,12 +4,15 @@ import type {
   ViewModelCreateConfig,
   ViewModelSimple,
   ViewModelsConfig,
+  ViewModelStore,
 } from 'mobx-view-model';
 import {
+  _internals,
   isViewModel,
   isViewModelSimple,
   viewModelsConfig,
 } from 'mobx-view-model';
+import { runInAction } from 'mobx';
 import {
   use,
   useContext,
@@ -18,22 +21,81 @@ import {
   useRef,
   useSyncExternalStore,
 } from 'react';
-import type { AnyObject, Class, IsPartial, Maybe, MaybePromise } from 'yummies/types';
+import type { AnyObject, Class, IsPartial, Maybe } from 'yummies/types';
 import {
   ActiveViewModelContext,
   ViewModelsContext,
 } from '../contexts/index.js';
+import {
+  cancelPendingForVm,
+  claimPendingVm,
+  scheduleVmUnmount,
+} from './pending-vm-unmount.js';
 
 const EMPTY_ARR: any[] = [];
-const EMPTY_OBJECT: AnyObject = Object.freeze({});
 
-const isThenable = (value: unknown): value is PromiseLike<unknown> =>
-  !!value &&
-  typeof (value as PromiseLike<unknown>).then === 'function';
-
-const subscribeNoop = () => () => {};
+const subscribeNoop = () => _internals.noop;
 const getClientHydrated = () => true;
 const getServerHydrated = () => false;
+
+type VmInstance = AnyViewModel | AnyViewModelSimple;
+
+type Cache = {
+  vm: VmInstance;
+  promise?: PromiseLike<void>;
+  isSSR: boolean;
+  fn: () => () => void;
+};
+
+const isDead = (vm: VmInstance, store: ViewModelStore | null) =>
+  (isViewModel(vm) && !vm.isMounted) || (!!store && !!vm.id && !store.has(vm.id));
+
+const destroyVm = (vm: VmInstance, store: ViewModelStore | null) => {
+  if (store) store.unmount(vm);
+  else vm.unmount?.();
+};
+
+const instantiateVm = (
+  id: string,
+  VM: Class<any>,
+  payload: any,
+  rawCfg: any,
+  props: any,
+  viewModels: ViewModelStore | null,
+  parentViewModel: VmInstance | null | undefined,
+) =>
+  runInAction(() => {
+    const config: ViewModelCreateConfig<any> = {
+      ...rawCfg,
+      id,
+      payload,
+      VM,
+      viewModels,
+      parentViewModel,
+      ctx: rawCfg?.ctx ?? _internals.emptyObject,
+      props: props ?? rawCfg?.props,
+    };
+    if (viewModels) return viewModels.define(config);
+    const instance =
+      config.factory?.(config) ?? viewModelsConfig.factory(config);
+    instance.init?.(config as any);
+    return instance;
+  });
+
+const bindLifecycle = (
+  instance: VmInstance,
+  payload: any,
+  parentViewModel: VmInstance | null | undefined,
+) =>
+  runInAction(() => {
+    if (isViewModelSimple(instance)) {
+      instance.parentViewModel = parentViewModel;
+      instance.setPayload?.(payload);
+    }
+    return isViewModel(instance) && instance.isMounted
+      ? undefined
+      : instance.mount?.();
+  });
 
 export interface UseCreateViewModelConfig<TViewModel extends AnyViewModel>
   extends Pick<
@@ -106,88 +168,75 @@ export function useCreateViewModel<TViewModelSimple>(
  */
 export function useCreateViewModel(
   VM: Class<any>,
-  payload: any = EMPTY_OBJECT,
+  payload: any = _internals.emptyObject,
   rawCfg?: any,
   props?: any,
 ) {
   const viewModels = useContext(ViewModelsContext);
   const parentViewModel = useContext(ActiveViewModelContext);
-  const cache = useRef<{
-    vm: AnyViewModel | AnyViewModelSimple;
-    promise?: PromiseLike<void>;
-    isSSR?: boolean
-    cleanup: () => VoidFunction;
-  }>(null!);
-
+  const cache = useRef<Cache>(null!);
   const reactId = useId();
+
   let model = cache.current?.vm;
 
-  if (!model) {
-    const reactGeneratedId =
-      process.env.NODE_ENV === 'production' ? reactId : `${reactId}:${VM.name}`;
-    const id = rawCfg?.id ?? reactGeneratedId;
+  if (!model || isDead(model, viewModels)) {
+    const parentId = parentViewModel?.id ?? null;
+    const explicitId = rawCfg?.id as string | null | undefined;
+    const claimed =
+      !model && explicitId == null
+        ? claimPendingVm(VM, parentId)
+        : null;
 
-    const config = {
-      ...rawCfg,
-      id,
-      payload,
-      VM,
-      viewModels,
-      parentViewModel,
-      ctx: rawCfg?.ctx ?? EMPTY_OBJECT,
-      props: props ?? rawCfg?.props,
-    } satisfies ViewModelCreateConfig<any>;
-
-    if (viewModels) {
-      model = viewModels.define(config);
+    if (claimed) {
+      model = claimed;
     } else {
-      model = config.factory?.(config) ?? viewModelsConfig.factory(config);
-      model.init?.(config);
-    }
-
-    // Suspense remounts reset useRef but reuse the store instance. Calling
-    // async mount() again would create a new Promise → use() suspends → remount loop.
-    const mountResult =
-      isViewModel(model) && model.isMounted ? undefined : model.mount?.();
-
-    if (isViewModelSimple(model)) {
-      model.parentViewModel = parentViewModel;
-      model.setPayload?.(payload);
+      cancelPendingForVm(explicitId ?? model?.id);
+      model = instantiateVm(
+        explicitId ?? model?.id ?? (
+          process.env.NODE_ENV === 'production'
+            ? reactId
+            : `${reactId}:${VM.name}`
+        ),
+        VM,
+        payload,
+        rawCfg,
+        props,
+        viewModels,
+        parentViewModel,
+      );
     }
 
     cache.current = {
       vm: model,
-      promise: mountResult as (PromiseLike<void> | undefined),
+      promise: bindLifecycle(model, payload, parentViewModel) as
+        | PromiseLike<void>
+        | undefined,
       isSSR: viewModelsConfig.mode === 'ssr',
-      cleanup: () => () => {
-        if (viewModels) {
-          viewModels.unmount(model);
-        } else {
-          model.unmount?.();
-        }
-      }
+      fn: () => {
+        const vm = cache.current.vm;
+        cancelPendingForVm(vm.id);
+        return () => {
+          scheduleVmUnmount(vm, VM, parentId, () => destroyVm(vm, viewModels));
+        };
+      },
     };
   } else {
+    cancelPendingForVm(model.id);
     model.setPayload?.(payload);
   }
 
-  useEffect(cache.current.cleanup, EMPTY_ARR);
+  useEffect(cache.current.fn, EMPTY_ARR);
 
   if (cache.current.isSSR) {
-    // `ssr`, or client still hydrating (`useSyncExternalStore` server snapshot).
-    const pending = cache.current!.promise;
+    const pending = cache.current.promise;
     const isHydrated = useSyncExternalStore(
       subscribeNoop,
       getClientHydrated,
       getServerHydrated,
     );
-    if (
-      use &&
-      pending &&
-      (typeof window === 'undefined' || !isHydrated)
-    ) {
+    if (use && pending && (typeof window === 'undefined' || !isHydrated)) {
       use(pending);
-    } 
+    }
   }
 
   return model;

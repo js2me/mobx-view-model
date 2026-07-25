@@ -32,7 +32,7 @@ See [interface](/api/view-model-store/interface#hasmountingvms).
 See [interface](/api/view-model-store/interface#waitmount-vms).
 
 ### `connect(instance, config)`  
-Registers an already created instance in the store: links anchors, indexes the instance by id / class, and for [`ViewModelSimple`](/api/view-models/view-model-simple) calls `init(...)` when present.
+Registers an already created instance in the store: links anchors, indexes the instance by id / class, and calls `init(...)` when present.
 
 ### `define(config)`  
 See [interface](/api/view-model-store/interface#define). Creates via [`create`](/api/view-model-store/interface#create-config) and then [`connect`](#connectinstance-config) when needed.

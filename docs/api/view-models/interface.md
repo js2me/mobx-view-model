@@ -68,9 +68,7 @@ class ChildVM extends ViewModelBase<{}, ParentVM> {
 ## Lifecycle Methods
 
 ### `init?(config: ViewModelInitConfig<this>): void`  
-Optional hook called when the instance is connected to a [`ViewModelStore`](/api/view-model-store/interface) (for example via [`define`](/api/view-model-store/interface#define) / [`connect`](/api/view-model-store/base-implementation#connect)).  
-
-Primarily used by [`ViewModelSimple`](/api/view-models/view-model-simple) instances; full `ViewModel` implementations typically receive store access through constructor params instead.
+Optional hook called when the instance is connected to a [`ViewModelStore`](/api/view-model-store/interface) (for example via [`define`](/api/view-model-store/interface#define) / [`connect`](/api/view-model-store/base-implementation#connect)). Also called by the React / Solid integrations when creating a VM without a store.
 
 ### `mount(): void | Promise<void>`  
 Called when the component is mounted in the React / Solid tree.  

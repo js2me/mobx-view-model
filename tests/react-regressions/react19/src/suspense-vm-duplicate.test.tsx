@@ -33,8 +33,7 @@ class ViewModelBaseMock<
 
 class ViewModelStoreBaseMock extends ViewModelStoreBase {
   constructor() {
-    super({
-    });
+    super({});
   }
 }
 
@@ -127,18 +126,14 @@ describe('Suspense VM duplicate prevention', () => {
 
   /**
    * Reproduces the REAL infinite-loop bug from githome:
-   * React 19 + lazy + Suspense + withViewModel(observer) + useId: true
+   * React 19 + lazy + Suspense + withViewModel(observer) + auto useId
    *
-   * In the real app, the cycle is driven by observer components that read
-   * MobX observables which are mutated by define()/unmount(). The full cycle:
-   * 1. RouteView (observer) reads route.isOpened → re-renders when route changes
-   * 2. It renders RepositoryPage via React.lazy inside Suspense
-   * 3. withViewModel(observer) creates RepositoryPageVM → define()/unmount() mutates MobX
-   *    observables in the store (viewModelIdsByClasses, instanceAttachedCount, etc.)
-   * 4. These MobX mutations trigger the observer RouteViewGroup/RouteView to re-render
-   * 5. React 19 re-evaluates the Suspense boundary → remounts the component
-   * 6. New useId() → new VM id → new VM created → back to step 3
-   * 7. Infinite loop: 44+ duplicate RepositoryPageVM instances
+   * Cycle without the deferred-unmount reuse fix:
+   * 1. RouteView (observer) reads route → re-renders
+   * 2. Renders page via React.lazy inside Suspense
+   * 3. withViewModel creates VM → define()/unmount() mutates store observables
+   * 4. Parent observers re-render → Suspense remounts → new useId → new VM
+   * 5. Infinite duplicates
    */
   test('withViewModel + observer + Suspense + useId does not create duplicate VMs', async () => {
     const vmStore = new ViewModelStoreBaseMock();
@@ -147,14 +142,11 @@ describe('Suspense VM duplicate prevention', () => {
     class LayoutVM extends ViewModelBaseMock {}
     class PageVM extends ViewModelBaseMock {}
 
-    // The page component uses withViewModel — just like githome's RepositoryPage.
-    // withViewModel wraps the component in observer, which tracks MobX reads.
     const PageView = ({ model }: { model: InstanceType<typeof PageVM> }) => {
       return <span data-testid="page">{model.id}</span>;
     };
     const PageComponent = withViewModel(PageVM, PageView);
 
-    // Simulate React.lazy: component not available immediately
     let resolveModule!: (module: { default: ComponentType }) => void;
     const LazyPage = lazy(
       () =>
@@ -163,15 +155,11 @@ describe('Suspense VM duplicate prevention', () => {
         }),
     );
 
-    // RouteView: observer that conditionally renders the lazy page
-    // based on a MobX observable — same pattern as mobx-route's RouteView
     const RouteView = observer(() => {
       if (routeStore.currentRoute !== 'page') return null;
       return <LazyPage />;
     });
 
-    // LayoutComponent: observer with its own VM, provides parent context
-    // — same pattern as githome's Layout
     const LayoutComponent = observer(() => {
       const layoutVm = useCreateViewModel(LayoutVM);
       return (
@@ -212,5 +200,168 @@ describe('Suspense VM duplicate prevention', () => {
 
     expect(screen.getByTestId('page')).toBeDefined();
     expect(screen.queryByTestId('loading')).toBeNull();
+  });
+
+  test('two sibling auto-id VMs of the same class stay distinct', async () => {
+    const vmStore = new ViewModelStoreBaseMock();
+
+    class LayoutVM extends ViewModelBaseMock {}
+    class CardVM extends ViewModelBaseMock {}
+
+    const Card = withViewModel(CardVM, ({ model }) => (
+      <span data-testid={`card-${model.id}`}>{model.id}</span>
+    ));
+
+    const Layout = observer(() => {
+      const layoutVm = useCreateViewModel(LayoutVM);
+      return (
+        <ActiveViewModelProvider value={layoutVm}>
+          <div>
+            <Card />
+            <Card />
+          </div>
+        </ActiveViewModelProvider>
+      );
+    });
+
+    await act(async () =>
+      render(
+        <ViewModelsProvider value={vmStore}>
+          <Layout />
+        </ViewModelsProvider>,
+      ),
+    );
+
+    expect(vmStore.getIds(CardVM)).toHaveLength(2);
+    const [idA, idB] = vmStore.getIds(CardVM);
+    expect(idA).not.toBe(idB);
+    expect(screen.getByTestId(`card-${idA}`)).toBeDefined();
+    expect(screen.getByTestId(`card-${idB}`)).toBeDefined();
+  });
+
+  test('sibling same-class remount with auto-id keeps two distinct VMs when useId changes', async () => {
+    const vmStore = new ViewModelStoreBaseMock();
+
+    class LayoutVM extends ViewModelBaseMock {}
+    class CardVM extends ViewModelBaseMock {}
+
+    const Card = withViewModel(CardVM, ({ model }) => (
+      <span data-testid="card">{model.id}</span>
+    ));
+
+    const Layout = ({ slot }: { slot: string }) => {
+      const layoutVm = useCreateViewModel(LayoutVM);
+      return (
+        <ActiveViewModelProvider value={layoutVm}>
+          {/* New key → new fibers → new useId(); claimPendingVm sees 2
+              pending matches and refuses reclaim. */}
+          <div key={slot}>
+            <Card />
+            <Card />
+          </div>
+        </ActiveViewModelProvider>
+      );
+    };
+
+    const App = ({ slot }: { slot: string }) => (
+      <ViewModelsProvider value={vmStore}>
+        <Layout slot={slot} />
+      </ViewModelsProvider>
+    );
+
+    const view = await act(async () => render(<App slot="a" />));
+    expect(vmStore.getIds(CardVM)).toHaveLength(2);
+    const before = [...vmStore.getIds(CardVM)].sort();
+
+    await act(async () => {
+      view.rerender(<App slot="b" />);
+    });
+    await act(async () => {});
+
+    expect(vmStore.getIds(CardVM)).toHaveLength(2);
+    const after = [...vmStore.getIds(CardVM)].sort();
+    expect(after[0]).not.toBe(after[1]);
+    expect(screen.getAllByTestId('card')).toHaveLength(2);
+    // New useIds + no single pending reclaim → fresh instance ids.
+    expect(after).not.toEqual(before);
+  });
+
+  test('sibling same-class remount with explicit ids keeps the same ids', async () => {
+    const vmStore = new ViewModelStoreBaseMock();
+
+    class LayoutVM extends ViewModelBaseMock {}
+    class CardVM extends ViewModelBaseMock {}
+
+    const CardA = withViewModel(CardVM, ({ model }) => (
+      <span data-testid="card-a">{model.id}</span>
+    ), { id: 'card-a' });
+    const CardB = withViewModel(CardVM, ({ model }) => (
+      <span data-testid="card-b">{model.id}</span>
+    ), { id: 'card-b' });
+
+    const Layout = ({ show }: { show: boolean }) => {
+      const layoutVm = useCreateViewModel(LayoutVM);
+      return (
+        <ActiveViewModelProvider value={layoutVm}>
+          {show ? (
+            <>
+              <CardA />
+              <CardB />
+            </>
+          ) : null}
+        </ActiveViewModelProvider>
+      );
+    };
+
+    const App = ({ show }: { show: boolean }) => (
+      <ViewModelsProvider value={vmStore}>
+        <Layout show={show} />
+      </ViewModelsProvider>
+    );
+
+    const view = await act(async () => render(<App show />));
+    expect(vmStore.getIds(CardVM).sort()).toEqual(['card-a', 'card-b']);
+
+    await act(async () => {
+      view.rerender(<App show={false} />);
+      view.rerender(<App show />);
+    });
+    await act(async () => {});
+
+    expect(vmStore.getIds(CardVM).sort()).toEqual(['card-a', 'card-b']);
+    expect(screen.getByTestId('card-a').textContent).toBe('card-a');
+    expect(screen.getByTestId('card-b').textContent).toBe('card-b');
+  });
+
+  test('explicit id stays sticky across remount', async () => {
+    const vmStore = new ViewModelStoreBaseMock();
+
+    class PageVM extends ViewModelBaseMock {}
+
+    const Page = withViewModel(PageVM, ({ model }) => (
+      <span data-testid="page">{model.id}</span>
+    ), { id: 'sticky-page' });
+
+    const App = ({ show }: { show: boolean }) => (
+      <ViewModelsProvider value={vmStore}>
+        {show ? <Page /> : null}
+      </ViewModelsProvider>
+    );
+
+    const view = await act(async () => render(<App show />));
+    expect(vmStore.getIds(PageVM)).toEqual(['sticky-page']);
+
+    await act(async () => {
+      view.rerender(<App show={false} />);
+    });
+    // deferred unmount — still present until microtask flush
+    await act(async () => {});
+    expect(vmStore.getIds(PageVM)).toHaveLength(0);
+
+    await act(async () => {
+      view.rerender(<App show />);
+    });
+    expect(vmStore.getIds(PageVM)).toEqual(['sticky-page']);
+    expect(screen.getByTestId('page').textContent).toBe('sticky-page');
   });
 });

@@ -18,7 +18,7 @@ import type {
   AnyViewModelSimple,
   ViewModelParams,
 } from './view-model.types.js';
-import { isViewModel, isViewModelSimple } from '../utils/typeguards.js';
+import { isViewModel } from '../utils/typeguards.js';
 
 const baseAnnotations: ObservableAnnotationsArray = [
   [computed, 'mountedViewsCount', 'hasMountingVms'],
@@ -90,9 +90,7 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
     this.viewModels.set(config.id, instance!);
     this.attachVMConstructor(instance);
 
-    if (isViewModelSimple(instance)) {
-      instance.init?.({ ...config, viewModels: this });
-    }
+    instance.init?.({ ...config, viewModels: this });
   }
 
   /**

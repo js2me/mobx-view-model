@@ -311,7 +311,9 @@ describe('useCreateViewModel', () => {
         render(<App />, { wrapper: createVMStoreWrapper(vmStore) }),
       );
 
-      it.unmount();
+      await act(async () => {
+        it.unmount();
+      });
 
       expect(unmountSpy).toHaveBeenCalledTimes(1);
     });
@@ -444,7 +446,9 @@ describe('useCreateViewModel', () => {
           render(<App />, { wrapper: createVMStoreWrapper(vmStore) }),
         );
 
-        it.unmount();
+        await act(async () => {
+          it.unmount();
+        });
 
         expect(unmountSpy).toHaveBeenCalledTimes(1);
       });

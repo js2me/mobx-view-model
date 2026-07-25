@@ -17,6 +17,7 @@ export class ViewModelBaseMock<
   ParentViewModel extends AnyViewModel | AnyViewModelSimple | null = null,
 > extends ViewModelBase<Payload, ParentViewModel> {
   spies: {
+    init: Mock<(config: unknown) => void>;
     mount: Mock<() => void>;
     unmount: Mock<() => void>;
     willMount: Mock<() => void>;
@@ -24,6 +25,7 @@ export class ViewModelBaseMock<
     willUnmount: Mock<() => void>;
     didUnmount: Mock<() => void>;
   } = {
+    init: vi.fn(),
     mount: vi.fn(),
     unmount: vi.fn(),
     willMount: vi.fn(),
@@ -39,6 +41,10 @@ export class ViewModelBaseMock<
       payload: params?.payload as Payload,
     });
     makeObservable(this);
+  }
+
+  init(config: unknown): void {
+    this.spies.init(config);
   }
 
   protected didMount(): void {

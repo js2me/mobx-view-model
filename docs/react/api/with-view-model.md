@@ -127,7 +127,9 @@ const Component = withViewModel(YourVM, () => {
 ```
 
 ### `fallback`   
-Component to render if the view model is not ready to render yet (for example while async [`willMount()`](/api/view-models/base-implementation#willmount-void) / `mount()` is in progress).   
+Component to render if the view model is not ready to render yet (for example while async [`willMount()`](/api/view-models/base-implementation#willmount-void) / `mount()` is in progress and the hook is **not** suspending).
+
+In [`mode: 'ssr'`](/api/view-models/view-models-config#mode) on React 19+, async mount is waited with [`use()`](https://react.dev/reference/react/use) inside [`useCreateViewModel`](/react/api/use-create-view-model) — that suspends **before** this `fallback` can render. Put a [`Suspense`](https://react.dev/reference/react/Suspense) boundary around the tree for loading UI. On React 18 (no `use()`), or in CSR without suspending, this `fallback` is the right loading gate.
 
 Example:   
 ```tsx{5,12,13,14}
@@ -248,21 +250,21 @@ export const AnotherComponent = withViewModel(VM, ({ model }) => {
 })
 ```
 
-## Incompatibility with `<Suspense />` and `lazy()`   
+## `lazy()` and `Suspense`
 
-The `withViewModel` HOC is not compatible with React’s built-in [`lazy()`](https://react.dev/reference/react/lazy) in the usual “lazy-wrap the VM component” setup.
+[`lazy()`](https://react.dev/reference/react/lazy) around a `withViewModel` component is supported when a [`ViewModelStore`](/api/view-model-store/interface) is present (via [`ViewModelsProvider`](/react/api/view-models-provider)). [`useCreateViewModel`](/react/api/use-create-view-model) defers unmount by a microtask and reuses the pending instance if the same VM class remounts under the same parent (typical Suspense remount / new `useId()`), so you do not get duplicate VMs or an observer remount loop.
 
-Using `lazy` with `withViewModel` can lead to unexpected remount / id behavior. Prefer `loadable()` from `react-simple-loadable` (or similar) and register the wrapper via [`connect()`](#connectanchor).
+For several instances of the **same** VM class under the **same** parent in unusual remount scenarios, pass an explicit [`id`](#id) per instance.
 
-When [`viewModelsConfig.mode`](/api/view-models/view-models-config#mode) is `'ssr'`, async `mount()` / `willMount()` is waited via React [`use()`](https://react.dev/reference/react/use) during SSR / hydration — put a [`Suspense`](https://react.dev/reference/react/Suspense) boundary (or `fallback`) around those trees if you need a loading UI.
+You can still use `loadable()` from `react-simple-loadable` (or similar) and register the wrapper via [`connect()`](#connectanchor) when you need anchor lookup on the lazy wrapper.
+
+[`Suspense`](https://react.dev/reference/react/Suspense) itself is fine — and required for loading UI when [`viewModelsConfig.mode`](/api/view-models/view-models-config#mode) is `'ssr'` on **React 19+**: async `mount()` / `willMount()` is waited via React [`use()`](https://react.dev/reference/react/use) during SSR / hydration, which suspends before HOC [`fallback`](#fallback) can render. On **React 18**, `use()` is unavailable — use [`fallback`](#fallback) (or gate on `isMounted`) instead.
 
 ### Concurrent Mode
 
-In concurrent mode, React may discard a render without committing it, which means cleanup effects never run. Since `mount()` is called synchronously during render (required for SSR), an orphaned mount could occur if the render is discarded.
+In concurrent mode, React may discard a render without committing it, which means cleanup effects never run. Since `define()` / `mount()` run during render (required for SSR) and [`unmount`](/api/view-model-store/interface#unmountinstance) runs only in an effect, an orphaned instance can occur for **both** store-backed and no-store paths when a concurrent render is discarded.
 
-This mainly affects the scenario **without `ViewModelStore`**. With a store, instances are registered via [`define`](/api/view-model-store/interface#define) and cleaned up with [`unmount`](/api/view-model-store/interface#unmountinstance) in an effect.
-
-**Recommendation:** Use `ViewModelStore` for full concurrent mode safety. The no-store scenario is designed for simple client-side use cases where SSR is not needed.
+**Recommendation:** Prefer patterns that avoid discarded mounts when possible. The no-store path is mainly for simple client-side cases where SSR is not needed; a store alone does not give full concurrent-mode safety.
 
 
 ## Generic types for your wrapped `ViewModel` in this HOC   

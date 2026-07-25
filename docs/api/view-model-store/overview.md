@@ -57,7 +57,7 @@ export const Notifier = withViewModel(
 ...
 // somewhere in your app
 
-vmStore.get(Notifier)?.foo // 'foo' | null
-vmStore.get(NotifierVM)?.foo // 'foo' | null
-vmStore.get('notifier-id')?.foo // 'foo' | null
+vmStore.get(Notifier)?.foo // 'foo' | undefined
+vmStore.get(NotifierVM)?.foo // 'foo' | undefined
+vmStore.get<NotifierVM>('notifier-id')?.foo // 'foo' | undefined
 ```
