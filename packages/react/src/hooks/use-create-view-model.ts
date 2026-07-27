@@ -36,6 +36,9 @@ const EMPTY_ARR: any[] = [];
 const { emptyObject, noop } = _internals;
 const isProd = process.env.NODE_ENV === 'production';
 
+const DBG = !isProd;
+const dbg = DBG ? (...args: any[]) => console.log('[useCreateVM]', ...args) : noop;
+
 const subscribeNoop = () => noop;
 const getClientHydrated = () => true;
 const getServerHydrated = () => false;
@@ -177,9 +180,15 @@ export function useCreateViewModel(
   const cache = useRef<Cache>(null!);
   const reactId = useId();
 
+  const isSSR = viewModelsConfig.mode === 'ssr';
+  const isClient = typeof window !== 'undefined';
+
   let model = cache.current?.vm;
 
+  dbg('--- ENTER', VM.name, 'id=', reactId, 'isSSR=', isSSR, 'isClient=', isClient, 'hasCache=', !!cache.current?.vm, 'cacheVmId=', cache.current?.vm?.id, 'cacheVmLifecycle=', cache.current?.vm?.lifecycleState, 'cacheVmIsMounted=', cache.current?.vm?.isMounted);
+
   if (!model || !isAlive(model, viewModels)) {
+    dbg('CREATE NEW VM', VM.name, 'oldModel=', model?.id, 'oldLifecycle=', model?.lifecycleState, 'isAlive=', model ? isAlive(model, viewModels) : 'no-model');
     const parentId = parentViewModel?.id ?? null;
     const explicitId = rawCfg?.id as string | null | undefined;
     const claimed =
@@ -187,14 +196,19 @@ export function useCreateViewModel(
         ? claimPendingVm(VM, parentId)
         : null;
 
+    dbg('claimPendingVm result=', claimed?.id, 'parentId=', parentId, 'explicitId=', explicitId);
+
     if (claimed) {
       model = claimed;
+      dbg('CLAIMED VM', model.id, 'lifecycleState=', model.lifecycleState, 'isMounted=', model.isMounted);
     } else {
       cancelPendingForVm(explicitId ?? model?.id);
+      const vmId = explicitId ?? model?.id ?? (
+        isProd ? reactId : `${reactId}:${VM.name}`
+      );
+      dbg('INSTANTIATE', VM.name, 'vmId=', vmId);
       model = instantiateVm(
-        explicitId ?? model?.id ?? (
-          isProd ? reactId : `${reactId}:${VM.name}`
-        ),
+        vmId,
         VM,
         payload,
         rawCfg,
@@ -202,23 +216,44 @@ export function useCreateViewModel(
         viewModels,
         parentViewModel,
       );
+      dbg('INSTANTIATED', VM.name, 'vmId=', model.id, 'lifecycleState=', model.lifecycleState, 'isMounted=', model.isMounted);
     }
+
+    dbg('BIND LIFECYCLE', model.id, 'lifecycleState-before=', model.lifecycleState, 'isMounted-before=', model.isMounted);
+    const lifecycleResult = bindLifecycle(model, payload, parentViewModel) as
+      | PromiseLike<void>
+      | undefined;
+    dbg('BIND LIFECYCLE DONE', model.id, 'lifecycleState-after=', model.lifecycleState, 'isMounted-after=', model.isMounted, 'promise=', !!lifecycleResult);
 
     cache.current = {
       vm: model,
-      promise: bindLifecycle(model, payload, parentViewModel) as
-        | PromiseLike<void>
-        | undefined,
-      isSSR: viewModelsConfig.mode === 'ssr',
+      promise: lifecycleResult,
+      isSSR,
       fn: () => {
         const vm = cache.current.vm;
         cancelPendingForVm(vm.id);
+        const shouldHydrate = isViewModel(vm) && vm.lifecycleState === 'mounted' && cache.current.isSSR;
+        dbg('EFFECT fn', 'vmId=', vm.id, 'lifecycleState=', vm.lifecycleState, 'isSSR=', cache.current.isSSR, 'shouldHydrate=', shouldHydrate);
+        // Transition to 'hydrated' ONLY in SSR mode.
+        // Mount effect confirms React committed the component on the client.
+        // In SSR mode this means hydration succeeded — VMs can check
+        // lifecycleState === 'hydrated' to safely render dynamic content
+        // that would cause hydration mismatches.
+        // In CSR mode lifecycleState stays 'mounted' — no hydration phase.
+        if (shouldHydrate) {
+          runInAction(() => {
+            (vm as any).lifecycleState = 'hydrated';
+          });
+          dbg('EFFECT lifecycleState→hydrated', vm.id);
+        }
+
         return () => {
           scheduleVmUnmount(vm, VM, parentId, viewModels);
         };
       },
     };
   } else {
+    dbg('REUSE VM', model.id, 'lifecycleState=', model.lifecycleState, 'isMounted=', model.isMounted);
     model.setPayload?.(payload);
   }
 
@@ -231,10 +266,14 @@ export function useCreateViewModel(
       getClientHydrated,
       getServerHydrated,
     );
+    dbg('SSR BLOCK', model.id, 'isHydrated=', isHydrated, 'pending=', !!pending, 'use=', !!use);
     if (use && pending && (typeof window === 'undefined' || !isHydrated)) {
+      dbg('SSR use(pending)', model.id);
       use(pending);
     }
   }
+
+  dbg('RETURN', VM.name, 'vmId=', model.id, 'lifecycleState=', model.lifecycleState, 'isMounted=', model.isMounted);
 
   return model;
 }

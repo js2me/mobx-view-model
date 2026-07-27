@@ -120,7 +120,7 @@ export class ViewModelBase<
   }
 
   get isMounted() {
-    return this.lifecycleState === 'mounted';
+    return this.lifecycleState === 'mounted' || this.lifecycleState === 'hydrated';
   }
 
   protected willUnmount(): void {
