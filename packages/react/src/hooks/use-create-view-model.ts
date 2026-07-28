@@ -29,6 +29,7 @@ import {
 import {
   cancelPendingForVm,
   claimPendingVm,
+  claimPendingVmById,
   scheduleVmUnmount,
 } from './pending-vm-unmount.js';
 
@@ -191,10 +192,14 @@ export function useCreateViewModel(
     dbg('CREATE NEW VM', VM.name, 'oldModel=', model?.id, 'oldLifecycle=', model?.lifecycleState, 'isAlive=', model ? isAlive(model, viewModels) : 'no-model');
     const parentId = parentViewModel?.id ?? null;
     const explicitId = rawCfg?.id as string | null | undefined;
-    const claimed =
-      !model && explicitId == null
-        ? claimPendingVm(VM, parentId)
-        : null;
+    let claimed: VmInstance | null = null;
+    if (!model) {
+      if (explicitId == null) {
+        claimed = claimPendingVm(VM, parentId, viewModels);
+      } else {
+        claimed = claimPendingVmById(explicitId, VM, viewModels);
+      }
+    }
 
     dbg('claimPendingVm result=', claimed?.id, 'parentId=', parentId, 'explicitId=', explicitId);
 

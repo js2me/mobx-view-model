@@ -12,6 +12,7 @@ type PendingUnmount = {
   vm: VmInstance;
   VM: Class<any>;
   parentId: string | null;
+  store: ViewModelStore | null;
   cancelled: boolean;
 };
 
@@ -45,16 +46,17 @@ export const cancelPendingForVm = (id: string | null | undefined) => {
   }
 };
 
-/** Reclaim a single pending VM for this class + parent, or `null`. */
+/** Reclaim a single pending VM for this class + parent + store, or `null`. */
 export const claimPendingVm = (
   VM: Class<any>,
   parentId: string | null,
+  store: ViewModelStore | null,
 ): VmInstance | null => {
-  dbg('claimPendingVm', VM.name, 'parentId=', parentId, 'pendingUnmounts.size=', pendingUnmounts.size);
+  dbg('claimPendingVm', VM.name, 'parentId=', parentId, 'store=', store, 'pendingUnmounts.size=', pendingUnmounts.size);
   if (pendingUnmounts.size === 0) return null;
   let match: PendingUnmount | null = null;
   for (const entry of pendingUnmounts) {
-    if (entry.VM === VM && entry.parentId === parentId) {
+    if (entry.VM === VM && entry.parentId === parentId && entry.store === store) {
       dbg('claimPendingVm candidate', entry.vm.id, 'cancelled=', entry.cancelled);
       if (match) {
         dbg('claimPendingVm AMBIGUOUS - more than one match, returning null');
@@ -68,8 +70,25 @@ export const claimPendingVm = (
     return null;
   }
   cancel(match);
-  dbg('claimPendingVm CLAIMED', match.vm.id, 'lifecycleState=', match.vm.lifecycleState, 'isMounted=', match.vm.isMounted);
+  dbg('claimPendingVm CLAIMED', match.vm.id, 'lifecycleState=', (match.vm as any).lifecycleState, 'isMounted=', (match.vm as any).isMounted);
   return match.vm;
+};
+
+/** Reclaim a pending VM by its explicit id + class + store, or `null`. */
+export const claimPendingVmById = (
+  id: string,
+  VM: Class<any>,
+  store: ViewModelStore | null,
+): VmInstance | null => {
+  if (pendingById.size === 0) return null;
+  const entry = pendingById.get(id);
+  if (entry && !entry.cancelled && entry.VM === VM && entry.store === store) {
+    dbg('claimPendingVmById CLAIMED', entry.vm.id, 'lifecycleState=', (entry.vm as any).lifecycleState, 'isMounted=', (entry.vm as any).isMounted);
+    cancel(entry);
+    return entry.vm;
+  }
+  dbg('claimPendingVmById NO MATCH', id);
+  return null;
 };
 
 export const scheduleVmUnmount = (
@@ -78,16 +97,20 @@ export const scheduleVmUnmount = (
   parentId: string | null,
   store: ViewModelStore | null,
 ) => {
-  dbg('scheduleVmUnmount', vm.id, 'VM=', VM.name, 'parentId=', parentId, 'lifecycleState=', vm.lifecycleState, 'isMounted=', vm.isMounted);
-  const entry: PendingUnmount = { vm, VM, parentId, cancelled: false };
+  dbg('scheduleVmUnmount', vm.id, 'VM=', VM.name, 'parentId=', parentId, 'lifecycleState=', (vm as any).lifecycleState, 'isMounted=', (vm as any).isMounted);
+  const entry: PendingUnmount = { vm, VM, parentId, store, cancelled: false };
   pendingUnmounts.add(entry);
-  if (vm.id != null) pendingById.set(vm.id, entry);
+  if (vm.id != null) {
+    const existing = pendingById.get(vm.id);
+    if (existing) cancel(existing);
+    pendingById.set(vm.id, entry);
+  }
   queueMicrotask(() => {
     dbg('scheduleVmUnmount microtask', vm.id, 'cancelled=', entry.cancelled);
     if (entry.cancelled) return;
     pendingUnmounts.delete(entry);
     if (vm.id != null) pendingById.delete(vm.id);
-    dbg('scheduleVmUnmount UNMOUNT', vm.id, 'lifecycleState=', vm.lifecycleState);
+    dbg('scheduleVmUnmount UNMOUNT', vm.id, 'lifecycleState=', (vm as any).lifecycleState);
     runInAction(() => {
       if (store) store.unmount(vm);
       else vm.unmount?.();
