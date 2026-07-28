@@ -319,7 +319,7 @@ export function withViewModel(
       allProps,
     ) as AnyViewModel | AnyViewModelSimple;
 
-    dbgW('Wrapper GOT model', VM.name, 'modelId=', model.id, 'lifecycleState=', model.lifecycleState, 'isMounted=', model.isMounted, 'isViewModel=', isViewModel(model));
+    dbgW('Wrapper GOT model', VM.name, 'modelId=', model.id, 'lifecycleState=', (model as any).lifecycleState, 'isMounted=', (model as any).isMounted, 'isViewModel=', isViewModel(model));
 
     (config.reactHook ?? viewModelsConfig.reactHook)?.(
       allProps,
@@ -339,7 +339,7 @@ export function withViewModel(
     if (cacheRef.current) {
       cacheRef.current.value = model;
     } else {
-      dbgW('INIT cacheRef', VM.name, 'modelId=', model.id, 'isMounted=', model.isMounted);
+      dbgW('INIT cacheRef', VM.name, 'modelId=', model.id, 'isMounted=', (model as any).isMounted);
       cacheRef.current = {
         value: model,
         subscribe: (onStoreChange) =>
@@ -347,7 +347,7 @@ export function withViewModel(
             () => {
               const current = cacheRef.current.value;
               const ready = !isViewModel(current) || current.isMounted;
-              dbgW('subscribe reaction', VM.name, 'currentId=', current?.id, 'isMounted=', current?.isMounted, 'ready=', ready);
+              dbgW('subscribe reaction', VM.name, 'currentId=', current?.id, 'isMounted=', (current as any)?.isMounted, 'ready=', ready);
               return ready;
             },
             (ready) => {
@@ -379,7 +379,7 @@ export function withViewModel(
       getServerSnapshot,
     );
 
-    dbgW('isReadyToRender', VM.name, 'isReady=', isReadyToRender, 'modelId=', model.id, 'isMounted=', model.isMounted);
+    dbgW('isReadyToRender', VM.name, 'isReady=', isReadyToRender, 'modelId=', model.id, 'isMounted=', (model as any).isMounted);
 
     let child: RReactNode = null;
 

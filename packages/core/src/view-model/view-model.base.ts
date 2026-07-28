@@ -138,11 +138,19 @@ export class ViewModelBase<
    * The method is called when the view starts mounting
    */
   mount(): MaybePromise<void> {
-    if (this.lifecycleState === 'mounted') {
+    if (this.isMounted) {
       return;
     }
     if (this.#mountPromise) {
       return this.#mountPromise;
+    }
+
+    // Revive support: an unmounted VM can be mounted again (e.g. the React
+    // fiber survived while Suspense hid the tree). The signal aborted by the
+    // previous unmount must be replaced with a fresh one.
+    if (this.abortController.signal.aborted) {
+      this.abortController = new AbortController();
+      this.unmountSignal = this.abortController.signal;
     }
 
     this.lifecycleState = 'mounting';
@@ -190,6 +198,9 @@ export class ViewModelBase<
     this.vmConfig.onUnmount?.(this);
     startViewTransitionSafety(
       () => {
+        // mount() may have been re-entered (revive) while the view transition
+        // was pending — mirror finalizeMount()'s guard.
+        if (this.lifecycleState !== 'unmounting') return;
         runInAction(() => (this.lifecycleState = 'unmounted'));
         this.didUnmount();
         this.abortController.abort();

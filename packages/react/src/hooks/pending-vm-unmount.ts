@@ -3,8 +3,11 @@ import type {
   AnyViewModelSimple,
   ViewModelStore,
 } from 'mobx-view-model';
+import { _internals } from 'mobx-view-model';
 import { runInAction } from 'mobx';
 import type { Class } from 'yummies/types';
+
+const { isShallowEqual } = _internals;
 
 type VmInstance = AnyViewModel | AnyViewModelSimple;
 
@@ -46,17 +49,38 @@ export const cancelPendingForVm = (id: string | null | undefined) => {
   }
 };
 
-/** Reclaim a single pending VM for this class + parent + store, or `null`. */
+/**
+ * The claim key (VM class + parentId + store) is shared by same-class siblings
+ * rendered under one parent (e.g. a list of avatars). Payload is the
+ * discriminator: a remount of the SAME component carries an equal payload,
+ * while a sibling generally doesn't. VMs that don't expose `payload`
+ * (some ViewModelSimple impls) can't be discriminated — for them the
+ * ambiguity guard below is the only protection.
+ */
+const payloadMatches = (vm: VmInstance, payload: unknown): boolean => {
+  const vmPayload = (vm as { payload?: unknown }).payload;
+  if (vmPayload === payload) return true;
+  if (vmPayload == null || payload == null) return true;
+  return isShallowEqual(vmPayload, payload);
+};
+
+/** Reclaim a single pending VM for this class + parent + store + payload, or `null`. */
 export const claimPendingVm = (
   VM: Class<any>,
   parentId: string | null,
   store: ViewModelStore | null,
+  payload: unknown,
 ): VmInstance | null => {
   dbg('claimPendingVm', VM.name, 'parentId=', parentId, 'store=', store, 'pendingUnmounts.size=', pendingUnmounts.size);
   if (pendingUnmounts.size === 0) return null;
   let match: PendingUnmount | null = null;
   for (const entry of pendingUnmounts) {
-    if (entry.VM === VM && entry.parentId === parentId && entry.store === store) {
+    if (
+      entry.VM === VM &&
+      entry.parentId === parentId &&
+      entry.store === store &&
+      payloadMatches(entry.vm, payload)
+    ) {
       dbg('claimPendingVm candidate', entry.vm.id, 'cancelled=', entry.cancelled);
       if (match) {
         dbg('claimPendingVm AMBIGUOUS - more than one match, returning null');

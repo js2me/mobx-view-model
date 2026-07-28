@@ -1,3 +1,4 @@
+import { isShallowEqual } from "yummies/data";
 import { AnyObject } from "yummies/types";
 
 
@@ -10,5 +11,6 @@ if (process.env.NODE_ENV !== 'production') {
 
 export const _internals = {
   emptyObject,
-  noop
+  noop,
+  isShallowEqual,
 }
