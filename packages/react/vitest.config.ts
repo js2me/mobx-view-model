@@ -9,6 +9,9 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 export default mergeConfig(
   defineLibVitestConfig(ConfigsManager.create()),
   {
+    test: {
+      environment: 'jsdom',
+    },
     resolve: {
       alias: [
         {
