@@ -1,6 +1,6 @@
 {
   "name": "mobx-view-model-react",
-  "version": "9.3.2",
+  "version": "9.3.3",
   "scripts": {
     "clean": "rimraf dist",
     "ts:check": "tsc --noEmit",
@@ -42,6 +42,9 @@
   "repository": {
     "type": "git",
     "url": "git://github.com/js2me/mobx-view-model"
+  },
+  "publishConfig": {
+    "directory": "dist"
   },
   "dependencies": {
     "mobx-view-model": "workspace:*"

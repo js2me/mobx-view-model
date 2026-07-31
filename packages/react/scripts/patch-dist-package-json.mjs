@@ -8,9 +8,19 @@ const coreVersion = JSON.parse(
 ).version;
 const distPath = join(pkgRoot, 'dist/package.json');
 const distPkg = JSON.parse(readFileSync(distPath, 'utf8'));
-const dep = distPkg.dependencies?.['mobx-view-model'];
 
+// Rewrite workspace: protocol to actual version
+const dep = distPkg.dependencies?.['mobx-view-model'];
 if (typeof dep === 'string' && dep.startsWith('workspace:')) {
   distPkg.dependencies['mobx-view-model'] = `^${coreVersion}`;
-  writeFileSync(distPath, `${JSON.stringify(distPkg, null, 2)}\n`);
 }
+
+// Rewrite exports.types from ./src/index.ts to ./index.d.ts
+// (src/ is not included in the published package)
+if (distPkg.exports?.['.']?.types) {
+  distPkg.exports['.'].types = distPkg.exports['.'].types
+    .replace('./src/index.ts', './index.d.ts')
+    .replace('./dist/index.d.ts', './index.d.ts');
+}
+
+writeFileSync(distPath, `${JSON.stringify(distPkg, null, 2)}\n`);
