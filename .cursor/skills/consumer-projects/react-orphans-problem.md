@@ -244,3 +244,163 @@ useEffect(fn, [])  — вызывается ОДИН раз при mount fiber'�
 | `Map<VmInstance, entry>` вместо `Set<entry>` | `viewModels.define(id)` с одинаковым id возвращает тот же объект. Set позволяет два entry для одного объекта → `confirmCreation` удаляет один, второй остаётся → orphan cleanup убивает живой VM. Map по ключу VM instance — один VM = одна запись. |
 | `claimPendingVm` с payload-дискриминацией | Два sibling'а одного VM класса (GitlabAvatarVM × 2) — оба имеют pending unmount. Payload отличает "свой" от "чужого". Если payload совпадает — ambiguous guard → null (безопаснее не reclaim'нуть, чем забрать чужой). |
 | `reattachVm` в useEffect | Если VM был unmount'нут между render и effect (microtask из scheduleVmUnmount), store его не содержит. reattachVm + mount восстанавливает. |
+
+---
+
+## Известная проблема: `claimPendingVm` не различает sibling'ов с одинаковым payload
+
+### Суть проблемы
+
+`claimPendingVm` ищет pending VM по ключу **(VM class + parentId + store + payload)**. Но два sibling'а с одинаковым payload — это один и тот же ключ. Нельзя отличить "свой" VM от "чужого".
+
+### Сценарий 1: Все sibling'ы unmount → ambiguous guard спасает, но ценой потери данных
+
+```
+<ParentVM>
+  <ChildVM payload={{}} />   ← fiber 0, VM_A
+  <ChildVM payload={{}} />   ← fiber 1, VM_B
+  <ChildVM payload={{}} />   ← fiber 2, VM_C
+  <ChildVM payload={{}} />   ← fiber 3, VM_D
+</ParentVM>
+
+Suspense fallback → все 4 unmount → 4 pending unmounts
+Suspense resolve → React создаёт 4 новых fiber:
+
+fiber 0 → claimPendingVm(ChildVM, parentId, store, {})
+         → нашёл 4 match (VM_A, VM_B, VM_C, VM_D — payload одинаковый!)
+         → ambiguous guard → return null
+         → создаёт НОВЫЙ VM_E (данные потеряны!)
+
+fiber 1 → claimPendingVm → 4 match → null → новый VM_F
+fiber 2 → claimPendingVm → 4 match → null → новый VM_G
+fiber 3 → claimPendingVm → 4 match → null → новый VM_H
+
+Итог: 4 старых VM убиты через microtask, 4 новых созданы с нуля.
+      Данные (загруженные данные, scroll position и т.д.) — потеряны.
+```
+
+**Ambiguous guard** предотвращает захват "левого" VM, но побочный эффект — **ни один VM не реклаймится**. Все создаются заново.
+
+### Сценарий 2: Один sibling unmount → нет ambiguous guard → можно забрать чужой
+
+```
+<ParentVM>
+  <ChildVM payload={{ id: 1 }} />   ← fiber 0, VM_A
+  <ChildVM payload={{ id: 1 }} />   ← fiber 1, VM_B  ← ДУБЛИКАТ payload!
+</ParentVM>
+
+Только fiber 1 unmount → VM_B в pendingUnmounts (1 match)
+
+fiber 0 пересоздаётся (fiber умер, React создал новый):
+→ claimPendingVm → 1 match (VM_B)
+→ реклаймит VM_B! Но это VM от fiber 1, а не от fiber 0
+→ VM_B могла иметь состояние от fiber 1 (другие данные, другой scroll)
+```
+
+**Ambiguous guard НЕ сработает**, потому что в pendingUnmounts только 1 entry. Функция не может знать, что это "чужой" VM — ключ совпадает.
+
+### Сценарий 3: Payload `{} (empty object)` — все sibling'ы выглядят одинаково
+
+```
+<ParentVM>
+  <ChildVM />   ← payload = {} (default)
+  <ChildVM />   ← payload = {} (default)
+  <ChildVM />   ← payload = {} (default)
+</ParentVM>
+
+payloadMatches(vm, {}) проверяет isShallowEqual({}, {}) → true
+Все 3 sibling'а неразличимы.
+```
+
+### Корень проблемы: React fiber identity — одноразовая
+
+```
+Fiber A (useId = ":r2") ──► unmount ──► ИДЕНТИЧНОСТЬ ПОТЕРЯНА
+                                  │
+                                  ▼
+Fiber B (useId = ":r5") ──► mount ──► Кто был ":r2"? Никто не знает.
+```
+
+React **не даёт** хуку узнать "я — реинкарнация fiber'а :r2". Это фундаментальное ограничение. Каждый подход упирается в одну и ту же стену.
+
+### Почему каждый подход ломается
+
+#### React key через props
+```tsx
+<ChildVM key="avatar-42" />  // key НЕ доступен внутри хука!
+```
+React использует key для reconciliation, но **не передаёт его в хуки**. `useId()`, `useRef()`, `useContext()` — ничего не знает про key. Единственный способ — попросить пользователя передать его вручную через payload или config.id.
+
+#### generateId по позиции
+```tsx
+{items.map((item, i) => <ChildVM config={{ id: `child-${i}` }} />)}
+```
+Работает **пока порядок не меняется**. Но если список переупорядочился:
+```
+Было:  [child-0=VM_A, child-1=VM_B, child-2=VM_C]
+Стало: [child-2=VM_A, child-0=VM_B, child-1=VM_C]  ← VM_A теперь child-2!
+```
+claimPendingVmById("child-2") вернёт VM_C, а не VM_A. Данные чужие.
+
+#### Стек вызовов (render order)
+```
+useCreateViewModel вызывается в порядке: [fiber0, fiber1, fiber2, fiber3]
+scheduleVmUnmount вызывается в порядке: [fiber0, fiber1, fiber2, fiber3]
+```
+**Кажется** что можно сопоставить по порядку. Но:
+- React не гарантирует порядок cleanup вызовов
+- При StrictMode вызовы удваиваются
+- При Suspense fiber может быть discard'нут без cleanup
+
+#### useId как часть claim key
+```
+Старый fiber: useId = ":r2" → VM.id = ":r2:ChildVM"
+Новый fiber:  useId = ":r5" → VM.id = ":r5:ChildVM"
+
+Новый fiber не знает старый ":r2" → не может найти pending VM по id
+```
+**Идея**: хранить старый useId в VM. Но новый fiber не знает, какой useId искать — он не знает, что он "реинкарнация" fiber'а :r2.
+
+#### Отказ от claimPendingVm
+Без claimPendingVm при Suspense/lazy remount:
+```
+Suspense fallback → VM_A unmount → microtask запланирован
+Suspense resolve → новый fiber → новый useId = ":r5"
+→ cancelPendingForVm(":r5:PageVM") — не находит ничего (старый был ":r2:PageVM")
+→ instantiateVm(":r5:PageVM") → создаёт НОВЫЙ VM_B
+→ microtask: VM_A.unmount() → данные потеряны, unmountSignal aborted
+```
+
+**Итог**: VM_A убит, VM_B создан с нуля. Все данные потеряны. API-запросы повторяются. Пользователь видит loading spinner вместо контента.
+
+### Возможный подход: FIFO reclaim вместо ambiguous guard
+
+```
+Сейчас (ambiguous guard):
+  claimPendingVm → 4 match → "много совпадений, не знаю какой" → null → новый VM
+
+FIFO reclaim:
+  claimPendingVm → 4 match → "беру первый из очереди" → reclaim VM_A
+  claimPendingVm → 3 match → "беру первый из очереди" → reclaim VM_B
+  claimPendingVm → 2 match → "беру первый из очереди" → reclaim VM_C
+  claimPendingVm → 1 match → "беру последний" → reclaim VM_D
+```
+
+**Почему это может работать**: React рендерит и unmount'ит компоненты в tree order. Если порядок детей не меняется, FIFO будет сопоставлять правильные VM.
+
+**Почему это может сломаться**: если порядок детей **изменился**, FIFO даст первому fiber'у VM от последнего sibling'а. Данные будут чужие.
+
+**Но это всё равно лучше чем ambiguous guard** — в большинстве случаев порядок не меняется, и reclaim сработает. А в редких случаях (порядок изменился) — данные будут чужие, но по крайней мере VM не пересоздаётся с нуля.
+
+### Честный ответ
+
+Нет серебряной пули. React 19 не даёт fiber identity хукам — это фундаментальное ограничение.
+
+| Ситуация | Лучший подход |
+|----------|--------------|
+| Один VM без siblings | ✅ `claimPendingVm` работает идеально |
+| explicit id | ✅ `claimPendingVmById` работает идеально |
+| Sibling'и с разным payload | ✅ Payload-дискриминация работает |
+| Sibling'и с одинаковым payload | ⚠️ Либо ambiguous guard (безопасно, но данные теряются), либо FIFO (данные сохраняются, но могут быть чужие) |
+
+**Единственный 100% надёжный способ** — использовать `config.id` или `generateId` для sibling'ов. Это единственный discriminator, который переживает fiber recreation.
