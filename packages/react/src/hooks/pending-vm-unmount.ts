@@ -115,6 +115,124 @@ export const claimPendingVmById = (
   return null;
 };
 
+// ---------------------------------------------------------------------------
+// Unconfirmed-creation tracking — orphan detection via setTimeout
+// ---------------------------------------------------------------------------
+// When React 19 creates two fibers for the same component in one render pass
+// (Suspense boundary catches a child's suspend), both fibers go through
+// useCreateViewModel and create separate VM instances. The first fiber is
+// discarded — its useEffect cleanup never runs — so the first VM is orphaned
+// in the store forever.
+//
+// We cannot use queueMicrotask because React 19 may yield to microtasks
+// BETWEEN fibers in the same render pass. A microtask fires too early and
+// kills the first fiber's VM before the second fiber even starts.
+//
+// Using setTimeout(fn, 0) ensures the cleanup runs after React has fully
+// committed the current render pass (including all microtasks and effects).
+// By that point, every surviving fiber's effect has called confirmCreation().
+// Whoever remains in unconfirmedCreations is truly orphaned.
+// ---------------------------------------------------------------------------
+
+export type UnconfirmedCreation = {
+  vm: VmInstance;
+  VM: Class<any>;
+  parentId: string | null;
+  store: ViewModelStore | null;
+};
+
+/**
+ * Map keyed by VM instance to deduplicate registrations.
+ * When two fibers create the same VM (viewModels.define returns the existing
+ * instance for the same id), both fibers would register the same VM as
+ * unconfirmed. Without dedup, the orphan cleanup would kill a VM that's still
+ * in use: one fiber's confirmCreation removes its entry, but the other fiber's
+ * entry (for the SAME instance) remains → setTimeout cleanup unmounts it.
+ */
+const unconfirmedByVm = new Map<VmInstance, UnconfirmedCreation>();
+let orphanCleanupScheduled = false;
+
+/**
+ * Register a VM as "unconfirmed" — its useEffect has not yet committed.
+ * Returns the entry for O(1) removal via confirmCreation().
+ *
+ * If the same VM instance is already registered (e.g. two fibers hit
+ * viewModels.define with the same id and get the same instance back),
+ * returns the existing entry — no duplicate registration.
+ *
+ * NOTE: orphan cleanup is NOT scheduled here. It is scheduled from
+ * confirmCreation() (called inside useEffect) to guarantee that
+ * setTimeout(0) fires AFTER React has flushed effects. Scheduling
+ * from the render phase would cause the cleanup to fire before effects,
+ * killing VMs that are still alive.
+ */
+export const registerUnconfirmedCreation = (
+  vm: VmInstance,
+  VM: Class<any>,
+  parentId: string | null,
+  store: ViewModelStore | null,
+): UnconfirmedCreation => {
+  // Dedup: same VM instance → same entry. Two fibers may share one VM
+  // (viewModels.define returns the existing instance for the same id).
+  // Without this, the orphan cleanup would kill a VM that's still alive.
+  const existing = unconfirmedByVm.get(vm);
+  if (existing) {
+    dbg('registerUnconfirmed DEDUP', vm.id, 'VM=', VM.name, 'unconfirmedByVm.size=', unconfirmedByVm.size);
+    return existing;
+  }
+
+  const entry: UnconfirmedCreation = { vm, VM, parentId, store };
+  unconfirmedByVm.set(vm, entry);
+  dbg('registerUnconfirmed', vm.id, 'VM=', VM.name, 'unconfirmedByVm.size=', unconfirmedByVm.size);
+
+  return entry;
+};
+
+/**
+ * Schedule the orphan cleanup. Called from confirmCreation() (inside useEffect)
+ * to guarantee that the setTimeout fires AFTER React has flushed all effects.
+ * If we scheduled from the render phase, setTimeout(0) would fire before
+ * effects because it was enqueued before React's MessageChannel flush.
+ */
+const scheduleOrphanCleanup = () => {
+  if (orphanCleanupScheduled) return;
+  orphanCleanupScheduled = true;
+  setTimeout(() => {
+    orphanCleanupScheduled = false;
+    // All effects have committed. Whoever remains is orphaned.
+    if (unconfirmedByVm.size === 0) return;
+    for (const e of unconfirmedByVm.values()) {
+      unconfirmedByVm.delete(e.vm);
+      dbg('ORPHAN CLEANUP', e.vm.id, 'VM=', e.VM.name);
+      // Defensive: no pending unmount should exist for orphans, but
+      // cancel just in case future code changes create a path for one.
+      cancelPendingForVm(e.vm.id);
+      runInAction(() => {
+        if (e.store) e.store.unmount(e.vm);
+        else e.vm.unmount?.();
+      });
+    }
+  });
+};
+
+/**
+ * Confirm that a VM's useEffect has committed — the fiber is alive.
+ * Removes the entry from the unconfirmed map, preventing orphan cleanup.
+ * Also schedules the orphan cleanup so that any VMs whose effects never
+ * fire (discarded fibers) are cleaned up after all effects have run.
+ */
+export const confirmCreation = (entry: UnconfirmedCreation): void => {
+  const deleted = unconfirmedByVm.delete(entry.vm);
+  if (deleted) {
+    dbg('confirmCreation', entry.vm.id, 'VM=', entry.VM.name);
+  }
+  // Schedule cleanup from inside useEffect — this guarantees the
+  // setTimeout fires AFTER React has flushed effects, not before.
+  if (unconfirmedByVm.size > 0) {
+    scheduleOrphanCleanup();
+  }
+};
+
 export const scheduleVmUnmount = (
   vm: VmInstance,
   VM: Class<any>,

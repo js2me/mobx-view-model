@@ -30,6 +30,9 @@ import {
   cancelPendingForVm,
   claimPendingVm,
   claimPendingVmById,
+  type UnconfirmedCreation,
+  registerUnconfirmedCreation,
+  confirmCreation,
   scheduleVmUnmount,
 } from './pending-vm-unmount.js';
 
@@ -54,6 +57,7 @@ type Cache = {
   promise?: PromiseLike<void>;
   isSSR: boolean;
   fn: () => () => void;
+  creationEntry?: UnconfirmedCreation;
 };
 
 const instantiateVm = (
@@ -257,11 +261,22 @@ export function useCreateViewModel(
     dbg('BIND LIFECYCLE DONE', model.id, 'lifecycleState-after=', dbgLc(model), 'isMounted-after=', dbgIm(model), 'promise=', !!lifecycleResult);
 
     const vm = model;
+
+    // Register as unconfirmed — if this fiber is discarded by React before
+    // the effect commits, the orphan cleanup microtask will unmount the VM.
+    const creationEntry = registerUnconfirmedCreation(vm, VM, parentId, viewModels);
+
     cache.current = {
       vm,
       promise: lifecycleResult,
       isSSR,
+      creationEntry,
       fn: () => {
+        // Fiber committed — confirm the VM is no longer orphaned.
+        if (cache.current.creationEntry) {
+          confirmCreation(cache.current.creationEntry);
+        }
+
         cancelPendingForVm(vm.id);
 
         // The grace microtask may have unmounted the VM between render and
