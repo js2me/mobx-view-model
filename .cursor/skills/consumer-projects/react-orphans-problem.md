@@ -404,3 +404,96 @@ FIFO reclaim:
 | Sibling'и с одинаковым payload | ⚠️ Либо ambiguous guard (безопасно, но данные теряются), либо FIFO (данные сохраняются, но могут быть чужие) |
 
 **Единственный 100% надёжный способ** — использовать `config.id` или `generateId` для sibling'ов. Это единственный discriminator, который переживает fiber recreation.
+
+---
+
+## Почему `useSyncExternalStore` не решает проблему
+
+### Проблема orphaned VM — это проблема lifecycle, а не consistency
+
+`useSyncExternalStore` (USES) решает задачу **tearing** (рассинхрон снапшота в concurrent mode) — гарантирует, что snapshot внешнего стора консистентен между render и commit.
+
+Проблема orphaned VM в другом: **React создаёт fiber, вызывает render, но потом отбрасывает fiber — и никогда не вызывает ни `useEffect`, ни `subscribe` от USES.**
+
+```
+Fiber создан → render() вызван → USES.getSnapshot() вызван →
+Fiber отброшен → ❌ USES.subscribe() НИКОГДА не вызван
+                          ❌ useEffect НИКОГДА не вызван
+```
+
+`subscribe` в USES — это по сути тот же `useEffect`, только синхронный. Если fiber отброшен, **ни один callback не вызывается** — ни в `useEffect`, ни в `useSyncExternalStore`.
+
+### Что бы изменилось, если переписать хук на USES?
+
+```ts
+// Гипотетический вариант с USES
+function useCreateViewModel(VM, payload, config) {
+  const store = useContext(ViewModelsContext);
+
+  const vm = useSyncExternalStore(
+    store.subscribe,        // ← НИКОГДА не вызовется для discarded fiber
+    () => store.get(VM, id), // ← вызовется в render, создаст VM
+  );
+
+  // Проблема: VM уже создана в store.get() выше
+  // Но если fiber отброшен — subscribe не вызван
+  // VM остаётся в store навсегда → тот же orphan leak
+}
+```
+
+Мы просто перенесли бы проблему из `useEffect`/`registerUnconfirmedCreation` в `useSyncExternalStore`/`subscribe` — **суть не меняется**.
+
+### Корень проблемы: React не даёт сигнал "fiber был отброшен"
+
+```
+React 19 concurrent render:
+  ┌─────────────────────────────────────┐
+  │  Fiber A (render) → VM создан       │
+  │  Fiber B (render) → VM создан       │
+  │                                     │
+  │  React выбирает Fiber B             │
+  │  Fiber A → ??? Никакого callback'а  │
+  │  Fiber B → useEffect вызван ✅      │
+  └─────────────────────────────────────┘
+```
+
+Ни `useSyncExternalStore`, ни `useEffect`, ни `useLayoutEffect`, ни `useInsertionEffect` — **ни один хук не вызывается для отброшенного fiber'а**. Это не баг React — это design decision.
+
+### Текущее решение (unconfirmed + setTimeout) — единственный подход
+
+То, что уже реализовано — `registerUnconfirmedCreation` + `confirmCreation` + `scheduleOrphanCleanup` — это **единственный способ** обнаружить orphaned VM без поддержки от React:
+
+1. **Render**: помечаем VM как "не подтверждён"
+2. **Commit (useEffect)**: подтверждаем — VM жива
+3. **setTimeout(0) после confirmCreation**: если VM не подтверждена — она orphaned, убиваем
+
+`useSyncExternalStore` не даёт нового сигнала, которого нет в `useEffect`. Оба работают в commit phase. Оба не вызываются для discarded fiber'ов.
+
+### Что USES МОЖЕТ помочь (но это не про orphan'ы)
+
+USES уже используется в проекте — в `withViewModel` HOC для трекинга `isMounted`:
+
+```ts
+// packages/react/src/hoc/with-view-model.tsx
+useSyncExternalStore(
+  (onStoreChange) => reaction(
+    () => !isViewModel(current) || current.isMounted,
+    (ready) => onStoreChange(),
+  ),
+  () => current.isMounted !== false,
+)
+```
+
+Это правильное применение USES — **реактивный ререндер при изменении observable-состояния**. Но это про re-render, а не про lifecycle.
+
+### Итог
+
+| Аспект | USES помогает? |
+|--------|---------------|
+| Orphaned VM (fiber отброшен) | ❌ Нет — `subscribe` не вызывается для discarded fiber |
+| Sibling discrimination | ❌ Нет — USES не даёт fiber identity |
+| Tearing prevention | ✅ Да — но это уже решено через `observer` |
+| Re-render при isMounted | ✅ Да — уже используется в HOC |
+| Замена setTimeout(0) | ❌ Нет — нет нового сигнала для обнаружения orphan'ов |
+
+**Проблема — не в том, какой хук использовать, а в том, что React не даёт никакого сигнала о смерти fiber'а.** Текущий подход с `unconfirmedByVm` + `setTimeout(0)` — это единственный обходной путь в рамках существующего React API.
