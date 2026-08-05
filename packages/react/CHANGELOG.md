@@ -2,7 +2,7 @@
 
 ## 9.3.4
 
-- rollback package to use 9.x version of core package
+- fix broken package (rollback package to use 9.x version of core package)
 
 ## 9.3.3
 

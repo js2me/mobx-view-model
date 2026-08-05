@@ -1,5 +1,9 @@
 # mobx-view-model
 
+## 9.3.2
+
+- fix build and sync with mobx-view-model-react 9.x
+
 ## 9.3.1
 
 ### Patch Changes
