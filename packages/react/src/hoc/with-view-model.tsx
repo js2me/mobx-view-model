@@ -233,6 +233,8 @@ type VMHocFullConfig = ViewModelSimpleHocConfig<any> & ViewModelHocConfig<any> &
   component: VMComponent<any>;
 }
 
+console.log("KEKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKkk");
+
 /**
  * A Higher-Order Component that connects React components to their ViewModels, providing seamless MobX integration.
  *
@@ -278,7 +280,10 @@ export function withViewModel(
 ): any {
   const config = (rawConfig ?? {}) as VMHocFullConfig;
   const anchors = (config.anchors ??= []);
+  // Defensive fallback: a duplicated/older mobx-view-model copy can poison the
+  // shared viewModelsConfig singleton (Symbol.for) and leave getPayload undefined.
   const getPayload: Defined<VMHocFullConfig['getPayload']> = config.getPayload ?? viewModelsConfig.getPayload;
+  console.log('--- ENTER withViewModel', 'getPayload', getPayload);
   const forwardRefMode = !!config.forwardRef;
   const Fallback = (config.fallback ??
     config.vmConfig?.fallbackComponent ??

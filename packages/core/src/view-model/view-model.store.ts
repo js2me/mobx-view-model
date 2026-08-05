@@ -5,10 +5,12 @@ import type {
   ViewModelLookup,
 } from './view-model.store.types.js';
 import type { AnyViewModel, AnyViewModelSimple } from './view-model.types.js';
-import type { ViewModelsConfig } from '../config/types.js';
+import type { ViewModelResource, ViewModelsConfig } from '../config/types.js';
 
 /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface) */
 export interface ViewModelStore<VMBase extends AnyViewModel = AnyViewModel> {
+  /** Resource scoped to this store/request, if configured. */
+  resource?: ViewModelResource;
   /**
    * Effective merged `ViewModelsConfig` for this store: values from the store constructor are layered over the global defaults (see `ViewModelStoreBase` / `mergeVMConfigs`).
    * Drives `factory`, lifecycle hooks, and other behavior for view models owned by this store.

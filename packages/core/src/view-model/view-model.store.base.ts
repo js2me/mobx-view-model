@@ -36,6 +36,7 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
   >;
 
   public vmConfig: ViewModelsConfig;
+  public resource: ViewModelStoreConfig['resource'];
 
   constructor(protected config?: ViewModelStoreConfig) {
     // @ts-ignore ObservableMap is missing getOrInsert/getOrInsertComputed added in TS 6.0
@@ -45,6 +46,7 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
     // @ts-ignore ObservableMap is missing getOrInsert/getOrInsertComputed added in TS 6.0
     this.viewModelIdsByClasses = observable.map([], { deep: true });
     this.vmConfig = mergeVMConfigs(config?.vmConfig);
+    this.resource = config?.resource ?? this.vmConfig.resource;
 
     applyObservable(
       this,

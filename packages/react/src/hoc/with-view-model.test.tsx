@@ -37,6 +37,7 @@ import {
   type ViewModelStore,
   ViewModelStoreBase,
   type ViewModelsRawConfig,
+  viewModelsConfig,
 } from 'mobx-view-model';
 import { ViewModelBaseMock } from '../../../core/src/view-model/view-model.base.test.js';
 import { ViewModelStoreBaseMock } from '../../../core/src/view-model/view-model.store.base.test.js';
@@ -88,11 +89,16 @@ describe('withViewModel', () => {
   });
 
   describe('SSR', () => {
-    const renderOnServer = (node: ReactNode) => {
+    const renderOnServer = (node: ReactNode, ssr = true) => {
+      const originalMode = viewModelsConfig.mode;
+      if (ssr) {
+        viewModelsConfig.mode = 'ssr';
+      }
       vi.stubGlobal('window', undefined);
       try {
         return renderToString(<>{node}</>);
       } finally {
+        viewModelsConfig.mode = originalMode;
         vi.unstubAllGlobals();
       }
     };
@@ -203,6 +209,7 @@ describe('withViewModel', () => {
         fallback: () => 'loading'
 });
 
+      const originalMode = viewModelsConfig.mode;
       const html = renderOnServer(<Component payload={{ value: 'next' }} />);
       expect(html).toContain('hello ssr-hydration next');
       expect(html).not.toContain('loading');
@@ -211,15 +218,20 @@ describe('withViewModel', () => {
       container.innerHTML = html;
 
       let root: any = null;
-      await act(async () => {
-        root = hydrateRoot(
-          container,
-          <Component payload={{ value: 'next' }} />,
-        );
-      });
+      try {
+        viewModelsConfig.mode = 'ssr';
+        await act(async () => {
+          root = hydrateRoot(
+            container,
+            <Component payload={{ value: 'next' }} />,
+          );
+        });
 
-      expect(container.textContent).toContain('hello ssr-hydration next');
-      root?.unmount();
+        expect(container.textContent).toContain('hello ssr-hydration next');
+      } finally {
+        viewModelsConfig.mode = originalMode;
+        root?.unmount();
+      }
     });
 
     test('async mount shows fallback on SSR and CSR initial', async () => {
@@ -237,7 +249,7 @@ describe('withViewModel', () => {
         fallback: () => 'loading'
 });
 
-      const html = renderOnServer(<Component />);
+      const html = renderOnServer(<Component />, false);
       expect(html).toContain('loading');
 
       vi.useFakeTimers();
@@ -707,7 +719,7 @@ describe('withViewModel', () => {
     expect(spyFallbackRender).toHaveBeenCalledTimes(1);
   });
 
-  test('does not render fallback on first paint when mount() completes synchronously', async () => {
+  test('renders fallback until commit mount completes synchronously', async () => {
     class VM extends ViewModelBaseMock {}
     const View = ({ model }: ViewModelProps<VM>) => {
       return <div data-testid={'view'}>{`hello ${model.id}`}</div>;
@@ -721,7 +733,7 @@ describe('withViewModel', () => {
 
     await act(async () => render(<Component />));
 
-    expect(spyFallbackRender).toHaveBeenCalledTimes(0);
+    expect(spyFallbackRender).toHaveBeenCalledTimes(1);
   });
 
   test('renders nesting', () => {
@@ -896,7 +908,7 @@ describe('withViewModel', () => {
     expect(screen.getByText('second-props-vm')).toBeDefined();
   });
 
-  test('withViewModel reactHook runs once per initial paint (sync attach)', () => {
+  test('withViewModel reactHook runs during initial render and commit update', () => {
     class VM extends ViewModelBaseMock {}
     const View = vi.fn(({ model }: ViewModelProps<VM>) => {
       return <div>{`hello ${model.id}`}</div>;
@@ -909,7 +921,7 @@ describe('withViewModel', () => {
 });
 
     render(<Component />);
-    expect(useHookSpy).toHaveBeenCalledTimes(1);
+    expect(useHookSpy).toHaveBeenCalledTimes(2);
   });
 
   describe('payload manipulations', () => {

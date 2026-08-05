@@ -1,5 +1,9 @@
 import type { AnyObject, Class, Maybe } from 'yummies/types';
-import type { ViewModelsConfig, ViewModelsRawConfig } from '../config/index.js';
+import type {
+  ViewModelResource,
+  ViewModelsConfig,
+  ViewModelsRawConfig,
+} from '../config/index.js';
 import type {
   AnyViewModel,
   AnyViewModelSimple,
@@ -8,6 +12,8 @@ import type {
 import { InferViewModelPayload, InferViewModelProps } from './view-model.base.types.js';
 
 export interface ViewModelStoreConfig {
+  /** Resource scoped to this store/request. */
+  resource?: ViewModelResource;
   /**
    * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config)
    */

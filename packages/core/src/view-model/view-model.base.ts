@@ -43,6 +43,9 @@ export class ViewModelBase<
 
   private _payload: Payload;
 
+  /** Data resolved by the store resource for this VM id. */
+  public vmData: unknown;
+
   public vmConfig: ViewModelsConfig;
 
   protected isPayloadEqual?: PayloadCompareFn<Payload>;
@@ -60,6 +63,7 @@ export class ViewModelBase<
     this.lifecycleState = 'init';
     this.vmConfig = mergeVMConfigs(vmParams.vmConfig);
     this._payload = vmParams.payload;
+    this.vmData = vmParams.vmData;
     this.props = vmParams.props ?? ({} as ComponentProps);
     this.abortController = new AbortController();
     this.unmountSignal = this.abortController.signal;

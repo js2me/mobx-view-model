@@ -4,3 +4,5 @@ export * from "./symbols/index.js";
 export * from './utils/index.js';
 export * from './view-model/index.js';
 export * from "./internals.js"
+
+console.log('HELLO WORLD');

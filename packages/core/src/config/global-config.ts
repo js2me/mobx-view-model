@@ -46,3 +46,6 @@ export const viewModelsConfig = createGlobalConfig<ViewModelsConfig>(
   },
   Symbol.for('VIEW_MODELS_CONFIG'),
 );
+
+
+console.log('viewModelsConfig', viewModelsConfig)

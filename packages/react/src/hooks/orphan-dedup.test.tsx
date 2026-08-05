@@ -1,7 +1,7 @@
 /**
  * @vitest-environment jsdom
  */
-import { makeObservable, observable, action, runInAction } from 'mobx';
+import { makeObservable, observable, action, reaction, runInAction } from 'mobx';
 import {
   ViewModelBase,
   ViewModelStoreBase,
@@ -48,6 +48,67 @@ afterEach(() => {
  * cleanup unmounts a VM that's still in use.
  */
 describe('Orphan cleanup dedup: same VM instance from two fibers', () => {
+  test('resolves vmData from the store resource by VM id', () => {
+    const vmStore = new ViewModelStoreBase({
+      resource: {
+        read: (id) => ({ id, value: 42 }),
+      },
+    });
+
+    class ResourceVM extends ViewModelBaseMock {}
+
+    const Component = () => {
+      const vm = useCreateViewModel(ResourceVM, undefined, { id: 'resource-vm' });
+      return <span data-testid="vm-data">{String((vm.vmData as any).value)}</span>;
+    };
+
+    render(
+      <ViewModelsProvider value={vmStore}>
+        <Component />
+      </ViewModelsProvider>,
+    );
+
+    expect(screen.getByTestId('vm-data').textContent).toBe('42');
+  });
+
+  test('constructor reactions stop when the VM is unmounted', async () => {
+    const vmStore = new ViewModelStoreBaseMock();
+    const source = observable.box(0);
+    let runs = 0;
+
+    class SubscribedVM extends ViewModelBaseMock {
+      constructor(params?: Partial<ViewModelParams>) {
+        super(params);
+        reaction(
+          () => source.get(),
+          () => {
+            runs += 1;
+          },
+          { signal: this.unmountSignal },
+        );
+      }
+    }
+
+    const Component = () => {
+      useCreateViewModel(SubscribedVM, undefined, { id: 'subscribed' });
+      return null;
+    };
+
+    const root = render(
+      <ViewModelsProvider value={vmStore}>
+        <Component />
+      </ViewModelsProvider>,
+    );
+
+    runInAction(() => source.set(1));
+    expect(runs).toBe(1);
+
+    root.unmount();
+    runInAction(() => source.set(2));
+    expect(runs).toBe(1);
+    expect(vmStore.get('subscribed')).toBeNull();
+  });
+
   test('fixed-id VM with two sibling consumers: only 1 VM in store, cleanup does not kill it', async () => {
     const vmStore = new ViewModelStoreBaseMock();
     const mountLog: string[] = [];

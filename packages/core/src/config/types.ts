@@ -32,12 +32,23 @@ export type CreateViewModelFactoryFn<
 > = (config: ViewModelCreateConfig<TViewModel>) => TViewModel;
 
 /**
+ * Request/application-owned data source used by render-time SSR resources.
+ * `read` may return data or throw a Promise/Error following React Suspense's
+ * resource convention.
+ */
+export interface ViewModelResource<TData = unknown> {
+  read(id: string): TData;
+}
+
+/**
  * Configuration options for view models.
  * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config)
  */
 export interface ViewModelsConfig<
   TViewModel extends AnyViewModel = AnyViewModel,
 > {
+  /** Default resource used when a store does not provide one. */
+  resource?: ViewModelResource;
   getPayload: (allProps: any) => any;
   mode: 'csr-only' | 'ssr';
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#startviewtransitions) */

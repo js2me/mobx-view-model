@@ -216,6 +216,15 @@ describe('Nested Suspense + lazy child suspend causes duplicate VMs', () => {
       resolveChild({ default: () => <span data-testid="child">child</span> });
     });
 
+    // Flush orphan-cleanup setTimeout(0): a fiber discarded by React 19
+    // (the duplicate-fiber bug) registers + mounts its PageVM in render but
+    // never commits, so it is removed via the unconfirmed-creation cleanup.
+    // With reclaim removed, the Suspense remount creates a fresh PageVM —
+    // after cleanup only that one remains.
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 10));
+    });
+
     // Key check: only 1 PageVM, not 2
     expect(vmStore.getIds(PageVM)).toHaveLength(1);
     expect(vmStore.getIds(LayoutVM)).toHaveLength(1);
@@ -333,6 +342,15 @@ describe('Nested Suspense + lazy child suspend causes duplicate VMs', () => {
     // Resolve child lazy
     await act(async () => {
       resolveChild({ default: () => <span data-testid="child">child</span> });
+    });
+
+    // Flush orphan-cleanup setTimeout(0): a fiber discarded by React 19
+    // (the duplicate-fiber bug) registers + mounts its PageVM in render but
+    // never commits, so it is removed via the unconfirmed-creation cleanup.
+    // With reclaim removed, the Suspense remount creates a fresh PageVM —
+    // after cleanup only that one remains.
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 10));
     });
 
     // Key check: only 1 PageVM, not 2
