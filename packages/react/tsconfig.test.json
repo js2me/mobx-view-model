@@ -19,7 +19,10 @@
     "isolatedModules": true,
     "typeRoots": ["./node_modules/@types/", "./types", "./node_modules"],
     "noEmit": false,
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
+    "paths": {
+      "mobx-view-model-react": ["./src/index.ts"]
+    }
   },
   "include": ["src/**/*.test.ts", "src/**/*.test.tsx", "src/**/*.fixture.ts"]
 }
