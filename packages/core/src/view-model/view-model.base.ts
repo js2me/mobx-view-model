@@ -265,19 +265,10 @@ export class ViewModelBase<
 
   /**
    * Returns the parent view model
+   * For this property to work, the getParentViewModel method is required
    */
   get parentViewModel() {
-    if (this.vmParams.parentViewModel !== undefined) {
-      return this.vmParams.parentViewModel as ParentViewModel;
-    }
-
-    if (this.vmParams.parentViewModelId == null) {
-      return null as unknown as ParentViewModel;
-    }
-
-    return this.viewModels?.get(
-      this.vmParams.parentViewModelId,
-    ) as unknown as ParentViewModel;
+    return this.getParentViewModel(this.vmParams.parentViewModelId);
   }
 
   /**
@@ -299,4 +290,24 @@ export class ViewModelBase<
     }
   }
 
+  /**
+   * The method of getting the parent view model
+   *
+   * @deprecated Use getter `get parentViewModel` instead. This method will be removed in the future.
+   */
+  protected getParentViewModel(
+    parentViewModelId: Maybe<string>,
+  ): ParentViewModel {
+    if (this.vmParams.parentViewModel !== undefined) {
+      return this.vmParams.parentViewModel as ParentViewModel;
+    }
+
+    if (parentViewModelId == null) {
+      return null as unknown as ParentViewModel;
+    }
+
+    return this.viewModels?.get(
+      parentViewModelId,
+    ) as unknown as ParentViewModel;
+  }
 }

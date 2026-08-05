@@ -1,6 +1,6 @@
 {
   "name": "mobx-view-model",
-  "version": "10.0.0",
+  "version": "9.3.1",
   "scripts": {
     "clean": "rimraf dist",
     "ts:check": "tsc --noEmit",
@@ -56,8 +56,8 @@
     "url": "git://github.com/js2me/mobx-view-model"
   },
   "dependencies": {
-    "mobx-view-model-react": "^9.3.2",
-    "yummies": "^7.10.0"
+    "yummies": "^7.10.0",
+    "mobx-view-model-react": "^9.3.1"
   },
   "peerDependencies": {
     "mobx": "^6.12.4",
@@ -69,6 +69,7 @@
     }
   },
   "devDependencies": {
+    "mobx-view-model-react": "workspace:*",
     "@biomejs/biome": "2.2.6",
     "@types/node": "^25.3.3",
     "@types/react": "^18.3.28",
@@ -76,10 +77,9 @@
     "@vitest/coverage-istanbul": "^4.0.18",
     "js2me-biome-config": "^1.1.0",
     "jsdom": "^26.1.0",
-    "mobx-view-model-react": "workspace:*",
     "nodemon": "^3.1.14",
     "rimraf": "^6.1.3",
-    "sborshik": "^3.1.0",
+    "sborshik": "^3.0.7",
     "typescript": "^5.9.3",
     "vite": "^7.3.1",
     "vitest": "^4.0.18"

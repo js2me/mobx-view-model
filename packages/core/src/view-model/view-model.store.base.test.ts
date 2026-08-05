@@ -1,11 +1,12 @@
 import type { Mock } from 'vitest';
 import { describe, expect, it, vi } from 'vitest';
 
-import type { Maybe } from 'yummies/types';
+import type { AnyObject, EmptyObject, Maybe } from 'yummies/types';
 import type { ViewModelsConfig } from '../config/types.js';
 import { ViewModelBaseMock } from './view-model.base.test.js';
 import type { ViewModel } from './view-model.js';
 import { ViewModelStoreBase } from './view-model.store.base.js';
+import type { ViewModelStore } from './view-model.store.js';
 import type {
   ViewModelGenerateIdConfig,
   ViewModelLookup,
@@ -13,6 +14,7 @@ import type {
 import type {
   AnyViewModel,
   AnyViewModelSimple,
+  ViewModelParams,
 } from './view-model.types.js';
 
 export class ViewModelStoreBaseMock extends ViewModelStoreBase {
@@ -102,21 +104,6 @@ describe('ViewModelStoreBase', () => {
     expect(vmStore._instanceAttachedCount.get('1')).toBe(undefined);
   });
 
-  it('re-attach after detach: second mount/willMount on the same instance', async () => {
-    const vmStore = new ViewModelStoreBaseMock();
-    const vm = new ViewModelBaseMock({ id: 'demo-widgets-vm' });
-
-    await vmStore.attach(vm);
-    expect(vm.spies.willMount).toHaveBeenCalledTimes(1);
-
-    await vmStore.detach('demo-widgets-vm');
-    expect(vmStore.get('demo-widgets-vm')).toBe(null);
-
-    await vmStore.attach(vm);
-    expect(vm.spies.willMount).toHaveBeenCalledTimes(2);
-    expect(vmStore.get('demo-widgets-vm')).toBe(vm);
-  });
-
   it('is able to get total mounted views count', async () => {
     const vmStore = new ViewModelStoreBaseMock();
     await vmStore.attach(new ViewModelBaseMock({ id: '1' }));
@@ -129,22 +116,39 @@ describe('ViewModelStoreBase', () => {
   });
 
   it('accessing to parent view models using store [using parentViewModelId and vmStore]', async () => {
-    class VMParent extends ViewModelBaseMock {}
-    class VMChild extends ViewModelBaseMock<any, VMParent> {}
+    class TestViewModelImpl1<
+      Payload extends AnyObject = EmptyObject,
+      ParentViewModel extends AnyViewModel | AnyViewModelSimple | null = null,
+    > extends ViewModelBaseMock<Payload, ParentViewModel> {
+      constructor(
+        private vmStore: ViewModelStore,
+        params?: Partial<ViewModelParams<Payload>>,
+      ) {
+        super(params);
+      }
+
+      protected getParentViewModel(
+        parentViewModelId: Maybe<string>,
+      ): ParentViewModel {
+        return this.vmStore.get(parentViewModelId)! as ParentViewModel;
+      }
+    }
+
+    class VMParent extends TestViewModelImpl1 {}
+    class VMChild extends TestViewModelImpl1<any, VMParent> {}
 
     const vmStore = new ViewModelStoreBaseMock();
 
-    const parentVM = new VMParent({ id: 'parent' });
+    const parentVM = new VMParent(vmStore, { id: 'parent' });
 
     await vmStore.attach(parentVM);
 
-    const childVM = new VMChild({
+    const childVM = new VMChild(vmStore, {
       id: 'child',
       parentViewModelId: 'parent',
-      viewModels: vmStore,
     });
 
-    await vmStore.attach(childVM);
+    await vmStore.attach(parentVM);
 
     expect(childVM.parentViewModel.id).toBe('parent');
   });

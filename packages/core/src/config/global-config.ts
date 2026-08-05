@@ -27,7 +27,6 @@ export const viewModelsConfig = createGlobalConfig<ViewModelsConfig>(
       },
     },
     generateId: generateVmId,
-    flushPendingReactions: 100,
     factory: (config) => {
       const VM = config.VM;
       return new VM({
