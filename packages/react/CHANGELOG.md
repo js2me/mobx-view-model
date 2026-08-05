@@ -1,5 +1,13 @@
 # mobx-view-model-react
 
+## 9.3.4
+
+- rollback package to use 9.x version of core package
+
+## 9.3.3
+
+- try to fix bug with typings
+
 ## 9.3.2
 
 ### Patch Changes

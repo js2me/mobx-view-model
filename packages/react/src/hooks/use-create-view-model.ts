@@ -6,9 +6,8 @@ import type {
   ViewModelsConfig,
 } from 'mobx-view-model';
 import { viewModelsConfig } from 'mobx-view-model';
-import { useContext, useRef } from 'react';
-import { flushPendingReactions } from 'yummies/mobx';
-import type { AnyObject, Class, IsPartial, Maybe } from 'yummies/types';
+import { useContext } from 'react';
+import type { Class, IsPartial, Maybe } from 'yummies/types';
 import { isViewModelClass } from 'mobx-view-model';
 import {
   ActiveViewModelContext,
@@ -66,14 +65,13 @@ export function useCreateViewModel<TViewModel extends AnyViewModel>(
  *
  * [**Documentation**](https://js2me.github.io/mobx-view-model/react/api/use-create-view-model.html)
  */
-export function useCreateViewModel<
-  TPayload extends AnyObject,
-  TViewModelSimple extends ViewModelSimple<TPayload>,
->(
+export function useCreateViewModel<TViewModelSimple extends ViewModelSimple>(
   VM: Class<TViewModelSimple>,
-  ...args: IsPartial<TPayload> extends true
-    ? [payload?: TPayload]
-    : [payload: TPayload]
+  ...args: TViewModelSimple extends ViewModelSimple<infer TPayload>
+    ? IsPartial<TPayload> extends true
+      ? [payload?: TPayload]
+      : [payload: TPayload]
+    : []
 ): TViewModelSimple;
 
 /**
@@ -111,8 +109,6 @@ const useCreateViewModelBase = (
 ) => {
   const viewModels = useContext(ViewModelsContext);
   const parentViewModel = useContext(ActiveViewModelContext);
-  /** Last VM this hook instance attached in render; per-hook, not keyed by `instance.id`. */
-  const lastAttachedInstanceRef = useRef<AnyViewModel | null>(null);
 
   const ctx = config?.ctx ?? {};
 
@@ -127,7 +123,7 @@ const useCreateViewModelBase = (
       config?.id ??
       viewModelsConfig.generateId(ctx);
 
-    const instanceFromStore = viewModels?.get(id);
+    const instanceFromStore = viewModels ? viewModels.get(id) : null;
 
     if (instanceFromStore) {
       return instanceFromStore as AnyViewModel;
@@ -151,8 +147,6 @@ const useCreateViewModelBase = (
         viewModels?.createViewModel<any>(configCreate) ??
         viewModelsConfig.factory(configCreate);
 
-      flushPendingReactions(viewModelsConfig.flushPendingReactions);
-
       viewModels?.markToBeAttached(instance);
 
       return instance;
@@ -160,35 +154,18 @@ const useCreateViewModelBase = (
   });
 
   useIsomorphicLayoutEffect(() => {
-    const id = instance.id;
-    const vm = instance;
     if (viewModels) {
+      viewModels.attach(instance);
       return () => {
-        void viewModels.detach(id);
-        if (lastAttachedInstanceRef.current === vm) {
-          lastAttachedInstanceRef.current = null;
-        }
+        viewModels.detach(instance.id);
+      };
+    } else {
+      instance.mount();
+      return () => {
+        instance.unmount();
       };
     }
-    return () => {
-      vm.unmount();
-      if (lastAttachedInstanceRef.current === vm) {
-        lastAttachedInstanceRef.current = null;
-      }
-    };
   }, [instance]);
-
-  // Same render pass as attach (SSR + first client frame). `flushPendingMobxReactions` is
-  // required when the VM is created under mobx-react `observer`: nested `reaction()` otherwise
-  // runs after `mount()` in the same tick.
-  if (lastAttachedInstanceRef.current !== instance) {
-    if (viewModels) {
-      void viewModels.attach(instance);
-    } else {
-      void instance.mount();
-    }
-    lastAttachedInstanceRef.current = instance;
-  }
 
   instance.setPayload(payload ?? {});
 
@@ -201,8 +178,6 @@ const useCreateViewModelSimple = (
 ) => {
   const viewModels = useContext(ViewModelsContext);
   const parentViewModel = useContext(ActiveViewModelContext);
-  /** Last VM this hook instance attached in render; per-hook, not keyed by `instance.id`. */
-  const lastAttachedInstanceRef = useRef<AnyViewModelSimple | null>(null);
 
   const instance = useValue(() => {
     const instance = new VM();
@@ -210,42 +185,30 @@ const useCreateViewModelSimple = (
     instance.parentViewModel =
       parentViewModel as unknown as (typeof instance)['parentViewModel'];
 
-    flushPendingReactions(viewModelsConfig.flushPendingReactions);
-
     viewModels?.markToBeAttached(instance);
 
     return instance;
   });
 
-  useIsomorphicLayoutEffect(() => {
-    const id = instance.id;
-    const vm = instance;
-    if (viewModels) {
-      return () => {
-        void viewModels.detach(id);
-        if (lastAttachedInstanceRef.current === vm) {
-          lastAttachedInstanceRef.current = null;
-        }
-      };
-    }
-    return () => {
-      vm.unmount?.();
-      if (lastAttachedInstanceRef.current === vm) {
-        lastAttachedInstanceRef.current = null;
-      }
-    };
-  }, [instance]);
-
-  if (lastAttachedInstanceRef.current !== instance) {
-    if (viewModels) {
-      void viewModels.attach(instance);
-    } else {
-      void instance.mount?.();
-    }
-    lastAttachedInstanceRef.current = instance;
+  if ('setPayload' in instance) {
+    useIsomorphicLayoutEffect(() => {
+      instance.setPayload!(payload);
+    }, [payload]);
   }
 
-  instance.setPayload?.(payload);
+  useIsomorphicLayoutEffect(() => {
+    if (viewModels) {
+      viewModels.attach(instance);
+      return () => {
+        viewModels.detach(instance.id);
+      };
+    } else {
+      instance.mount?.();
+      return () => {
+        instance.unmount?.();
+      };
+    }
+  }, [instance]);
 
   return instance;
 };
