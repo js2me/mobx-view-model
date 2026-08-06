@@ -337,6 +337,10 @@ export default defineConfig({
             text: '<ReactMark /> #3: No access to ViewModelStore',
             link: '/errors/3',
           },
+          {
+            text: '<ReactMark /> #4: View component already wrapped',
+            link: '/errors/4',
+          },
         ],
       },
       {

@@ -233,7 +233,7 @@ type VMHocFullConfig = ViewModelSimpleHocConfig<any> & ViewModelHocConfig<any> &
   component: VMComponent<any>;
 }
 
-console.log("KEKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKkk");
+const ReactMemoSymbol = Symbol.for('react.memo');
 
 /**
  * A Higher-Order Component that connects React components to their ViewModels, providing seamless MobX integration.
@@ -298,6 +298,16 @@ export function withViewModel(
       | undefined) ??
     rawRenderFn ??
     _internals.noop;
+
+  if ((renderFn as any)?.$$typeof === ReactMemoSymbol) {
+    if (process.env.NODE_ENV !== 'production') {
+      const nestedObserverError = 
+        '[mobx-view-model-react] You are trying to wrap a View component in `observer` or `React.memo` inside `withViewModel`. `withViewModel` already applies `observer` automatically, so do not wrap the View component manually.\n' +
+  'More info: https://js2me.github.io/mobx-view-model/errors/4';
+      throw new Error(`Error #4: ${nestedObserverError}`);
+    }
+    throw new Error('Error #4: https://js2me.github.io/mobx-view-model/errors/4');
+  }
 
   // Single observer layer — tracks model observables in the view.
   const View = observer(renderFn as RFunctionComponent<any>);

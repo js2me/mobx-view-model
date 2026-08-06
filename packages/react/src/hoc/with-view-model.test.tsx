@@ -22,10 +22,12 @@ import {
   useRef,
   useState,
   version,
+  memo,
 } from 'react';
 import { hydrateRoot } from 'react-dom/client';
 import { renderToString } from 'react-dom/server';
 import { describe, expect, expectTypeOf, it, test, vi } from 'vitest';
+import { observer } from 'mobx-react-lite';
 import { sleep } from 'yummies/async';
 import { callFunction } from 'yummies/common';
 import { createCounter } from 'yummies/complex';
@@ -73,6 +75,19 @@ const EXPECTED_RERENDERS_OBSERVER_VIEW_WITH_PAYLOAD_IN_VIEW =
   });
 
 describe('withViewModel', () => {
+  test('rejects View components already wrapped in observer or memo', () => {
+    class VM extends ViewModelBaseMock {}
+    const View = ({ model }: ViewModelProps<VM>) => (
+      <div>{model.id}</div>
+    );
+    const error =
+      'Error #4: [mobx-view-model-react] You are trying to wrap a View component in `observer` or `React.memo` inside `withViewModel`. `withViewModel` already applies `observer` automatically, so do not wrap the View component manually.\n' +
+      'More info: https://js2me.github.io/mobx-view-model/errors/4';
+
+    expect(() => withViewModel(VM, observer(View))).toThrow(error);
+    expect(() => withViewModel(VM, memo(View))).toThrow(error);
+  });
+
   test('renders', async () => {
     class VM extends ViewModelBaseMock {
       mount() {
