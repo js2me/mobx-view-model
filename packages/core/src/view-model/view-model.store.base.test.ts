@@ -38,6 +38,9 @@ export class ViewModelStoreBaseMock extends ViewModelStoreBase {
   get _viewModelIdsByClasses() {
     return this.viewModelIdsByClasses;
   }
+  get _stagedViewModels() {
+    return this.stagedViewModels;
+  }
 
   generateId<VM extends AnyViewModel | AnyViewModelSimple>(
     config: ViewModelGenerateIdConfig<VM>,
@@ -252,5 +255,238 @@ describe('ViewModelStoreBase', () => {
 
     expect(vmConfig.observable.viewModelStores.useDecorators).toBe(true);
     expect(vmConfig.observable.viewModels.useDecorators).toBe(true);
+  });
+
+  describe('staging (defineStaged / commitStaged / dropStaged)', () => {
+    it('defineStaged creates an instance visible to lookups but not committed', () => {
+      const vmStore = new ViewModelStoreBaseMock();
+      const owner = {};
+
+      const vm = vmStore.defineStaged(
+        { id: 'staged', VM: ViewModelBaseMock, payload: {} },
+        owner,
+      );
+
+      // read-through: lookups see the staged instance
+      expect(vmStore.get('staged')).toBe(vm);
+      expect(vmStore.has('staged')).toBe(true);
+      expect(vmStore.get(ViewModelBaseMock)).toBe(vm);
+      expect(vmStore.getIds(ViewModelBaseMock)).toContain('staged');
+
+      // but it is not a committed store member
+      expect(vmStore._viewModels.has('staged')).toBe(false);
+      expect(vmStore._stagedViewModels.has('staged')).toBe(true);
+    });
+
+    it('defineStaged calls init with the store', () => {
+      const vmStore = new ViewModelStoreBaseMock();
+
+      const vm = vmStore.defineStaged(
+        { id: 'init', VM: ViewModelBaseMock, payload: {} },
+        {},
+      );
+
+      expect(vm.spies.init).toBeCalledTimes(1);
+      expect(vm.spies.init.mock.calls[0]![0]).toMatchObject({
+        id: 'init',
+        viewModels: vmStore,
+      });
+    });
+
+    it('defineStaged returns the existing staged instance for the same id', () => {
+      const vmStore = new ViewModelStoreBaseMock();
+
+      const first = vmStore.defineStaged(
+        { id: 'shared', VM: ViewModelBaseMock, payload: {} },
+        {},
+      );
+      const second = vmStore.defineStaged(
+        { id: 'shared', VM: ViewModelBaseMock, payload: {} },
+        {},
+      );
+
+      expect(second).toBe(first);
+      expect(vmStore._stagedViewModels.size).toBe(1);
+    });
+
+    it('defineStaged returns the committed instance for the same id', () => {
+      const vmStore = new ViewModelStoreBaseMock();
+
+      const committed = vmStore.define({
+        id: 'shared',
+        VM: ViewModelBaseMock,
+        payload: {},
+      });
+      const staged = vmStore.defineStaged(
+        { id: 'shared', VM: ViewModelBaseMock, payload: {} },
+        {},
+      );
+
+      expect(staged).toBe(committed);
+      expect(vmStore._stagedViewModels.size).toBe(0);
+    });
+
+    it('define promotes an existing staged entry instead of creating a second instance', () => {
+      const vmStore = new ViewModelStoreBaseMock();
+
+      const staged = vmStore.defineStaged(
+        { id: 'promote-me', VM: ViewModelBaseMock, payload: {} },
+        {},
+      );
+      const defined = vmStore.define({
+        id: 'promote-me',
+        VM: ViewModelBaseMock,
+        payload: {},
+      });
+
+      expect(defined).toBe(staged);
+      expect(vmStore._viewModels.get('promote-me')).toBe(staged);
+      expect(vmStore._stagedViewModels.size).toBe(0);
+      // init ran exactly once (in defineStaged) — promotion must not re-init
+      expect(staged.spies.init).toBeCalledTimes(1);
+    });
+
+    it('commitStaged promotes a staged instance to a committed entry', () => {
+      const vmStore = new ViewModelStoreBaseMock();
+
+      const vm = vmStore.defineStaged(
+        { id: 'commit', VM: ViewModelBaseMock, payload: {} },
+        {},
+      );
+      vmStore.commitStaged('commit', vm);
+
+      expect(vmStore._viewModels.get('commit')).toBe(vm);
+      expect(vmStore._stagedViewModels.size).toBe(0);
+      // class index is attached on commit
+      expect(vmStore._viewModelIdsByClasses.get(ViewModelBaseMock)).toEqual([
+        'commit',
+      ]);
+      expect(vmStore.get(ViewModelBaseMock)).toBe(vm);
+    });
+
+    it('commitStaged is a no-op for an unknown id', () => {
+      const vmStore = new ViewModelStoreBaseMock();
+
+      vmStore.commitStaged('missing');
+
+      expect(vmStore._viewModels.size).toBe(0);
+    });
+
+    it('commitStaged re-registers an instance whose staged entry was dropped', () => {
+      const vmStore = new ViewModelStoreBaseMock();
+
+      const vm = vmStore.defineStaged(
+        { id: 'self-heal', VM: ViewModelBaseMock, payload: {} },
+        {},
+      );
+      vmStore.dropStaged('self-heal', vm);
+      expect(vmStore.get('self-heal')).toBe(null);
+
+      // the owning fiber is still alive and commits — the instance is
+      // registered as committed even though the staged entry is gone
+      vmStore.commitStaged('self-heal', vm);
+
+      expect(vmStore._viewModels.get('self-heal')).toBe(vm);
+      expect(vmStore.get('self-heal')).toBe(vm);
+    });
+
+    it('dropStaged removes only the entry that belongs to the given instance', () => {
+      const vmStore = new ViewModelStoreBaseMock();
+
+      const first = vmStore.defineStaged(
+        { id: 'reuse', VM: ViewModelBaseMock, payload: {} },
+        {},
+      );
+      vmStore.dropStaged('reuse', first);
+
+      const second = vmStore.defineStaged(
+        { id: 'reuse', VM: ViewModelBaseMock, payload: {} },
+        {},
+      );
+      expect(second).not.toBe(first);
+
+      // a stale finalizer for the previous instance must not drop the new one
+      vmStore.dropStaged('reuse', first);
+      expect(vmStore.get('reuse')).toBe(second);
+
+      vmStore.dropStaged('reuse', second);
+      expect(vmStore.get('reuse')).toBe(null);
+    });
+
+    it('commitStaged sweeps stale staged entries but keeps newer ones', async () => {
+      const vmStore = new ViewModelStoreBaseMock();
+
+      const stale = vmStore.defineStaged(
+        { id: 'stale', VM: ViewModelBaseMock, payload: {} },
+        {},
+      );
+      const promoted = vmStore.defineStaged(
+        { id: 'promoted', VM: ViewModelBaseMock, payload: {} },
+        {},
+      );
+
+      // commit of one fiber schedules a sweep of the current render pass
+      vmStore.commitStaged('promoted', promoted);
+
+      // entries staged by a LATER render pass must survive the sweep
+      const newer = vmStore.defineStaged(
+        { id: 'newer', VM: ViewModelBaseMock, payload: {} },
+        {},
+      );
+
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
+      expect(vmStore.get('stale')).toBe(null);
+      expect(vmStore.get('promoted')).toBe(promoted);
+      expect(vmStore.get('newer')).toBe(newer);
+      expect(stale.isMounted).toBe(false);
+    });
+
+    it('sweeping a staged entry never calls unmount on the instance', async () => {
+      const vmStore = new ViewModelStoreBaseMock();
+
+      const staged = vmStore.defineStaged(
+        { id: 'silent', VM: ViewModelBaseMock, payload: {} },
+        {},
+      );
+      const committed = vmStore.defineStaged(
+        { id: 'committed', VM: ViewModelBaseMock, payload: {} },
+        {},
+      );
+      vmStore.commitStaged('committed', committed);
+
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
+      expect(vmStore.get('silent')).toBe(null);
+      expect(staged.spies.unmount).not.toHaveBeenCalled();
+      expect(staged.spies.willUnmount).not.toHaveBeenCalled();
+    });
+
+    it('unmount removes staged entries as well', () => {
+      const vmStore = new ViewModelStoreBaseMock();
+
+      const vm = vmStore.defineStaged(
+        { id: 'staged-unmount', VM: ViewModelBaseMock, payload: {} },
+        {},
+      );
+      vmStore.unmount(vm);
+
+      expect(vmStore._stagedViewModels.size).toBe(0);
+      expect(vmStore.get('staged-unmount')).toBe(null);
+      expect(vm.spies.unmount).toHaveBeenCalledTimes(1);
+    });
+
+    it('clean clears staged entries', () => {
+      const vmStore = new ViewModelStoreBaseMock();
+
+      vmStore.defineStaged(
+        { id: 'staged-clean', VM: ViewModelBaseMock, payload: {} },
+        {},
+      );
+      vmStore.clean();
+
+      expect(vmStore._stagedViewModels.size).toBe(0);
+      expect(vmStore.get('staged-clean')).toBe(null);
+    });
   });
 });

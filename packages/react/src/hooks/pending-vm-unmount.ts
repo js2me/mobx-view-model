@@ -7,9 +7,6 @@ import { runInAction } from 'mobx';
 
 type VmInstance = AnyViewModel | AnyViewModelSimple;
 
-const isProd = process.env.NODE_ENV === 'production';
-const dbg = !isProd ? (...args: any[]) => console.log('[pendingVM]', ...args) : () => {};
-
 // ---------------------------------------------------------------------------
 // Unconfirmed-creation tracking — orphan detection via setTimeout
 // ---------------------------------------------------------------------------
@@ -59,7 +56,6 @@ export const registerUnconfirmed = (
   store: ViewModelStore | null,
 ): UnconfirmedCreation => {
   unconfirmed.set(vm, store);
-  dbg('registerUnconfirmed', (vm as { id?: unknown })?.id, 'size=', unconfirmed.size);
   return { vm };
 };
 
@@ -73,7 +69,6 @@ const scheduleOrphanCleanup = () => {
     if (unconfirmed.size === 0) return;
     for (const [vm, store] of unconfirmed) {
       unconfirmed.delete(vm);
-      dbg('ORPHAN CLEANUP', (vm as { id?: unknown })?.id);
       runInAction(() => {
         if (store) store.unmount(vm);
         else vm.unmount?.();
@@ -88,10 +83,7 @@ const scheduleOrphanCleanup = () => {
  * schedules the cleanup so VMs whose effects never fire get unmounted.
  */
 export const confirmCreation = (entry: UnconfirmedCreation): void => {
-  const deleted = unconfirmed.delete(entry.vm);
-  if (deleted) {
-    dbg('confirmCreation', (entry.vm as { id?: unknown })?.id, 'size=', unconfirmed.size);
-  }
+  unconfirmed.delete(entry.vm);
   if (unconfirmed.size > 0) {
     scheduleOrphanCleanup();
   }
@@ -105,7 +97,6 @@ export const unmountVm = (
   vm: VmInstance,
   store: ViewModelStore | null,
 ): void => {
-  dbg('unmountVm', (vm as { id?: unknown })?.id);
   runInAction(() => {
     if (store) store.unmount(vm);
     else vm.unmount?.();

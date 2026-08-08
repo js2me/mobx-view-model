@@ -96,6 +96,33 @@ export interface ViewModelStore<VMBase extends AnyViewModel = AnyViewModel> {
   define<VM extends VMBase | AnyViewModelSimple>(config: ViewModelCreateConfig<VM>): VM;
 
   /**
+   * Staging variant of {@link define}: creates (or returns) the instance and
+   * makes it visible to store lookups immediately (read-through), but does
+   * not commit it as a store entry until {@link commitStaged} is called.
+   * If `owner` is garbage-collected without committing (e.g. a React fiber
+   * discarded during a render pass), the staged entry is dropped
+   * automatically.
+   *
+   * Optional: implemented by `ViewModelStoreBase`. View-layer integrations
+   * feature-detect it and fall back to {@link define} otherwise.
+   */
+  defineStaged?<VM extends VMBase | AnyViewModelSimple>(
+    config: ViewModelCreateConfig<VM>,
+    owner: object,
+  ): VM;
+
+  /**
+   * Promotes a staged view model to a committed store entry. Must be called
+   * only from commit-phase code (effects), never during render.
+   */
+  commitStaged?(id: string, instance?: VMBase | AnyViewModelSimple): void;
+
+  /**
+   * Drops a staged entry if it still belongs to the given instance.
+   */
+  dropStaged?(id: string, instance: VMBase | AnyViewModelSimple): void;
+
+  /**
    * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#link)
    * Link anchors (React components) with view model class.
    * @param VM - The view model class to link to.

@@ -2,24 +2,38 @@
 
 ## TL;DR
 
-Хук создаёт ViewModel один раз на fiber, привязывает её к React-жизненному циклу и защищает от проблемы orphaned VM (React 19 discard'ит fiber → его `useEffect` не вызывается → VM остаётся в сторе). Защита построена на **unconfirmed-creation tracking**: VM регистрируется + маунтится в render, а `useEffect` подтверждает, что fiber закоммичен. Кто не подтверждён — вычищается через `setTimeout(0)`.
+Хук создаёт ViewModel один раз на fiber и привязывает её к React-жизненному циклу через **staging-модель, зеркалящую WIP→commit модель самого React**:
+
+- **render-фаза**: VM создаётся и регистрируется в **staging-слое** стора (`defineStaged`) — видна render-time lookup'ам (`useViewModel`, `viewModels.get(...)`) через read-through, но НЕ является committed-записью.
+- **commit-фаза**: effect того же fiber'а делает `commitStaged` — staging → committed. Fiber закоммичен ⇔ VM в сторе.
+- **fiber отброшен React 19** → effect не вызван → promote не случился → staged-запись выметается sweep'ом после ближайшего commit'а (по epoch'ам) и в конечном счёте GC'ом (FinalizationRegistry по owner'у). Committed-стор orphan'ов не содержит **by construction** — чистить нечего.
+
+Fallback-пути (SSR, no-store, кастомный стор без `defineStaged`) сохраняют старый механизм: eager-регистрация в render + **unconfirmed-creation tracking** (`Map<vm, store>` + `setTimeout(0)` из `confirmCreation`).
 
 Reclaim (сохранение состояния VM при Suspense/lazy remount) **намеренно убран** — remount создаёт свежий VM. Это упрощение: больше нет `claimPendingVm`, ambiguous guard, payload-дискриминации.
 
 ---
 
-## Ключевое архитектурное решение: регистрация и mount в render
+## Ключевое архитектурное решение: read-through staging вместо eager-регистрации
 
-И mount, и регистрация в сторе происходят **в render-фазе**, не в effect. Это не случайно — это требование двух паттернов:
+Render-time store access по-прежнему обязателен: `useViewModel(class/ref/id)` и VM-компьютеды через `this.viewModels.get(...)` читают стор **во время render**, а children/siblings рендерятся ДО effect'а родителя.
 
-1. **SSR `use(promise)`**: `willMount` должен выполниться в render, чтобы сервер рендерил контент с данными. Перенос mount в effect ломает SSR.
-2. **Render-time store access**: `useViewModel(class/ref/id)` и VM-компьютеды через `this.viewModels.get(...)` читают стор **во время render**. Children/siblings рендерятся ДО effect'а родителя — значит VM должна быть в сторе уже в render. Отложенная регистрация (в effect) ломает все эти lookup'и.
+Раньше это достигалось eager-записью прямо в committed-мапу в render — отсюда orphan'ы: fiber, discard'нутый React 19, уже зарегистрировал VM, но его `useEffect` не вызывается → зомби в сторе, которого надо вычищать эвристикой по таймеру.
 
-Цена: fiber, discard'нутый React 19, уже зарегистрировал + смонтировал VM, но его `useEffect` не вызывается → VM orphan. Этот orphan вычищается механизмом ниже.
+Теперь стор имеет два слоя (как WIP- и current-деревья у React):
+
+```
+staging (per-store Map, НЕ observable)   ← defineStaged в render
+committed (observable Map, как раньше)   ← commitStaged в effect
+```
+
+- **Чтения** (`get`/`has`/`getIds`/`getAll`) делают read-through: committed ∪ staging. Render-time lookup'и работают без изменений.
+- **Committed-only читатели** (`mountedViewsCount`, `hasMountingVms`, `waitMount`, devtools-перечисления) staging не видят → отброшенные fiber'ы никогда не мелькают как зомби.
+- **Promote** делает effect самого fiber'а — никаких глобальных свипов committed-состояния.
 
 ---
 
-## Полный flow
+## Полный flow (staged path: client + store с `defineStaged`)
 
 ### 1. Вход: `!cache.current` (первый рендер fiber'а)
 
@@ -35,31 +49,33 @@ cache.current === null?  ──►  ДА: идём по пути создани�
    │  или reactId из useId()  (isProd ? reactId : `${reactId}:${VM.name}`)
    │
    ▼
-2. instantiateVm → viewModels.define(config)
-   │  define = get-or-create по id:
-   │    - если id уже в сторе → вернуть существующий экземпляр (sharing)
-   │    - иначе create + connect (init + регистрация в сторе)
-   │  Без стора: factory(config) + instance.init(config)
-   │
-   │  Важно: VM УЖЕ в сторе после этого шага (в render, не в effect).
+2. useStaging = client && store && typeof store.defineStaged === 'function'
    │
    ▼
-3. bindLifecycle(model, payload, parentViewModel)
+3. instantiateVm → viewModels.defineStaged(config, cache)
+   │  defineStaged = get-or-create по committed ∪ staging:
+   │    - committed/staged id уже есть → вернуть существующий (sharing)
+   │    - иначе create + link(anchors) + init(config + store)
+   │      + stagedViewModels.set(id, { vm, epoch })
+   │      + FinalizationRegistry.register(cache, { store, id, vm }, vm)
+   │  Без стора: factory(config) + instance.init(config) — staging нет
+   │
+   │  Важно: VM видна lookup'ам, но НЕ в committed-мапе.
+   │
+   ▼
+4. bindModel(model, payload, parentViewModel)  (client)
    │  → ViewModelSimple: parentViewModel + setPayload
-   │  → vm.mount() если не mounted (willMount, может вернуть Promise)
+   │  (mount на клиенте НЕ вызывается в render — ждёт commit effect)
    │
    ▼
-4. registerUnconfirmed(vm, store)
-   │  → Map<vm, store>.set(vm, store)
-   │  → ключ = VM instance → identity-dedup (два fiber'а с одним id
-   │    через define получают один экземпляр → одна запись)
-   │  → НЕ планирует setTimeout! (планирование в confirmCreation)
-   │
+5. creationEntry = undefined  (staging не нуждается в unconfirmed-трекинге;
+   │                          registerUnconfirmed остаётся только для
+   │                          no-store / fallback-сторов)
    ▼
-5. Сохранить в cache.current = { vm, config, promise, isSSR, creationEntry, fn }
+6. cache.current = { vm, config, promise, isSSR, staged: true, fn }
   │
   ▼
-6. return vm
+7. return vm
 ```
 
 ### 2. Повторный рендер: `cache.current` уже есть
@@ -71,7 +87,7 @@ cache.current === null?  ──►  ДА: идём по пути создани�
    │
    ▼
 2. Проверить: VM отвалился от store или unmounted?
-   │  isDetachedFromStore(vm, store) — VM выкинули из store
+   │  isDetachedFromStore(vm, store) — has() read-through: staged тоже виден
    │  vm.lifecycleState === 'unmounted' / 'unmounting'
    │
    │  Зачем: Suspense может скрыть дерево → effect cleanup →
@@ -81,67 +97,76 @@ cache.current === null?  ──►  ДА: идём по пути создани�
    │
    ▼
 3. needsRevive?  → reattachVm(vm, config) + bindLifecycle (mount заново)
+   │  (reattachVm = define({…config, factory: () => vm}) — committed-direct,
+   │   как и раньше; revive-путь редкий)
    otherwise     → REUSE VM (ничего не делаем)
    │
    ▼
 4. return vm
 ```
 
-### 3. useEffect: `cache.current.fn` (mount effect)
+### 3. Commit effect: `cache.current.fn`
 
 ```
-useEffect(fn, [])  — вызывается ОДИН раз при mount fiber'а
+useLayoutEffect(fn, [])  — вызывается ОДИН раз при mount fiber'а
   │
   ▼
-1. confirmCreation(creationEntry)
-   │  → Map.delete(vm)
-   │  → если Map не пуст → scheduleOrphanCleanup()
-   │     (setTimeout(0) запланирован ИЗ useEffect, не из render!)
+1. confirmCreation(creationEntry) — только для fallback-путей
    │
    ▼
-2. Revive-проверка (между render и effect VM могли unmount'нуть):
-   │  isDetachedFromStore(vm, store)?
-   │    ДА → reattachVm(vm, config) + vm.mount()
-   │         (reattachVm = viewModels.define({…config, factory: () => vm}) —
-   │          re-register существующего инстанса; connect зовёт init повторно,
-   │          но revive-путь редкий и это старое поведение)
-   │  иначе isViewModel(vm) && !vm.isMounted?
-   │    ДА → vm.mount()
+2. staged? → commitStaged(config.id, vm)
+   │  → staging.delete + committed.set + attachVMConstructor
+   │  → scheduleStagedSweep(): setTimeout(0) с epochAtCommit
+   │     sweep удаляет staged-записи с epoch <= epochAtCommit
+   │     (их fiber'ы либо закоммичены → уже промоутнуты, либо отброшены)
    │
    ▼
-3. SSR: lifecycleState → 'hydrated' (если mounted + isSSR)
+3. Revive-проверка (между render и effect VM могли unmount'нуть):
+   │  isDetachedFromStore(vm, store)? → reattachVm + mount
+   │  иначе !isMounted? → mount
    │
    ▼
-4. return cleanup function
+4. SSR: lifecycleState → 'hydrated' (если mounted + isSSR)
+   │
+   ▼
+5. return cleanup function
    │  → unmountVm(vm, store) — НЕМЕДЛЕННО, без grace period
-   │  → store.unmount(vm): remove из store + vm.unmount()
+   │  → store.unmount(vm): remove из committed+staging + vm.unmount()
    │  → reclaim'а НЕТ: Suspense remount создаст свежий VM
 ```
 
 ---
 
-## Механизм защиты: Orphan Cleanup (React 19 discarded fibers)
+## Механизм защиты: staging + sweep + GC (React 19 discarded fibers)
 
 ```
 Проблема:  React 19 создаёт два fiber для одного компонента в одном
            render pass (Suspense boundary). Первый fiber отбрасывается —
-           его useEffect НИКОГДА не вызывается. Но VM уже зарегистрирован
-           и смонтирован в render → остаётся в store навсегда
-           (memory leak, zombie data).
+           его useEffect НИКОГДА не вызывается.
 
-Решение:   registerUnconfirmed(vm, store) — помечает VM как "не подтверждён"
-           confirmCreation — вызывается из useEffect, подтверждает VM
-           scheduleOrphanCleanup — setTimeout(0) после confirmCreation,
-           чистит VM'ы чей useEffect не отработал (store.unmount: remove + unmount)
+Раньше:    VM регистрировалась в committed в render → orphan в сторе →
+           unconfirmed-Map + setTimeout(0) вычищал зомби эвристически.
 
-           Ключ: setTimeout планируется из useEffect (confirmCreation),
-           НЕ из render! Иначе setTimeout(0) срабатывает раньше React-эффектов
-           (он был поставлен в очередь раньше MessageChannel).
+Теперь:    VM регистрируется в STAGING в render. Отброшенный fiber
+           никогда не делает promote → committed-стор чист by construction.
 
-Dedup:     Map<vm, store> с ключом = VM instance. Два fiber'а, разделяющих
-           один экземпляр через viewModels.define (одинаковый explicit id),
-           получают одну запись. Один confirmCreation полностью удаляет VM
-           из Map → orphan cleanup не убивает живой VM.
+Sweep:     commitStaged планирует setTimeout(0) с epochAtCommit =
+           текущему stagedEpoch. Sweep удаляет staged-записи с
+           epoch <= epochAtCommit: у всех fiber'ов этого render pass
+           эффекты уже отработали (промоутили) или не отработают никогда
+           (отброшены). Записи более поздних проходов (epoch больше)
+           не трогаем.
+
+           Sweep БЕЗОПАСЕН для живых fiber'ов: удаление staged-записи
+           — это потеря видимости, не убийство инстанса (unmount НЕ
+           вызывается). Живой fiber при своём commit'е сам себя
+           зарегистрирует: commitStaged(id, instance) пишет committed
+           из cache'а хука (self-heal).
+
+GC belt:   defineStaged регистрирует owner (ref хука, живёт ровно столько,
+           сколько fiber) в FinalizationRegistry. Owner собран →
+           dropStaged(id, vm) с identity-check (защита от reuse id).
+           Детерминированность не требуется — это только memory-backstop.
 ```
 
 ### Почему reclaim убран
@@ -154,120 +179,105 @@ Dedup:     Map<vm, store> с ключом = VM instance. Два fiber'а, раз
 
 Reclaim убран. Suspense/lazy remount создаёт свежий VM. Это проще и предсказуемее. Важно различать два разных сценария, которые легко спутать:
 
-- **Предотвращение two-fiber дубликации** (два fiber'а для одного компонента в **одном** render pass): стабильный `config.id`/`generateId` помогает — `define` get-or-create возвращает **общий инстанс** → 1 VM вместо 2. Это работает и без reclaim.
+- **Предотвращение two-fiber дубликации** (два fiber'а для одного компонента в **одном** render pass): стабильный `config.id`/`generateId` помогает — `defineStaged` get-or-create по committed ∪ staging возвращает **общий инстанс** → 1 VM вместо 2.
 - **Сохранение состояния через Suspense unmount→remount** (fiber **размонтировался**, потом новый fiber пересоздаётся): стабильный id **НЕ помогает**. Cleanup вызывает `unmountVm` → `store.unmount` (VM удаляется из стора **сразу**, без grace), и на remount `define(id)` не находит VM → свежий инстанс. Надёжно сохранить стейт тут можно только:
   - `RouteViewGroup` `suspense` prop — локальный Suspense ловит suspend ребёнка, страница **не размонтируется** вообще; ИЛИ
   - revive — если React **сохраняет** fiber через hide/show (тот же инстанс пере-регистрируется через `reattachVm` + mount). Зависит от внутреннего решения React, не гарантировано.
 
 ---
 
-## Пример: orphan-сценарий React 19 шаг за шагом
+## Пример: orphan-сценарий React 19 шаг за шагом (staging)
 
-Компонент `<Page/>` (через `withViewModel`) внутри `<Suspense>`. React 19 в одном render pass создаёт **два fiber'а** для `Page` (дубликат-fiber баг), один discard'ит.
+Компонент `<Page/>` (через `withViewModel`) внутри `<Suspense>`. React 19 в одном render pass создаёт **два fiber'а** для `Page`, один discard'ит.
 
 ```
 RENDER PASS
 ├─ Fiber A (будет отброшен):
-│    useCreateViewModel → define(":r1:PageVM") → VM_A в сторе + mount
-│    registerUnconfirmed(VM_A) → Map { VM_A }
-│    cache_A = { vm: VM_A, ... }
+│    useCreateViewModel → defineStaged(":r1:PageVM", cacheA)
+│    staging { ":r1:" → { VM_A, epoch: 1 } }   ← committed ПУСТ
+│    registry.register(cacheA, { store, ":r1:", VM_A })
 │
 └─ Fiber B (выживет):
-     useCreateViewModel → define(":r2:PageVM") → VM_B в сторе + mount
-     registerUnconfirmed(VM_B) → Map { VM_A, VM_B }
-     cache_B = { vm: VM_B, ... }
+     useCreateViewModel → defineStaged(":r2:PageVM", cacheB)
+     staging { ":r1:", ":r2:" → { VM_B, epoch: 2 } }
 
 React discard'ит Fiber A, коммитит Fiber B.
 
-COMMIT (useEffect у Fiber B; у Fiber A — НИКОГДА):
+COMMIT (layout effect у Fiber B; у Fiber A — НИКОГДА):
   cache_B.fn():
-    confirmCreation(VM_B) → Map.delete(VM_B) → Map { VM_A } (size=1 > 0)
-    → scheduleOrphanCleanup()  ← setTimeout(0) поставлен ИЗ effect'а
+    commitStaged(":r2:", VM_B)
+      → staging.delete(":r2:") + committed.set(":r2:", VM_B)
+      → scheduleStagedSweep(epochAtCommit = 2)
 
-  (Fiber A effect не отработал → VM_A остаётся в Map)
+SWEEP (setTimeout(0)):
+  staging { ":r1:" → { VM_A, epoch: 1 } }, epoch 1 <= 2
+    → drop (БЕЗ unmount — VM_A никогда не маунтилась на клиенте)
+  staging {}
 
-ORPHAN CLEANUP (setTimeout(0), после всех effect'ов):
-  Map { VM_A } → store.unmount(VM_A)  ← remove из store + vm.unmount()
-  Map {}
+GC (когда cacheA соберётся):
+  FinalizationRegistry → dropStaged(":r1:", VM_A) → уже удалено, no-op.
 
-ИТОГ: в сторе только VM_B (живой). VM_A (orphan) вычищен. ✅
+ИТОГ: committed содержит только VM_B. VM_A никогда не была committed —
+      нечего чистить, нечему течь. ✅
 ```
 
-Если бы Fibers A и B **разделяли** один инстанс (одинаковый explicit `id` → `define` вернул бы тот же VM): `Map` по ключу-instance дал бы **одну запись**, один `confirmCreation` очистил бы её → orphan cleanup не запустился бы → живой VM не убит. В этом суть identity-dedup.
+Если бы Fibers A и B **разделяли** один инстанс (одинаковый explicit `id` → `defineStaged` вернул бы тот же VM из staging): одна staged-запись, выживший fiber её промоутит, finalizer отброшенного — no-op по identity-check.
 
 ---
 
-## Сценарий: sibling'и с одинаковым payload (бывшая проблема reclaim)
+## Инварианты
 
-```
-<LayoutVM>
-  <ChildVM payload={{}} />   ← fiber 0, VM_A (auto-id :r1:)
-  <ChildVM payload={{}} />   ← fiber 1, VM_B (auto-id :r2:)
-  <ChildVM payload={{}} />   ← fiber 2, VM_C (auto-id :r3:)
-</LayoutVM>
-```
+1. **Staged-слой НЕ observable** — staging-записи пишутся в render и не должны нотифицировать observer'ов стора. Committed-мапа observable, как раньше.
 
-Это был **худший кейс для старого reclaim**: `claimPendingVm` искал по `(class + parent + store + payload)` → три match → ambiguous guard → `null` → никто не реклаймился → данные терялись. Или (Scenario 2) один sibling в pending → 1 match → reclaim забирал **чужой** VM.
+2. **`commitStaged` вызывается только из commit-фазы (effect), никогда из render** — sweep планируется внутри `commitStaged`; его `setTimeout(0)` должен встать в очередь после React-эффектов, иначе снимет staged-записи ещё не закоммиченных fiber'ов текущего pass'а. (Само по себе не фатально — живой fiber self-heal'ится своим `commitStaged(id, instance)` — но окно read-through просадки не нужно.)
 
-**Под новым дизайном проблемы нет:**
-- Reclaim удалён → нет поиска по payload → нет ambiguity, нет grab'а чужого VM.
-- Каждый sibling имеет **свой auto-id** → `define` создаёт **отдельный инстанс**. Orphan cleanup трекает по инстансу (`Map<vm, store>`), payload вообще не используется как ключ.
-- Discard'нутые fiber'ы → их VM остаются в Map → `store.unmount`. Выжившие → `confirmCreation` → не тронуты. Каждый инстанс независимо.
+3. **Sweep/drop никогда не вызывают `unmount`** — удаление staged-записи это потеря видимости, а не убийство инстанса. Убийство чужого/живого VM невозможно by construction.
 
-Сценарий стал **строже и предсказуемее** старого: убраны и ambiguity, и wrong-VM-grab. Единственное последствие — на Suspense remount все sibling'ы теряют стейт (свежие VM), это принятый trade-off (см. «Почему reclaim убран» выше).
+4. **`dropStaged` только по identity** (`staged.get(id)?.vm === instance`) — защита от reuse id: протухший finalizer не должен снести новую VM под тем же id.
+
+5. **Promote идемпотентен** — `commitStaged` для уже committed VM это no-op (важно для StrictMode double-effect и shared explicit id).
 
 ---
 
-## Два инварианта (нарушить — убить живые VM)
-
-1. **`Map<vm, store>` с ключом = VM instance, не `Set`** — identity-dedup. Два fiber'а, разделяющих VM через `define` (одинаковый id), получают одну запись; один `confirmCreation` очищает. С `Set` объектов было бы две записи → cleanup убил бы живой VM.
-
-2. **`setTimeout(0)` ставится из `confirmCreation` (внутри `useEffect`), НЕ из `registerUnconfirmed` (render)** — `setTimeout(0)` из render встаёт в очередь раньше React'ового `MessageChannel` для эффектов → срабатывает ДО `useEffect` → убивает VM, чей effect ещё не подтвердил. Из effect'а — после.
-
----
-
-## Визуализация: полный жизненный цикл VM
+## Визуализация: полный жизненный цикл VM (staging)
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│                      RENDER PHASE (sync)                           │
+│                      RENDER PHASE (sync)                            │
 │                                                                     │
-│  1. instantiateVm → viewModels.define(config)                      │
-│     └── existing id? → returns SAME instance (sharing)             │
-│     └── VM УЖЕ в сторе (в render!)                                  │
+│  1. instantiateVm → viewModels.defineStaged(config, cache)         │
+│     └── existing id (committed ∪ staged)? → SAME instance (sharing)│
+│     └── иначе: create + link + init + staged.set + register GC     │
+│     └── VM видна lookup'ам, НЕ в committed                         │
 │                                                                     │
-│  2. bindLifecycle → vm.mount() (willMount, maybe Promise)          │
+│  2. bindModel (client) — setPayload/parentViewModel                 │
+│     mount НЕ вызывается (ждёт commit)                               │
 │                                                                     │
-│  3. registerUnconfirmed → Map<vm, store>                           │
-│     └── same VM? → одна запись (identity dedup)                    │
-│     └── NO setTimeout here!                                        │
+│  3. cache.current = { vm, config, staged: true, fn }               │
 │                                                                     │
-│  4. cache.current = { vm, config, creationEntry, fn }              │
-│                                                                     │
-│  5. return vm                                                       │
+│  4. return vm                                                       │
 ├─────────────────────────────────────────────────────────────────────┤
-│                      COMMIT PHASE (async)                          │
+│                      COMMIT PHASE (layout effect)                   │
 │                                                                     │
-│  useEffect(fn):                                                     │
-│  1. confirmCreation(creationEntry)                                  │
-│     └── Map.delete(vm) → Map пуст? → отлично, нет orphan cleanup   │
-│     └── Map НЕ пуст? → scheduleOrphanCleanup (setTimeout(0))       │
+│  1. staged? → commitStaged(id, vm): staging → committed,           │
+│     attachVMConstructor, scheduleStagedSweep(epoch)                │
 │                                                                     │
-│  2. detached from store? → reattachVm (define+factory) + mount (revive) │
-│     not mounted? → mount                                           │
+│  2. detached? → reattachVm + mount (revive); !mounted? → mount     │
 │                                                                     │
 │  3. SSR → lifecycleState = 'hydrated'                              │
 │                                                                     │
 │  cleanup: unmountVm → store.unmount (НЕМЕДЛЕННО, без grace)        │
 ├─────────────────────────────────────────────────────────────────────┤
-│                      ORPHAN CLEANUP (setTimeout)                    │
+│                      SWEEP (setTimeout, per store)                  │
 │                                                                     │
-│  Срабатывает ТОЛЬКО если:                                           │
-│  - confirmCreation был вызван (из useEffect)                       │
-│  - И после удаления остались незакоммиченные VM в Map              │
+│  Срабатывает после commit'а; сносит staged-записи этого render     │
+│  pass'а (epoch <= epochAtCommit) — их fiber'ы отброшены.           │
+│  Живые self-heal'ятся при своём commit'е.                          │
+├─────────────────────────────────────────────────────────────────────┤
+│                      GC (FinalizationRegistry)                      │
 │                                                                     │
-│  → store.unmount всех VM, чей useEffect не отработал               │
-│    (truly orphaned — fiber был отброшен React'ом)                  │
+│  Owner (ref хука) собран → dropStaged по identity.                 │
+│  Memory-backstop; детерминированность не требуется.                │
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -277,13 +287,23 @@ ORPHAN CLEANUP (setTimeout(0), после всех effect'ов):
 
 | Решение | Почему так, а не иначе |
 |---------|----------------------|
-| Регистрация в сторе в render (не в effect) | `useViewModel(class/ref/id)` и VM-компьютеды через `this.viewModels.get(...)` читают стор во время render. Children рендерятся до effect'а родителя → VM должна быть в сторе уже в render. Отложенная регистрация ломает эти lookup'и. |
-| mount в render (не в effect) | SSR: `willMount` грузит данные, `use(promise)` саспендит. Перенос mount в effect ломает SSR + даёт Fallback-флеш для sync-mount. |
-| `setTimeout(0)` для orphan cleanup | `queueMicrotask` срабатывает МЕЖДУ fiber'ами в одном render pass (React 19 yield'ит к микротаскам). `setTimeout(0)` гарантированно после всего render pass. |
-| `setTimeout` из `confirmCreation`, НЕ из `registerUnconfirmed` | `setTimeout(0)` из render phase ставится в очередь раньше React'ового `MessageChannel` для эффектов. Срабатывает ДО useEffect → убивает живые VM. Из useEffect — ставится после, срабатывает после. |
-| `Map<vm, store>` с ключом = VM instance | `viewModels.define(id)` с одинаковым id возвращает тот же объект. Map по ключу VM instance — один VM = одна запись (identity dedup). Два fiber'а, разделяющих VM, получают одну запись → один confirmCreation очищает. |
-| `reattachVm` (define+factory) для revive | Revive пере-регистрирует отвалившийся VM через `viewModels.define({...config, factory: () => vm})`. Хелпер живёт в react-пакете — core store API остаётся чистым от react-специфики. `connect` зовёт `init` повторно (double-init для ViewModelSimple), но revive-путь редкий и это ровно старое поведение. |
+| Staging + read-through (а не eager committed в render) | Render-time lookup'и (`useViewModel(class)`, `this.viewModels.get(...)` в компьютедах) обязаны работать в render — children рендерятся до effect'а родителя. Read-through сохраняет это, не загрязняя committed-стор работой отброшенных fiber'ов. |
+| Promote из effect самого fiber'а (а не глобальный sweep committed) | Единственный достоверный commit-сигнал — effect этого fiber'а. Нет committed-записей без живого fiber'а → orphan cleanup committed-состояния не нужен вообще. |
+| Sweep по epoch'ам, `setTimeout(0)` из `commitStaged` | После commit'а pass'а все его fiber'ы либо промоутились, либо мертвы. Epoch отсекает записи более поздних проходов. `queueMicrotask` нельзя: React 19 yield'ит к микротаскам между fiber'ами. |
+| Sweep без `unmount`, self-heal через `commitStaged(id, instance)` | Удаление staged-записи — потеря видимости, не убийство. Старый orphan cleanup убивал инстанс (`store.unmount`) и поэтому был хрупок к таймингам; здесь худшее последствие гонки — transient lookup-gap до commit'а живого fiber'а. |
+| `FinalizationRegistry` по owner=ref хука | GC-backstop для памяти: ref живёт ровно столько, сколько fiber. Детерминизм не нужен — корректность даёт sweep. |
+| Fallback `registerUnconfirmed`/`setTimeout` для no-store и старых сторов | Без стора VM не pollut'ит глобальное состояние, но `init` в render может подписаться на внешние observable → таймер остаётся safety-net'ом. Кастомные сторы без `defineStaged` — полный старый путь. |
+| mount в render на сервере | SSR: `willMount` грузит данные, `use(promise)` саспендит. На сервере нет commit-фазы — staging не нужен, стор выбрасывается после запроса. |
+| `reattachVm` (define+factory) для revive | Revive пере-регистрирует отвалившийся VM через `viewModels.define({...config, factory: () => vm})`. Хелпер живёт в react-пакете — core store API остаётся чистым от react-специфики. |
 | Reclaim убран | React fiber identity одноразовая → reclaim по auto-id невозможен; ambiguous guard всё равно терял данные при одинаковых payload. Suspense remount создаёт свежий VM — проще и предсказуемее. |
+
+---
+
+## Известные ограничения staging-модели
+
+1. **VM, рутующая себя через `reaction`/`autorun` на ВНЕШНИЕ observable в конструкторе или `init`**, не будет собрана GC → finalizer не сработает. Sweep всё равно уберёт её из staging (видимости не будет), но память освободится только с dispose подписки. Правило: подписки на внешние сторы — в `mount`/`didMount` (для `ViewModelBase` это естественное место), либо с `signal: this.unmountSignal`.
+2. **Внешние (не-React) читатели стора** не видят VM между render и commit — осознанное ужесточение, зеркалит «uncommitted UI невидим». `mountedViewsCount`/`hasMountingVms`/`waitMount` — committed-only.
+3. **Revive-путь** (`reattachVm`) пишет в committed из render — как и раньше; это редкий путь пережившего fiber'а, и он не промоутится через staging.
 
 ---
 
@@ -305,7 +325,7 @@ Fiber отброшен → ❌ USES.subscribe() НИКОГДА не вызван
 
 Идея «создать VM в render, а зарегистрировать в сторе только в effect» (через USES или useEffect) устранила бы orphan-утечку в сторе. Но она **ломает render-time store access**: `useViewModel(class/ref/id)` и VM-компьютеды через `this.viewModels.get(...)` читают стор во время render, а children рендерятся до effect'а родителя → VM ещё не в сторе → lookup падает.
 
-Текущий подход (регистрация в render + orphan cleanup) — единственный способ одновременно сохранить render-time store access и вычистить orphans.
+Staging-модель снимает это противоречие: read-through даёт render-time видимость, а commit-gating не пускает в committed-стор работу отброшенных fiber'ов.
 
 ### Что USES всё-таки делает в проекте
 
@@ -330,9 +350,8 @@ useSyncExternalStore(
 | Отложенная регистрация | ❌ Нет — ломает render-time store access |
 | Tearing prevention | ✅ Да — но это уже решено через `observer` |
 | Re-render при isMounted | ✅ Да — уже используется в HOC |
-| Замена setTimeout(0) | ❌ Нет — нет нового сигнала для обнаружения orphan'ов |
 
-**Проблема — не в том, какой хук использовать, а в том, что React не даёт сигнала о смерти fiber'а.** Orphan cleanup через `unconfirmedByVm` + `setTimeout(0)` — единственный обходной путь при сохранении регистрации в render.
+**Проблема — не в том, какой хук использовать, а в том, что React не даёт сигнала о смерти fiber'а.** Поэтому committed-стор строится только из commit-сигналов (effect'ов), а всё некоммиченное живёт в staging и умирает вместе с fiber'ом.
 
 ---
 
@@ -340,32 +359,30 @@ useSyncExternalStore(
 
 | Файл | Роль |
 |------|------|
-| `packages/react/src/hooks/use-create-view-model.ts` | Хук. Регистрация + mount в render, `registerUnconfirmed`, `confirmCreation` в effect, `reattachVm` (revive), immediate `unmountVm` в cleanup |
-| `packages/react/src/hooks/pending-vm-unmount.ts` | `registerUnconfirmed`/`confirmCreation`/`unmountVm`/`scheduleOrphanCleanup`. `Map<vm, store>` + `setTimeout(0)` |
+| `packages/react/src/hooks/use-create-view-model.ts` | Хук. `defineStaged` в render (staged path), `commitStaged` в effect, `reattachVm` (revive), immediate `unmountVm` в cleanup; fallback — `registerUnconfirmed` |
+| `packages/react/src/hooks/pending-vm-unmount.ts` | Fallback-механизм для no-store и кастомных сторов без staging: `registerUnconfirmed`/`confirmCreation`/`unmountVm`/`scheduleOrphanCleanup` (`Map<vm, store>` + `setTimeout(0)`) |
 | `packages/react/src/hoc/with-view-model.tsx` | HOC. `useCreateViewModel` + `useSyncExternalStore` на `isMounted` (Fallback-gating) + `ActiveViewModelProvider` (parent-child контекст) |
-| `packages/react/src/hooks/use-view-model.ts` | `useViewModel(lookup)` — store-lookup во время render (`viewModels.get`). Работает потому, что регистрация в render |
-| `packages/core/src/view-model/view-model.store.base.ts` | Store: `define` (get-or-create+init+register), `create`, `connect`, `unmount`, `link`. НЕ знает про React |
+| `packages/react/src/hooks/use-view-model.ts` | `useViewModel(lookup)` — store-lookup во время render (`viewModels.get`). Работает через read-through staging |
+| `packages/core/src/view-model/view-model.store.base.ts` | Store: `define`/`defineStaged`/`commitStaged`/`dropStaged`, `sweepStaged` по epoch'ам, `FinalizationRegistry`, `create`, `connect`, `unmount`, `link`. НЕ знает про React |
 | `packages/core/src/view-model/view-model.base.ts` | `ViewModelBase`: lifecycle (`mount`/`unmount`/`isMounted`/`lifecycleState`), `unmountSignal`. `init` отсутствует (конструктор всё ставит) |
 
-**Слои:** core store чистый (никакой React-специфики). Вся lifecycle-логика (register+mount в render, orphan cleanup, revive, reclaim-удаление) — в react-пакете.
+**Слои:** staging-механика живёт в core-сторе (per-store, без React-специфики); react-пакет только выбирает `defineStaged` vs `define` и зовёт `commitStaged` из commit-эффекта.
 
 ---
 
 ## Что делать потребителю
 
-1. **Гейтить на `isMounted`** (теперь обязательнее): `withViewModel` делает это сам (Fallback пока `!isMounted`); при прямом использовании хука — `if (!vm.isMounted) return null` (как `OnlyViewModel`).
+1. **Гейтить на `isMounted`**: `withViewModel` делает это сам (Fallback пока `!isMounted`); при прямом использовании хука — `if (!vm.isMounted) return null` (как `OnlyViewModel`).
 2. **Сохранение состояния при Suspense remount** — reclaim'а больше нет, remount создаёт свежий VM. Важно различать:
-   - **Two-fiber дубликация** (два fiber'а в одном pass): стабильный `config.id`/`generateId` помогает — `define` вернёт общий инстанс → 1 VM вместо 2.
+   - **Two-fiber дубликация** (два fiber'а в одном pass): стабильный `config.id`/`generateId` помогает — `defineStaged` вернёт общий инстанс → 1 VM вместо 2.
    - **Suspense unmount→remount** (fiber размонтировался, потом новый): стабильный id **НЕ спасает** — cleanup сразу удаляет VM из стора, remount создаёт свежий. Надёжно только `RouteViewGroup` `suspense` prop (не размонтировать) или revive (если React сохраняет fiber).
-3. **Дубликаты `id`** — два компонента с одним explicit `id` разделяют один инстанс (`define` get-or-create). Это легально, но cleanup/unmount одного влияет на общий VM — лучше уникальные id.
+3. **Дубликаты `id`** — два компонента с одним explicit `id` разделяют один инстанс (get-or-create). Это легально, но cleanup/unmount одного влияет на общий VM — лучше уникальные id.
+4. **Подписки на внешние observable** — в `mount`/`didMount`, не в конструкторе/`init` (см. «Известные ограничения» п.1).
 
 ---
 
-## Проверка в реальных приложениях
+## Проверка
 
-Изменения (удаление reclaim, упрощённый orphan cleanup, `reattachVm` для revive) **визуально проверены** в двух потребительских приложениях:
-
-- **gozon** — визуально работает ✅
-- **githome** — визуально работает ✅
-
-Orphan cleanup корректно вычищает discard'нутые fiber'ы, revive восстанавливает VM при Suspense hide/show на пережившем fiber, утечек и зомби-VM не наблюдается.
+- `packages/core`: unit-тесты staging (`defineStaged`/`commitStaged`/`dropStaged`/sweep/identity-guard) — `view-model.store.base.test.ts`.
+- `packages/react`: весь сьют гоняется по staged-пути (store из core-исходников всегда staging-capable) + `staged-commit.test.tsx` (read-through в render, discarded fiber не оставляет committed-зомби).
+- Регрессии `tests/react-regressions/react18` и `react19` — зелёные (единственный падающий тест `sibling-cross-claim > remount with an equal payload reclaims the same instance` падает и на базовом коммите — это протухший тест эпохи удалённого reclaim).

@@ -38,12 +38,6 @@ const EMPTY_ARR: any[] = [];
 const { emptyObject, noop } = _internals;
 const isProd = process.env.NODE_ENV === 'production';
 
-const DBG = !isProd;
-const dbg = DBG ? (...args: any[]) => console.log('[useCreateVM]', ...args) : noop;
-/** Debug-only safe accessors — ViewModelSimple has no lifecycle props. */
-const dbgLc = (vm: unknown) => (vm as { lifecycleState?: unknown } | null | undefined)?.lifecycleState;
-const dbgIm = (vm: unknown) => (vm as { isMounted?: unknown } | null | undefined)?.isMounted;
-
 const subscribeNoop = () => noop;
 const getClientHydrated = () => true;
 const getServerHydrated = () => false;
@@ -59,18 +53,25 @@ type Cache = {
   isSSR: boolean;
   fn: () => () => void;
   creationEntry?: UnconfirmedCreation;
+  /** True while the VM is registered only in the store's staging layer. */
+  staged?: boolean;
 };
 
 /**
- * Creates AND registers the VM instance in the store during render.
+ * Creates AND registers the VM instance during render.
  *
- * Registration stays in render (not deferred to the effect) so that
- * `useViewModel(class/ref/id)` and VM computeds that read
- * `this.viewModels.get(...)` during render keep working — children and
- * siblings render before the parent's effect, so the VM must already be in
- * the store by the time anyone looks it up. The orphan that this creates (a
- * fiber discarded by React 19 registers + mounts but never commits) is
- * cleaned up by the unconfirmed-creation setTimeout in pending-vm-unmount.
+ * With a staging-capable store (client-side), registration goes to the
+ * store's staging layer: render-phase lookups (`useViewModel(class/ref/id)`,
+ * VM computeds reading `this.viewModels.get(...)`) keep working via
+ * read-through, but the committed store map is only written by this fiber's
+ * commit effect (`commitStaged`). A fiber discarded by React never promotes
+ * its VM — the staged entry is swept after the next commit and eventually
+ * GC'd, mirroring React's own work-in-progress → commit model.
+ *
+ * Fallback paths (server rendering, stores without staging support, no
+ * store) keep the eager render-phase registration; discarded fibers there
+ * are cleaned up by the unconfirmed-creation setTimeout in
+ * pending-vm-unmount.
  *
  * On the server, mount() is called from render so an async willMount can be
  * consumed by React's `use(promise)` SSR flow. On the client, mount() is
@@ -86,6 +87,7 @@ const instantiateVm = (
   props: any,
   viewModels: ViewModelStore | null,
   parentViewModel: VmInstance | null | undefined,
+  stagedOwner?: object,
 ): { instance: VmInstance; config: ViewModelCreateConfig<any> } =>
   runInAction(() => {
     const config: ViewModelCreateConfig<any> = {
@@ -100,10 +102,12 @@ const instantiateVm = (
       props: props ?? rawCfg?.props,
     };
     const instance: VmInstance = viewModels
-      ? viewModels.define(config)
+      ? stagedOwner
+        ? viewModels.defineStaged!(config, stagedOwner)
+        : viewModels.define(config)
       : (config.factory?.(config) ?? viewModelsConfig.factory(config));
     if (!viewModels) {
-      // `store.define` → `connect` already called init(); the no-store path
+      // `store.define`/`defineStaged` already called init(); the no-store path
       // builds the instance via the factory and must init() manually so
       // ViewModelSimple receives its config before the view reads it.
       instance.init?.({ ...config, viewModels: undefined } as any);
@@ -250,8 +254,6 @@ export function useCreateViewModel(
   const cache = useRef<Cache>(null!);
   const reactId = useId();
 
-  dbg('--- ENTER', VM.name, 'id=', reactId, 'hasCache=', !!cache.current?.vm, 'cacheVmId=', cache.current?.vm?.id, 'cacheVmLifecycle=', dbgLc(cache.current?.vm), 'cacheVmIsMounted=', dbgIm(cache.current?.vm));
-
   if (!cache.current) {
     // Runs once per fiber. The fiber owns its VM: while the fiber is alive the
     // instance is never replaced — see the revive branch below.
@@ -264,7 +266,16 @@ export function useCreateViewModel(
       ? (existing as { vmData?: unknown }).vmData
       : vmResource?.read(vmId);
 
-    dbg('INSTANTIATE', VM.name, 'vmId=', vmId, 'hasVmData=', vmData !== undefined);
+    // Client + staging-capable store: register into the store's staging
+    // layer instead of the committed map. Render-phase lookups keep working
+    // via read-through; only this fiber's commit effect promotes the VM to a
+    // committed entry, and a discarded fiber's staged entry is dropped by the
+    // store (sweep + GC finalizer) — no unconfirmed-creation tracking needed.
+    const useStaging =
+      typeof window !== 'undefined' &&
+      viewModels != null &&
+      typeof viewModels.defineStaged === 'function';
+
     const { instance: model, config } = instantiateVm(
       vmId,
       VM,
@@ -274,28 +285,27 @@ export function useCreateViewModel(
       props,
       viewModels,
       parentViewModel,
+      useStaging ? cache : undefined,
     );
     if (typeof window !== 'undefined') {
       bindModel(model, payload, parentViewModel);
     }
-    dbg('INSTANTIATED', VM.name, 'vmId=', model.id, 'lifecycleState=', dbgLc(model), 'isMounted=', dbgIm(model));
-
-    dbg('BIND LIFECYCLE', model.id, 'lifecycleState-before=', dbgLc(model), 'isMounted-before=', dbgIm(model));
     const lifecycleResult =
       typeof window === 'undefined'
         ? (bindLifecycle(model, payload, parentViewModel) as
             | PromiseLike<void>
             | undefined)
         : undefined;
-    dbg('BIND LIFECYCLE DONE', model.id, 'lifecycleState-after=', dbgLc(model), 'isMounted-after=', dbgIm(model), 'promise=', !!lifecycleResult);
 
     const vm = model;
 
-    // Register as unconfirmed — the VM is registered during render. On the
-    // server it is also mounted for SSR; on the client mount waits for commit.
-    // A fiber discarded by React still needs store cleanup. Keying by VM
-    // instance lets shared explicit IDs collapse to one entry.
-    const creationEntry = registerUnconfirmed(vm, viewModels);
+    // Orphan tracking is only needed for the eager-registration paths.
+    // Staged VMs are dropped by the store itself; on the server there is no
+    // commit phase at all, so nothing can ever be confirmed or swept there.
+    const creationEntry =
+      useStaging || typeof window === 'undefined'
+        ? undefined
+        : registerUnconfirmed(vm, viewModels);
 
     cache.current = {
       vm,
@@ -303,6 +313,7 @@ export function useCreateViewModel(
       promise: lifecycleResult,
       isSSR,
       creationEntry,
+      staged: useStaging || undefined,
       fn: () => {
         // Fiber committed — confirm the VM is no longer orphaned.
         if (cache.current.creationEntry) {
@@ -312,11 +323,18 @@ export function useCreateViewModel(
 
         const vm = cache.current.vm;
 
+        // Promote the staged VM to a committed store entry: this fiber is
+        // alive. Also schedules the store's sweep of staged entries left
+        // behind by fibers discarded during this render pass.
+        if (cache.current.staged) {
+          cache.current.staged = false;
+          viewModels?.commitStaged?.(cache.current.config.id, vm);
+        }
+
         // The VM may have been unmounted between render and this effect (a
         // previous Suspense-hide cleanup ran on the same persisted fiber) —
         // revive the same instance instead of losing it.
         if (isDetachedFromStore(vm, viewModels)) {
-          dbg('EFFECT reattach', vm.id);
           reattachVm(vm, cache.current.config, viewModels!);
         }
 
@@ -329,7 +347,6 @@ export function useCreateViewModel(
 
         const shouldHydrate =
           isViewModel(vm) && vm.lifecycleState === 'mounted' && cache.current.isSSR;
-        dbg('EFFECT fn', 'vmId=', vm.id, 'lifecycleState=', dbgLc(vm), 'isSSR=', cache.current.isSSR, 'shouldHydrate=', shouldHydrate);
         // Transition to 'hydrated' ONLY in SSR mode.
         // Mount effect confirms React committed the component on the client.
         // In SSR mode this means hydration succeeded — VMs can check
@@ -340,7 +357,6 @@ export function useCreateViewModel(
           runInAction(() => {
             (vm as any).lifecycleState = 'hydrated';
           });
-          dbg('EFFECT lifecycleState→hydrated', vm.id);
         }
 
         return () => {
@@ -366,7 +382,6 @@ export function useCreateViewModel(
           model.lifecycleState === 'unmounting'));
 
     if (needsRevive) {
-      dbg('REVIVE VM', model.id, 'lifecycleState=', dbgLc(model), 'detached=', detached);
       if (detached && viewModels) {
         reattachVm(model, cache.current.config, viewModels);
       }
@@ -374,8 +389,6 @@ export function useCreateViewModel(
         (bindLifecycle(model, payload, parentViewModel) as
           | PromiseLike<void>
           | undefined) ?? cache.current.promise;
-    } else {
-      dbg('REUSE VM', model.id, 'lifecycleState=', dbgLc(model), 'isMounted=', dbgIm(model));
     }
   }
 
@@ -390,14 +403,10 @@ export function useCreateViewModel(
       getClientHydrated,
       getServerHydrated,
     );
-    dbg('SSR BLOCK', model.id, 'isHydrated=', isHydrated, 'pending=', !!pending, 'use=', !!use);
     if (use && pending && (typeof window === 'undefined' || !isHydrated)) {
-      dbg('SSR use(pending)', model.id);
       use(pending);
     }
   }
-
-  dbg('RETURN', VM.name, 'vmId=', model.id, 'lifecycleState=', dbgLc(model), 'isMounted=', dbgIm(model));
 
   return model;
 }

@@ -283,7 +283,6 @@ export function withViewModel(
   // Defensive fallback: a duplicated/older mobx-view-model copy can poison the
   // shared viewModelsConfig singleton (Symbol.for) and leave getPayload undefined.
   const getPayload: Defined<VMHocFullConfig['getPayload']> = config.getPayload ?? viewModelsConfig.getPayload;
-  console.log('--- ENTER withViewModel', 'getPayload', getPayload);
   const forwardRefMode = !!config.forwardRef;
   const Fallback = (config.fallback ??
     config.vmConfig?.fallbackComponent ??
@@ -317,15 +316,9 @@ export function withViewModel(
   }
 
   // Plain shell (no observer): create VM, gate on isMounted, render View / Fallback.
-  const dbgW = process.env.NODE_ENV !== 'production'
-    ? (...args: any[]) => console.log('[withVM]', ...args)
-    : () => {};
-
   const Wrapper = (allProps: any, ref?: any): RReactNode => {
     const viewModels = useContext(ViewModelsContext);
     const payload = getPayload(allProps);
-
-    dbgW('--- ENTER Wrapper', VM.name, 'propsId=', allProps?.id);
 
     const model = useCreateViewModel(
       VM,
@@ -333,8 +326,6 @@ export function withViewModel(
       config,
       allProps,
     ) as AnyViewModel | AnyViewModelSimple;
-
-    dbgW('Wrapper GOT model', VM.name, 'modelId=', model.id, 'lifecycleState=', (model as any).lifecycleState, 'isMounted=', (model as any).isMounted, 'isViewModel=', isViewModel(model));
 
     (config.reactHook ?? viewModelsConfig.reactHook)?.(
       allProps,
@@ -354,39 +345,27 @@ export function withViewModel(
     if (cacheRef.current) {
       cacheRef.current.value = model;
     } else {
-      dbgW('INIT cacheRef', VM.name, 'modelId=', model.id, 'isMounted=', (model as any).isMounted);
       cacheRef.current = {
         value: model,
         subscribe: (onStoreChange) =>
           reaction(
             () => {
               const current = cacheRef.current.value;
-              const ready = !isViewModel(current) || current.isMounted;
-              dbgW('subscribe reaction', VM.name, 'currentId=', current?.id, 'isMounted=', (current as any)?.isMounted, 'ready=', ready);
-              return ready;
+              return !isViewModel(current) || current.isMounted;
             },
-            (ready) => {
-              dbgW('subscribe reaction FIRED', VM.name, 'ready=', ready);
+            () => {
               onStoreChange();
             },
           ),
-        getSnapshot: () => {
-          const ready = (cacheRef.current.value as AnyViewModel).isMounted !== false;
-          dbgW('getSnapshot', VM.name, 'modelId=', cacheRef.current.value?.id, 'isMounted=', (cacheRef.current.value as AnyViewModel)?.isMounted, 'ready=', ready);
-          return ready;
-        },
+        getSnapshot: () =>
+          (cacheRef.current.value as AnyViewModel).isMounted !== false,
       };
     }
 
     const getServerSnapshot =
       typeof window !== 'undefined' && viewModelsConfig.mode === 'ssr'
-        ? () => {
-            dbgW('getServerSnapshot (SSR=true)', VM.name, 'returning true');
-            return true;
-          }
+        ? () => true
         : cacheRef.current.getSnapshot;
-
-    dbgW('useSyncExternalStore', VM.name, 'isSSR=', viewModelsConfig.mode === 'ssr', 'isClient=', typeof window !== 'undefined');
 
     const isReadyToRender = useSyncExternalStore(
       cacheRef.current.subscribe,
@@ -394,12 +373,9 @@ export function withViewModel(
       getServerSnapshot,
     );
 
-    dbgW('isReadyToRender', VM.name, 'isReady=', isReadyToRender, 'modelId=', model.id, 'isMounted=', (model as any).isMounted);
-
     let child: RReactNode = null;
 
     if (isReadyToRender) {
-      dbgW('RENDER View', VM.name, 'modelId=', model.id);
       // One shallow copy only on the ready path (fallback skips this alloc).
       const viewProps = { ...allProps, model };
       delete viewProps.payload;
@@ -408,10 +384,7 @@ export function withViewModel(
       }
       child = createElement(View, viewProps);
     } else if (Fallback) {
-      dbgW('RENDER Fallback', VM.name);
       child = createElement(Fallback);
-    } else {
-      dbgW('RENDER null', VM.name);
     }
 
     return createElement(ActiveViewModelProvider, cacheRef.current, child);
