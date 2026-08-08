@@ -413,6 +413,36 @@ describe('ViewModelStoreBase', () => {
       expect(vmStore.get('reuse')).toBe(null);
     });
 
+    it('finalizeStaged drops the entry and unmounts the instance', () => {
+      const vmStore = new ViewModelStoreBaseMock();
+
+      const vm = vmStore.defineStaged(
+        { id: 'finalized', VM: ViewModelBaseMock, payload: {} },
+        {},
+      );
+      vmStore.finalizeStaged('finalized', vm);
+
+      expect(vmStore.get('finalized')).toBe(null);
+      // unmount releases constructor/init subscriptions via unmountSignal
+      expect(vm.spies.unmount).toHaveBeenCalledTimes(1);
+      expect(vm.unmountSignal.aborted).toBe(true);
+    });
+
+    it('finalizeStaged does not touch a VM committed meanwhile', () => {
+      const vmStore = new ViewModelStoreBaseMock();
+
+      const vm = vmStore.defineStaged(
+        { id: 'committed', VM: ViewModelBaseMock, payload: {} },
+        {},
+      );
+      vmStore.commitStaged('committed', vm);
+
+      vmStore.finalizeStaged('committed', vm);
+
+      expect(vmStore.get('committed')).toBe(vm);
+      expect(vm.spies.unmount).not.toHaveBeenCalled();
+    });
+
     it('commitStaged sweeps stale staged entries but keeps newer ones', async () => {
       const vmStore = new ViewModelStoreBaseMock();
 

@@ -163,10 +163,16 @@ Sweep:     commitStaged планирует setTimeout(0) с epochAtCommit =
            зарегистрирует: commitStaged(id, instance) пишет committed
            из cache'а хука (self-heal).
 
-GC belt:   defineStaged регистрирует owner (ref хука, живёт ровно столько,
-           сколько fiber) в FinalizationRegistry. Owner собран →
-           dropStaged(id, vm) с identity-check (защита от reuse id).
-           Детерминированность не требуется — это только memory-backstop.
+GC dispose: defineStaged регистрирует owner (ref хука, живёт ровно
+           столько, сколько fiber) в FinalizationRegistry. VM owner'а НЕ
+           удерживает (reactions/config ссылаются на VM, не на ref) →
+           owner собран ⇔ fiber доказуемо мёртв → finalizeStaged(id, vm):
+           drop staged-записи (identity-check против reuse id) +
+           vm.unmount() → unmountSignal aborted → constructor/init
+           подписки освобождены. Тайминг — на усмотрение GC, но семантика
+           строгая (в отличие от sweep, который не умеет отличить мёртвый
+           fiber от fiber'а с отложенным commit'ом и поэтому не трогает
+           lifecycle).
 ```
 
 ### Почему reclaim убран
@@ -215,7 +221,9 @@ SWEEP (setTimeout(0)):
   staging {}
 
 GC (когда cacheA соберётся):
-  FinalizationRegistry → dropStaged(":r1:", VM_A) → уже удалено, no-op.
+  FinalizationRegistry → finalizeStaged(":r1:", VM_A)
+    → staged-запись уже сметена sweep'ом → vm.unmount()
+    → unmountSignal aborted → constructor/init-подписки освобождены.
 
 ИТОГ: committed содержит только VM_B. VM_A никогда не была committed —
       нечего чистить, нечему течь. ✅
@@ -231,7 +239,7 @@ GC (когда cacheA соберётся):
 
 2. **`commitStaged` вызывается только из commit-фазы (effect), никогда из render** — sweep планируется внутри `commitStaged`; его `setTimeout(0)` должен встать в очередь после React-эффектов, иначе снимет staged-записи ещё не закоммиченных fiber'ов текущего pass'а. (Само по себе не фатально — живой fiber self-heal'ится своим `commitStaged(id, instance)` — но окно read-through просадки не нужно.)
 
-3. **Sweep/drop никогда не вызывают `unmount`** — удаление staged-записи это потеря видимости, а не убийство инстанса. Убийство чужого/живого VM невозможно by construction.
+3. **Sweep/drop никогда не вызывают `unmount`; dispose делает только `finalizeStaged` (GC)** — sweep не умеет отличить мёртвый fiber от fiber'а с отложенным commit'ом, поэтому только снимает видимость. Finalizer стреляет, когда owner (ref хука) собран GC ⇔ fiber доказуемо мёртв → `unmount` безопасен и освобождает `unmountSignal`-подписки.
 
 4. **`dropStaged` только по identity** (`staged.get(id)?.vm === instance`) — защита от reuse id: протухший finalizer не должен снести новую VM под тем же id.
 
@@ -301,7 +309,7 @@ GC (когда cacheA соберётся):
 
 ## Известные ограничения staging-модели
 
-1. **VM, рутующая себя через `reaction`/`autorun` на ВНЕШНИЕ observable в конструкторе или `init`**, не будет собрана GC → finalizer не сработает. Sweep всё равно уберёт её из staging (видимости не будет), но память освободится только с dispose подписки. Правило: подписки на внешние сторы — в `mount`/`didMount` (для `ViewModelBase` это естественное место), либо с `signal: this.unmountSignal`.
+1. **Подписки из конструктора/`init` на внешние observable освобождаются с GC-задержкой.** Sweep снимает видимость сразу, но `unmount` (и abort `unmountSignal`) для отброшенного fiber'а делает только finalizer — когда соберётся hook cache. Между sweep и GC такие реакции продолжают работать незримо. Остаточная гонка: два fiber'а шарят explicit id, создатель отброшен и его cache собран ДО commit'а шарера → dispose живой VM (guard: `finalizeStaged` пропускает VM, уже committed шарером; окно — между scavenge-GC и commit'ом, на практике ~ноль). Правило «подписки в `mount`/`didMount`» остаётся рекомендацией по гигиене, но утечки как таковой уже нет.
 2. **Внешние (не-React) читатели стора** не видят VM между render и commit — осознанное ужесточение, зеркалит «uncommitted UI невидим». `mountedViewsCount`/`hasMountingVms`/`waitMount` — committed-only.
 3. **Revive-путь** (`reattachVm`) пишет в committed из render — как и раньше; это редкий путь пережившего fiber'а, и он не промоутится через staging.
 

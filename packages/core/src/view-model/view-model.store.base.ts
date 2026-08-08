@@ -38,15 +38,20 @@ type StagedVmRegistryEntry = {
 };
 
 /**
- * GC-driven backstop for staged entries whose owner was discarded without
+ * GC-driven disposal path for staged VMs whose owner was discarded without
  * committing (e.g. a React fiber thrown away during a render pass). The
  * owner object (the view layer's per-fiber cache) is the finalization
- * target: once it is collected, the staged entry is dropped.
+ * target; crucially, the VM itself does NOT retain it — so once the target
+ * is collected, the owner fiber is provably dead and the VM can be safely
+ * unmounted (releasing `unmountSignal` subscriptions). Unlike
+ * {@link ViewModelStoreBase.sweepStaged}, which cannot distinguish a dead
+ * fiber from one whose commit is merely delayed, this signal is exact
+ * (though its timing is up to the GC).
  */
 const stagedVmRegistry: FinalizationRegistry<StagedVmRegistryEntry> | null =
   typeof FinalizationRegistry === 'function'
     ? new FinalizationRegistry<StagedVmRegistryEntry>(({ store, id, vm }) => {
-        store.dropStaged(id, vm);
+        store.finalizeStaged(id, vm);
       })
     : null;
 
@@ -245,8 +250,9 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
 
     if (staged?.vm === vm) {
       this.stagedViewModels.delete(id);
-      stagedVmRegistry?.unregister(vm);
     }
+    // The VM now has a provably live owner — cancel the orphan finalizer.
+    stagedVmRegistry?.unregister(vm);
 
     if (untracked(() => this.viewModels.get(id)) !== vm) {
       runInAction(() => {
@@ -271,16 +277,42 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
   }
 
   /**
+   * Finalizes a staged VM whose owner was garbage-collected without
+   * committing: drops the staged entry (if still present) and unmounts the
+   * instance, releasing constructor/init subscriptions bound to
+   * `unmountSignal`.
+   *
+   * Called only by the staged-vm FinalizationRegistry. The owner fiber is
+   * provably dead here (its cache was collected), so unmounting is safe —
+   * unlike the sweep, which fires while a delayed commit may still be alive
+   * and therefore only affects lookup visibility.
+   */
+  finalizeStaged(id: string, instance: VMBase | AnyViewModelSimple): void {
+    if (this.viewModels.get(id) === instance) {
+      // A sibling fiber sharing the same id committed it meanwhile — alive.
+      return;
+    }
+    if (this.stagedViewModels.get(id)?.vm === instance) {
+      this.stagedViewModels.delete(id);
+    }
+    instance.unmount?.();
+  }
+
+  /**
    * Removes staged entries created up to (and including) the render pass
    * that produced the latest commit; entries created by later passes
    * survive. Dropping is lifecycle-free and safe for live owners: their
    * commit effect re-registers the instance via {@link commitStaged}.
+   *
+   * The finalizer registrations intentionally stay in place: a swept entry
+   * may still belong to a dead fiber whose VM subscribed to external
+   * observables in its constructor/init — the finalizer disposes those once
+   * the owner is GC'd (see {@link finalizeStaged}).
    */
   protected sweepStaged(epochAtCommit: number): void {
     for (const [id, entry] of this.stagedViewModels) {
       if (entry.epoch <= epochAtCommit) {
         this.stagedViewModels.delete(id);
-        stagedVmRegistry?.unregister(entry.vm);
       }
     }
   }
