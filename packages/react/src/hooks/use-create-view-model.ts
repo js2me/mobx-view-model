@@ -61,17 +61,11 @@ type Cache = {
  * Creates AND registers the VM instance during render.
  *
  * With a staging-capable store (client-side), registration goes to the
- * store's staging layer: render-phase lookups (`useViewModel(class/ref/id)`,
- * VM computeds reading `this.viewModels.get(...)`) keep working via
- * read-through, but the committed store map is only written by this fiber's
- * commit effect (`commitStaged`). A fiber discarded by React never promotes
- * its VM — the staged entry is swept after the next commit and eventually
- * GC'd, mirroring React's own work-in-progress → commit model.
- *
- * Fallback paths (server rendering, stores without staging support, no
- * store) keep the eager render-phase registration; discarded fibers there
- * are cleaned up by the unconfirmed-creation setTimeout in
- * pending-vm-unmount.
+ * store's staging layer: render-phase lookups keep working via read-through,
+ * and only this fiber's commit effect (`commitStaged`) promotes the VM —
+ * a discarded fiber's staged entry is dropped by the store. Fallback paths
+ * (SSR, stores without staging support, no store) keep the eager
+ * registration + unconfirmed-creation cleanup (see pending-vm-unmount).
  *
  * On the server, mount() is called from render so an async willMount can be
  * consumed by React's `use(promise)` SSR flow. On the client, mount() is
@@ -267,14 +261,13 @@ export function useCreateViewModel(
       : vmResource?.read(vmId);
 
     // Client + staging-capable store: register into the store's staging
-    // layer instead of the committed map. Render-phase lookups keep working
-    // via read-through; only this fiber's commit effect promotes the VM to a
-    // committed entry, and a discarded fiber's staged entry is dropped by the
-    // store (sweep + GC finalizer) — no unconfirmed-creation tracking needed.
+    // layer instead of the committed map — no unconfirmed-creation tracking
+    // needed, the store drops discarded fibers' staged entries itself.
     const useStaging =
       typeof window !== 'undefined' &&
       viewModels != null &&
-      typeof viewModels.defineStaged === 'function';
+      typeof viewModels.defineStaged === 'function' &&
+      typeof viewModels.commitStaged === 'function';
 
     const { instance: model, config } = instantiateVm(
       vmId,
@@ -370,26 +363,10 @@ export function useCreateViewModel(
     const model = cache.current.vm;
     model.setPayload?.(payload);
 
-    // The fiber owns this VM — it is never replaced here. If the VM was
-    // unmounted while the fiber was hidden (Suspense), revive the same
-    // instance. Suspense hide → effect cleanup → immediate unmount; when the
-    // fiber re-renders, re-register + mount it again.
-    const detached = isDetachedFromStore(model, viewModels);
-    const needsRevive =
-      detached ||
-      (isViewModel(model) &&
-        (model.lifecycleState === 'unmounted' ||
-          model.lifecycleState === 'unmounting'));
-
-    if (needsRevive) {
-      if (detached && viewModels) {
-        reattachVm(model, cache.current.config, viewModels);
-      }
-      cache.current.promise =
-        (bindLifecycle(model, payload, parentViewModel) as
-          | PromiseLike<void>
-          | undefined) ?? cache.current.promise;
-    }
+    // A persisted Suspense fiber can be detached by its previous effect
+    // cleanup. Do not revive it here: this render may still be discarded.
+    // The commit effect below reattaches and mounts it only after React has
+    // confirmed that the fiber is alive.
   }
 
   const model = cache.current.vm;

@@ -112,7 +112,7 @@ describe('sibling same-class VMs: claim discriminated by payload', () => {
     expect(vmStore.getAll(AvatarVM)[0].payload).toEqual({ name: 'Y' });
   });
 
-  test('remount with an equal payload reclaims the same instance', async () => {
+  test('remount with an equal payload creates a fresh instance (no reclaim)', async () => {
     const { vmStore, AvatarVM, App } = setup();
 
     const view = await act(async () => render(<App names={['X']} />));
@@ -125,11 +125,16 @@ describe('sibling same-class VMs: claim discriminated by payload', () => {
       view.rerender(<App names={['X']} />);
     });
 
+    // Reclaim was intentionally removed: unmount drops the VM from the
+    // store immediately (no grace window), so the remounting fiber defines
+    // a fresh instance even with an equal payload.
     expect(vmStore.getAll(AvatarVM)).toHaveLength(1);
-    expect(vmStore.getAll(AvatarVM)[0]).toBe(vmX);
+    expect(vmStore.getAll(AvatarVM)[0]).not.toBe(vmX);
+    expect(vmStore.getAll(AvatarVM)[0].payload).toEqual({ name: 'X' });
 
     await act(async () => {});
     expect(vmStore.getAll(AvatarVM)).toHaveLength(1);
-    expect(vmX.isMounted).toBe(true);
+    expect(vmX.isMounted).toBe(false);
+    expect(vmStore.getAll(AvatarVM)[0].isMounted).toBe(true);
   });
 });

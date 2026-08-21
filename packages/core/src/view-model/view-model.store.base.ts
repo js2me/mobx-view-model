@@ -38,15 +38,11 @@ type StagedVmRegistryEntry = {
 };
 
 /**
- * GC-driven disposal path for staged VMs whose owner was discarded without
- * committing (e.g. a React fiber thrown away during a render pass). The
- * owner object (the view layer's per-fiber cache) is the finalization
- * target; crucially, the VM itself does NOT retain it — so once the target
- * is collected, the owner fiber is provably dead and the VM can be safely
- * unmounted (releasing `unmountSignal` subscriptions). Unlike
- * {@link ViewModelStoreBase.sweepStaged}, which cannot distinguish a dead
- * fiber from one whose commit is merely delayed, this signal is exact
- * (though its timing is up to the GC).
+ * GC-driven disposal for staged VMs whose owner (the view layer's
+ * per-fiber cache) was collected without ever committing: the VM does not
+ * retain the owner, so collection proves the fiber is dead and the VM can
+ * be safely unmounted — unlike {@link ViewModelStoreBase.sweepStaged},
+ * which cannot distinguish a dead fiber from a delayed commit.
  */
 const stagedVmRegistry: FinalizationRegistry<StagedVmRegistryEntry> | null =
   typeof FinalizationRegistry === 'function'
@@ -65,15 +61,11 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
     string[]
   >;
   /**
-   * VMs registered by the view layer during render (see {@link defineStaged}).
-   * Visible to lookups via read-through, but not committed store members:
+   * VMs registered during render (see {@link defineStaged}): visible to
+   * lookups via read-through, but not committed members —
    * {@link mountedViewsCount}, {@link hasMountingVms} and {@link waitMount}
-   * ignore them. Promoted to {@link viewModels} by {@link commitStaged};
-   * dropped by {@link sweepStaged} / {@link dropStaged} when the owning
-   * render is discarded.
-   *
-   * Intentionally NOT observable: staging writes happen during render and
-   * must not notify store observers.
+   * ignore them. Not observable on purpose: staging writes happen during
+   * render and must not notify store observers.
    */
   protected stagedViewModels: Map<string, StagedViewModelEntry<VMBase>>;
   private stagedEpoch = 0;
@@ -165,9 +157,8 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
     const staged = this.stagedViewModels.get(config.id);
 
     if (staged) {
-      // A staged entry with this id exists: promote it instead of creating a
-      // second instance. `init` already ran in `defineStaged`, so promotion
-      // only moves the entry into the committed map (no re-init, no sweep —
+      // Promote the staged entry instead of creating a second instance:
+      // `init` already ran in `defineStaged` (no re-init, no sweep —
       // `define` may run during a view-layer render pass).
       this.stagedViewModels.delete(config.id);
       stagedVmRegistry?.unregister(staged.vm);
@@ -187,16 +178,11 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
   }
 
   /**
-   * Staging variant of {@link define}: creates (or returns) the instance and
-   * makes it visible to store lookups immediately (read-through), but does
-   * NOT commit it as a store entry. The view layer must call
-   * {@link commitStaged} once the owner is known to be alive (e.g. from a
-   * React commit effect). If `owner` is garbage-collected without ever
+   * Staging variant of {@link define}: the instance is visible to lookups
+   * immediately (read-through) but is not committed until the view layer
+   * calls {@link commitStaged} once the owner is known to be alive (e.g.
+   * from a React commit effect). If `owner` is garbage-collected without
    * committing, the staged entry is dropped automatically.
-   *
-   * This mirrors the view layer's own work-in-progress → commit model:
-   * work done for a discarded render never becomes committed store state,
-   * so no orphan cleanup of committed entries is needed.
    */
   defineStaged<VM extends VMBase | AnyViewModelSimple>(
     config: ViewModelCreateConfig<VM>,
@@ -233,11 +219,11 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
   }
 
   /**
-   * Promotes a staged view model to a committed store entry. Safe to call
-   * with an instance whose staged entry is already gone (e.g. swept): the
-   * instance is simply (re)registered as committed. Also schedules a sweep
-   * of staged leftovers from the current render pass — call this only from
-   * commit-phase code (effects), never during render.
+   * Promotes a staged view model to a committed store entry and schedules a
+   * sweep of staged leftovers from the current render pass. Safe to call
+   * when the staged entry is already gone (e.g. swept): the instance is
+   * simply (re)registered. Call only from commit-phase code (effects),
+   * never during render.
    */
   commitStaged(id: string, instance?: VMBase | AnyViewModelSimple): void {
     const vm = instance ?? this.stagedViewModels.get(id)?.vm;
@@ -251,7 +237,7 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
     if (staged?.vm === vm) {
       this.stagedViewModels.delete(id);
     }
-    // The VM now has a provably live owner — cancel the orphan finalizer.
+    // Live owner confirmed — cancel the orphan finalizer.
     stagedVmRegistry?.unregister(vm);
 
     if (untracked(() => this.viewModels.get(id)) !== vm) {
@@ -265,9 +251,8 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
   }
 
   /**
-   * Drops a staged entry if it still belongs to the given instance.
-   * The identity check protects against id reuse: a new VM staged under the
-   * same id must not be removed by a stale finalizer.
+   * Drops a staged entry if it still belongs to the given instance
+   * (identity guard against id reuse by a newer staged VM).
    */
   dropStaged(id: string, instance: VMBase | AnyViewModelSimple): void {
     if (this.stagedViewModels.get(id)?.vm === instance) {
@@ -277,15 +262,10 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
   }
 
   /**
-   * Finalizes a staged VM whose owner was garbage-collected without
-   * committing: drops the staged entry (if still present) and unmounts the
-   * instance, releasing constructor/init subscriptions bound to
-   * `unmountSignal`.
-   *
-   * Called only by the staged-vm FinalizationRegistry. The owner fiber is
-   * provably dead here (its cache was collected), so unmounting is safe —
-   * unlike the sweep, which fires while a delayed commit may still be alive
-   * and therefore only affects lookup visibility.
+   * Called only by the staged-vm FinalizationRegistry: the owner was
+   * collected, so the fiber is provably dead and the instance can be
+   * unmounted (releasing `unmountSignal` subscriptions) — unlike the sweep,
+   * which cannot tell a dead fiber from a delayed commit.
    */
   finalizeStaged(id: string, instance: VMBase | AnyViewModelSimple): void {
     if (this.viewModels.get(id) === instance) {
@@ -300,14 +280,10 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
 
   /**
    * Removes staged entries created up to (and including) the render pass
-   * that produced the latest commit; entries created by later passes
-   * survive. Dropping is lifecycle-free and safe for live owners: their
-   * commit effect re-registers the instance via {@link commitStaged}.
-   *
-   * The finalizer registrations intentionally stay in place: a swept entry
-   * may still belong to a dead fiber whose VM subscribed to external
-   * observables in its constructor/init — the finalizer disposes those once
-   * the owner is GC'd (see {@link finalizeStaged}).
+   * that produced the latest commit; newer entries survive. Lifecycle-free:
+   * live owners re-register via {@link commitStaged}; dead ones are
+   * disposed later by {@link finalizeStaged} (finalizer registrations
+   * intentionally stay in place).
    */
   protected sweepStaged(epochAtCommit: number): void {
     for (const [id, entry] of this.stagedViewModels) {
@@ -424,8 +400,7 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
       ...(this.viewModelIdsByClasses.get(viewModelClass) || []),
     ];
 
-    // Read-through: staged entries are visible to lookups (created during
-    // the current render pass, not yet committed).
+    // Read-through: staged (not yet committed) entries are visible too.
     for (const [id, entry] of this.stagedViewModels) {
       if (
         (entry.vm as any).constructor === viewModelClass &&
@@ -503,7 +478,10 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
   ): T[] {
     const viewModelIds = this.getIds(vmLookup);
 
-    return viewModelIds.map((id) => this.viewModels.get(id) as T);
+    // Read-through: `getIds` includes staged ids (see {@link get}).
+    return viewModelIds.map(
+      (id) => (this.viewModels.get(id) ?? this.stagedViewModels.get(id)?.vm) as T,
+    );
   }
 
   /**

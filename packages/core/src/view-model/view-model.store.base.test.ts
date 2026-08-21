@@ -278,6 +278,25 @@ describe('ViewModelStoreBase', () => {
       expect(vmStore._stagedViewModels.has('staged')).toBe(true);
     });
 
+    it('getAll resolves staged instances (read-through)', () => {
+      const vmStore = new ViewModelStoreBaseMock();
+
+      const staged = vmStore.defineStaged(
+        { id: 'staged', VM: ViewModelBaseMock, payload: {} },
+        {},
+      );
+      const committed = vmStore.define({
+        id: 'committed',
+        VM: ViewModelBaseMock,
+        payload: {},
+      });
+
+      // `getIds` includes staged ids — `getAll` must resolve them too,
+      // otherwise staged entries leak through as `undefined`.
+      expect(vmStore.getAll(ViewModelBaseMock)).toEqual([committed, staged]);
+      expect(vmStore.getAll('staged')).toEqual([staged]);
+    });
+
     it('defineStaged calls init with the store', () => {
       const vmStore = new ViewModelStoreBaseMock();
 

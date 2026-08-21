@@ -17,7 +17,7 @@ import {
   withViewModel,
 } from 'mobx-view-model-react';
 import { act, cleanup, render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, test } from 'vitest';
+import { afterEach, describe, expect, test, vi } from 'vitest';
 import { Suspense, lazy, type ComponentType } from 'react';
 
 class ViewModelBaseMock<
@@ -60,6 +60,33 @@ afterEach(() => {
 });
 
 describe('staged commit (client + staging-capable store)', () => {
+  test('falls back to eager registration when commitStaged is unavailable', async () => {
+    const vmStore = new ViewModelStoreBaseMock();
+    // A third-party store can expose one optional staging method without the
+    // matching promotion method. That is not a complete staging capability.
+    Object.defineProperty(vmStore, 'commitStaged', { value: undefined });
+    const defineStaged = vi.spyOn(vmStore, 'defineStaged');
+
+    class FooVM extends ViewModelBaseMock {}
+
+    const Component = () => {
+      useCreateViewModel(FooVM, undefined, { id: 'foo' });
+      return null;
+    };
+
+    await act(async () =>
+      render(
+        <ViewModelsProvider value={vmStore}>
+          <Component />
+        </ViewModelsProvider>,
+      ),
+    );
+
+    expect(defineStaged).not.toHaveBeenCalled();
+    expect(vmStore.get('foo')).toBeDefined();
+    expect(vmStore.mountedViewsCount).toBe(1);
+  });
+
   test('VM is visible to lookups during render via read-through, committed after', async () => {
     const vmStore = new ViewModelStoreBaseMock();
 
@@ -113,6 +140,8 @@ describe('staged commit (client + staging-capable store)', () => {
       }
     }
 
+    let pageRenderCount = 0;
+
     let resolveChild!: (module: { default: ComponentType }) => void;
     const LazyChild = lazy(
       () =>
@@ -124,12 +153,21 @@ describe('staged commit (client + staging-capable store)', () => {
     // Page with a lazy child WITHOUT its own Suspense — the child's suspend
     // propagates to the Routing Suspense and React 19 discards one of the
     // two page fibers created in the same render pass.
-    const PageView = ({ model }: { model: InstanceType<typeof PageVM> }) => (
-      <div data-testid="page">
-        <span>{model.id}</span>
-        <LazyChild />
-      </div>
-    );
+    const PageView = ({ model }: { model: InstanceType<typeof PageVM> }) => {
+      pageRenderCount += 1;
+      if (pageRenderCount > 100) {
+        throw new Error(
+          'Suspense retry loop detected: PageView rendered more than 100 times',
+        );
+      }
+
+      return (
+        <div data-testid="page">
+          <span>{model.id}</span>
+          <LazyChild />
+        </div>
+      );
+    };
     const PageComponent = withViewModel(PageVM, PageView);
 
     let resolvePage!: (module: { default: ComponentType }) => void;
@@ -212,5 +250,50 @@ describe('staged commit (client + staging-capable store)', () => {
 
     const pageMounts = mountLog.filter((l) => l.startsWith('PageVM'));
     expect(pageMounts.length).toBeGreaterThanOrEqual(1);
+  });
+
+  test('does not revive a detached VM from a render that suspends', async () => {
+    const vmStore = new ViewModelStoreBaseMock();
+    const mountSpy = vi.fn();
+    let suspend = false;
+    const never = new Promise<void>(() => {});
+
+    class FooVM extends ViewModelBaseMock {
+      mount() {
+        mountSpy();
+        return super.mount();
+      }
+    }
+
+    const Component = () => {
+      const vm = useCreateViewModel(FooVM, undefined, { id: 'foo' });
+      if (suspend) throw never;
+      return <span>{vm.id}</span>;
+    };
+
+    const App = () => (
+      <ViewModelsProvider value={vmStore}>
+        <Suspense fallback={<span data-testid="loading">Loading</span>}>
+          <Component />
+        </Suspense>
+      </ViewModelsProvider>
+    );
+
+    const view = await act(async () => render(<App />));
+    const vm = vmStore.get<FooVM>('foo')!;
+    // Simulate the cleanup React performed when this persisted fiber was
+    // hidden before it started a new render.
+    vmStore.unmount(vm);
+    const define = vi.spyOn(vmStore, 'define');
+    mountSpy.mockClear();
+
+    suspend = true;
+    await act(async () => {
+      view.rerender(<App />);
+    });
+
+    expect(define).not.toHaveBeenCalled();
+    expect(mountSpy).not.toHaveBeenCalled();
+    expect(vmStore.get('foo')).toBeNull();
   });
 });
