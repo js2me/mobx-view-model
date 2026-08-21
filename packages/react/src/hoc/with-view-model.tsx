@@ -357,8 +357,21 @@ export function withViewModel(
               onStoreChange();
             },
           ),
-        getSnapshot: () =>
-          (cacheRef.current.value as AnyViewModel).isMounted !== false,
+        getSnapshot: () => {
+          const current = cacheRef.current.value as AnyViewModel;
+          // React cleans up layout effects when Suspense hides a committed
+          // tree. That cleanup unmounts the VM, but React can subsequently
+          // retry the same fiber. Keep rendering that previously mounted VM:
+          // it may suspend again until its child resolves, after which the
+          // commit effect reattaches and mounts it. Gating it as not-ready
+          // here would commit an empty branch, mount it, suspend again, and
+          // repeat that cycle indefinitely.
+          return (
+            current.isMounted !== false ||
+            current.lifecycleState === 'unmounting' ||
+            current.lifecycleState === 'unmounted'
+          );
+        },
       };
     }
 

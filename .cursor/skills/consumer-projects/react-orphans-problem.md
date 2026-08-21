@@ -7,6 +7,7 @@
 - **render-фаза**: VM создаётся и регистрируется в **staging-слое** стора (`defineStaged`) — видна render-time lookup'ам (`useViewModel`, `viewModels.get(...)`) через read-through, но НЕ является committed-записью.
 - **commit-фаза**: effect того же fiber'а делает `commitStaged` — staging → committed. Fiber закоммичен ⇔ VM в сторе.
 - **fiber отброшен React 19** → effect не вызван → promote не случился → staged-запись выметается sweep'ом после ближайшего commit'а (по epoch'ам) и в конечном счёте GC'ом (FinalizationRegistry по owner'у). Committed-стор orphan'ов не содержит **by construction** — чистить нечего.
+- **Suspense скрывает уже committed fiber** → cleanup отсоединяет VM, но React может повторно отрендерить тот же fiber. `withViewModel` продолжает пропускать ранее созданный `View`; commit-effect после успешного retry выполняет reattach + mount.
 
 Fallback-пути (SSR, no-store, кастомный стор без `defineStaged`) сохраняют старый механизм: eager-регистрация в render + **unconfirmed-creation tracking** (`Map<vm, store>` + `setTimeout(0)` из `confirmCreation`).
 
@@ -50,6 +51,7 @@ cache.current === null?  ──►  ДА: идём по пути создани�
    │
    ▼
 2. useStaging = client && store && typeof store.defineStaged === 'function'
+   │  && typeof store.commitStaged === 'function'
    │
    ▼
 3. instantiateVm → viewModels.defineStaged(config, cache)
@@ -86,23 +88,13 @@ cache.current === null?  ──►  ДА: идём по пути создани�
 1. model.setPayload?.(payload)
    │
    ▼
-2. Проверить: VM отвалился от store или unmounted?
-   │  isDetachedFromStore(vm, store) — has() read-through: staged тоже виден
-   │  vm.lifecycleState === 'unmounted' / 'unmounting'
-   │
-   │  Зачем: Suspense может скрыть дерево → effect cleanup →
-   │  unmountVm → store.unmount. Когда Suspense снова показывает
-   │  дерево на ТОМ ЖЕ fiber (cache выжил), VM уже unmounted/detached.
-   │  Нужно revive.
-   │
-   ▼
-3. needsRevive?  → reattachVm(vm, config) + bindLifecycle (mount заново)
-   │  (reattachVm = define({…config, factory: () => vm}) — committed-direct,
-   │   как и раньше; revive-путь редкий)
-   otherwise     → REUSE VM (ничего не делаем)
-   │
-   ▼
-4. return vm
+2. Не reattach'ить VM в render-фазе.
+    │  Suspense retry всё ещё может быть отброшен React.
+    │
+    ▼
+ 3. return vm
+    │  Gate в withViewModel продолжает пропускать ранее созданный View,
+    │  даже если cleanup перевёл VM в unmounting/unmounted.
 ```
 
 ### 3. Commit effect: `cache.current.fn`
@@ -134,6 +126,35 @@ useLayoutEffect(fn, [])  — вызывается ОДИН раз при mount f
    │  → store.unmount(vm): remove из committed+staging + vm.unmount()
    │  → reclaim'а НЕТ: Suspense remount создаст свежий VM
 ```
+
+---
+
+## Исправленный retry loop: Suspense hide/show того же fiber
+
+Когда committed fiber скрывается из-за suspend'а вложенного lazy-компонента,
+React вызывает cleanup layout-effect. `unmountVm` переводит VM в
+`unmounted` и удаляет её из committed store, но React может сохранить cache
+хука и повторно отрендерить тот же fiber после retry.
+
+Проблемный цикл выглядел так:
+
+```
+Suspense hide
+  → cleanup → VM unmounted
+  → withViewModel gate видит !isMounted и возвращает пустую ветку
+  → React коммитит пустую ветку и запускает следующий retry
+  → вложенный lazy снова suspend'ится
+  → цикл повторяется до OOM
+```
+
+Теперь `withViewModel` пропускает ранее созданный `View`, если VM находится
+в `unmounting` или `unmounted`. Сам `useCreateViewModel` не делает reattach в
+render-фазе: retry всё ещё может быть отброшен. Reattach и mount выполняются
+только в commit-effect, когда React подтвердил живой fiber.
+
+Регрессионный тест `staged-commit.test.tsx` ограничивает число рендеров
+`PageView` и падает с явным сообщением `Suspense retry loop detected`, вместо
+того чтобы доводить Node.js до `JavaScript heap out of memory`.
 
 ---
 
@@ -302,7 +323,7 @@ GC (когда cacheA соберётся):
 | `FinalizationRegistry` по owner=ref хука | GC-backstop для памяти: ref живёт ровно столько, сколько fiber. Детерминизм не нужен — корректность даёт sweep. |
 | Fallback `registerUnconfirmed`/`setTimeout` для no-store и старых сторов | Без стора VM не pollut'ит глобальное состояние, но `init` в render может подписаться на внешние observable → таймер остаётся safety-net'ом. Кастомные сторы без `defineStaged` — полный старый путь. |
 | mount в render на сервере | SSR: `willMount` грузит данные, `use(promise)` саспендит. На сервере нет commit-фазы — staging не нужен, стор выбрасывается после запроса. |
-| `reattachVm` (define+factory) для revive | Revive пере-регистрирует отвалившийся VM через `viewModels.define({...config, factory: () => vm})`. Хелпер живёт в react-пакете — core store API остаётся чистым от react-специфики. |
+| `reattachVm` (define+factory) для revive | Revive пере-регистрирует отвалившийся VM через `viewModels.define({...config, factory: () => vm})`. Вызывается только из commit-effect; core store API остаётся чистым от react-специфики. |
 | Reclaim убран | React fiber identity одноразовая → reclaim по auto-id невозможен; ambiguous guard всё равно терял данные при одинаковых payload. Suspense remount создаёт свежий VM — проще и предсказуемее. |
 
 ---
@@ -311,7 +332,7 @@ GC (когда cacheA соберётся):
 
 1. **Подписки из конструктора/`init` на внешние observable освобождаются с GC-задержкой.** Sweep снимает видимость сразу, но `unmount` (и abort `unmountSignal`) для отброшенного fiber'а делает только finalizer — когда соберётся hook cache. Между sweep и GC такие реакции продолжают работать незримо. Остаточная гонка: два fiber'а шарят explicit id, создатель отброшен и его cache собран ДО commit'а шарера → dispose живой VM (guard: `finalizeStaged` пропускает VM, уже committed шарером; окно — между scavenge-GC и commit'ом, на практике ~ноль). Правило «подписки в `mount`/`didMount`» остаётся рекомендацией по гигиене, но утечки как таковой уже нет.
 2. **Внешние (не-React) читатели стора** не видят VM между render и commit — осознанное ужесточение, зеркалит «uncommitted UI невидим». `mountedViewsCount`/`hasMountingVms`/`waitMount` — committed-only.
-3. **Revive-путь** (`reattachVm`) пишет в committed из render — как и раньше; это редкий путь пережившего fiber'а, и он не промоутится через staging.
+3. **Revive-путь** (`reattachVm`) пишет в committed только из commit-effect. Render-фаза не должна reattach'ить VM: текущий retry может быть отброшен React.
 
 ---
 
@@ -369,7 +390,7 @@ useSyncExternalStore(
 |------|------|
 | `packages/react/src/hooks/use-create-view-model.ts` | Хук. `defineStaged` в render (staged path), `commitStaged` в effect, `reattachVm` (revive), immediate `unmountVm` в cleanup; fallback — `registerUnconfirmed` |
 | `packages/react/src/hooks/pending-vm-unmount.ts` | Fallback-механизм для no-store и кастомных сторов без staging: `registerUnconfirmed`/`confirmCreation`/`unmountVm`/`scheduleOrphanCleanup` (`Map<vm, store>` + `setTimeout(0)`) |
-| `packages/react/src/hoc/with-view-model.tsx` | HOC. `useCreateViewModel` + `useSyncExternalStore` на `isMounted` (Fallback-gating) + `ActiveViewModelProvider` (parent-child контекст) |
+| `packages/react/src/hoc/with-view-model.tsx` | HOC. `useCreateViewModel` + `useSyncExternalStore` на lifecycle VM; ранее committed Suspense fiber не блокируется состоянием `unmounted`, иначе возникает бесконечный retry loop; + `ActiveViewModelProvider` (parent-child контекст) |
 | `packages/react/src/hooks/use-view-model.ts` | `useViewModel(lookup)` — store-lookup во время render (`viewModels.get`). Работает через read-through staging |
 | `packages/core/src/view-model/view-model.store.base.ts` | Store: `define`/`defineStaged`/`commitStaged`/`dropStaged`, `sweepStaged` по epoch'ам, `FinalizationRegistry`, `create`, `connect`, `unmount`, `link`. НЕ знает про React |
 | `packages/core/src/view-model/view-model.base.ts` | `ViewModelBase`: lifecycle (`mount`/`unmount`/`isMounted`/`lifecycleState`), `unmountSignal`. `init` отсутствует (конструктор всё ставит) |
@@ -380,7 +401,7 @@ useSyncExternalStore(
 
 ## Что делать потребителю
 
-1. **Гейтить на `isMounted`**: `withViewModel` делает это сам (Fallback пока `!isMounted`); при прямом использовании хука — `if (!vm.isMounted) return null` (как `OnlyViewModel`).
+1. **Гейтить на lifecycle**: `withViewModel` делает это сам. Для ранее committed Suspense fiber состояния `unmounting` и `unmounted` не блокируют `View`; для нового VM остаётся обычный gate по `isMounted`. При прямом использовании хука по-прежнему можно проверять `if (!vm.isMounted) return null` (как `OnlyViewModel`).
 2. **Сохранение состояния при Suspense remount** — reclaim'а больше нет, remount создаёт свежий VM. Важно различать:
    - **Two-fiber дубликация** (два fiber'а в одном pass): стабильный `config.id`/`generateId` помогает — `defineStaged` вернёт общий инстанс → 1 VM вместо 2.
    - **Suspense unmount→remount** (fiber размонтировался, потом новый): стабильный id **НЕ спасает** — cleanup сразу удаляет VM из стора, remount создаёт свежий. Надёжно только `RouteViewGroup` `suspense` prop (не размонтировать) или revive (если React сохраняет fiber).
