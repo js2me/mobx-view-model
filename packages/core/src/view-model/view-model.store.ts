@@ -96,29 +96,18 @@ export interface ViewModelStore<VMBase extends AnyViewModel = AnyViewModel> {
   define<VM extends VMBase | AnyViewModelSimple>(config: ViewModelCreateConfig<VM>): VM;
 
   /**
-   * Staging variant of {@link define}: the instance is visible to lookups
-   * immediately (read-through) but is not committed until
-   * {@link commitStaged} is called. If `owner` is garbage-collected without
-   * committing (e.g. a React fiber discarded during a render pass), the
-   * staged entry is dropped automatically.
-   *
-   * Optional: view-layer integrations feature-detect it and fall back to
-   * {@link define} otherwise.
+   * Like {@link define}, visible to lookups immediately, committed via
+   * {@link commitStaged}. Optional — integrations feature-detect it.
    */
   defineStaged?<VM extends VMBase | AnyViewModelSimple>(
     config: ViewModelCreateConfig<VM>,
     owner: object,
   ): VM;
 
-  /**
-   * Promotes a staged view model to a committed store entry. Must be called
-   * only from commit-phase code (effects), never during render.
-   */
+  /** Promote a staged VM. Call from commit effects only, never during render. */
   commitStaged?(id: string, instance?: VMBase | AnyViewModelSimple): void;
 
-  /**
-   * Drops a staged entry if it still belongs to the given instance.
-   */
+  /** Drop a staged entry if it still belongs to this instance. */
   dropStaged?(id: string, instance: VMBase | AnyViewModelSimple): void;
 
   /**

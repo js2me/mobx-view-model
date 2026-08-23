@@ -33,3 +33,13 @@ skip consumer-driven validation.
    — no `use()` on client nav. Do not force `mode = 'ssr'` on the client.
 5. Page `willMount` may be `async` (gozon style); hydration is handled by (4).
 6. `ViewModelBase.mount` must reuse an in-flight `#mountPromise` on re-entrant calls.
+7. Client + store: `defineStaged` during render, `commitStaged` in the commit
+   effect. Discarded React 19 fibers never enter the committed map. Do not
+   revive a detached VM during render — only in the commit effect.
+   Fallback (SSR / no-store / store without staging): `registerUnconfirmed` +
+   `setTimeout(0)` from `confirmCreation` (not from render, not `queueMicrotask`).
+8. `withViewModel` getSnapshot: a previously mounted VM stays ready while
+   `lifecycleState` is `unmounting` / `unmounted` (Suspense retry). Gating as
+   not-ready causes an infinite fallback loop.
+
+Design notes: [`react-orphans-problem.md`](./react-orphans-problem.md).

@@ -308,14 +308,12 @@ export function withViewModel(
     throw new Error('Error #4: https://js2me.github.io/mobx-view-model/errors/4');
   }
 
-  // Single observer layer — tracks model observables in the view.
   const View = observer(renderFn as RFunctionComponent<any>);
 
   if (process.env.NODE_ENV !== 'production') {
     View.displayName = `View(${VM.name})`;
   }
 
-  // Plain shell (no observer): create VM, gate on isMounted, render View / Fallback.
   const Wrapper = (allProps: any, ref?: any): RReactNode => {
     const viewModels = useContext(ViewModelsContext);
     const payload = getPayload(allProps);
@@ -334,7 +332,6 @@ export function withViewModel(
       ref,
     );
 
-    // Stable props for Provider (`value`) + useSyncExternalStore.
     // @ts-expect-error it's ok
     const cacheRef = useRef<{
       value: typeof model;
@@ -359,13 +356,9 @@ export function withViewModel(
           ),
         getSnapshot: () => {
           const current = cacheRef.current.value as AnyViewModel;
-          // React cleans up layout effects when Suspense hides a committed
-          // tree. That cleanup unmounts the VM, but React can subsequently
-          // retry the same fiber. Keep rendering that previously mounted VM:
-          // it may suspend again until its child resolves, after which the
-          // commit effect reattaches and mounts it. Gating it as not-ready
-          // here would commit an empty branch, mount it, suspend again, and
-          // repeat that cycle indefinitely.
+          // Suspense hide unmounts via layout-effect cleanup, then retries
+          // the same fiber. Stay ready so we don't empty-commit → remount →
+          // suspend → loop.
           return (
             current.isMounted !== false ||
             current.lifecycleState === 'unmounting' ||
@@ -389,7 +382,6 @@ export function withViewModel(
     let child: RReactNode = null;
 
     if (isReadyToRender) {
-      // One shallow copy only on the ready path (fallback skips this alloc).
       const viewProps = { ...allProps, model };
       delete viewProps.payload;
       if (forwardRefMode) {

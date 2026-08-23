@@ -53,25 +53,9 @@ type Cache = {
   isSSR: boolean;
   fn: () => () => void;
   creationEntry?: UnconfirmedCreation;
-  /** True while the VM is registered only in the store's staging layer. */
   staged?: boolean;
 };
 
-/**
- * Creates AND registers the VM instance during render.
- *
- * With a staging-capable store (client-side), registration goes to the
- * store's staging layer: render-phase lookups keep working via read-through,
- * and only this fiber's commit effect (`commitStaged`) promotes the VM —
- * a discarded fiber's staged entry is dropped by the store. Fallback paths
- * (SSR, stores without staging support, no store) keep the eager
- * registration + unconfirmed-creation cleanup (see pending-vm-unmount).
- *
- * On the server, mount() is called from render so an async willMount can be
- * consumed by React's `use(promise)` SSR flow. On the client, mount() is
- * deferred to the commit effect so discarded fibers never activate
- * subscriptions or other lifecycle side effects.
- */
 const instantiateVm = (
   id: string,
   VM: Class<any>,
@@ -101,9 +85,6 @@ const instantiateVm = (
         : viewModels.define(config)
       : (config.factory?.(config) ?? viewModelsConfig.factory(config));
     if (!viewModels) {
-      // `store.define`/`defineStaged` already called init(); the no-store path
-      // builds the instance via the factory and must init() manually so
-      // ViewModelSimple receives its config before the view reads it.
       instance.init?.({ ...config, viewModels: undefined } as any);
     }
     return { instance, config };
@@ -139,13 +120,6 @@ const mountLifecycle = (instance: VmInstance) =>
       : instance.mount?.(),
   );
 
-/**
- * Re-registers an existing (revived) instance in the store under its original
- * id. `define` sees no entry (the VM was removed on unmount), calls the
- * factory which returns the same instance, and `connect`s it. This is the
- * revive path (Suspense hide/show on a persisted fiber) — it lives in the
- * react package so the core store API stays free of react-specific concerns.
- */
 const reattachVm = (
   vm: VmInstance,
   config: ViewModelCreateConfig<any>,
@@ -158,10 +132,6 @@ const reattachVm = (
     }),
   );
 
-/**
- * Only full ViewModels: for them `vm.id` is the store key. ViewModelSimple may
- * manage its own `id` which differs from the key used at registration.
- */
 const isDetachedFromStore = (
   vm: VmInstance,
   store: ViewModelStore | null,
@@ -249,8 +219,6 @@ export function useCreateViewModel(
   const reactId = useId();
 
   if (!cache.current) {
-    // Runs once per fiber. The fiber owns its VM: while the fiber is alive the
-    // instance is never replaced — see the revive branch below.
     const isSSR = viewModelsConfig.mode === 'ssr';
     const explicitId = rawCfg?.id as string | null | undefined;
     const vmId = explicitId ?? (isProd ? reactId : `${reactId}:${VM.name}`);
@@ -260,9 +228,6 @@ export function useCreateViewModel(
       ? (existing as { vmData?: unknown }).vmData
       : vmResource?.read(vmId);
 
-    // Client + staging-capable store: register into the store's staging
-    // layer instead of the committed map — no unconfirmed-creation tracking
-    // needed, the store drops discarded fibers' staged entries itself.
     const useStaging =
       typeof window !== 'undefined' &&
       viewModels != null &&
@@ -292,9 +257,6 @@ export function useCreateViewModel(
 
     const vm = model;
 
-    // Orphan tracking is only needed for the eager-registration paths.
-    // Staged VMs are dropped by the store itself; on the server there is no
-    // commit phase at all, so nothing can ever be confirmed or swept there.
     const creationEntry =
       useStaging || typeof window === 'undefined'
         ? undefined
@@ -308,7 +270,6 @@ export function useCreateViewModel(
       creationEntry,
       staged: useStaging || undefined,
       fn: () => {
-        // Fiber committed — confirm the VM is no longer orphaned.
         if (cache.current.creationEntry) {
           confirmCreation(cache.current.creationEntry);
           cache.current.creationEntry = undefined;
@@ -316,17 +277,11 @@ export function useCreateViewModel(
 
         const vm = cache.current.vm;
 
-        // Promote the staged VM to a committed store entry: this fiber is
-        // alive. Also schedules the store's sweep of staged entries left
-        // behind by fibers discarded during this render pass.
         if (cache.current.staged) {
           cache.current.staged = false;
           viewModels?.commitStaged?.(cache.current.config.id, vm);
         }
 
-        // The VM may have been unmounted between render and this effect (a
-        // previous Suspense-hide cleanup ran on the same persisted fiber) —
-        // revive the same instance instead of losing it.
         if (isDetachedFromStore(vm, viewModels)) {
           reattachVm(vm, cache.current.config, viewModels!);
         }
@@ -340,12 +295,6 @@ export function useCreateViewModel(
 
         const shouldHydrate =
           isViewModel(vm) && vm.lifecycleState === 'mounted' && cache.current.isSSR;
-        // Transition to 'hydrated' ONLY in SSR mode.
-        // Mount effect confirms React committed the component on the client.
-        // In SSR mode this means hydration succeeded — VMs can check
-        // lifecycleState === 'hydrated' to safely render dynamic content
-        // that would cause hydration mismatches.
-        // In CSR mode lifecycleState stays 'mounted' — no hydration phase.
         if (shouldHydrate) {
           runInAction(() => {
             (vm as any).lifecycleState = 'hydrated';
@@ -353,8 +302,6 @@ export function useCreateViewModel(
         }
 
         return () => {
-          // Immediate unmount — no grace period, no reclaim. A Suspense/lazy
-          // remount creates a fresh VM (state is lost by design).
           unmountVm(cache.current.vm, viewModels);
         };
       },
@@ -362,11 +309,8 @@ export function useCreateViewModel(
   } else {
     const model = cache.current.vm;
     model.setPayload?.(payload);
-
-    // A persisted Suspense fiber can be detached by its previous effect
-    // cleanup. Do not revive it here: this render may still be discarded.
-    // The commit effect below reattaches and mounts it only after React has
-    // confirmed that the fiber is alive.
+    // Don't revive here — this render may still be discarded.
+    // The commit effect reattaches after React confirms the fiber is alive.
   }
 
   const model = cache.current.vm;

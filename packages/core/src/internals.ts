@@ -9,8 +9,11 @@ if (process.env.NODE_ENV !== 'production') {
   noop.displayName = 'DefaultFallback'
 }
 
+const viewModelMarker = Symbol.for('@view-model@');
+
 export const _internals = {
   emptyObject,
   noop,
   isShallowEqual,
+  viewModelMarker,
 }
