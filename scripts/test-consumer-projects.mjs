@@ -66,15 +66,18 @@ const waitForServer = async (consumer) => {
   );
 };
 
+const hasExited = (child) =>
+  child.exitCode !== null || child.signalCode !== null;
+
 const stopServer = (child) => {
-  if (!child.pid || child.exitCode !== null || child.killed) return;
+  if (!child.pid || hasExited(child) || child.killed) return;
   // The dev server can have child processes (tsx/vite), so stop its process
   // group instead of leaking a server into the next consumer scenario.
   process.kill(-child.pid, 'SIGTERM');
 };
 
 const waitForExit = (child) =>
-  child.exitCode !== null ? Promise.resolve() : once(child, 'exit');
+  hasExited(child) ? Promise.resolve() : once(child, 'exit');
 
 const cleanup = () => {
   for (const server of servers.reverse()) {

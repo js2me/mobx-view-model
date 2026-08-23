@@ -183,7 +183,6 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
     const instance = this.create(config);
 
     this.link(config.VM as Class<VMBase>, ...(config.anchors ?? []));
-    instance.init?.({ ...config, viewModels: this } as any);
 
     this.stagedViewModels.set(config.id, {
       vm: instance,
@@ -194,6 +193,8 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
       { store: this, id: config.id, vm: instance },
       instance,
     );
+
+    instance.init?.({ ...config, viewModels: this } as any);
 
     return instance;
   }

@@ -312,6 +312,30 @@ describe('ViewModelStoreBase', () => {
       });
     });
 
+    it('defineStaged is visible to lookups from init (same order as define)', () => {
+      const vmStore = new ViewModelStoreBaseMock();
+      let seenById: unknown;
+      let seenByClass: unknown;
+
+      class SelfLookupVM extends ViewModelBaseMock {
+        init(config: unknown): void {
+          const store = (config as { viewModels: ViewModelStoreBaseMock })
+            .viewModels;
+          seenById = store.get('self');
+          seenByClass = store.get(SelfLookupVM);
+          super.init(config);
+        }
+      }
+
+      const vm = vmStore.defineStaged(
+        { id: 'self', VM: SelfLookupVM, payload: {} },
+        {},
+      );
+
+      expect(seenById).toBe(vm);
+      expect(seenByClass).toBe(vm);
+    });
+
     it('defineStaged returns the existing staged instance for the same id', () => {
       const vmStore = new ViewModelStoreBaseMock();
 

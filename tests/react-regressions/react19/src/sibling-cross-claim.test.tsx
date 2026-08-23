@@ -90,9 +90,9 @@ describe('sibling same-class VMs: claim discriminated by payload', () => {
     const [vmX] = vmStore.getAll(AvatarVM);
     expect(vmX.payload).toEqual({ name: 'X' });
 
-    // Remove X (cleanup schedules its unmount into the microtask grace
-    // window), then mount sibling Y before the microtask flushes — the exact
-    // window where the old claim heuristic cross-claimed X's instance.
+    // Unmount is immediate (no reclaim / grace window). X is gone from the
+    // store before Y mounts, so Y cannot inherit X's instance — the old
+    // pending-claim heuristic used to hand Y the unmounting VM.
     act(() => {
       view.rerender(<App names={[]} />);
     });
@@ -106,7 +106,7 @@ describe('sibling same-class VMs: claim discriminated by payload', () => {
     expect(vmY).toBeDefined();
     expect(vmY).not.toBe(vmX);
 
-    // After the grace window X is gone, only Y remains.
+    // Only Y remains.
     await act(async () => {});
     expect(vmStore.getAll(AvatarVM)).toHaveLength(1);
     expect(vmStore.getAll(AvatarVM)[0].payload).toEqual({ name: 'Y' });
