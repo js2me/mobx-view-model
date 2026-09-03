@@ -1,5 +1,14 @@
 # mobx-view-model
 
+## 9.3.4
+
+### Patch Changes
+
+- fix cirullar deps
+
+- Updated dependencies []:
+  - mobx-view-model-react@9.3.6
+
 ## 9.3.3
 
 ### Patch Changes

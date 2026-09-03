@@ -1,6 +1,6 @@
 {
   "name": "mobx-view-model",
-  "version": "9.3.3",
+  "version": "9.3.4",
   "scripts": {
     "clean": "rimraf dist",
     "ts:check": "tsc --noEmit",
@@ -63,7 +63,7 @@
   },
   "dependencies": {
     "yummies": "^7.10.0",
-    "mobx-view-model-react": "^9.3.5"
+    "mobx-view-model-react": "^9.3.6"
   },
   "peerDependencies": {
     "mobx": "^6.12.4",
