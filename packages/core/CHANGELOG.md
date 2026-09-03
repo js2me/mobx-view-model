@@ -1,5 +1,14 @@
 # mobx-view-model
 
+## 9.3.3
+
+### Patch Changes
+
+- fixed circullar dependencies
+
+- Updated dependencies []:
+  - mobx-view-model-react@9.3.5
+
 ## 9.3.2
 
 - fix build and sync with mobx-view-model-react 9.x

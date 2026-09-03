@@ -21,6 +21,7 @@
     "noEmit": false,
     "jsx": "react-jsx",
     "paths": {
+      "mobx-view-model/core": ["../core/src/core.ts"],
       "mobx-view-model-react": ["./src/index.ts"]
     }
   },

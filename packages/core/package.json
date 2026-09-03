@@ -1,6 +1,6 @@
 {
   "name": "mobx-view-model",
-  "version": "9.3.2",
+  "version": "9.3.3",
   "scripts": {
     "clean": "rimraf dist",
     "ts:check": "tsc --noEmit",
@@ -43,6 +43,12 @@
       "require": "./dist/index.cjs",
       "default": "./dist/index.js"
     },
+    "./core": {
+      "types": "./src/core.ts",
+      "import": "./dist/core.js",
+      "require": "./dist/core.cjs",
+      "default": "./dist/core.js"
+    },
     "./react": {
       "types": "./src/react-subpath.ts",
       "import": "./dist/react.js",
@@ -57,7 +63,7 @@
   },
   "dependencies": {
     "yummies": "^7.10.0",
-    "mobx-view-model-react": "^9.3.1"
+    "mobx-view-model-react": "^9.3.5"
   },
   "peerDependencies": {
     "mobx": "^6.12.4",

@@ -1,5 +1,14 @@
 # mobx-view-model-react
 
+## 9.3.5
+
+### Patch Changes
+
+- fixed circullar dependencies
+
+- Updated dependencies []:
+  - mobx-view-model@9.3.3
+
 ## 9.3.4
 
 - fix broken package (rollback package to use 9.x version of core package)
