@@ -1,5 +1,14 @@
 # mobx-view-model-react
 
+## 9.3.7
+
+### Patch Changes
+
+- fix
+
+- Updated dependencies []:
+  - mobx-view-model@9.3.5
+
 ## 9.3.6
 
 ### Patch Changes
