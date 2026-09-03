@@ -2,7 +2,7 @@ import { act, fireEvent, render, screen } from '@testing-library/react';
 import { useState } from 'react';
 import { beforeEach, describe, expect, test } from 'vitest';
 import { createCounter } from 'yummies/complex';
-import type { ViewModelStore } from 'mobx-view-model';
+import type { ViewModelStore } from 'mobx-view-model/core';
 import { ViewModelBaseMock } from '../../../core/src/view-model/view-model.base.test.js';
 import { ViewModelStoreBaseMock } from '../../../core/src/view-model/view-model.store.base.test.js';
 import { ViewModelsProvider } from '../components/index.js';

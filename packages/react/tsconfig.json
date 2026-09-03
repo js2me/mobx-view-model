@@ -21,9 +21,9 @@
     "noEmit": false,
     "jsx": "react-jsx",
     "paths": {
-      "mobx-view-model/core": ["../core/src/core.ts"]
+      "mobx-view-model/core": ["../core/dist/core.d.ts"]
     }
   },
-  "include": ["src"],
+    "include": ["src"],
   "exclude": ["src/**/*.test.ts", "src/**/*.test.tsx", "src/**/*.fixture.ts"]
 }

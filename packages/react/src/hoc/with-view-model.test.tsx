@@ -31,7 +31,7 @@ import {
   type ViewModelStore,
   ViewModelStoreBase,
   type ViewModelsRawConfig,
-} from 'mobx-view-model';
+} from 'mobx-view-model/core';
 import { ViewModelBaseMock } from '../../../core/src/view-model/view-model.base.test.js';
 import { ViewModelStoreBaseMock } from '../../../core/src/view-model/view-model.store.base.test.js';
 import { ViewModelsProvider } from '../components/index.js';
