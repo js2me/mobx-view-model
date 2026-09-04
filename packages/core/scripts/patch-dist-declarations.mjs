@@ -12,7 +12,7 @@ writeFileSync(
   join(distRoot, 'index.d.ts'),
   [
     "export * from './core.d.ts';",
-    "export * from './mobx-view-model-react.d.ts';",
+    "export * from './react.d.ts';",
     '',
   ].join('\n'),
 );

@@ -1,4 +1,4 @@
-import type { AnyViewModel, AnyViewModelSimple } from 'mobx-view-model/core';
+import type { AnyViewModel, AnyViewModelSimple } from '../core.js';
 import { ActiveViewModelContext } from '../contexts/index.js';
 
 /**

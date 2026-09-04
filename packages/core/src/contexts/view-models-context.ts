@@ -1,4 +1,4 @@
-import type { ViewModelStore } from 'mobx-view-model/core';
+import type { ViewModelStore } from '../core.js';
 import { createContext } from 'react';
 
 /**
