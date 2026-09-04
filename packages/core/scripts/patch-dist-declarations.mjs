@@ -1,4 +1,4 @@
-import { writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -16,3 +16,10 @@ writeFileSync(
     '',
   ].join('\n'),
 );
+
+const packageJsonPath = join(distRoot, 'package.json');
+const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf8'));
+if (packageJson.exports?.['./core']) {
+  packageJson.exports['./core'].types = './index.d.ts';
+}
+writeFileSync(packageJsonPath, `${JSON.stringify(packageJson, null, 2)}\n`);
