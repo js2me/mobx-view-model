@@ -1,6 +1,6 @@
 {
   "name": "mobx-view-model",
-  "version": "9.3.14",
+  "version": "9.3.15",
   "scripts": {
     "clean": "rimraf dist",
     "ts:check": "tsc --noEmit",

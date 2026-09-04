@@ -1,7 +1,12 @@
 import type { AnyViewModel, AnyViewModelSimple } from '../../core.js';
 import { createContext } from 'react';
 
-// will contains the view model
-export const ActiveViewModelContext = createContext<
+declare const globalThis: any
+
+globalThis[Symbol.for('mobx-view-model/active-vm')] ??= createContext<
   AnyViewModel | AnyViewModelSimple
->(null as any);
+>(null as any); 
+
+// will contains the view model
+export const ActiveViewModelContext: React.Context<AnyViewModelSimple | AnyViewModel> =
+  globalThis[Symbol.for('mobx-view-model/active-vm')]
