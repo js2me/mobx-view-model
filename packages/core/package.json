@@ -1,6 +1,6 @@
 {
   "name": "mobx-view-model",
-  "version": "9.3.7",
+  "version": "9.3.9",
   "scripts": {
     "clean": "rimraf dist",
     "ts:check": "tsc --noEmit",
@@ -44,7 +44,7 @@
       "default": "./dist/index.js"
     },
     "./core": {
-      "types": "./src/index.ts",
+      "types": "./src/core.ts",
       "import": "./dist/core.js",
       "require": "./dist/core.cjs",
       "default": "./dist/core.js"

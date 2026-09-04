@@ -1,6 +1,6 @@
 {
   "name": "mobx-view-model-react",
-  "version": "9.3.9",
+  "version": "9.3.11",
   "scripts": {
     "clean": "rimraf dist",
     "ts:check": "tsc --noEmit",

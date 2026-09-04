@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync } from 'node:fs';
+import { writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -6,8 +6,8 @@ const packageRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
 const distRoot = join(packageRoot, 'dist');
 
 // Keep the root entry and the explicit core entry on the same declaration
-// symbols. Bundling core into index.d.ts creates duplicate TypeScript types
-// when one consumer imports the root and another imports /core.
+// symbols. This prevents duplicate TypeScript type identities when consumers
+// resolve both package entrypoints.
 writeFileSync(
   join(distRoot, 'index.d.ts'),
   [
@@ -16,10 +16,3 @@ writeFileSync(
     '',
   ].join('\n'),
 );
-
-const packageJsonPath = join(distRoot, 'package.json');
-const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf8'));
-if (packageJson.exports?.['./core']) {
-  packageJson.exports['./core'].types = './index.d.ts';
-}
-writeFileSync(packageJsonPath, `${JSON.stringify(packageJson, null, 2)}\n`);
