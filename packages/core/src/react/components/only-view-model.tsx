@@ -4,7 +4,7 @@ import type { Class, IsPartial } from 'yummies/types';
 import {
   type UseCreateViewModelConfig,
   useCreateViewModel,
-} from '../hooks/index.js';
+} from 'mobx-view-model/react';
 
 export type OnlyViewModelProps<TViewModel extends AnyViewModel> = {
   model: Class<TViewModel>;

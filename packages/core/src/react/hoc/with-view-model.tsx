@@ -19,12 +19,12 @@ import type {
   IsUnknown,
   Maybe,
 } from 'yummies/types';
-import { ActiveViewModelProvider } from '../components/index.js';
-import { ViewModelsContext } from '../contexts/index.js';
+import { ActiveViewModelProvider } from 'mobx-view-model/react';
+import { ViewModelsContext } from 'mobx-view-model/react';
 import {
   type UseCreateViewModelConfig,
   useCreateViewModel,
-} from '../hooks/index.js';
+} from 'mobx-view-model/react';
 
 type FixedComponentType<P extends AnyObject = {}> =
   /**

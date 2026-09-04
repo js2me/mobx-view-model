@@ -8,7 +8,7 @@ import type { AnyObject } from 'yummies/types';
 import {
   ActiveViewModelContext,
   ViewModelsContext,
-} from '../contexts/index.js';
+} from 'mobx-view-model/react';
 
 /**
  * Get access to **already created** instance of ViewModel

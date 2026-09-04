@@ -23,8 +23,7 @@
     "paths": {
       "mobx-view-model": ["./src/index.ts"],
       "mobx-view-model/core": ["./src/core.ts"],
-      "mobx-view-model/react": ["./src/react-subpath.ts"],
-      "mobx-view-model-react": ["../react/src/index.ts"]
+      "mobx-view-model/react": ["./src/react.ts"]
     }
   },
   "include": ["src/**/*.test.ts", "src/**/*.fixture.ts"]

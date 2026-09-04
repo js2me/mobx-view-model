@@ -31,9 +31,9 @@ import {
   type ViewModelStore,
   ViewModelStoreBase,
   type ViewModelsRawConfig,
-} from '../core.js';
-import { ViewModelBaseMock } from '../../../core/src/view-model/view-model.base.test.js';
-import { ViewModelStoreBaseMock } from '../../../core/src/view-model/view-model.store.base.test.js';
+} from '../../core.js';
+import { ViewModelBaseMock } from '../../view-model/view-model.base.test.js';
+import { ViewModelStoreBaseMock } from '../../view-model/view-model.store.base.test.js';
 import { ViewModelsProvider } from '../components/index.js';
 import { useViewModel } from '../hooks/use-view-model.js';
 import { type ViewModelProps, withViewModel } from './with-view-model.js';

@@ -1,5 +1,7 @@
 import type { AnyObject } from 'yummies/types';
-import type { ViewModelsConfig } from '../core.js';
+import type { ViewModelsConfig, ViewModelSimple, ViewModelStore } from '../../core.js';
+import { ViewModelBaseMock } from '../../view-model/view-model.base.test.js';
+import { ViewModelStoreBaseMock } from '../../view-model/view-model.store.base.test.js';
 
 export type CircularVmPayloadDependencyTestCase = {
   vmConfig: Partial<ViewModelsConfig>;

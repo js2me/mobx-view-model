@@ -1,5 +1,5 @@
 import type { AnyViewModel, AnyViewModelSimple } from 'mobx-view-model/core';
-import { ActiveViewModelContext } from '../contexts/index.js';
+import { ActiveViewModelContext } from 'mobx-view-model/react';
 
 /**
  * This is a provider for the `ActiveViewModelContext`.
