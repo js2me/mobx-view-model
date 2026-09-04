@@ -1,4 +1,4 @@
-import type { AnyViewModel, AnyViewModelSimple } from 'mobx-view-model/core';
+import type { AnyViewModel, AnyViewModelSimple } from 'mobx-view-model';
 import { createContext } from 'react';
 
 // will contains the view model

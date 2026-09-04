@@ -8,9 +8,7 @@ export default defineLibViteConfig(ConfigsManager.create(), {
   build: {
     rollupOptions: {
       external: [
-        'mobx-view-model/core',
         'mobx-view-model/react',
-        'mobx-view-model-react',
       ],
     },
   },

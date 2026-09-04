@@ -2,7 +2,7 @@ import type {
   AnyViewModel,
   AnyViewModelSimple,
   ViewModelLookup,
-} from 'mobx-view-model/core';
+} from 'mobx-view-model';
 import { useContext, useRef } from 'react';
 import type { AnyObject } from 'yummies/types';
 import {

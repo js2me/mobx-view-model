@@ -20,7 +20,6 @@
     "jsx": "react-jsx",
     "paths": {
       "mobx-view-model": ["./src/index.ts"],
-      "mobx-view-model/core": ["./src/core.ts"],
       "mobx-view-model/react": ["./src/react.ts"]
     }
   },
