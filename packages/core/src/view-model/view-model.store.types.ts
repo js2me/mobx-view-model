@@ -25,7 +25,7 @@ export interface ViewModelCreateConfig<VM extends AnyViewModel>
   extends ViewModelParams<VM['payload'], VM['parentViewModel']> {
   VM: Class<VM>;
   fallback?: React.ComponentType;
-  component?: import('mobx-view-model/react').VMComponent<AnyViewModel, any>;
+  component?: import('../react/hoc/with-view-model.js').VMComponent<AnyViewModel, any>;
   /**
    * Additional component anchors for the same VM instance.
    * useViewModel(AnchorComponent) will return this VM when mounted.
@@ -41,5 +41,5 @@ export type ViewModelLookup<T extends AnyViewModel | AnyViewModelSimple> =
   | AnyViewModel['id']
   | Class<T>
   | (T extends AnyViewModel
-      ? import('mobx-view-model/react').VMComponent<T, any> | React.ComponentType<any>
+      ? import('../react/hoc/with-view-model.js').VMComponent<T, any> | React.ComponentType<any>
       : React.ComponentType<any>);

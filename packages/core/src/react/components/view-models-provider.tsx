@@ -1,5 +1,5 @@
-import type { ViewModelStore } from 'mobx-view-model';
-import { ViewModelsContext } from 'mobx-view-model/react';
+import type { ViewModelStore } from '../../core.js';
+import { ViewModelsContext } from '../contexts/index.js';
 
 export const ViewModelsProvider =
   ViewModelsContext.Provider as unknown as React.ComponentType<{

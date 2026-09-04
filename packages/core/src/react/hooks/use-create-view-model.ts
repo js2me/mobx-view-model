@@ -4,11 +4,11 @@ import type {
   ViewModelCreateConfig,
   ViewModelSimple,
   ViewModelsConfig,
-} from 'mobx-view-model';
-import { viewModelsConfig } from 'mobx-view-model';
+} from '../../core.js';
+import { viewModelsConfig } from '../../core.js';
 import { useContext } from 'react';
 import type { Class, IsPartial, Maybe } from 'yummies/types';
-import { isViewModelClass } from 'mobx-view-model';
+import { isViewModelClass } from '../../core.js';
 import {
   ActiveViewModelContext,
   ViewModelsContext,

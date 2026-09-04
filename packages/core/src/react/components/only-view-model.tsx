@@ -1,10 +1,10 @@
 import { observer } from 'mobx-react-lite';
-import type { AnyViewModel } from 'mobx-view-model';
+import type { AnyViewModel } from '../../core.js';
 import type { Class, IsPartial } from 'yummies/types';
 import {
   type UseCreateViewModelConfig,
   useCreateViewModel,
-} from 'mobx-view-model/react';
+} from '../hooks/index.js';
 
 export type OnlyViewModelProps<TViewModel extends AnyViewModel> = {
   model: Class<TViewModel>;

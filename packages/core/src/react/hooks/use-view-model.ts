@@ -2,13 +2,13 @@ import type {
   AnyViewModel,
   AnyViewModelSimple,
   ViewModelLookup,
-} from 'mobx-view-model';
+} from '../../core.js';
 import { useContext, useRef } from 'react';
 import type { AnyObject } from 'yummies/types';
 import {
   ActiveViewModelContext,
   ViewModelsContext,
-} from 'mobx-view-model/react';
+} from '../contexts/index.js';
 
 /**
  * Get access to **already created** instance of ViewModel
