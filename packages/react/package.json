@@ -1,6 +1,6 @@
 {
   "name": "mobx-view-model-react",
-  "version": "9.3.11",
+  "version": "9.3.12",
   "scripts": {
     "clean": "rimraf dist",
     "ts:check": "tsc --noEmit",
@@ -8,7 +8,7 @@
     "check": "pnpm run ts:check",
     "prebuild": "pnpm run clean && pnpm run check",
     "build:watch": "pnpm build && nodemon --watch src --ext ts,tsx --exec \"pnpm build\"",
-    "build": "vite build && node ./scripts/patch-dist-package-json.mjs",
+    "build": "vite build",
     "pub": "pnpm build && sborshik publish --useDistDir",
     "pub:patch": "PUBLISH_VERSION=patch pnpm pub",
     "pub:minor": "PUBLISH_VERSION=minor pnpm pub",
@@ -47,7 +47,7 @@
     "directory": "dist"
   },
   "dependencies": {
-    "mobx-view-model": "workspace:*"
+    "mobx-view-model": "9.3.10"
   },
   "peerDependencies": {
     "mobx": "^6.12.4",

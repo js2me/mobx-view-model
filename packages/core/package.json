@@ -1,6 +1,6 @@
 {
   "name": "mobx-view-model",
-  "version": "9.3.10",
+  "version": "9.3.11",
   "scripts": {
     "clean": "rimraf dist",
     "ts:check": "tsc --noEmit",
@@ -8,7 +8,7 @@
     "check": "pnpm run ts:check && pnpm ts-test-types:check",
     "prebuild": "pnpm run clean && pnpm run check",
     "build:watch": "pnpm build && nodemon --watch src --ext ts,tsx --exec \"pnpm build\"",
-    "build": "vite build && node ./scripts/patch-dist-declarations.mjs",
+    "build": "vite build",
     "pub": "pnpm build && sborshik publish --useDistDir",
     "pub:patch": "PUBLISH_VERSION=patch pnpm pub",
     "pub:minor": "PUBLISH_VERSION=minor pnpm pub",

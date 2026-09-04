@@ -2,14 +2,12 @@
   "compilerOptions": {
     "types": ["node"],
     "target": "ESNext",
-    "outDir": "dist",
     "declaration": true,
     "declarationMap": true,
     "useDefineForClassFields": true,
     "lib": ["ESNext", "DOM"],
     "allowJs": false,
     "skipLibCheck": true,
-    "esModuleInterop": false,
     "allowSyntheticDefaultImports": true,
     "strict": true,
     "forceConsistentCasingInFileNames": true,
@@ -17,12 +15,9 @@
     "moduleResolution": "nodenext",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "typeRoots": ["./node_modules/@types/", "./types", "./node_modules"],
+    "typeRoots": ["./node_modules/@types/", "./node_modules"],
     "noEmit": false,
-    "jsx": "react-jsx",
-    "paths": {
-      "mobx-view-model/react": ["../core/src/react.ts"]
-    }
+    "jsx": "react-jsx"
   },
   "include": ["src"],
   "exclude": ["src/**/*.test.ts", "src/**/*.test.tsx", "src/**/*.fixture.ts"]

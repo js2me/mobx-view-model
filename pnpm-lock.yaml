@@ -320,8 +320,8 @@ importers:
   packages/react:
     dependencies:
       mobx-view-model:
-        specifier: workspace:*
-        version: link:../core
+        specifier: 9.3.10
+        version: 9.3.10(mobx-react-lite@4.1.1(mobx@6.15.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(mobx@6.15.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
     devDependencies:
       '@biomejs/biome':
         specifier: 2.2.6
@@ -4257,6 +4257,17 @@ packages:
       react-dom:
         optional: true
       react-native:
+        optional: true
+
+  mobx-view-model@9.3.10:
+    resolution: {integrity: sha512-UHa4QeV80jJdMNraGhDqGMTfAVGo2t5DWUwohXpDwKofxJ7Z4NIhZJofYIoiRTKMWAcONK5bAivAQQSck3ts4A==}
+    peerDependencies:
+      mobx: ^6.12.4
+      mobx-react-lite: ^4.0.7
+      react: ^18.0.0 || ^19.0.0
+      react-dom: ^18.0.0 || ^19.0.0
+    peerDependenciesMeta:
+      react:
         optional: true
 
   mobx@6.15.0:
@@ -9751,6 +9762,15 @@ snapshots:
       use-sync-external-store: 1.6.0(react@19.2.5)
     optionalDependencies:
       react-dom: 19.2.5(react@19.2.5)
+
+  mobx-view-model@9.3.10(mobx-react-lite@4.1.1(mobx@6.15.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(mobx@6.15.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5):
+    dependencies:
+      mobx: 6.15.0
+      mobx-react-lite: 4.1.1(mobx@6.15.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
+      react-dom: 19.2.5(react@19.2.5)
+      yummies: 7.17.0(mobx@6.15.0)(react@19.2.5)
+    optionalDependencies:
+      react: 19.2.5
 
   mobx@6.15.0: {}
 
