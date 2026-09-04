@@ -5,8 +5,8 @@ import type {
   ViewModel,
   ViewModelSimple,
   ViewModelStore,
-} from '../core.js';
-import { viewModelsConfig } from '../core.js';
+} from 'mobx-view-model/core';
+import { viewModelsConfig } from 'mobx-view-model/core';
 import { forwardRef, useContext } from 'react';
 import type {
   AnyObject,

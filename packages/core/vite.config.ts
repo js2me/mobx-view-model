@@ -7,7 +7,11 @@ export default defineLibViteConfig(ConfigsManager.create(), {
   distExtraFilesNames: ['LICENSE', 'README.md'],
   build: {
     rollupOptions: {
-      external: ['mobx-view-model/react', 'mobx-view-model-react'],
+      external: [
+        'mobx-view-model/core',
+        'mobx-view-model/react',
+        'mobx-view-model-react',
+      ],
     },
   },
 });
