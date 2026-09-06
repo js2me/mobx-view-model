@@ -96,5 +96,5 @@ export const useViewModel = <T extends AnyViewModel | AnyViewModelSimple>(
     devModeModelRef.current = activeViewModel;
   }
 
-  return model;
+  return model as T;
 };
