@@ -22,7 +22,7 @@ export const useViewModel = <T extends AnyViewModel | AnyViewModelSimple>(
   const viewModels = useContext(ViewModelsContext);
   const activeViewModel = useContext(ActiveViewModelContext);
   const model = viewModels
-    ? getRenderPhaseViewModel(viewModels, vmLookup)
+    ? getRenderPhaseViewModel<T>(viewModels, vmLookup)
     : undefined;
 
   // This ref is needed only for development
@@ -96,5 +96,5 @@ export const useViewModel = <T extends AnyViewModel | AnyViewModelSimple>(
     devModeModelRef.current = activeViewModel;
   }
 
-  return model as T;
+  return model;
 };
