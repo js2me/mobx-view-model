@@ -33,6 +33,7 @@ import {
   registerUnconfirmed,
   unmountVm,
 } from './pending-vm-unmount.js';
+import { commitStagedViewModel, stageViewModel } from './staged-view-model.js';
 
 const EMPTY_ARR: any[] = [];
 const { emptyObject, noop } = _internals;
@@ -81,7 +82,7 @@ const instantiateVm = (
     };
     const instance: VmInstance = viewModels
       ? stagedOwner
-        ? viewModels.defineStaged!(config, stagedOwner)
+        ? stageViewModel(viewModels, config, stagedOwner)
         : viewModels.define(config)
       : (config.factory?.(config) ?? viewModelsConfig.factory(config));
     if (!viewModels) {
@@ -228,11 +229,7 @@ export function useCreateViewModel(
       ? (existing as { vmData?: unknown }).vmData
       : vmResource?.read(vmId);
 
-    const useStaging =
-      typeof window !== 'undefined' &&
-      viewModels != null &&
-      typeof viewModels.defineStaged === 'function' &&
-      typeof viewModels.commitStaged === 'function';
+    const useStaging = typeof window !== 'undefined' && viewModels != null;
 
     const { instance: model, config } = instantiateVm(
       vmId,
@@ -279,7 +276,7 @@ export function useCreateViewModel(
 
         if (cache.current.staged) {
           cache.current.staged = false;
-          viewModels?.commitStaged?.(cache.current.config.id, vm);
+          commitStagedViewModel(viewModels!, cache.current.config, vm);
         }
 
         if (isDetachedFromStore(vm, viewModels)) {

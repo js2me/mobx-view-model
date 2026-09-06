@@ -43,16 +43,11 @@ vmStore.getId(ViewComponentOfMyVM) // "id"
 
 ### `mountedViewsCount`  
 
-The total number of views that are currently mounted. Counts **committed** store entries only — VMs registered via [`defineStaged`](#definestaged-config-owner) are not counted until committed.
+The total number of views that are currently mounted.
 
 ### `hasMountingVms`  
 
 `true` while at least one registered full [`ViewModel`](/api/view-models/interface) is not yet mounted (`isMounted === false`). Counts **committed** store entries only.
-
-### `waitMount(...vms)`  
-
-Returns a `Promise` that resolves when the given view models are mounted.  
-If no arguments are passed, waits until **all** registered full view models are mounted. Observes **committed** store entries only.
 
 ### `has(vmLookup)`  
 
@@ -91,20 +86,6 @@ Retrieves all [ViewModel](/api/view-models/overview) instances from the store ba
 Recommended way to obtain a VM from the store: returns the existing instance if one with the same ID is already registered, otherwise creates a new instance, connects it to the store, and returns it.
 
 Replaces the manual `generateId` → `get` → `create` → `connect` flow.
-
-### `defineStaged(config, owner)`  
-
-Staging variant of [`define(config)`](#define-config): creates (or returns) the instance and makes it visible to store lookups immediately (read-through), but does **not** commit it as a store entry until [`commitStaged(id, instance)`](#commitstaged-id-instance) is called. If `owner` is garbage-collected without committing (e.g. a React fiber discarded during a render pass), the staged entry is dropped automatically.
-
-Used by view-layer integrations (React) to keep render-phase registration safe: work done for a discarded render never becomes committed store state. Optional — implemented by [`ViewModelStoreBase`](/api/view-model-store/base-implementation); integrations feature-detect it and fall back to `define` otherwise.
-
-### `commitStaged(id, instance)`  
-
-Promotes a staged view model to a committed store entry. Safe to call with an instance whose staged entry is already gone — the instance is simply (re)registered as committed. Must be called only from commit-phase code (effects), never during render.
-
-### `dropStaged(id, instance)`  
-
-Drops a staged entry if it still belongs to the given instance (the identity check protects against id reuse).
 
 ### `create(config)`  
 Creates a new [ViewModel](/api/view-models/overview) instance based on the provided configuration (does **not** register it in the store by itself).  

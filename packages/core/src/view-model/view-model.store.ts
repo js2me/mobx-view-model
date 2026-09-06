@@ -73,8 +73,6 @@ export interface ViewModelStore<VMBase extends AnyViewModel = AnyViewModel> {
 
   readonly hasMountingVms: boolean;
 
-  waitMount(...vms: (AnyViewModel | AnyViewModelSimple)[]): Promise<void>;
-
   /**
    * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#createviewmodel-config)
    * Creates a new view model instance based on the provided configuration.
@@ -94,21 +92,6 @@ export interface ViewModelStore<VMBase extends AnyViewModel = AnyViewModel> {
    * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#define)
    */
   define<VM extends VMBase | AnyViewModelSimple>(config: ViewModelCreateConfig<VM>): VM;
-
-  /**
-   * Like {@link define}, visible to lookups immediately, committed via
-   * {@link commitStaged}. Optional — integrations feature-detect it.
-   */
-  defineStaged?<VM extends VMBase | AnyViewModelSimple>(
-    config: ViewModelCreateConfig<VM>,
-    owner: object,
-  ): VM;
-
-  /** Promote a staged VM. Call from commit effects only, never during render. */
-  commitStaged?(id: string, instance?: VMBase | AnyViewModelSimple): void;
-
-  /** Drop a staged entry if it still belongs to this instance. */
-  dropStaged?(id: string, instance: VMBase | AnyViewModelSimple): void;
 
   /**
    * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#link)

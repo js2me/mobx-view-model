@@ -59,35 +59,8 @@ afterEach(() => {
   cleanup();
 });
 
-describe('staged commit (client + staging-capable store)', () => {
-  test('falls back to eager registration when commitStaged is unavailable', async () => {
-    const vmStore = new ViewModelStoreBaseMock();
-    // A third-party store can expose one optional staging method without the
-    // matching promotion method. That is not a complete staging capability.
-    Object.defineProperty(vmStore, 'commitStaged', { value: undefined });
-    const defineStaged = vi.spyOn(vmStore, 'defineStaged');
-
-    class FooVM extends ViewModelBaseMock {}
-
-    const Component = () => {
-      useCreateViewModel(FooVM, undefined, { id: 'foo' });
-      return null;
-    };
-
-    await act(async () =>
-      render(
-        <ViewModelsProvider value={vmStore}>
-          <Component />
-        </ViewModelsProvider>,
-      ),
-    );
-
-    expect(defineStaged).not.toHaveBeenCalled();
-    expect(vmStore.get('foo')).toBeDefined();
-    expect(vmStore.mountedViewsCount).toBe(1);
-  });
-
-  test('VM is visible to lookups during render via read-through, committed after', async () => {
+describe('render-phase VM staging', () => {
+  test('VM is registered only after its fiber commits', async () => {
     const vmStore = new ViewModelStoreBaseMock();
 
     class FooVM extends ViewModelBaseMock {}
@@ -100,8 +73,7 @@ describe('staged commit (client + staging-capable store)', () => {
     const Component = () => {
       const vm = useCreateViewModel(FooVM, undefined, { id: 'foo' });
 
-      // Read during the render phase: the VM is staged — visible to
-      // read-through lookups, but not a committed store member yet.
+      // Direct core-store lookups do not see React's render-phase registry.
       probes.hasDuringRender = vmStore.has(FooVM);
       probes.mountedCountDuringRender = vmStore.mountedViewsCount;
 
@@ -116,8 +88,7 @@ describe('staged commit (client + staging-capable store)', () => {
       ),
     );
 
-    // render-phase reads work (siblings / VM computeds can find the VM)
-    expect(probes.hasDuringRender).toBe(true);
+    expect(probes.hasDuringRender).toBe(false);
     // ...but the VM was not counted as a committed store member in render
     expect(probes.mountedCountDuringRender).toBe(0);
 

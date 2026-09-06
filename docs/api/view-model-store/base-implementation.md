@@ -28,9 +28,6 @@ Map from ViewModel class to the list of registered instance ids.
 ### `hasMountingVms`  
 See [interface](/api/view-model-store/interface#hasmountingvms).
 
-### `waitMount(...vms)`  
-See [interface](/api/view-model-store/interface#waitmount-vms).
-
 ### `connect(instance, config)`  
 Registers an already created instance in the store: links anchors, indexes the instance by id / class, and calls `init(...)` when present.
 

@@ -1,4 +1,4 @@
-import { action, computed, observable, runInAction, untracked, when } from 'mobx';
+import { action, computed, observable, untracked } from 'mobx';
 import type { ObservableAnnotationsArray } from 'yummies/mobx';
 import type { Class, Maybe } from 'yummies/types';
 import {
@@ -25,25 +25,6 @@ const baseAnnotations: ObservableAnnotationsArray = [
   [action, 'link', 'unlink'],
 ];
 
-type StagedViewModelEntry<VMBase extends AnyViewModel = AnyViewModel> = {
-  vm: VMBase | AnyViewModelSimple;
-  epoch: number;
-};
-
-type StagedVmRegistryEntry = {
-  store: ViewModelStoreBase<any>;
-  id: string;
-  vm: AnyViewModel | AnyViewModelSimple;
-};
-
-/** Drops staged VMs whose view-layer owner was GC'd without a commit. */
-const stagedVmRegistry: FinalizationRegistry<StagedVmRegistryEntry> | null =
-  typeof FinalizationRegistry === 'function'
-    ? new FinalizationRegistry<StagedVmRegistryEntry>(({ store, id, vm }) => {
-        store.finalizeStaged(id, vm);
-      })
-    : null;
-
 export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
   implements ViewModelStore<VMBase>
 {
@@ -53,11 +34,6 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
     Class<VMBase> | Class<AnyViewModelSimple>,
     string[]
   >;
-  /** Render-phase registrations; lookups see them, committed counters do not. */
-  protected stagedViewModels: Map<string, StagedViewModelEntry<VMBase>>;
-  private stagedEpoch = 0;
-  private stagedSweepScheduled = false;
-
   public vmConfig: ViewModelsConfig;
   public resource: ViewModelStoreConfig['resource'];
 
@@ -68,7 +44,6 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
     this.linkedAnchorVMClasses = observable.map([], { deep: false });
     // @ts-ignore ObservableMap is missing getOrInsert/getOrInsertComputed added in TS 6.0
     this.viewModelIdsByClasses = observable.map([], { deep: true });
-    this.stagedViewModels = new Map();
     this.vmConfig = mergeVMConfigs(config?.vmConfig);
     this.resource = config?.resource ?? this.vmConfig.resource;
 
@@ -95,17 +70,6 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
     return [...this.viewModels.values()].some(
       (vm) => isViewModel(vm) && !vm.isMounted,
     );
-  }
-
-  waitMount(...vms: (AnyViewModel | AnyViewModelSimple)[]): Promise<void> {
-    return when(() => {
-      if (vms.length) {
-        return vms.every((vm) => !isViewModel(vm) || vm.isMounted);
-      }
-      return [...this.viewModels.values()].every(
-        (vm) => !isViewModel(vm) || vm.isMounted,
-      );
-    });
   }
 
   connect(
@@ -139,129 +103,11 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
       return existing;
     }
 
-    const staged = this.stagedViewModels.get(config.id);
-
-    if (staged) {
-      // Promote staged → committed; init already ran in defineStaged.
-      this.stagedViewModels.delete(config.id);
-      stagedVmRegistry?.unregister(staged.vm);
-      runInAction(() => {
-        this.viewModels.set(config.id, staged.vm);
-        this.attachVMConstructor(staged.vm);
-      });
-
-      return staged.vm as VM;
-    }
-
     const instance = this.create(config);
 
     this.connect(instance, config);
 
     return instance;
-  }
-
-  /**
-   * Like {@link define}, but visible to lookups immediately and committed
-   * only via {@link commitStaged}. GC of `owner` without a commit drops the entry.
-   */
-  defineStaged<VM extends VMBase | AnyViewModelSimple>(
-    config: ViewModelCreateConfig<VM>,
-    owner: object,
-  ): VM {
-    config.id = this.generateId(config);
-
-    const existing = untracked(
-      () =>
-        this.viewModels.get(config.id) ??
-        this.stagedViewModels.get(config.id)?.vm,
-    ) as VM | undefined;
-
-    if (existing) {
-      return existing;
-    }
-
-    const instance = this.create(config);
-
-    this.link(config.VM as Class<VMBase>, ...(config.anchors ?? []));
-
-    this.stagedViewModels.set(config.id, {
-      vm: instance,
-      epoch: ++this.stagedEpoch,
-    });
-    stagedVmRegistry?.register(
-      owner,
-      { store: this, id: config.id, vm: instance },
-      instance,
-    );
-
-    instance.init?.({ ...config, viewModels: this } as any);
-
-    return instance;
-  }
-
-  /** Promote a staged VM. Call from commit effects only, never during render. */
-  commitStaged(id: string, instance?: VMBase | AnyViewModelSimple): void {
-    const vm = instance ?? this.stagedViewModels.get(id)?.vm;
-
-    if (!vm) {
-      return;
-    }
-
-    const staged = this.stagedViewModels.get(id);
-
-    if (staged?.vm === vm) {
-      this.stagedViewModels.delete(id);
-    }
-    stagedVmRegistry?.unregister(vm);
-
-    if (untracked(() => this.viewModels.get(id)) !== vm) {
-      runInAction(() => {
-        this.viewModels.set(id, vm);
-        this.attachVMConstructor(vm);
-      });
-    }
-
-    this.scheduleStagedSweep();
-  }
-
-  /** Drop a staged entry if it still belongs to this instance. */
-  dropStaged(id: string, instance: VMBase | AnyViewModelSimple): void {
-    if (this.stagedViewModels.get(id)?.vm === instance) {
-      this.stagedViewModels.delete(id);
-      stagedVmRegistry?.unregister(instance);
-    }
-  }
-
-  /** FinalizationRegistry callback: owner was GC'd, so the fiber is dead. */
-  finalizeStaged(id: string, instance: VMBase | AnyViewModelSimple): void {
-    if (this.viewModels.get(id) === instance) {
-      return;
-    }
-    if (this.stagedViewModels.get(id)?.vm === instance) {
-      this.stagedViewModels.delete(id);
-    }
-    instance.unmount?.();
-  }
-
-  /** Drop staged entries from this render pass; newer ones stay. */
-  protected sweepStaged(epochAtCommit: number): void {
-    for (const [id, entry] of this.stagedViewModels) {
-      if (entry.epoch <= epochAtCommit) {
-        this.stagedViewModels.delete(id);
-      }
-    }
-  }
-
-  private scheduleStagedSweep(): void {
-    if (this.stagedSweepScheduled) {
-      return;
-    }
-    this.stagedSweepScheduled = true;
-    const epochAtCommit = this.stagedEpoch;
-    setTimeout(() => {
-      this.stagedSweepScheduled = false;
-      this.sweepStaged(epochAtCommit);
-    });
   }
 
   unmount(instance: VMBase | AnyViewModelSimple) {
@@ -270,14 +116,6 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
     if (instance.id) {
       this.viewModels.delete(instance.id);
     }
-    // ViewModelSimple may use a different id than the staged key.
-    for (const [id, entry] of this.stagedViewModels) {
-      if (entry.vm === instance) {
-        this.stagedViewModels.delete(id);
-        break;
-      }
-    }
-    stagedVmRegistry?.unregister(instance);
   }
 
   /**
@@ -358,16 +196,6 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
       ...(this.viewModelIdsByClasses.get(viewModelClass) || []),
     ];
 
-    // Staged entries are visible to lookups too.
-    for (const [id, entry] of this.stagedViewModels) {
-      if (
-        (entry.vm as any).constructor === viewModelClass &&
-        !viewModelIds.includes(id)
-      ) {
-        viewModelIds.push(id);
-      }
-    }
-
     return viewModelIds;
   }
 
@@ -404,7 +232,7 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
 
     if (!id) return false;
 
-    return this.viewModels.has(id) || this.stagedViewModels.has(id);
+    return this.viewModels.has(id);
   }
 
   /**
@@ -420,9 +248,7 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
     if (!id) return null;
 
     return (
-      ((this.viewModels.get(id) ?? this.stagedViewModels.get(id)?.vm) as
-        | Maybe<T>
-        | undefined) ?? null
+      (this.viewModels.get(id) as Maybe<T> | undefined) ?? null
     );
   }
 
@@ -437,7 +263,7 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
     const viewModelIds = this.getIds(vmLookup);
 
     return viewModelIds.map(
-      (id) => (this.viewModels.get(id) ?? this.stagedViewModels.get(id)?.vm) as T,
+      (id) => this.viewModels.get(id) as T,
     );
   }
 
@@ -475,10 +301,6 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
   }
 
   clean(): void {
-    for (const entry of this.stagedViewModels.values()) {
-      stagedVmRegistry?.unregister(entry.vm);
-    }
-    this.stagedViewModels.clear();
     this.viewModels.clear();
     this.linkedAnchorVMClasses.clear();
     this.viewModelIdsByClasses.clear();
