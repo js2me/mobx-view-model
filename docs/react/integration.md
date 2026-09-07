@@ -21,7 +21,7 @@ import { ViewModelBase, ViewModelStoreBase, viewModelsConfig } from "mobx-view-m
 import { withViewModel, ViewModelProps } from "mobx-view-model-react";
 ```
 
-The root **`mobx-view-model`** package still re-exports these symbols for backward compatibility, but that path is **deprecated**; use **`mobx-view-model-react`** for all React-related imports.
+The **`mobx-view-model-react`** package contains React integration APIs; **`mobx-view-model`** contains the core view-model classes, stores, and configuration.
 
 Integration consists of **2-3 steps**.  
 
@@ -114,10 +114,13 @@ const YourApp = () => {
 With this step you can use the [`useViewModel()`](/react/api/use-view-model) hook with the first argument  
 
 ::: tip [`isMounted`](/api/view-models/interface#ismounted-boolean) state  
-This state is based on calling the [`mount()` method](/api/view-models/interface#mount-void-promise-void), which is triggered inside the [`useCreateViewModel()`](/react/api/use-create-view-model) hook or the store lifecycle.  
-Because of this, on the first render `isMounted` will be `false`, since mounting happens inside a `useLayoutEffect`/`useEffect` hook.  
+This state is based on calling the [`mount()` method](/api/view-models/interface#mount-void-promise-void), which runs inside [`useCreateViewModel()`](/react/api/use-create-view-model) during render (after [`define`](/api/view-model-store/interface#define) when a store is present).  
+If `mount()` / [`willMount()`](/api/view-models/base-implementation#willmount-void) finishes synchronously, `isMounted` is already `true` on the first paint. Async mount keeps it `false` until the promise settles.
+
+- With [`withViewModel`](/react/api/with-view-model): use its [`fallback`](/react/api/with-view-model#fallback) while `isMounted` is `false` (CSR / when the hook is not suspending).
+- With direct [`useCreateViewModel`](/react/api/use-create-view-model): there is no `fallback` option — gate the UI on `model.isMounted` yourself (or wrap the tree in [`Suspense`](https://react.dev/reference/react/Suspense) when [`viewModelsConfig.mode = 'ssr'`](/api/view-models/view-models-config#mode) on React 19+, where the hook waits via `use()`).
 :::
 
-::: warning Do not calls [`mount()`](/api/view-models/interface#mount-void-promise-void), [`unmount()`](/api/view-models/interface#unmount-void-promise-void) manually  
-This methods already calling inside [`ViewModelStore` base implementation](/api/view-model-store/base-implementation) or inside [`useCreateViewModel`](/react/api/use-create-view-model) hook.
+::: warning Do not call [`mount()`](/api/view-models/interface#mount-void-promise-void) / [`unmount()`](/api/view-models/interface#unmount-void) manually  
+These methods are already called inside [`useCreateViewModel`](/react/api/use-create-view-model) (via [`define`](/api/view-model-store/interface#define) / [`unmount`](/api/view-model-store/interface#unmountinstance) when a store is present).
 :::

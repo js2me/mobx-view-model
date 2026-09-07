@@ -9,7 +9,7 @@ You write `<Page userId="1" />` instead of passing a nested `payload` prop.
 Under the hood it is `withViewModel` with `getPayload: (props) => props`. Everything else — `observer()`, SSR, `fallback`, `anchors`, `connect()` — works the same. See [`withViewModel`](/react/api/with-view-model) for details.
 
 ::: info This HOC wraps your view component into `observer()` HOC!
-Enabled by default via [`wrapViewsInObserver`](/api/view-models/view-models-config#wrapviewsinobserver), same as `withViewModel`.
+Same as `withViewModel`: the render function is always wrapped with [`observer()`](https://mobx.js.org/api.html#observer).
 :::
 
 ## Signature
@@ -77,5 +77,5 @@ All [`withViewModel` config options](/react/api/with-view-model#configuration) e
 
 ## Notes
 
-- Not compatible with `<Suspense />` / `lazy()` — [same as `withViewModel`](/react/api/with-view-model#incompatibility-with-suspense-and-lazy).
+- [`lazy()`](https://react.dev/reference/react/lazy) / [`Suspense`](https://react.dev/reference/react/Suspense) — [same as `withViewModel`](/react/api/with-view-model#lazy-and-suspense).
 - Generic ViewModel types — [same caveats as `withViewModel`](/react/api/with-view-model#generic-types-for-your-wrapped-viewmodel-in-this-hoc).

@@ -1,5 +1,7 @@
 import type {
   AnyViewModel,
+  AnyViewModelSimple,
+  ViewModelComponentRef,
   ViewModelSimple,
 } from 'mobx-view-model';
 import type { AnyObject, Class, EmptyObject, HasKey, IsUnknown } from 'yummies/types';
@@ -11,12 +13,15 @@ import {
 } from '../lib/react-types.js';
 import {
   type AllViewModelPropsKeys,
-  type FixedComponentType,
+  type ExtractReactRef,
   type ViewModelHocConfig,
   type ViewModelPropsChargedProps,
   type ViewModelSimpleHocConfig,
   withViewModel,
 } from './with-view-model.js';
+import {
+  type RRenderFn
+} from "../lib/react-types.js";
 
 type InferPropsViewModelPayload<TViewModel> = TViewModel extends AnyViewModel
   ? TViewModel['payload']
@@ -40,27 +45,23 @@ export type PropsVMComponentProps<
     AllViewModelPropsKeys | keyof ExtractVMPayload<TViewModel>
   > &
   (HasKey<TComponentOriginProps, 'ref'> extends true
-    ? {}
-    : HasKey<TComponentOriginProps, 'forwardedRef'> extends true
-      ? Required<TComponentOriginProps>['forwardedRef'] extends RForwardedRef<
-          infer R
-        >
-        ? {
-            ref?: RLegacyRef<R>;
-          }
-        : Required<TComponentOriginProps>['forwardedRef'] extends RLegacyRef<any>
-          ? {
-              ref?: TComponentOriginProps['forwardedRef'];
-            }
-          : Pick<TComponentOriginProps, 'forwardedRef'>
-      : IsUnknown<TForwardedRef> extends true
-        ? {}
-        : { ref?: RLegacyRef<TForwardedRef> });
+    ? Required<TComponentOriginProps>['ref'] extends RForwardedRef<infer R>
+      ? { ref?: RLegacyRef<R> }
+      : Required<TComponentOriginProps>['ref'] extends RLegacyRef<infer R>
+        ? { ref?: RLegacyRef<R> }
+        : { ref?: RLegacyRef<ExtractReactRef<TComponentOriginProps['ref']>> }
+    : IsUnknown<TForwardedRef> extends true
+      ? {}
+      : { ref?: RLegacyRef<TForwardedRef> });
 
 export interface PropsVMComponent<
   TViewModel,
   TComponentOriginProps extends AnyObject = ExtractVMPayload<TViewModel>,
   TForwardedRef = unknown,
+> extends ViewModelComponentRef<
+  TViewModel extends AnyViewModel | AnyViewModelSimple
+    ? TViewModel
+    : AnyViewModel | AnyViewModelSimple
 > {
   (
     props: PropsVMComponentProps<TViewModel, TComponentOriginProps, TForwardedRef>,
@@ -95,14 +96,14 @@ export function withPropsViewModel<
   TForwardedRef = unknown,
 >(
   model: Class<TViewModel>,
-  component: FixedComponentType<
+  renderFn: RRenderFn<
     ViewModelPropsChargedProps<TComponentOriginProps, TViewModel, TForwardedRef>
   >,
   config?: TViewModel extends AnyViewModel
     ? PropsViewModelHocConfig<TViewModel>
     : PropsViewModelSimpleHocConfig<TViewModel>,
 ): PropsVMComponent<TViewModel, TComponentOriginProps, TForwardedRef> {
-  return withViewModel(model, component, {
+  return withViewModel(model, renderFn, {
     ...config,
     getPayload: allPropsAsPayload,
   }) as unknown as PropsVMComponent<TViewModel, TComponentOriginProps, TForwardedRef>;

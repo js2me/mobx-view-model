@@ -18,13 +18,7 @@ const skippedHierarchyKeys = new Set([
 ]);
 
 function isViewModelLike(value: object) {
-  return (
-    isViewModel(value) ||
-    (typeof (value as { payloadChanged?: unknown }).payloadChanged ===
-      'function' &&
-      typeof (value as { id?: unknown }).id === 'string' &&
-      typeof (value as { mount?: unknown }).mount === 'function')
-  );
+  return isViewModel(value);
 }
 
 export function notifyMobxObjectChange(object: object, key?: string) {

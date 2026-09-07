@@ -1,5 +1,5 @@
 import { Xmark } from '@gravity-ui/icons';
-import { withViewModel } from 'mobx-view-model';
+import { withViewModel } from 'mobx-view-model-react';
 import { VmDevtoolsContent } from '../devtools-content';
 import { VmDevtoolsPopupVM } from './model';
 import css from './styles.module.css';

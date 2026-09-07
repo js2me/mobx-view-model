@@ -127,7 +127,7 @@ export class UserVM extends ViewModelBase {}`;
     expect(result.map((c) => c.name)).toEqual(['CounterVM', 'UserVM']);
   });
 
-  it('detects class from mobx-view-model/react import', () => {
+  it('detects class from legacy mobx-view-model/react import', () => {
     const code = `
 import { ViewModelBase } from 'mobx-view-model/react';
 

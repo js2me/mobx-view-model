@@ -20,7 +20,7 @@ Below is a **Next.js (Pages Router)** checklist. A working layout lives in [`exa
 
 ## 1. `next.config`
 
-- **`reactStrictMode: false`** — in dev, React Strict Mode double-mounts components. This library ties **`attach` / `detach`** to mount and layout effects, so the extra cycle can **surface bugs** (wrong VM instances or counts). Turn Strict Mode off while debugging SSR if you see that.
+- **`reactStrictMode: false`** — in dev, React Strict Mode double-mounts components. This library creates / mounts VMs during render and cleans them up in effects (`define` / `unmount`), so the extra cycle can **surface bugs** (wrong VM instances or counts). Turn Strict Mode off while debugging SSR if you see that.
 
 ```ts
 import type { NextConfig } from 'next';
@@ -56,7 +56,9 @@ The sample app uses the **Pages** router and imports this bootstrap from a **cli
 
 ## 3. Root store + `ViewModelsProvider`
 
-Put a [`ViewModelStoreBase`](/api/view-model-store/base-implementation) (or custom store) on your app root. If every VM needs `rootStore`, override **`createViewModel`** — see [Integration with RootStore](/recipes/integration-with-root-store).
+Put a [`ViewModelStoreBase`](/api/view-model-store/base-implementation) (or custom store) on your app root. If every VM needs `rootStore`, override **`create`** — see [Integration with RootStore](/recipes/integration-with-root-store).
+
+Set [`viewModelsConfig.mode = 'ssr'`](/api/view-models/view-models-config#mode) globally so async mount is waited with React `use()` during SSR / hydration (React 19+). Store-level `vmConfig` does **not** control this — the hook reads only the global `viewModelsConfig.mode`.
 
 Wrap the tree with your context and [`ViewModelsProvider`](/react/api/view-models-provider):
 
@@ -109,10 +111,12 @@ The page module can stay without `'use client'`; pass `initialPayload` into a **
 1. **`'use client'`** where you use the library’s hooks/HOCs.
 2. Pass the same **`payload`** (or props) on server and client.
 3. Use a stable **`id`** per route if several pages share one VM class — avoids collisions in the store.
-4. If **`mount()`** is **async**, set **`fallback`** so the first server and client paint match.
+4. If **`mount()` / `willMount()`** is **async**:
+   - **React 19+** with [`mode: 'ssr'`](/api/view-models/view-models-config#mode): wrap the tree in a [`Suspense`](https://react.dev/reference/react/Suspense) boundary — the hook waits via `use()` and suspends before HOC [`fallback`](/react/api/with-view-model#fallback) can render.
+   - **React 18**, or CSR without suspending: use [`withViewModel`](/react/api/with-view-model)'s [`fallback`](/react/api/with-view-model#fallback) (or gate on `isMounted`) so the first server and client paint match.
 5. Deep children: [`useViewModel`](/react/api/use-view-model) + **`observer`**.
 
-**Why the first paint can match:** during the server HTML pass, React does not run `useLayoutEffect` / `useEffect`. [`useCreateViewModel`](/react/api/use-create-view-model) (and [`withViewModel`](/react/api/with-view-model), which uses it) calls [`attach()`](/api/view-model-store/interface#attach-viewmodel) **during render** as `void store.attach(...)` — the promise is **not** awaited. When the VM’s [`mount()`](/api/view-models/interface#mount-void-promise-void) finishes **synchronously**, the store completes `attach` in the same turn, `isMounted` becomes `true`, and the main view can render immediately. If `mount()` returns a **`Promise`**, the render pass continues without waiting; the VM stays in `mountingViews` until it settles, [`isAbleToRenderView`](/api/view-model-store/interface#isabletorenderview-viewmodelid) is `false` in the meantime, and you should use **`fallback`** so server and client output agree. Custom [`ViewModelStore`](/api/view-model-store/interface) implementations should keep the same semantics as [`ViewModelStoreBase`](/api/view-model-store/base-implementation) for [`attach(viewModel)`](/api/view-model-store/interface#attach-viewmodel).
+**Why the first paint can match:** during the server HTML pass, React does not run `useEffect`. [`useCreateViewModel`](/react/api/use-create-view-model) (and [`withViewModel`](/react/api/with-view-model), which uses it) calls [`define()`](/api/view-model-store/interface#define) **during render** and starts `mount()` in the same turn. When mount finishes **synchronously**, `isMounted` becomes `true` and the main view can render immediately. If mount returns a **`Promise`** and global [`mode`](/api/view-models/view-models-config#mode) is `'ssr'` on **React 19+**, the hook waits with React `use()` so SSR / hydration stay aligned — put a **`Suspense`** boundary around that tree for loading UI. On **React 18** (no `use()`), or when not suspending, provide HOC **`fallback`** / gate on `isMounted`.
 
 ---
 
@@ -121,8 +125,10 @@ The page module can stay without `'use client'`; pass `initialPayload` into a **
 Same store + same payload on server and client:
 
 ```tsx
-import { ViewModelBase, ViewModelStoreBase } from 'mobx-view-model';
+import { ViewModelBase, ViewModelStoreBase, viewModelsConfig } from 'mobx-view-model';
 import { ViewModelsProvider, withViewModel } from 'mobx-view-model-react';
+
+viewModelsConfig.mode = 'ssr';
 
 class PageVM extends ViewModelBase<{ count: number }> {}
 
@@ -161,22 +167,24 @@ hydrateRoot(
 
 ---
 
-## Async `mount()`
+## Async `mount()` / `willMount()`
 
-Use **`fallback`** for the initial render on server and client:
+Prefer async work in [`willMount()`](/api/view-models/base-implementation#willmount-void).
 
 ```tsx
 import { sleep } from "yummies/async";
 
 class PageVM extends ViewModelBase {
-  async mount() {
+  protected async willMount() {
     await sleep(100);
-    super.mount();
   }
 }
 ```
 
-Pass a `fallback` component in [`withViewModel` config](/react/api/with-view-model#fallback) (or set [`viewModelsConfig.fallbackComponent`](/api/view-models/view-models-config#fallbackcomponent)) so both server and client render that UI until `mount()` completes.
+Loading UI depends on React version and [`mode`](/api/view-models/view-models-config#mode):
+
+- **`mode: 'ssr'` on React 19+:** wrap with [`Suspense`](https://react.dev/reference/react/Suspense). The hook suspends via `use()` during SSR / hydration, so HOC / global [`fallback`](/react/api/with-view-model#fallback) is **not** shown on that path — the nearest `Suspense` fallback is.
+- **React 18**, or when the hook is not suspending: pass a `fallback` in [`withViewModel` config](/react/api/with-view-model#fallback) (or set [`viewModelsConfig.fallbackComponent`](/api/view-models/view-models-config#fallbackcomponent)) until `isMounted` becomes `true`.
 
 ::: tip Same data everywhere
 Reuse the same **`payload`** and the same **`ViewModelsProvider`** / store wiring on server and client. Do not depend on `mount()` side effects for the first paint.

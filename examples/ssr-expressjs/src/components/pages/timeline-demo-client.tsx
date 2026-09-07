@@ -1,4 +1,4 @@
-import { withViewModel } from 'mobx-view-model';
+import { withViewModel } from 'mobx-view-model-react';
 import { DemoPageVM } from '../demo-page-client/model.js';
 import { DemoPageArticle } from '../demo-page-client/ui/demo-page-article.js';
 import { DemoPageFallback } from '../demo-page-client/ui/demo-page-fallback.js';

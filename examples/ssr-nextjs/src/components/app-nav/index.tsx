@@ -1,6 +1,6 @@
 'use client';
 
-import { withViewModel } from 'mobx-view-model';
+import { withViewModel } from 'mobx-view-model-react';
 import Link from 'next/link';
 import { AppNavVM } from './model';
 

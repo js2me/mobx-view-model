@@ -14,34 +14,24 @@ function useCreateViewModel<VM extends AnyViewModel>(
 ): VM;
 ```
 
-## <ReactMark /> `vmConfig.useReactIds` {#usereactids}  
-Optional flag on merged [`vmConfig`](/api/view-models/view-models-config) (same shape as [`viewModelsConfig`](/api/view-models/view-models-config)): when `true`, this hook always calls React [`useId()`](https://react.dev/reference/react/useId) and passes the result into view-model id generation as `renderId`. The same switch exists on global [`viewModelsConfig`](/api/view-models/view-models-config#usereactids).  
+## Configuration
+
+| Option | Description |
+| --- | --- |
+| `id` | Stable instance id. Defaults to React [`useId()`](https://react.dev/reference/react/useId). |
+| `factory` | Custom factory (same idea as [`viewModelsConfig.factory`](/api/view-models/view-models-config#factory)). |
+| `vmConfig` | Per-instance [`ViewModelsConfig`](/api/view-models/view-models-config) overrides. |
+| `ctx` | Extra context object passed into create config. |
+| `anchors` | Extra lookup anchors for [`useViewModel`](/react/api/use-view-model). |
+| `props` | Original component props forwarded into create config. |
+
+When a [`ViewModelStore`](/api/view-model-store/interface) is present (via [`ViewModelsProvider`](/react/api/view-models-provider)), the hook creates the VM in React's render-phase registry on the client and registers it with [`define`](/api/view-model-store/interface#define) only when the component's commit effect runs. React hooks and VM instances created by the hook can read this registry during render; direct reads from the core store see only committed VM instances. A render pass discarded by React (for example, a duplicate fiber under `Suspense` in React 19) therefore never mutates the store or leaves an orphaned VM behind. Otherwise the hook creates the instance via `factory` / global config and calls `init` / `mount` locally. Cleanup uses [`unmount`](/api/view-model-store/interface#unmountinstance) (with store) or `unmount()` (without).
 
 ::: tip SSR  
-Stable ids across server render and client hydration matter for SSR apps. Because `useId()` is matched between server and client for the same component tree, enabling `useReactIds` can help keep generated [`ViewModel`](/api/view-models/overview) ids consistent where you rely on that alignment.  
+With [`viewModelsConfig.mode = 'ssr'`](/api/view-models/view-models-config#mode) on **React 19+**, if `mount()` / `willMount()` returns a Promise, the hook waits for it with React [`use()`](https://react.dev/reference/react/use) during SSR and the first client hydration. Wrap the tree in [`Suspense`](https://react.dev/reference/react/Suspense) for a loading UI — the hook suspends before a parent HOC [`fallback`](/react/api/with-view-model#fallback) can render.
+
+On **React 18**, `use()` is unavailable, so the hook does not wait: the component can render while `isMounted` is still `false`. Use [`withViewModel`](/react/api/with-view-model)'s [`fallback`](/react/api/with-view-model#fallback), or gate on `model.isMounted` when calling this hook directly.
 :::
-
-#### Example
-```tsx
-const model = useCreateViewModel(YourVM, payload, {
-  vmConfig: { useReactIds: true },
-});
-```
-
-## <ReactMark /> `vmConfig.suspendUntil` {#suspenduntil}  
-Same idea as [`suspendUntil` on `viewModelsConfig`](/api/view-models/view-models-config#suspenduntil); set it on `vmConfig` here when you need it only for this hook (with a [`ViewModel`](/api/view-models/overview), not [`ViewModelSimple`](/api/view-models/view-model-simple)). You may **return nothing** to skip waiting—see the main [`suspendUntil`](/api/view-models/view-models-config#suspenduntil) section.
-
-#### Example
-
-```tsx
-import { when } from 'mobx';
-
-const model = useCreateViewModel(YourVM, payload, {
-  vmConfig: {
-    suspendUntil: (vm) => when(() => Boolean(vm.ctx)),
-  },
-});
-```
 
 ##  Usage  
 
@@ -72,12 +62,9 @@ import { observer } from "mobx-react-lite";
 
 export const YourComponent = observer(() => {
   const model = useCreateViewModel(YourVM, {}, {
-    vmConfig: { useReactIds: false }, // optional: pass React useId into VM id generation (see #usereactids)
-    // vmConfig: { suspendUntil: ... }, // see #suspenduntil
-    ctx: {}, // internal object used as cache key source inside this hook
+    ctx: {}, // extra create-config context
     factory: (config) => new config.VM(config), // factory method for creating VM instances
-    generateId, // custom fn for generating ids for VM instances
-    id, // unique id if you need to create 1 instance of your VM
+    id, // unique id if you need a single shared instance of your VM
     anchors: [], // additional components for useViewModel lookup
   });
 })

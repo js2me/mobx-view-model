@@ -80,48 +80,8 @@ describe('withPropsViewModel', () => {
 
       expect(screen.getByText('count 2')).toBeDefined();
       expect(vm.payload.count).toBe(2);
-      expect(vm.spies.payloadChanged).toHaveBeenCalled();
     });
 
-    it('calls payloadChanged with the next props as payload', async () => {
-      interface ComponentProps {
-        value: string;
-      }
-
-      class ValueVM extends ViewModelBaseMock<ComponentProps> {}
-
-      const vmStore = new ViewModelStoreBaseMock();
-
-      const Value = withPropsViewModel(
-        ValueVM,
-        ({ model }) => <div>{model.payload.value}</div>,
-        { id: 'value-vm' },
-      );
-
-      const screen = await act(async () =>
-        render(
-          <ViewModelsProvider value={vmStore}>
-            <Value value="first" />
-          </ViewModelsProvider>,
-        ),
-      );
-
-      const vm = vmStore.get('value-vm') as ValueVM;
-
-      await act(async () => {
-        screen.rerender(
-          <ViewModelsProvider value={vmStore}>
-            <Value value="second" />
-          </ViewModelsProvider>,
-        );
-      });
-
-      expect(screen.getByText('second')).toBeDefined();
-      expect(vm.spies.payloadChanged).toHaveBeenCalledWith(
-        { value: 'second' },
-        { value: 'first' },
-      );
-    });
 
     it('passes the same flat props to the view and into model.payload', async () => {
       interface Payload {
@@ -354,8 +314,8 @@ describe('withPropsViewModel', () => {
       expect(screen.getByText('user-2')).toBeDefined();
     });
 
-    describe('forwardedRef', () => {
-      it('types forwardedRef via ViewModelProps second generic with forwardRef', async () => {
+    describe('ref', () => {
+      it('types ref via ViewModelProps second generic with forwardRef', async () => {
         interface Payload {
           title: string;
         }
@@ -366,12 +326,12 @@ describe('withPropsViewModel', () => {
 
         const Title = withPropsViewModel(
           TitleVM,
-          ({ forwardedRef, model }: ComponentProps) => {
-            expectTypeOf(forwardedRef).toEqualTypeOf<
+          ({ ref, model }: ComponentProps) => {
+            expectTypeOf(ref).toEqualTypeOf<
               React.ForwardedRef<HTMLDivElement> | undefined
             >();
             expectTypeOf(model.payload.title).toBeString();
-            return <div ref={forwardedRef}>{model.payload.title}</div>;
+            return <div ref={ref}>{model.payload.title}</div>;
           },
           { forwardRef: true },
         );
@@ -397,8 +357,8 @@ describe('withPropsViewModel', () => {
 
         const Title = withPropsViewModel<TitleVM, ComponentProps, HTMLDivElement>(
           TitleVM,
-          ({ forwardedRef, model }: ComponentProps) => (
-            <div ref={forwardedRef}>{model.payload.title}</div>
+          ({ ref, model }: ComponentProps) => (
+            <div ref={ref}>{model.payload.title}</div>
           ),
           { forwardRef: true },
         );
@@ -409,7 +369,6 @@ describe('withPropsViewModel', () => {
         expectTypeOf<OuterProps['ref']>().toEqualTypeOf<
           React.LegacyRef<HTMLDivElement> | undefined
         >();
-        expectTypeOf<OuterProps>().not.toHaveProperty('forwardedRef');
         expectTypeOf<OuterProps>().not.toHaveProperty('model');
         expectTypeOf<OuterProps>().not.toHaveProperty('payload');
 
@@ -434,12 +393,12 @@ describe('withPropsViewModel', () => {
 
         const Title = withPropsViewModel(
           TitleVM,
-          ({ forwardedRef, model }: ComponentProps) => {
-            expectTypeOf(forwardedRef).toEqualTypeOf<
+          ({ ref, model }: ComponentProps) => {
+            expectTypeOf(ref).toEqualTypeOf<
               React.ForwardedRef<HTMLDivElement> | undefined
             >();
             expectTypeOf(model.payload.title).toBeString();
-            return <div ref={forwardedRef}>{model.payload.title}</div>;
+            return <div ref={ref}>{model.payload.title}</div>;
           },
           { forwardRef: true },
         );
@@ -450,7 +409,6 @@ describe('withPropsViewModel', () => {
         expectTypeOf<OuterProps['ref']>().toEqualTypeOf<
           React.LegacyRef<HTMLDivElement> | undefined
         >();
-        expectTypeOf<OuterProps>().not.toHaveProperty('forwardedRef');
         expectTypeOf<OuterProps>().not.toHaveProperty('model');
         expectTypeOf<OuterProps>().not.toHaveProperty('payload');
 
@@ -464,76 +422,7 @@ describe('withPropsViewModel', () => {
         expect(screen.getByText('inferred-ref')).toBeDefined();
       });
 
-      it('types custom forwardedRef on outer component when overridden in ComponentProps', async () => {
-        interface Payload {
-          label: string;
-        }
-
-        class LabelVM extends ViewModelBase<Payload> {}
-
-        interface ComponentProps extends ViewModelProps<LabelVM> {
-          forwardedRef: number;
-        }
-
-        const Label = withPropsViewModel(
-          LabelVM,
-          ({ forwardedRef, model }: ComponentProps) => {
-            expectTypeOf(forwardedRef).toEqualTypeOf<number>();
-            expectTypeOf(model.payload.label).toBeString();
-            return <div>{forwardedRef}</div>;
-          },
-        );
-
-        type OuterProps = Parameters<typeof Label>[0];
-
-        expectTypeOf<OuterProps['label']>().toBeString();
-        expectTypeOf<OuterProps['forwardedRef']>().toBeNumber();
-        expectTypeOf<OuterProps>().not.toHaveProperty('ref');
-        expectTypeOf<OuterProps>().not.toHaveProperty('model');
-
-        const screen = await act(async () =>
-          render(<Label label="lbl" forwardedRef={7} />),
-        );
-
-        expect(screen.getByText('7')).toBeDefined();
-      });
-
-      it('types optional custom forwardedRef on outer component', async () => {
-        interface Payload {
-          label: string;
-        }
-
-        class LabelVM extends ViewModelBase<Payload> {}
-
-        interface ComponentProps extends ViewModelProps<LabelVM> {
-          forwardedRef?: number;
-        }
-
-        const Label = withPropsViewModel(
-          LabelVM,
-          ({ forwardedRef, model }: ComponentProps) => {
-            expectTypeOf(forwardedRef).toEqualTypeOf<number | undefined>();
-            expectTypeOf(model.payload.label).toBeString();
-            return <div>{forwardedRef ?? 'none'}</div>;
-          },
-        );
-
-        type OuterProps = Parameters<typeof Label>[0];
-
-        expectTypeOf<OuterProps['label']>().toBeString();
-        expectTypeOf<OuterProps['forwardedRef']>().toEqualTypeOf<
-          number | undefined
-        >();
-        expectTypeOf<OuterProps>().not.toHaveProperty('ref');
-
-        const screen = await act(async () =>
-          render(<Label label="lbl" forwardedRef={9} />),
-        );
-
-        expect(screen.getByText('9')).toBeDefined();
-      });
-
-      it('types forwardedRef in view when ref is defined in ComponentProps with forwardRef', async () => {
+      it('types ref in view when ref is defined in ComponentProps with forwardRef', async () => {
         interface Payload {
           caption: string;
         }
@@ -546,8 +435,8 @@ describe('withPropsViewModel', () => {
 
         const Caption = withPropsViewModel<CaptionVM, ComponentProps, number>(
           CaptionVM,
-          ({ forwardedRef, model }) => {
-            expectTypeOf(forwardedRef).toEqualTypeOf<
+          ({ ref, model }) => {
+            expectTypeOf(ref).toEqualTypeOf<
               React.ForwardedRef<number> | undefined
             >();
             expectTypeOf(model.payload.caption).toBeString();

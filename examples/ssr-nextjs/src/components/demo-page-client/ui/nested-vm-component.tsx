@@ -1,6 +1,6 @@
 'use client';
 
-import { withViewModel } from 'mobx-view-model';
+import { withViewModel } from 'mobx-view-model-react';
 import { VM } from '@/shared/lib/vm';
 
 type NestedVmPayload = {

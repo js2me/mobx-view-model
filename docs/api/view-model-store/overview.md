@@ -4,19 +4,19 @@ title: View Model Store Overview
 
 # ViewModelStore  
 
-An optional but powerful container for managing ViewModel instances within a React application. Provides centralized control over ViewModel lifecycle and access.
+An optional but powerful container for managing ViewModel instances within a React / Solid application. Provides centralized control over ViewModel lifecycle and access.
 
 ## Key Features
-- **Instance Registry** - Automatic tracking of all active ViewModels in React tree
+- **Instance Registry** - Automatic tracking of all active ViewModels in the view tree
 - **Cross-Component Access** - Retrieve ViewModels by:
   - Class reference
-  - React Component reference
+  - Component reference (`withViewModel` / anchors)
   - Custom unique IDs  
-- **Factory Pattern** - Unified creation interface for ViewModels  
+- **Factory Pattern** - Unified creation interface via [`define`](/api/view-model-store/interface#define) / [`create`](/api/view-model-store/interface#create-config)
 
 ## When to Use
 Consider ViewModelStore when your application requires:
-- Access to ViewModels outside React hierarchy
+- Access to ViewModels outside the view hierarchy
 - Debugging/devtools inspection capabilities
 - Complex dependency injection scenarios
 
@@ -48,12 +48,10 @@ class NotifierVM extends ViewModelBase {
   foo = 'foo';
 }
 
-const NotifierView = () => {
-  return <div>Hello, I am a notifier.</div>;
-};
-
-export const Notifier = withViewModel(NotifierVM, { id: 'notifier-id' })(
-  NotifierView,
+export const Notifier = withViewModel(
+  NotifierVM,
+  () => <div>Hello, I am a notifier.</div>,
+  { id: 'notifier-id' },
 );
 
 ...
@@ -61,5 +59,5 @@ export const Notifier = withViewModel(NotifierVM, { id: 'notifier-id' })(
 
 vmStore.get(Notifier)?.foo // 'foo' | undefined
 vmStore.get(NotifierVM)?.foo // 'foo' | undefined
-vmStore.get('notifier-id')?.foo // 'foo' | undefined
+vmStore.get<NotifierVM>('notifier-id')?.foo // 'foo' | undefined
 ```

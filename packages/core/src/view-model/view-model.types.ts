@@ -3,10 +3,11 @@ import type { ViewModelsRawConfig } from '../config/index.js';
 import type { ViewModel } from './view-model.js';
 import type { ViewModelStore } from './view-model.store.js';
 import type { ViewModelSimple } from './view-model-simple.js';
+import { ViewModelCreateConfig } from './index.js';
 
 export type AnyViewModel = ViewModel<any, any>;
 
-export type AnyViewModelSimple = ViewModelSimple<any>;
+export type AnyViewModelSimple = ViewModelSimple<any, AnyViewModel | AnyViewModelSimple | null>;
 
 export type PayloadCompareFn<TPayload extends AnyObject = AnyObject> = (
   currentPayload: TPayload | undefined,
@@ -30,7 +31,6 @@ export interface ViewModelParams<
   id: string;
   payload: Payload;
   viewModels?: Maybe<ViewModelStore>;
-  parentViewModelId?: Maybe<string>;
   parentViewModel?: Maybe<ParentViewModel>;
   /**
    * Additional data that may be useful when creating the VM
@@ -46,4 +46,9 @@ export interface ViewModelParams<
    * Original component props
    */
   props?: ComponentProps;
+  /** Data resolved by the store resource for this VM id. */
+  vmData?: unknown;
 }
+
+
+export type ViewModelInitConfig<VM extends AnyViewModel | AnyViewModelSimple> = ViewModelCreateConfig<VM> & { viewModels?: ViewModelStore }

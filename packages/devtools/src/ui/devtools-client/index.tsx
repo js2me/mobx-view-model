@@ -2,7 +2,7 @@ import {
   ActiveViewModelProvider,
   ViewModelsProvider,
   withViewModel,
-} from 'mobx-view-model';
+} from 'mobx-view-model-react';
 import { VmDevtoolsButton } from '../devtools-button';
 import { VmDevtoolsPopup } from '../devtools-popup';
 import { DevtoolsClientVM } from './model';

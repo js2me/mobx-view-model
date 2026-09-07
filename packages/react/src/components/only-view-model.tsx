@@ -1,5 +1,5 @@
 import { observer } from 'mobx-react-lite';
-import type { AnyViewModel } from 'mobx-view-model';
+import { type AnyViewModel } from 'mobx-view-model';
 import type { Class, IsPartial } from 'yummies/types';
 import {
   type UseCreateViewModelConfig,
