@@ -36,10 +36,17 @@ export interface ViewModelCreateConfig<VM extends AnyViewModel>
 
 /**
  * [**Documentation**](https://js2me.github.io/mobx-view-model/api/other/view-model-lookup)
+ *
+ * Note: `React.ComponentType<any>` intentionally lives outside of the
+ * distributive conditional below. Keeping the `VMComponent<T, any> | React.ComponentType<any>`
+ * union inside the `T extends AnyViewModel` branch breaks contextual typing
+ * of `withViewModel` inline components for consumers of the bundled d.ts
+ * (the `model` prop degrades to an implicit `any`).
  */
 export type ViewModelLookup<T extends AnyViewModel | AnyViewModelSimple> =
   | AnyViewModel['id']
   | Class<T>
+  | React.ComponentType<any>
   | (T extends AnyViewModel
-      ? import('../react/hoc/with-view-model.js').VMComponent<T, any> | React.ComponentType<any>
-      : React.ComponentType<any>);
+      ? import('../react/hoc/with-view-model.js').VMComponent<T, any>
+      : never);

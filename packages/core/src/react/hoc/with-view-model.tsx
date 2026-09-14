@@ -28,7 +28,11 @@ import {
 
 type FixedComponentType<P extends AnyObject = {}> =
   /**
-   * Fixes typings loss with use `withViewModel` with inline function component
+   * Kept as the fallback component shape for class components
+   * and `React.ComponentType`-typed values.
+   * Inline function components are covered by a dedicated
+   * function-signature overload above, so their props get
+   * proper contextual typing.
    */
   ((props: P) => React.ReactNode) | React.ComponentClass<P>;
 
@@ -226,6 +230,27 @@ export function withViewModel<
   TForwardedRef = unknown,
 >(
   model: Class<TViewModel>,
+  component: (
+    props: ViewModelPropsChargedProps<
+      TComponentOriginProps,
+      TViewModel,
+      TForwardedRef
+    >,
+  ) => React.ReactNode,
+  config?: ViewModelHocConfig<TViewModel>,
+): VMComponent<TViewModel, TComponentOriginProps, TForwardedRef>;
+
+/**
+ * A Higher-Order Component that connects React components to their ViewModels, providing seamless MobX integration.
+ *
+ * [**Documentation**](https://js2me.github.io/mobx-view-model/react/api/with-view-model.html)
+ */
+export function withViewModel<
+  TViewModel extends AnyViewModel,
+  TComponentOriginProps extends AnyObject = AnyObject,
+  TForwardedRef = unknown,
+>(
+  model: Class<TViewModel>,
   component: React.ComponentType<
     ViewModelPropsChargedProps<TComponentOriginProps, TViewModel, TForwardedRef>
   >,
@@ -274,9 +299,51 @@ export function withViewModel<
   TForwardedRef = unknown,
 >(
   model: Class<TViewModel>,
+  component: (
+    props: ViewModelPropsChargedProps<
+      TComponentOriginProps,
+      TViewModel,
+      TForwardedRef
+    >,
+  ) => React.ReactNode,
+  config?: ViewModelSimpleHocConfig<TViewModel>,
+): VMComponent<TViewModel, TComponentOriginProps, TForwardedRef>;
+
+/**
+ * A Higher-Order Component that connects React components to their ViewModels, providing seamless MobX integration.
+ *
+ * [**Documentation**](https://js2me.github.io/mobx-view-model/react/api/with-view-model.html)
+ */
+export function withViewModel<
+  TViewModel extends AnyViewModelSimple,
+  TComponentOriginProps extends AnyObject = AnyObject,
+  TForwardedRef = unknown,
+>(
+  model: Class<TViewModel>,
   component: FixedComponentType<
     ViewModelPropsChargedProps<TComponentOriginProps, TViewModel, TForwardedRef>
   >,
+  config?: ViewModelSimpleHocConfig<TViewModel>,
+): VMComponent<TViewModel, TComponentOriginProps, TForwardedRef>;
+
+/**
+ * A Higher-Order Component that connects React components to their ViewModels, providing seamless MobX integration.
+ *
+ * [**Documentation**](https://js2me.github.io/mobx-view-model/react/api/with-view-model.html)
+ */
+export function withViewModel<
+  TViewModel,
+  TComponentOriginProps extends AnyObject = ViewModelProps<TViewModel>,
+  TForwardedRef = unknown,
+>(
+  model: Class<TViewModel>,
+  component: (
+    props: ViewModelPropsChargedProps<
+      TComponentOriginProps,
+      TViewModel,
+      TForwardedRef
+    >,
+  ) => React.ReactNode,
   config?: ViewModelSimpleHocConfig<TViewModel>,
 ): VMComponent<TViewModel, TComponentOriginProps, TForwardedRef>;
 
