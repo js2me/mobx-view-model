@@ -114,13 +114,13 @@ const YourApp = () => {
 With this step you can use the [`useViewModel()`](/react/api/use-view-model) hook with the first argument  
 
 ::: tip [`isMounted`](/api/view-models/interface#ismounted-boolean) state  
-This state is based on calling the [`mount()` method](/api/view-models/interface#mount-void-promise-void), which runs inside [`useCreateViewModel()`](/react/api/use-create-view-model) during render (after [`define`](/api/view-model-store/interface#define) when a store is present).  
-If `mount()` / [`willMount()`](/api/view-models/base-implementation#willmount-void) finishes synchronously, `isMounted` is already `true` on the first paint. Async mount keeps it `false` until the promise settles.
+This state is based on calling the [`mount()` method](/api/view-models/interface#mount-void-promise-void). On the client, [`useCreateViewModel()`](/react/api/use-create-view-model) runs it in a commit effect after connecting a store-backed ViewModel. During SSR it runs during render.
+On the client, the initial render can see `isMounted === false`; the component re-renders after synchronous or asynchronous mounting completes.
 
 - With [`withViewModel`](/react/api/with-view-model): use its [`fallback`](/react/api/with-view-model#fallback) while `isMounted` is `false` (CSR / when the hook is not suspending).
 - With direct [`useCreateViewModel`](/react/api/use-create-view-model): there is no `fallback` option — gate the UI on `model.isMounted` yourself (or wrap the tree in [`Suspense`](https://react.dev/reference/react/Suspense) when [`viewModelsConfig.mode = 'ssr'`](/api/view-models/view-models-config#mode) on React 19+, where the hook waits via `use()`).
 :::
 
 ::: warning Do not call [`mount()`](/api/view-models/interface#mount-void-promise-void) / [`unmount()`](/api/view-models/interface#unmount-void) manually  
-These methods are already called inside [`useCreateViewModel`](/react/api/use-create-view-model) (via [`define`](/api/view-model-store/interface#define) / [`unmount`](/api/view-model-store/interface#unmountinstance) when a store is present).
+These methods are already called inside [`useCreateViewModel`](/react/api/use-create-view-model) (via the store's `connect()` / [`unmount`](/api/view-model-store/interface#unmountinstance) when a store is present).
 :::

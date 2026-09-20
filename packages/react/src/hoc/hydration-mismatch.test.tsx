@@ -19,7 +19,7 @@ import type { ReactNode } from 'react';
 import { createRoot, hydrateRoot } from 'react-dom/client';
 import { renderToString } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { ViewModelBase, viewModelsConfig } from 'mobx-view-model';
+import { _internals, ViewModelBase, viewModelsConfig } from 'mobx-view-model';
 import { ViewModelStoreBaseMock } from '../../../core/src/view-model/view-model.store.base.test.js';
 import { ViewModelsProvider } from '../components/index.js';
 import { type ViewModelProps, withViewModel } from '../hoc/with-view-model.js';
@@ -78,10 +78,13 @@ const createDynamicView = (tick$: ReturnType<typeof createTick$>) =>
   );
 
 const renderOnServer = (node: ReactNode) => {
+  const originalIsClient = _internals.isClient;
+  _internals.isClient = false;
   vi.stubGlobal('window', undefined);
   try {
     return renderToString(<>{node}</>);
   } finally {
+    _internals.isClient = originalIsClient;
     vi.unstubAllGlobals();
   }
 };

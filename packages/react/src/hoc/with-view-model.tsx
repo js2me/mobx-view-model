@@ -83,8 +83,7 @@ export type ViewModelPropsChargedProps<
         IsUnknown<TForwardedRef> extends true ? any : TForwardedRef
       >;
 
-type VMInputPayloadPropObj<VM> = VM extends ViewModel<infer TPayload, any>
-  ? TPayload extends EmptyObject
+type VMInputPayloadProp<TPayload> = TPayload extends EmptyObject
     ? {}
     : IsPartial<TPayload> extends true
       ? {
@@ -92,17 +91,12 @@ type VMInputPayloadPropObj<VM> = VM extends ViewModel<infer TPayload, any>
         }
       : {
           payload: TPayload;
-        }
+        };
+
+type VMInputPayloadPropObj<VM> = VM extends ViewModel<infer TPayload, any>
+  ? VMInputPayloadProp<TPayload>
   : VM extends ViewModelSimple<infer TPayload>
-    ? TPayload extends EmptyObject
-      ? {}
-      : IsPartial<TPayload> extends true
-        ? {
-            payload?: TPayload;
-          }
-        : {
-            payload: TPayload;
-          }
+    ? VMInputPayloadProp<TPayload>
     : {};
 
 export type WithViewModelReactHook = (
@@ -234,6 +228,7 @@ type VMHocFullConfig = ViewModelSimpleHocConfig<any> & ViewModelHocConfig<any> &
 }
 
 const ReactMemoSymbol = Symbol.for('react.memo');
+const getServerReadySnapshot = () => true;
 
 /**
  * A Higher-Order Component that connects React components to their ViewModels, providing seamless MobX integration.
@@ -370,7 +365,7 @@ export function withViewModel(
 
     const getServerSnapshot =
       typeof window !== 'undefined' && viewModelsConfig.mode === 'ssr'
-        ? () => true
+        ? getServerReadySnapshot
         : cacheRef.current.getSnapshot;
 
     const isReadyToRender = useSyncExternalStore(

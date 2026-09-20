@@ -25,7 +25,7 @@ function useCreateViewModel<VM extends AnyViewModel>(
 | `anchors` | Extra lookup anchors for [`useViewModel`](/react/api/use-view-model). |
 | `props` | Original component props forwarded into create config. |
 
-When a [`ViewModelStore`](/api/view-model-store/interface) is present (via [`ViewModelsProvider`](/react/api/view-models-provider)), the hook creates the VM in React's render-phase registry on the client and registers it with [`define`](/api/view-model-store/interface#define) only when the component's commit effect runs. React hooks and VM instances created by the hook can read this registry during render; direct reads from the core store see only committed VM instances. A render pass discarded by React (for example, a duplicate fiber under `Suspense` in React 19) therefore never mutates the store or leaves an orphaned VM behind. Otherwise the hook creates the instance via `factory` / global config and calls `init` / `mount` locally. Cleanup uses [`unmount`](/api/view-model-store/interface#unmountinstance) (with store) or `unmount()` (without).
+When a [`ViewModelStore`](/api/view-model-store/interface) is present (via [`ViewModelsProvider`](/react/api/view-models-provider)), the hook creates the VM in React's render-phase registry on the client and registers it with the store's `connect()` method only when the component's commit effect runs. React hooks and VM instances created by the hook can read this registry during render; direct reads from the core store see only committed VM instances. A render pass discarded by React (for example, a duplicate fiber under `Suspense` in React 19) therefore never mutates the store or leaves an orphaned VM behind. Otherwise the hook creates the instance via `factory` / global config and calls `init` / `mount` locally. Cleanup uses [`unmount`](/api/view-model-store/interface#unmountinstance) (with store) or `unmount()` (without).
 
 ::: tip SSR  
 With [`viewModelsConfig.mode = 'ssr'`](/api/view-models/view-models-config#mode) on **React 19+**, if `mount()` / `willMount()` returns a Promise, the hook waits for it with React [`use()`](https://react.dev/reference/react/use) during SSR and the first client hydration. Wrap the tree in [`Suspense`](https://react.dev/reference/react/Suspense) for a loading UI — the hook suspends before a parent HOC [`fallback`](/react/api/with-view-model#fallback) can render.
@@ -42,7 +42,8 @@ import { observer } from "mobx-react-lite";
 
 export const YourComponent = observer(() => {
   const model = useCreateViewModel(YourVM);
-})
+  return null;
+});
 ```
 
 ### 2. Usage with payload
@@ -52,7 +53,8 @@ import { observer } from "mobx-react-lite";
 
 export const YourComponent = observer(() => {
   const model = useCreateViewModel(YourVM, { userId: '1' });
-})
+  return null;
+});
 ```
 
 ### 3. Custom Configuration
@@ -63,11 +65,11 @@ import { observer } from "mobx-react-lite";
 export const YourComponent = observer(() => {
   const model = useCreateViewModel(YourVM, {}, {
     ctx: {}, // extra create-config context
-    factory: (config) => new config.VM(config), // factory method for creating VM instances
-    id, // unique id if you need a single shared instance of your VM
+    id: 'your-component', // explicit id for one shared VM instance
     anchors: [], // additional components for useViewModel lookup
   });
-})
+  return null;
+});
 ```
 
 

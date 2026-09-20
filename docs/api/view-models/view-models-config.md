@@ -1,7 +1,7 @@
 # `ViewModelsConfig` configuration object   
 This configuration contains all options for the behavior of [`ViewModel`](/api/view-models/overview) instances.  
 
-The package provides a **global object** with this configuration, but you can also change it for each [`ViewModel`](/api/view-models/overview) and [`ViewModelStore`](/api/view-model-store/overview) separately using the `vmConfig` field.
+The package provides a **global object** with this configuration. You can override supported options for a [`ViewModel`](/api/view-models/overview) or [`ViewModelStore`](/api/view-model-store/overview) with the `vmConfig` field.
 
 ```ts
 import { viewModelsConfig, ViewModelStoreBase } from "mobx-view-model";
@@ -45,6 +45,22 @@ Runtime mode for the library integration:
 
 - `'csr-only'` — _**(default)**_ client-side only
 - `'ssr'` — enable SSR-oriented behavior in the React / Solid integration
+
+`mode` is global-only. Set it on `viewModelsConfig` before creating stores or view models.
+
+## `resource`
+
+An optional data source for render-time React SSR resources. Its `read(id)` method may return data or throw a `Promise` or `Error` following the React Suspense resource convention.
+
+```ts
+viewModelsConfig.resource = {
+  read(id) {
+    return cache.get(id);
+  },
+};
+```
+
+Pass `resource` to `ViewModelStoreBase` to override the global default for that store.
 
 ## `getPayload`  
 Extracts the ViewModel payload from component props.  
@@ -190,8 +206,7 @@ viewModelsConfig.processRender = (Component) => {
   }
 }
 ```
-::: warning It works only for [`withViewModel` HOCs](/react/api/with-view-model)  
-:::
+This option is used by the `withViewModel` integration in both React and SolidJS. The example above uses React's `observer()`; use the tracking mechanism for your framework when wrapping the render function.
 
 ## `observable`  
 

@@ -1,37 +1,43 @@
 # Usage with View Model Store
 
-ViewModelStore lets you access your view model instances from anywhere and gives you more control over creating them.  
-Follow the simplest way to add a view model store to your application:  
+`ViewModelStore` owns view model instances and lets registered view models look up one another. Add it when several components need to share or find the same instances.
 
-##### **1.** Create a class implementing the [ViewModelStore interface](/api/view-model-store/interface) or use [basic library implementation (ViewModelStoreBase)](/api/view-model-store/base-implementation).  
+## 1. Create a store
 
 ```tsx title="/src/shared/lib/mobx/view-model-store.ts"
 import { ViewModelStoreBase } from "mobx-view-model";
 
-class MyViewModelStore extends ViewModelStoreBase {}
+export class MyViewModelStore extends ViewModelStoreBase {}
 ```
 
-##### **2.** Create an instance of the [ViewModelStore](/api/view-model-store/overview)  
+## 2. Create one application-level instance
 
 ```ts
-const viewModelStore = new MyViewModelStore() // or new ViewModelStoreBase
+export const viewModelStore = new MyViewModelStore();
 ```
 
-##### <ReactMark /> **3.** Integrate with [React](https://react.dev/) using [`ViewModelsProvider`](/react/api/view-models-provider) at the root of your application  
+## <ReactMark /> 3. Provide the store to React
 
 ```tsx
+import { ViewModelsProvider } from 'mobx-view-model-react';
+import { viewModelStore } from './view-model-store';
+
+export function App() {
+  return (
 <ViewModelsProvider value={viewModelStore}>
-...
+  {/* application */}
 </ViewModelsProvider>
+  );
+}
 ```
 
-##### **4.** Get access to `ViewModelStore` inside your `ViewModels`   
+## 4. Access other registered ViewModels
 
 ```ts
 import { ViewModelBase } from "mobx-view-model";
 import { ParentVM } from "../parent-vm";
 import { ChildVM } from "../child-vm";
-import { AppLayoutVM } from "@/app-layout"
+import { AppLayoutVM } from "@/app-layout";
 
 export class YourVM extends ViewModelBase {
   get parentData() {
@@ -47,6 +53,5 @@ export class YourVM extends ViewModelBase {
   }
 }
 ```
-
 
 

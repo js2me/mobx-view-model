@@ -44,7 +44,7 @@ pnpm add mobx-view-model-solid mobx-solid solid-js
 import { action, observable } from 'mobx';
 import { ViewModelBase } from 'mobx-view-model';
 
-class PetCardVM extends ViewModelBase {
+export class PetCardVM extends ViewModelBase {
   @observable
   accessor petName: string = '';
 
@@ -58,8 +58,8 @@ class PetCardVM extends ViewModelBase {
 ## Integration with React
 
 ```tsx
-import { withViewModel, ViewModelProps } from "mobx-view-model-react";
-import { PetCardVM } from "./model";
+import { withViewModel } from 'mobx-view-model-react';
+import { PetCardVM } from './model';
 
 export const PetCard = withViewModel(PetCardVM, ({ model }) => {
   return (
@@ -72,9 +72,9 @@ export const PetCard = withViewModel(PetCardVM, ({ model }) => {
           model.setPetName(e.target.value);
         }}
       />
-    </div> 
-  )
-})
+    </div>
+  );
+});
 
 ...
 <PetCard />
@@ -85,8 +85,12 @@ See the full [React integration guide](/react/integration).
 ## Integration with SolidJS
 
 ```tsx
-import { enableObservableTracking, withViewModel, type ViewModelProps } from "mobx-view-model-solid";
-import { PetCardVM } from "./model";
+import {
+  enableObservableTracking,
+  withViewModel,
+  type ViewModelProps,
+} from 'mobx-view-model-solid';
+import { PetCardVM } from './model';
 
 enableObservableTracking();
 

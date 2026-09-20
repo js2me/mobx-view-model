@@ -49,6 +49,7 @@ The current lifecycle state of the `ViewModel`. Possible values:
 | `'init'` | Instance created, `mount()` not yet called |
 | `'mounting'` | `mount()` is in progress (async `willMount()` running) |
 | `'mounted'` | Fully mounted, `isMounted` is `true` |
+| `'hydrated'` | Hydrated from SSR data; `isMounted` is `true` |
 | `'unmounting'` | `unmount()` started |
 | `'unmounted'` | Fully unmounted |
 

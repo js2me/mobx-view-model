@@ -33,6 +33,7 @@ import { callFunction } from 'yummies/common';
 import { createCounter } from 'yummies/complex';
 import type { AnyObject, EmptyObject, Maybe } from 'yummies/types';
 import {
+  _internals,
   ViewModelBase,
   type ViewModelParams,
   type ViewModelSimple,
@@ -106,14 +107,17 @@ describe('withViewModel', () => {
   describe('SSR', () => {
     const renderOnServer = (node: ReactNode, ssr = true) => {
       const originalMode = viewModelsConfig.mode;
+      const originalIsClient = _internals.isClient;
       if (ssr) {
         viewModelsConfig.mode = 'ssr';
       }
+      _internals.isClient = false;
       vi.stubGlobal('window', undefined);
       try {
         return renderToString(<>{node}</>);
       } finally {
         viewModelsConfig.mode = originalMode;
+        _internals.isClient = originalIsClient;
         vi.unstubAllGlobals();
       }
     };

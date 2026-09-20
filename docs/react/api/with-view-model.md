@@ -16,7 +16,7 @@ function withViewModel<
   TCompProps extends AnyObject = AnyObject,
 >(
   model: Class<TViewModel>,
-  component: ComponentType<TCompProps & ViewModelProps<TViewModel>>,
+  renderFn: (props: TCompProps & ViewModelProps<TViewModel>) => React.ReactNode,
   config?: ViewModelHocConfig<TViewModel>,
 ): VMComponent<TViewModel, TCompProps>;
 ```

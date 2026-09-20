@@ -7,7 +7,7 @@ enabling centralized [ViewModel](/api/view-models/overview) management and cross
 
 ## API Signature
 ```tsx
-function ViewModelsProvider(props: { children: ReactNode; value: ViewModelStore }): ReactNode;
+function ViewModelsProvider(props: { children?: ReactNode; value: ViewModelStore }): ReactNode;
 ```
 
 ### Usage  

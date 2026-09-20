@@ -43,7 +43,7 @@ vmStore.getId(ViewComponentOfMyVM) // "id"
 
 ### `mountedViewsCount`  
 
-The total number of views that are currently mounted.
+The number of registered view model instances considered mounted by the store. Full `ViewModel` instances count only when `isMounted` is `true`; every registered `ViewModelSimple` instance counts because it has no required mounted state.
 
 ### `hasMountingVms`  
 

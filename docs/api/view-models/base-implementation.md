@@ -82,7 +82,7 @@ Executes before `isMounted` becomes `true`.
 
 May return a `Promise` — `mount()` waits for it, then finalizes mounting. Prefer this over overriding `mount()` for async setup.
 
-### `mount(): void | Promise<void>` <Badge type="info" text="action.bound" />  
+### `mount(): void | Promise<void>` <Badge type="info" text="action" />
 Called when the component is mounted in the React / Solid tree.  
 
 This method sets [`isMounted`](/api/view-models/interface#ismounted-boolean) to `true` after [`willMount()`](#willmount-void) completes.   
@@ -130,7 +130,7 @@ class ForceAlertVM extends ViewModelBase<{ message: string }> {
 Called when the component begins unmounting from the React / Solid tree.  
 Executes before the `unmount()` method finishes.
 
-### `unmount(): void` <Badge type="info" text="action.bound" />    
+### `unmount(): void` <Badge type="info" text="action" />
 Called when the component is unmounted from the React / Solid tree.  
 
 This method sets [`isMounted`](/api/view-models/interface#ismounted-boolean) to `false` and aborts [`unmountSignal`](#unmountsignal).   

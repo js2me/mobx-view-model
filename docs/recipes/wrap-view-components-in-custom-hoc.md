@@ -21,6 +21,8 @@ const YourHOC = (Component) => {
 }
 
 viewModelsConfig.processRender = (Component) => {
+  if (!Component) return Component;
+
   return YourHOC(observer(Component));
 };
 ```

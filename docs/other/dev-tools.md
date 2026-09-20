@@ -67,7 +67,7 @@ Then import and connect it directly from your application code:
 ```ts
 import { ViewModelDevtools } from 'mobx-view-model-devtools';
 
-ViewModelDevtools.connect(viewModelStore, extra);
+ViewModelDevtools.connect(viewModelStore);
 ```
 
 To keep the devtools out of production bundles, load the package only in development:
@@ -75,7 +75,7 @@ To keep the devtools out of production bundles, load the package only in develop
 ```ts
 if (process.env.NODE_ENV === 'development') {
   import('mobx-view-model-devtools').then(({ ViewModelDevtools }) => {
-    ViewModelDevtools.connect(viewModelStore, extra);
+    ViewModelDevtools.connect(viewModelStore);
   });
 }
 ```
@@ -96,7 +96,7 @@ export default {
 
 ## Connecting to a ViewModelStore
 
-After the script is loaded, connect your `ViewModelStore` to the devtools:
+The automatic script and the Vite plugin connect stores for you. Call `connect()` only when you install the package directly:
 
 ```ts
 ViewModelDevtools.connect(viewModelStore);

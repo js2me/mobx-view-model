@@ -225,6 +225,7 @@ export function useCreateViewModel(
     // Don't revive here — this render may still be discarded.
     // The commit effect reattaches after React confirms the fiber is alive.
   } else {
+    const isClient = _internals.isClient;
     const isSSR = viewModelsConfig.mode === 'ssr';
     const explicitId = rawCfg?.id as string | null | undefined;
     const vmId = explicitId ?? (isProd ? reactId : `${reactId}:${VM.name}`);
@@ -234,7 +235,7 @@ export function useCreateViewModel(
       ? (existing as { vmData?: unknown }).vmData
       : vmResource?.read(vmId);
 
-    const useStaging = typeof window !== 'undefined' && viewModels != null;
+    const useStaging = isClient && viewModels != null;
 
     const { instance: model, config } = instantiateVm(
       vmId,
@@ -247,25 +248,23 @@ export function useCreateViewModel(
       parentViewModel,
       useStaging ? cache : undefined,
     );
-    if (typeof window !== 'undefined') {
+    if (isClient) {
       bindModel(model, payload, parentViewModel);
     }
     const lifecycleResult =
-      typeof window === 'undefined'
+      !isClient
         ? (bindLifecycle(model, payload, parentViewModel) as
             | PromiseLike<void>
             | undefined)
         : undefined;
 
-    const vm = model;
-
     const creationEntry =
-      useStaging || typeof window === 'undefined'
+      useStaging || !isClient
         ? undefined
-        : registerUnconfirmed(vm, viewModels);
+        : registerUnconfirmed(model, viewModels);
 
     cache.current = {
-      vm,
+      vm: model,
       config,
       promise: lifecycleResult,
       isSSR,
@@ -321,7 +320,7 @@ export function useCreateViewModel(
       getClientHydrated,
       getServerHydrated,
     );
-    if (use && pending && (typeof window === 'undefined' || !isHydrated)) {
+    if (use && pending && (!_internals.isClient || !isHydrated)) {
       use(pending);
     }
   }
