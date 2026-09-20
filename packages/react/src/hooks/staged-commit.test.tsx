@@ -14,6 +14,7 @@ import {
   ActiveViewModelProvider,
   ViewModelsProvider,
   useCreateViewModel,
+  useViewModel,
   withViewModel,
 } from 'mobx-view-model-react';
 import { act, cleanup, render, screen } from '@testing-library/react';
@@ -96,6 +97,72 @@ describe('render-phase VM staging', () => {
     expect(vmStore.get(FooVM)).toBeDefined();
     expect(vmStore.getIds(FooVM)).toEqual(['foo']);
     expect(vmStore.mountedViewsCount).toBe(1);
+  });
+
+  test('prefers a newly staged VM over an older committed instance during render', async () => {
+    const vmStore = new ViewModelStoreBaseMock();
+
+    class FooVM extends ViewModelBaseMock {}
+
+    vmStore.define({ VM: FooVM, id: 'old', payload: {} });
+    let modelDuringRender: FooVM | undefined;
+
+    const Consumer = () => {
+      modelDuringRender = useViewModel(FooVM);
+      return <span>{modelDuringRender.id}</span>;
+    };
+    const Creator = () => {
+      useCreateViewModel(FooVM, undefined, { id: 'new' });
+      return <Consumer />;
+    };
+
+    await act(async () =>
+      render(
+        <ViewModelsProvider value={vmStore}>
+          <Creator />
+        </ViewModelsProvider>,
+      ),
+    );
+
+    expect(modelDuringRender?.id).toBe('new');
+    expect(vmStore.get(FooVM)?.id).toBe('new');
+  });
+
+  test('commits a staged VM with the ID generated during staging', async () => {
+    class AllocatingStore extends ViewModelStoreBaseMock {
+      generatedIds = 0;
+
+      override generateId() {
+        this.generatedIds += 1;
+        return `generated-${this.generatedIds}`;
+      }
+    }
+    const vmStore = new AllocatingStore();
+
+    class FooVM extends ViewModelBaseMock {}
+
+    let model: FooVM | undefined;
+    const Component = () => {
+      model = useCreateViewModel(FooVM, undefined, { id: 'requested' });
+      return <span>{model.id}</span>;
+    };
+
+    const view = await act(async () =>
+      render(
+        <ViewModelsProvider value={vmStore}>
+          <Component />
+        </ViewModelsProvider>,
+      ),
+    );
+
+    expect(vmStore.generatedIds).toBe(1);
+    expect(model?.id).toBe('generated-1');
+    expect(vmStore.get('generated-1')).toBe(model);
+    expect(vmStore.get(FooVM)).toBe(model);
+
+    await act(async () => view.unmount());
+
+    expect(vmStore.get('generated-1')).toBeNull();
   });
 
   test('discarded fiber never leaves a committed mounting VM behind', async () => {

@@ -82,6 +82,16 @@ export interface ViewModelStore<VMBase extends AnyViewModel = AnyViewModel> {
   create<VM extends VMBase | AnyViewModelSimple>(config: ViewModelCreateConfig<VM>): VM;
 
   /**
+   * Registers an already created view model using the supplied configuration.
+   * This is primarily intended for integrations that must defer registration
+   * until after a render has committed.
+   */
+  connect(
+    instance: AnyViewModel | AnyViewModelSimple,
+    config: ViewModelCreateConfig<any>,
+  ): void;
+
+  /**
    * Defines a view model: returns the existing instance if one with the same ID
    * is already registered, otherwise creates a new instance, connects it to the
    * store, and returns it.

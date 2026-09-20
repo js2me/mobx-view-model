@@ -219,7 +219,12 @@ export function useCreateViewModel(
   const cache = useRef<Cache>(null!);
   const reactId = useId();
 
-  if (!cache.current) {
+  if (cache.current) {
+    const model = cache.current.vm;
+    model.setPayload?.(payload);
+    // Don't revive here — this render may still be discarded.
+    // The commit effect reattaches after React confirms the fiber is alive.
+  } else {
     const isSSR = viewModelsConfig.mode === 'ssr';
     const explicitId = rawCfg?.id as string | null | undefined;
     const vmId = explicitId ?? (isProd ? reactId : `${reactId}:${VM.name}`);
@@ -303,11 +308,6 @@ export function useCreateViewModel(
         };
       },
     };
-  } else {
-    const model = cache.current.vm;
-    model.setPayload?.(payload);
-    // Don't revive here — this render may still be discarded.
-    // The commit effect reattaches after React confirms the fiber is alive.
   }
 
   const model = cache.current.vm;

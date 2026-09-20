@@ -74,7 +74,7 @@ const getStaged = <T extends VmInstance>(
 export const getRenderPhaseViewModel = <T extends VmInstance>(
   store: ViewModelStore,
   lookup: unknown,
-): T | null => (store.get(lookup as any) as T | null) ?? getStaged<T>(store, lookup);
+): T | null => getStaged<T>(store, lookup) ?? (store.get(lookup as any) as T | null);
 
 const createRenderPhaseStore = (store: ViewModelStore): ViewModelStore =>
   new Proxy(store, {
@@ -171,7 +171,7 @@ export const commitStagedViewModel = (
   stagedVmRegistry?.unregister(vm);
 
   runInAction(() => {
-    store.define({ ...config, factory: () => vm });
+    store.connect(vm, config);
   });
   scheduleSweep(stagedStore);
 };
