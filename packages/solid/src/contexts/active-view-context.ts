@@ -1,7 +1,13 @@
-import type { AnyViewModel, AnyViewModelSimple } from 'mobx-view-model';
+import { _internals, type AnyViewModel, type AnyViewModelSimple } from 'mobx-view-model';
 import { createContext } from 'solid-js';
 
+const symbol = Symbol.for(`${_internals.key}/avm-ctx`);
+
+type Context = ReturnType<typeof createContext<AnyViewModel | AnyViewModelSimple>>;
+
+declare const globalThis: { [symbol]?: Context }
+
 /** Contains the active (parent) view model for nested VMs. */
-export const ActiveViewModelContext = createContext<
-  AnyViewModel | AnyViewModelSimple
->(null as any);
+globalThis[symbol] ??= createContext(null as any) as Context;
+
+export const ActiveViewModelContext = globalThis[symbol];

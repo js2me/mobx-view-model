@@ -10,9 +10,13 @@ if (process.env.NODE_ENV !== 'production') {
   noop.displayName = 'DefaultFallback'
 }
 
-const marker = Symbol.for('@view-model@');
+
+const key = '@view-model@';
+
+const marker = Symbol.for(key);
 
 export const _internals = {
+  key,
   emptyObject,
   noop,
   isClient,

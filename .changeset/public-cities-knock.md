@@ -58,8 +58,8 @@ Strict Mode, Suspense, lazy-loaded components, and SSR.
   now works with framework-agnostic render functions.
 - `ViewModelsConfig` now requires `mode` and `getPayload`; `reactHook` also
   uses a framework-agnostic signature.
-- `isViewModel()` and `isViewModelClass()` now use the internal
-  `VIEW_MODEL_MARKER` instead of duck-typing `payloadChanged`.
+- Runtime detection of full and simple view models is now explicit and no
+  longer depends on the presence of `payloadChanged`.
 
 ### Added
 
@@ -76,6 +76,7 @@ Strict Mode, Suspense, lazy-loaded components, and SSR.
   mounted yet.
 - `ViewModelSimple.init()` as the initialization hook for simple view models.
 - `ViewModelsConfig.processRender()` as the framework-agnostic render hook.
-- `VIEW_MODEL_MARKER`-based view-model classification.
+- More reliable `isViewModel()`, `isViewModelClass()`, `isViewModelSimple()`,
+  and `isViewModelSimpleClass()` classification for custom view-model classes.
 - React staging and cleanup for abandoned renders, Suspense retries, lazy
   components, Strict Mode, and SSR.

@@ -36,4 +36,7 @@ features:
   - title: SSR Ready
     icon: 🖥️
     details: Server-side rendering support out of the box
+  - title: Microfrontend Friendly
+    icon: 🌐
+    details: Share ViewModel contexts across independently deployed microfrontends
 ---
