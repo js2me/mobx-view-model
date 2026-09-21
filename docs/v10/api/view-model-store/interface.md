@@ -38,10 +38,6 @@ vmStore.getId(MyVM) // "id"
 vmStore.getId(ViewComponentOfMyVM) // "id"
 ```
 
-### `mountedViewsCount`  
-
-The total number of views that are currently mounted.   
-
 ### `has(vmLookup)`  
 
 Checks whether a [ViewModel](/api/view-models/interface) instance exists in the store.  
@@ -126,4 +122,3 @@ Generates a unique ID for a [ViewModel](/api/view-models/overview) based on the 
 ### `clean()`  
 Cleans up resources associated with the [ViewModel](/api/view-models/overview) store.  
 Cleans all inner data structures.  
-

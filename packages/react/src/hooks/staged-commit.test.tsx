@@ -6,6 +6,7 @@ import { observer } from 'mobx-react-lite';
 import {
   ViewModelBase,
   ViewModelStoreBase,
+  isViewModel,
   type AnyViewModel,
   type AnyViewModelSimple,
   type ViewModelParams,
@@ -38,6 +39,10 @@ class ViewModelBaseMock<
 class ViewModelStoreBaseMock extends ViewModelStoreBase {
   constructor() {
     super({});
+  }
+
+  get _viewModels() {
+    return this.viewModels;
   }
 }
 
@@ -76,7 +81,9 @@ describe('render-phase VM staging', () => {
 
       // Direct core-store lookups do not see React's render-phase registry.
       probes.hasDuringRender = vmStore.has(FooVM);
-      probes.mountedCountDuringRender = vmStore.mountedViewsCount;
+      probes.mountedCountDuringRender = [...vmStore._viewModels.values()].filter(
+        (viewModel) => !isViewModel(viewModel) || viewModel.isMounted,
+      ).length;
 
       return <span data-testid="foo">{vm.id}</span>;
     };
@@ -96,7 +103,11 @@ describe('render-phase VM staging', () => {
     // after the commit effect: promoted + mounted
     expect(vmStore.get(FooVM)).toBeDefined();
     expect(vmStore.getIds(FooVM)).toEqual(['foo']);
-    expect(vmStore.mountedViewsCount).toBe(1);
+    expect(
+      [...vmStore._viewModels.values()].filter(
+        (viewModel) => !isViewModel(viewModel) || viewModel.isMounted,
+      ),
+    ).toHaveLength(1);
   });
 
   test('prefers a newly staged VM over an older committed instance during render', async () => {
@@ -272,7 +283,11 @@ describe('render-phase VM staging', () => {
     // committed store, so no committed VM sits in the "mounting" state.
     // (With the previous eager registration the orphaned VM stayed committed
     // and unmounted until the orphan-cleanup timer fired.)
-    expect(vmStore.hasMountingVms).toBe(false);
+    expect(
+      [...vmStore._viewModels.values()].some(
+        (viewModel) => isViewModel(viewModel) && !viewModel.isMounted,
+      ),
+    ).toBe(false);
 
     // Flush the staged-entries sweep
     await act(async () => {
@@ -283,7 +298,11 @@ describe('render-phase VM staging', () => {
     // PageVM remains, and it is mounted.
     expect(vmStore.getIds(PageVM)).toHaveLength(1);
     expect(vmStore.getIds(LayoutVM)).toHaveLength(1);
-    expect(vmStore.mountedViewsCount).toBe(2);
+    expect(
+      [...vmStore._viewModels.values()].filter(
+        (viewModel) => !isViewModel(viewModel) || viewModel.isMounted,
+      ),
+    ).toHaveLength(2);
     expect(screen.getByTestId('page')).toBeDefined();
 
     const pageMounts = mountLog.filter((l) => l.startsWith('PageVM'));

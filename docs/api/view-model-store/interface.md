@@ -41,14 +41,6 @@ vmStore.getId(MyVM) // "id"
 vmStore.getId(ViewComponentOfMyVM) // "id"
 ```
 
-### `mountedViewsCount`  
-
-The number of registered view model instances considered mounted by the store. Full `ViewModel` instances count only when `isMounted` is `true`; every registered `ViewModelSimple` instance counts because it has no required mounted state.
-
-### `hasMountingVms`  
-
-`true` while at least one registered full [`ViewModel`](/api/view-models/interface) is not yet mounted (`isMounted === false`). Counts **committed** store entries only.
-
 ### `has(vmLookup)`  
 
 Checks whether a [ViewModel](/api/view-models/interface) instance exists in the store.  

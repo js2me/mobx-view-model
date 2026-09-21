@@ -34,6 +34,7 @@ import { createCounter } from 'yummies/complex';
 import type { AnyObject, EmptyObject, Maybe } from 'yummies/types';
 import {
   _internals,
+  isViewModel,
   ViewModelBase,
   type ViewModelParams,
   type ViewModelSimple,
@@ -1294,7 +1295,11 @@ describe('withViewModel', () => {
       );
 
       expect(viewModels).toBeDefined();
-      expect(vmStore.mountedViewsCount).toBe(1);
+      expect(
+        [...vmStore._viewModels.values()].filter(
+          (viewModel) => !isViewModel(viewModel) || viewModel.isMounted,
+        ),
+      ).toHaveLength(1);
     });
 
     test('access to parent view model x3', async ({ task }) => {
@@ -1355,7 +1360,11 @@ describe('withViewModel', () => {
       await expect(container.firstChild).toMatchFileSnapshot(
         `../../../../tests/snapshots/hoc/with-view-model/view-model-store/${task.name}.html`,
       );
-      expect(vmStore.mountedViewsCount).toBe(3);
+      expect(
+        [...vmStore._viewModels.values()].filter(
+          (viewModel) => !isViewModel(viewModel) || viewModel.isMounted,
+        ),
+      ).toHaveLength(3);
     });
 
     test('access to child view model through VM in the middle (Parent -> Middle -> Child) (using useEffect + setState)', async ({

@@ -35,6 +35,7 @@ Strict Mode, Suspense, lazy-loaded components, and SSR.
   `ViewModelBase` still exposes its merged `vmConfig` configuration
 - `ViewModelParams.parentViewModelId`
 - `ViewModelSimple.attachViewModelStore()`
+- `ViewModelStore.mountedViewsCount` and `ViewModelStore.hasMountingVms`
 - `GenerateViewModelIdFn` and `generateVmId`
 - the `mobx-view-model/react` export and React dependencies from the core package
 - configuration options `generateId`, `flushPendingReactions`, `useReactIds`,
@@ -43,8 +44,6 @@ Strict Mode, Suspense, lazy-loaded components, and SSR.
 
 ### Changed
 
-- `ViewModelStore.mountedViewsCount` now counts registered simple view models
-  and mounted full view models instead of attachment references.
 - `ViewModelStore.generateId()` now receives a required `id` and returns it by
   default; custom stores can override it for application-specific IDs.
 - `ViewModelBase.setPayload()` now returns whether the payload was unchanged.
@@ -72,8 +71,6 @@ Strict Mode, Suspense, lazy-loaded components, and SSR.
   store.
 - `ViewModelStore.resource` and `ViewModelResource` for request-scoped SSR
   resources.
-- `ViewModelStore.hasMountingVms` for detecting full view models that have not
-  mounted yet.
 - `ViewModelSimple.init()` as the initialization hook for simple view models.
 - `ViewModelsConfig.processRender()` as the framework-agnostic render hook.
 - More reliable `isViewModel()`, `isViewModelClass()`, `isViewModelSimple()`,

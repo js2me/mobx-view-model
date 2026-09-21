@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import type { Maybe } from 'yummies/types';
 import type { ViewModelsConfig } from '../config/types.js';
+import { isViewModel } from '../utils/typeguards.js';
 import { ViewModelBaseMock } from './view-model.base.test.js';
 import { ViewModelStoreBase } from './view-model.store.base.js';
 import type {
@@ -158,20 +159,25 @@ describe('ViewModelStoreBase', () => {
     expect(vmStore.get('demo')).toBe(second);
   });
 
-  it('mountedViewsCount counts mounted view models', () => {
+  it('can count mounted view models from the store entries', () => {
     const vmStore = new ViewModelStoreBaseMock();
     const a = vmStore.define({ id: '1', VM: ViewModelBaseMock, payload: {} });
     const b = vmStore.define({ id: '2', VM: ViewModelBaseMock, payload: {} });
     const c = vmStore.define({ id: '3', VM: ViewModelBaseMock, payload: {} });
 
-    expect(vmStore.mountedViewsCount).toBe(0);
+    const countMountedViewModels = () =>
+      [...vmStore._viewModels.values()].filter(
+        (vm) => !isViewModel(vm) || vm.isMounted,
+      ).length;
+
+    expect(countMountedViewModels()).toBe(0);
 
     a.mount();
     b.mount();
-    expect(vmStore.mountedViewsCount).toBe(2);
+    expect(countMountedViewModels()).toBe(2);
 
     c.mount();
-    expect(vmStore.mountedViewsCount).toBe(3);
+    expect(countMountedViewModels()).toBe(3);
   });
 
   it('parentViewModel is available via constructor params', () => {

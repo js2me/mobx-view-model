@@ -1,4 +1,4 @@
-import { action, computed, observable, untracked } from 'mobx';
+import { action, observable, untracked } from 'mobx';
 import type { ObservableAnnotationsArray } from 'yummies/mobx';
 import type { Class, Maybe } from 'yummies/types';
 import {
@@ -18,10 +18,8 @@ import type {
   AnyViewModelSimple,
   ViewModelParams,
 } from './view-model.types.js';
-import { isViewModel } from '../utils/typeguards.js';
 
 const baseAnnotations: ObservableAnnotationsArray = [
-  [computed, 'mountedViewsCount', 'hasMountingVms'],
   [action, 'link', 'unlink'],
 ];
 
@@ -54,22 +52,6 @@ export class ViewModelStoreBase<VMBase extends AnyViewModel = AnyViewModel>
     );
 
     this.vmConfig.hooks.storeCreate(this as ViewModelStore);
-  }
-
-  get mountedViewsCount() {
-    let count = 0;
-    for (const vm of this.viewModels.values()) {
-      if (!isViewModel(vm) || vm.isMounted) {
-        count += 1;
-      }
-    }
-    return count;
-  }
-
-  get hasMountingVms() {
-    return [...this.viewModels.values()].some(
-      (vm) => isViewModel(vm) && !vm.isMounted,
-    );
   }
 
   connect(

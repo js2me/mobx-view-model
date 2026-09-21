@@ -38,11 +38,6 @@ export interface ViewModelStore<VMBase extends AnyViewModel = AnyViewModel> {
   ): string | null;
 
   /**
-   * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#mountedviewscount)
-   */
-  mountedViewsCount: number;
-
-  /**
    * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#has-vmlookup)
    * @param vmLookup - The ID or class type of the view model. See {@link ViewModelLookup}.
    * @returns True if the instance exists, false otherwise.
@@ -70,8 +65,6 @@ export interface ViewModelStore<VMBase extends AnyViewModel = AnyViewModel> {
   ): T[];
 
   unmount(instance: any): any;
-
-  readonly hasMountingVms: boolean;
 
   /**
    * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#createviewmodel-config)
