@@ -38,6 +38,10 @@ vmStore.getId(MyVM) // "id"
 vmStore.getId(ViewComponentOfMyVM) // "id"
 ```
 
+### `mountedViewsCount`  
+
+The total number of views that are currently mounted.   
+
 ### `has(vmLookup)`  
 
 Checks whether a [ViewModel](/api/view-models/interface) instance exists in the store.  

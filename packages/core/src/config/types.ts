@@ -47,7 +47,10 @@ export interface ViewModelResource<TData = unknown> {
 export interface ViewModelsConfig<
   TViewModel extends AnyViewModel = AnyViewModel,
 > {
-  /** Default resource used when a store does not provide one. */
+  /**
+   * Default resource used when a store does not provide one.
+   * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#resource)
+   */
   resource?: ViewModelResource;
   getPayload: (allProps: any) => any;
   mode: 'csr-only' | 'ssr';

@@ -18,6 +18,88 @@ This is not required for targeted usage of this package, but can be helpful for 
 
 Effective merged [`ViewModelsConfig`](/api/view-models/view-models-config) for this store: values from the store constructor are layered over the global defaults.  
 
+### `resource`
+
+Optional data source scoped to this store. The React integration calls
+`resource.read(viewModelId)` while creating a view model and passes the returned
+value to the view model as `vmData`. This is useful for data that belongs to a
+single request during SSR: create a new store for each request instead of
+putting request data in the global configuration.
+
+`read` follows the React Suspense resource convention:
+
+- return data when it is already available;
+- throw a `Promise` while the data is loading;
+- throw an `Error` when loading fails.
+
+The store resource takes precedence over [`viewModelsConfig.resource`](/api/view-models/view-models-config#resource).
+
+#### Example: request-scoped resource
+
+```tsx
+import {
+  ViewModelBase,
+  ViewModelStoreBase,
+  type ViewModelResource,
+} from 'mobx-view-model';
+import { ViewModelsProvider, useCreateViewModel } from 'mobx-view-model-react';
+
+type UserData = { id: string; name: string };
+
+function createRequestStore(
+  requestUsers: Map<string, UserData>,
+  loadUser: (id: string) => Promise<void>,
+) {
+  const resource: ViewModelResource<UserData> = {
+    read(id) {
+      const user = requestUsers.get(id);
+      if (!user) throw loadUser(id); // React Suspense retries after the promise settles
+      return user;
+    },
+  };
+
+  return new ViewModelStoreBase({ resource });
+}
+
+class UserVM extends ViewModelBase {
+  get user(): UserData {
+    return this.vmData as UserData;
+  }
+}
+
+function UserView() {
+  const user = useCreateViewModel(UserVM, undefined, { id: 'user-42' });
+  return <div>{user.user.name}</div>;
+}
+
+export function RequestApp() {
+  const store = createRequestStore(requestUsers, loadUser);
+
+  return (
+    <ViewModelsProvider value={store}>
+      <UserView />
+    </ViewModelsProvider>
+  );
+}
+```
+
+`requestUsers` and `loadUser` are application code. The important part is that
+the resource closes over data for one request and is passed to that request's
+store. The same store can be shared by all view models rendered for that
+request.
+
+#### Example: global fallback with a store override
+
+```ts
+import { viewModelsConfig, ViewModelStoreBase } from 'mobx-view-model';
+
+viewModelsConfig.resource = globalCacheResource;
+
+const requestStore = new ViewModelStoreBase({
+  resource: requestCacheResource, // used instead of globalCacheResource
+});
+```
+
 ### `getIds(vmLookup)`  
 
 Retrieves ids of [ViewModels](/api/view-models/interface) based on [vmLookup](/api/other/view-model-lookup).  

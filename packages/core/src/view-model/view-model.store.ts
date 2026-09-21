@@ -9,7 +9,10 @@ import type { ViewModelResource, ViewModelsConfig } from '../config/types.js';
 
 /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface) */
 export interface ViewModelStore<VMBase extends AnyViewModel = AnyViewModel> {
-  /** Resource scoped to this store/request, if configured. */
+  /**
+   * Resource scoped to this store/request, if configured.
+   * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#resource)
+   */
   resource?: ViewModelResource;
   /**
    * Effective merged `ViewModelsConfig` for this store: values from the store constructor are layered over the global defaults (see `ViewModelStoreBase` / `mergeVMConfigs`).

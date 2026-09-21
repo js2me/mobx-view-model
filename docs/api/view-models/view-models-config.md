@@ -50,9 +50,19 @@ Runtime mode for the library integration:
 
 ## `resource`
 
-An optional data source for render-time React SSR resources. Its `read(id)` method may return data or throw a `Promise` or `Error` following the React Suspense resource convention.
+An optional default data source for render-time React SSR resources. Its
+`read(id)` method is called with the view model id while the integration creates
+the view model. The returned value is available as `vmData` on the view model
+(`ViewModelBase` initializes it from `ViewModelParams.vmData`).
+
+`read` may return data or throw a `Promise` or `Error` following the React
+Suspense resource convention. A store-level `resource` overrides this global
+default; see [`ViewModelStore.resource`](/api/view-model-store/interface#resource)
+for a request-scoped example.
 
 ```ts
+import { viewModelsConfig } from 'mobx-view-model';
+
 viewModelsConfig.resource = {
   read(id) {
     return cache.get(id);
@@ -60,7 +70,22 @@ viewModelsConfig.resource = {
 };
 ```
 
-Pass `resource` to `ViewModelStoreBase` to override the global default for that store.
+Use a store-level resource when the data must not be shared between requests:
+
+```ts
+import { ViewModelStoreBase } from 'mobx-view-model';
+
+const store = new ViewModelStoreBase({
+  resource: {
+    read(id) {
+      return requestCache.get(id);
+    },
+  },
+});
+```
+
+Do not create a mutable request-specific resource once at module scope in an
+SSR application. Construct it together with the store for each request.
 
 ## `getPayload`  
 Extracts the ViewModel payload from component props.  

@@ -35,6 +35,25 @@ Used for tracking and managing view model lifecycle.
 ### `payload: Payload`  
 Data object passed from the parent component to the view model.  
 
+### `ViewModelBase.vmData: unknown`
+Data returned by the configured [`ViewModelResource`](/api/view-models/view-models-config#resource)
+for this view model's `id`. It is resolved during creation and can be used by
+`ViewModelBase` without duplicating the request-loading logic. This property is
+available on the base implementation; it is not part of the framework-agnostic
+`ViewModel` interface.
+
+```ts
+import { ViewModelBase } from 'mobx-view-model';
+
+type Product = { id: string; title: string };
+
+class ProductVM extends ViewModelBase {
+  get product(): Product {
+    return this.vmData as Product;
+  }
+}
+```
+
 ### `isMounted: boolean`  
 Indicates whether the `ViewModel` is currently mounted with its associated component.  
 Controls the rendering of the connected view component:

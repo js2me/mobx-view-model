@@ -26,6 +26,10 @@ vmStore.getIds(MyVM) // ["id"]
 vmStore.getIds(ViewComponentOfMyVM) // ["id"]
 ```
 
+### `mountedViewsCount`  
+
+The total number of views that are currently mounted.   
+
 
 ### `getId(vmLookup)`  
 

@@ -12,7 +12,10 @@ import type {
 import { InferViewModelPayload, InferViewModelProps } from './view-model.base.types.js';
 
 export interface ViewModelStoreConfig {
-  /** Resource scoped to this store/request. */
+  /**
+   * Resource scoped to this store/request.
+   * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-model-store/interface#resource)
+   */
   resource?: ViewModelResource;
   /**
    * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config)
