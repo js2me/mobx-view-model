@@ -9,8 +9,9 @@ has been removed.
 
 **Breaking:** replace the ViewModelStore attachment lifecycle APIs with
 `define()`, `create()`, `connect()`, `unmount()`, and `generateId()`. Automatic
-and global view-model ID generation have been removed, so integrations must
-provide an ID or override `generateId()`.
+and global core view-model ID generation have been removed; store callers must
+provide an ID, while framework integrations own any render-time ID generation
+or custom `generateId()` behavior.
 
 **Breaking:** ViewModel lifecycle and configuration APIs have been simplified:
 use `lifecycleState` and `setPayload()` instead of `isUnmounting` and
@@ -19,3 +20,62 @@ and replace `processViewComponent` with framework-agnostic `processRender`.
 
 Improve view-model creation and lifecycle handling for React 18 and React 19
 Strict Mode, Suspense, lazy-loaded components, and SSR.
+
+### Removed
+
+- `ViewModelStore.markToBeAttached()`
+- `ViewModelStore.attach()` and `ViewModelStore.detach()`
+- `ViewModelStore.isAbleToRenderView()`
+- `ViewModelStore.createViewModel()`
+- `ViewModelStore.processCreateConfig()`
+- `ViewModelStore.generateViewModelId()`
+- `ViewModelStoreBase.getOrCreateVmId()` and its attachment/mounting state
+- `ViewModel.isUnmounting` and `ViewModel.payloadChanged` from the `ViewModel`
+  interface; `ViewModel.vmConfig` is no longer part of that interface, although
+  `ViewModelBase` still exposes its merged `vmConfig` configuration
+- `ViewModelParams.parentViewModelId`
+- `ViewModelSimple.attachViewModelStore()`
+- `GenerateViewModelIdFn` and `generateVmId`
+- the `mobx-view-model/react` export and React dependencies from the core package
+- configuration options `generateId`, `flushPendingReactions`, `useReactIds`,
+  `suspendUntil`, `wrapViewsInObserver`, and `processViewComponent`
+- the misspelled `isViewModeSimpleClass` export
+
+### Changed
+
+- `ViewModelStore.mountedViewsCount` now counts registered simple view models
+  and mounted full view models instead of attachment references.
+- `ViewModelStore.generateId()` now receives a required `id` and returns it by
+  default; custom stores can override it for application-specific IDs.
+- `ViewModelBase.setPayload()` now returns whether the payload was unchanged.
+- `ViewModelBase.willMount()` may be asynchronous, and concurrent `mount()`
+  calls are deduplicated.
+- `ViewModelBase.unmount()` is synchronous; lifecycle is represented by
+  `lifecycleState` instead of `isUnmounting`.
+- Parent view models must be passed through `parentViewModel`; the store no
+  longer resolves them from `parentViewModelId`.
+- `ViewModelsConfig.processViewComponent` was renamed to `processRender` and
+  now works with framework-agnostic render functions.
+- `ViewModelsConfig` now requires `mode` and `getPayload`; `reactHook` also
+  uses a framework-agnostic signature.
+- `isViewModel()` and `isViewModelClass()` now use the internal
+  `VIEW_MODEL_MARKER` instead of duck-typing `payloadChanged`.
+
+### Added
+
+- `ViewModelStore.define()` to create, connect, register, and reuse a
+  view-model instance by ID.
+- `ViewModelStore.create()` for creating an instance without registering it.
+- `ViewModelStore.connect()` for registering an existing instance after
+  creation or render commit.
+- `ViewModelStore.unmount()` for synchronous unmount and removal from the
+  store.
+- `ViewModelStore.resource` and `ViewModelResource` for request-scoped SSR
+  resources.
+- `ViewModelStore.hasMountingVms` for detecting full view models that have not
+  mounted yet.
+- `ViewModelSimple.init()` as the initialization hook for simple view models.
+- `ViewModelsConfig.processRender()` as the framework-agnostic render hook.
+- `VIEW_MODEL_MARKER`-based view-model classification.
+- React staging and cleanup for abandoned renders, Suspense retries, lazy
+  components, Strict Mode, and SSR.
