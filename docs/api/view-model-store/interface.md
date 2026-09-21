@@ -34,36 +34,35 @@ putting request data in the global configuration.
 
 The store resource takes precedence over [`viewModelsConfig.resource`](/api/view-models/view-models-config#resource).
 
-#### Example: request-scoped resource
+#### Example: resource with a store-local cache
 
 ```tsx
 import {
   ViewModelBase,
   ViewModelStoreBase,
-  type ViewModelResource,
 } from 'mobx-view-model';
 import { ViewModelsProvider, useCreateViewModel } from 'mobx-view-model-react';
 
-type UserData = { id: string; name: string };
+type User = { id: string; name: string };
 
-function createRequestStore(
-  requestUsers: Map<string, UserData>,
-  loadUser: (id: string) => Promise<void>,
-) {
-  const resource: ViewModelResource<UserData> = {
+// In a real SSR application, create this map from the current request.
+const users = new Map<string, User>([
+  ['user-42', { id: 'user-42', name: 'Ada Lovelace' }],
+]);
+
+const store = new ViewModelStoreBase({
+  resource: {
     read(id) {
-      const user = requestUsers.get(id);
-      if (!user) throw loadUser(id); // React Suspense retries after the promise settles
+      const user = users.get(id);
+      if (!user) throw new Error(`User ${id} was not found`);
       return user;
     },
-  };
-
-  return new ViewModelStoreBase({ resource });
-}
+  },
+});
 
 class UserVM extends ViewModelBase {
-  get user(): UserData {
-    return this.vmData as UserData;
+  get user(): User {
+    return this.vmData as User;
   }
 }
 
@@ -73,8 +72,6 @@ function UserView() {
 }
 
 export function RequestApp() {
-  const store = createRequestStore(requestUsers, loadUser);
-
   return (
     <ViewModelsProvider value={store}>
       <UserView />
@@ -83,20 +80,46 @@ export function RequestApp() {
 }
 ```
 
-`requestUsers` and `loadUser` are application code. The important part is that
-the resource closes over data for one request and is passed to that request's
-store. The same store can be shared by all view models rendered for that
-request.
+When `UserVM` is created with the id `user-42`, the integration calls
+`store.resource.read('user-42')` and passes the returned object to the VM as
+`vmData`. The same store can be shared by all view models rendered for one
+request. For SSR, create the `users` map and the store per request rather than
+sharing them between requests.
+
+To load missing data asynchronously, replace the `throw new Error(...)` branch
+with `throw promise`. The promise must populate the cache before it resolves;
+React will retry `read(id)` after the promise settles:
+
+```ts
+read(id) {
+  const user = users.get(id);
+  if (user) return user;
+
+  const promise = loadUser(id).then((user) => users.set(id, user));
+  throw promise;
+}
+```
+
+In production, cache the in-flight promise as well, so repeated reads for the
+same id do not start duplicate requests.
 
 #### Example: global fallback with a store override
 
 ```ts
 import { viewModelsConfig, ViewModelStoreBase } from 'mobx-view-model';
 
-viewModelsConfig.resource = globalCacheResource;
+viewModelsConfig.resource = {
+  read(id) {
+    return globalCache.get(id);
+  },
+};
 
 const requestStore = new ViewModelStoreBase({
-  resource: requestCacheResource, // used instead of globalCacheResource
+  resource: {
+    read(id) {
+      return requestCache.get(id); // used instead of the global resource
+    },
+  },
 });
 ```
 
