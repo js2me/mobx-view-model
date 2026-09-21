@@ -5,9 +5,9 @@ import { mergeVMConfigs } from './utils/merge-vm-configs.js';
 import { isViewModelSimpleClass } from '../utils/typeguards.js';
 import { _internals } from '../internals.js';
 
-declare const globalThis: typeof Window & { [_internals.viewModelMarker]?: ViewModelsConfig }
+declare const globalThis: typeof Window & { [_internals.marker]?: ViewModelsConfig }
 
-globalThis[_internals.viewModelMarker] ??= {
+globalThis[_internals.marker] ??= {
   mode: 'csr-only',
   comparePayload: false,
   payloadComputed: 'struct',
@@ -46,4 +46,4 @@ globalThis[_internals.viewModelMarker] ??= {
 /**
  * Global configuration options for view models
  */
-export const viewModelsConfig: ViewModelsConfig = globalThis[_internals.viewModelMarker]!
+export const viewModelsConfig: ViewModelsConfig = globalThis[_internals.marker]!

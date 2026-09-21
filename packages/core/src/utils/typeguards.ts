@@ -5,7 +5,7 @@ import type {
   ViewModel,
   ViewModelSimple,
 } from '../view-model/index.js';
-import { VIEW_MODEL_MARKER } from '../symbols/index.js';
+import { _internals } from '../internals.js';
 
 
 export const isViewModel = <
@@ -14,7 +14,7 @@ export const isViewModel = <
 >(
   value: AnyObject,
 ): value is ViewModel<TPayload, ParentViewModel> =>
-  value[VIEW_MODEL_MARKER] === true;
+  value[_internals.marker] === true;
 
 export const isViewModelClass = <
   TPayload extends AnyObject = EmptyObject,
@@ -22,7 +22,7 @@ export const isViewModelClass = <
 >(
   value: Function,
 ): value is Class<ViewModel<TPayload, ParentViewModel>> =>
-  value.prototype[VIEW_MODEL_MARKER] === true;
+  value.prototype[_internals.marker] === true;
 
 export const isViewModelSimple = <
   TPayload extends AnyObject = EmptyObject,

@@ -17,7 +17,7 @@ import type {
   ViewModelParams,
 } from './view-model.types.js';
 import { ViewModelLifecycleState } from './view-model.base.types.js';
-import { VIEW_MODEL_MARKER } from '../symbols/index.js';
+import { _internals } from '../internals.js';
 
 const baseAnnotations: ObservableAnnotationsArray = [
   [observable.ref, 'lifecycleState'],
@@ -294,6 +294,6 @@ export class ViewModelBase<
 
   static {
     // @ts-ignore
-    this.prototype[VIEW_MODEL_MARKER] = true;
+    this.prototype[_internals.marker] = true;
   }
 }
