@@ -10,6 +10,10 @@ enabling centralized [ViewModel](/api/view-models/overview) management and cross
 function ViewModelsProvider(props: { children?: ReactNode; value: ViewModelStore }): ReactNode;
 ```
 
+::: warning Keep `value` stable
+Changing `value` does not move existing view models to the new store. To switch stores, remount the provider subtree (for example, change its `key`).
+:::
+
 ### Usage  
 
 ```tsx

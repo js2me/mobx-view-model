@@ -15,10 +15,6 @@ If you need to read about [`ViewModelStore`](/api/view-model-store/interface) in
 ### `viewModels` (_protected_)  
 Map structure with created [ViewModel](/api/view-models/overview) instances in application (`id` → instance).  
 
-### `linkedAnchorVMClasses` (_protected_)  
-Map from anchor / HOC component reference to the linked [ViewModel](/api/view-models/interface) class.  
-Used so `get(MyComponent)` / `useViewModel(MyComponent)` resolve to the same instances as `get(MyVM)`.
-
 ### `viewModelIdsByClasses` (_protected_)  
 Map from ViewModel class to the list of registered instance ids.
 

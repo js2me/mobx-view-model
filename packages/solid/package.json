@@ -9,7 +9,7 @@
     "prebuild": "pnpm run clean",
     "build:watch": "pnpm build && nodemon --watch src --ext ts,tsx --exec \"pnpm build\"",
     "build": "vite build && node ./scripts/normalize-dist-dts-imports.mjs && node ./scripts/validate-dist-dts-imports.mjs && node ./scripts/patch-dist-package-json.mjs",
-    "test": "vitest run --config vitest.config.ts",
+    "test": "vitest run --config vitest.config.ts; client_status=$?; vitest run --config vitest.ssr.config.ts; ssr_status=$?; exit $((client_status || ssr_status))",
     "test:watch": "vitest watch --config vitest.config.ts",
     "test:coverage": "vitest run --config vitest.config.ts --coverage"
   },
@@ -43,14 +43,14 @@
   },
   "peerDependencies": {
     "mobx": "^6.12.4",
-    "mobx-solid": "^0.0.3",
-    "solid-js": "^1.6.0"
+    "mobx-solid": "^0.3.1",
+    "solid-js": "^1.9.9"
   },
   "devDependencies": {
     "@solidjs/testing-library": "^0.8.10",
     "jsdom": "^26.1.0",
     "mobx": "^6.12.4",
-    "mobx-solid": "^0.0.1",
+    "mobx-solid": "^0.3.1",
     "solid-js": "^1.9.9",
     "vite-plugin-solid": "^2.11.13",
     "yummies": "^7.20.1"

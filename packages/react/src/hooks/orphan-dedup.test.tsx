@@ -176,6 +176,41 @@ describe('Orphan cleanup dedup: same VM instance from two fibers', () => {
     expect(pageMounts.length).toBeGreaterThanOrEqual(1);
   });
 
+  // Known failure: either consumer's cleanup unmounts their shared VM.
+  // Convert to test() when shared-instance ownership is fixed.
+  test.fails('removing one of two fixed-id consumers keeps the shared VM mounted', async () => {
+    const vmStore = new ViewModelStoreBaseMock();
+
+    class PageVM extends ViewModelBaseMock {}
+
+    const Consumer = ({ name }: { name: string }) => {
+      const model = useCreateViewModel(PageVM, undefined, { id: 'shared' });
+      return <span data-testid={name}>{model.id}</span>;
+    };
+
+    const App = ({ showFirst }: { showFirst: boolean }) => (
+      <ViewModelsProvider value={vmStore}>
+        {showFirst && <Consumer name="first" />}
+        <Consumer name="second" />
+      </ViewModelsProvider>
+    );
+
+    const view = render(<App showFirst />);
+    const vm = vmStore.get<PageVM>('shared');
+    expect(vm).toBeInstanceOf(PageVM);
+    expect(vm?.isMounted).toBe(true);
+    expect(screen.getAllByText('shared')).toHaveLength(2);
+
+    await act(async () => {
+      view.rerender(<App showFirst={false} />);
+    });
+
+    expect(screen.queryByTestId('first')).toBeNull();
+    expect(screen.getByTestId('second').textContent).toBe('shared');
+    expect(vmStore.get('shared')).toBe(vm);
+    expect(vm?.isMounted).toBe(true);
+  });
+
   test('fixed-id VM: orphan cleanup does not kill VM after Suspense remount', async () => {
     const vmStore = new ViewModelStoreBaseMock();
     const unmountLog: string[] = [];

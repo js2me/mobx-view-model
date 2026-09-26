@@ -35,7 +35,7 @@ Strict Mode, Suspense, lazy-loaded components, and SSR.
   `ViewModelBase` still exposes its merged `vmConfig` configuration
 - `ViewModelParams.parentViewModelId`
 - `ViewModelSimple.attachViewModelStore()`
-- `ViewModelStore.mountedViewsCount` and `ViewModelStore.hasMountingVms`
+- `ViewModelStore.mountedViewsCount`
 - `GenerateViewModelIdFn` and `generateVmId`
 - the `mobx-view-model/react` export and React dependencies from the core package
 - configuration options `generateId`, `flushPendingReactions`, `useReactIds`,

@@ -220,6 +220,8 @@ export function useCreateViewModel(
   const reactId = useId();
 
   if (cache.current) {
+    // The VM and its store belong to this fiber for its entire mounted lifetime.
+    // Changing the provider's store requires remounting the subtree.
     const model = cache.current.vm;
     model.setPayload?.(payload);
     // Don't revive here — this render may still be discarded.

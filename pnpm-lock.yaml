@@ -424,8 +424,8 @@ importers:
         specifier: ^6.12.4
         version: 6.15.0
       mobx-solid:
-        specifier: ^0.0.1
-        version: 0.0.1(mobx@6.15.0)(solid-js@1.9.14)
+        specifier: ^0.3.1
+        version: 0.3.1(mobx@6.15.0)(solid-js@1.9.14)
       solid-js:
         specifier: ^1.9.9
         version: 1.9.14
@@ -4527,11 +4527,11 @@ packages:
       react-native:
         optional: true
 
-  mobx-solid@0.0.1:
-    resolution: {integrity: sha512-4u7zmMnuz78CYRebcP0tuckQbliRzTbmhDXXgI8uKJYZUt+xXkfH56FLydbXP6UaE51pVb6sUDwUCIB0bjNBgA==}
+  mobx-solid@0.3.1:
+    resolution: {integrity: sha512-pZ4azDJjtflP+G+vzVXkeXORGDd0xaerfOVNzHpD2sszj9/7zVjyx7aY508cmQp/CfJ4hYzLmtbYl7RVRhz/dQ==}
     peerDependencies:
       mobx: ^6.0.0
-      solid-js: ^1.6.0
+      solid-js: ^1.6.0 || ^2.0.0-0
 
   mobx-swiss-knife@1.15.1:
     resolution: {integrity: sha512-7yotsnAqcBawsEWcKUu77VHrzmhLnbOFzkC1phwBI6K3P7wbt7pxfYPRdcGFzZQhQV58laSui7tnWzvcDKAfqg==}
@@ -10006,7 +10006,7 @@ snapshots:
     optionalDependencies:
       react-dom: 19.2.5(react@19.2.5)
 
-  mobx-solid@0.0.1(mobx@6.15.0)(solid-js@1.9.14):
+  mobx-solid@0.3.1(mobx@6.15.0)(solid-js@1.9.14):
     dependencies:
       mobx: 6.15.0
       solid-js: 1.9.14

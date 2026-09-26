@@ -20,7 +20,7 @@ import {
 } from 'mobx-view-model-react';
 import { act, cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, test, vi } from 'vitest';
-import { Suspense, lazy, type ComponentType } from 'react';
+import { Suspense, lazy, startTransition, useState, type ComponentType } from 'react';
 
 class ViewModelBaseMock<
   Payload extends Record<string, unknown> = Record<string, never>,
@@ -66,6 +66,54 @@ afterEach(() => {
 });
 
 describe('render-phase VM staging', () => {
+  test('a suspended transition changes a committed VM payload before the UI commits', async () => {
+    const vmStore = new ViewModelStoreBaseMock();
+    class PageVM extends ViewModelBaseMock<{ value: string }> {}
+
+    const LazyChild = lazy(
+      () => new Promise<{ default: ComponentType }>(() => {}),
+    );
+    const Page = ({ value }: { value: string }) => {
+      useCreateViewModel(PageVM, { value }, { id: 'page' });
+      return (
+        <>
+          <span data-testid="page">{value}</span>
+          {value === 'next' && <LazyChild />}
+        </>
+      );
+    };
+
+    let navigate!: () => void;
+    const App = () => {
+      const [value, setValue] = useState('initial');
+      navigate = () => startTransition(() => setValue('next'));
+      return (
+        <ViewModelsProvider value={vmStore}>
+          <Suspense fallback={<span data-testid="loading">Loading</span>}>
+            <Page value={value} />
+          </Suspense>
+        </ViewModelsProvider>
+      );
+    };
+
+    await act(async () => {
+      render(<App />);
+    });
+    const vm = vmStore.get<PageVM>('page');
+    expect(vm?.payload.value).toBe('initial');
+    expect(screen.getByTestId('page').textContent).toBe('initial');
+
+    await act(async () => {
+      navigate();
+    });
+
+    // The transition has not committed, but useCreateViewModel updated the live VM.
+    expect(screen.getByTestId('page').textContent).toBe('initial');
+    expect(screen.queryByTestId('loading')).toBeNull();
+    expect(vmStore.get('page')).toBe(vm);
+    expect(vm?.payload.value).toBe('next');
+  });
+
   test('VM is registered only after its fiber commits', async () => {
     const vmStore = new ViewModelStoreBaseMock();
 
