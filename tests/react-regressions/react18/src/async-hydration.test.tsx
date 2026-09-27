@@ -6,7 +6,7 @@ import { hydrateRoot } from 'react-dom/client';
 import { renderToString } from 'react-dom/server';
 import { expect, test, vi } from 'vitest';
 
-test('hydrating an async VM against the server fallback reports a mismatch', async () => {
+test('hydrating an async VM preserves the server fallback until mount completes', async () => {
   const previousMode = viewModelsConfig.mode;
   const previousIsClient = _internals.isClient;
   const pendingMounts: Array<() => void> = [];
@@ -50,12 +50,15 @@ test('hydrating an async VM against the server fallback reports a mismatch', asy
       });
     });
 
-    expect(recoverableErrors.map(String).join('\n')).toMatch(/hydrat|server HTML/i);
+    expect(recoverableErrors).toEqual([]);
+    expect(container.querySelector('[data-testid="vm-loading"]')?.textContent).toBe('Loading');
+    expect(container.querySelector('[data-testid="view"]')).toBeNull();
     expect(pendingMounts.length).toBeGreaterThan(1);
     await act(async () => {
       for (const resolve of pendingMounts) resolve();
     });
     expect(container.querySelector('[data-testid="view"]')?.textContent).toBe('Ready');
+    expect(recoverableErrors).toEqual([]);
   } finally {
     await act(async () => root?.unmount());
     for (const resolve of pendingMounts) resolve();

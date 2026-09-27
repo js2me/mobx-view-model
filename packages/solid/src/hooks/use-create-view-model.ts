@@ -13,8 +13,12 @@ import {
 } from 'mobx-view-model';
 import {
   createEffect,
+  createResource,
   createUniqueId,
+  getOwner,
   onCleanup,
+  runWithOwner,
+  sharedConfig,
   useContext,
 } from 'solid-js';
 import { isServer } from 'solid-js/web';
@@ -28,6 +32,30 @@ const EMPTY_OBJECT: AnyObject = Object.freeze({});
 
 const isThenable = (value: unknown): value is PromiseLike<unknown> =>
   !!value && typeof (value as PromiseLike<unknown>).then === 'function';
+
+type VmInstance = AnyViewModel | AnyViewModelSimple;
+type AsyncSsrEntry = { model: VmInstance; mountResult: PromiseLike<unknown> };
+const ssrVms = new WeakMap<object, Map<string, AsyncSsrEntry>>();
+
+const getSsrVms = (): Map<string, AsyncSsrEntry> | undefined => {
+  const scope = (sharedConfig.context as { suspense?: object } | undefined)?.suspense;
+  if (!scope) return undefined;
+  let entries = ssrVms.get(scope);
+  if (!entries) {
+    entries = new Map();
+    ssrVms.set(scope, entries);
+  }
+  return entries;
+};
+
+const registerSsrCleanup = (cleanup: () => void): void => {
+  // Suspense disposes its children before retrying. Keep the VM alive until
+  // the server render root is disposed instead of tying it to a retry owner.
+  let owner = getOwner();
+  while (owner?.owner) owner = owner.owner;
+  if (owner) runWithOwner(owner, () => onCleanup(cleanup));
+  else onCleanup(cleanup);
+};
 
 const resolvePayload = (payload: unknown) =>
   typeof payload === 'function' ? (payload as () => unknown)() : payload;
@@ -126,30 +154,41 @@ export function useCreateViewModel(
     props: props ?? rawCfg?.props,
   } satisfies ViewModelCreateConfig<any>;
 
-  let model: AnyViewModel | AnyViewModelSimple;
+  const isSsr = isServer && viewModelsConfig.mode === 'ssr';
+  const ssrEntries = isSsr ? getSsrVms() : undefined;
+  const previous = ssrEntries?.get(id);
+  let model: VmInstance;
 
-  if (viewModels) {
+  if (previous) {
+    model = previous.model;
+  } else if (viewModels) {
     model = viewModels.define(config);
   } else {
     model = config.factory?.(config) ?? viewModelsConfig.factory(config);
     model.init?.(config);
   }
 
-  const mountResult =
-    isViewModel(model) && model.isMounted ? undefined : model.mount?.();
+  const mountResult = previous?.mountResult ?? (
+    isViewModel(model) && model.isMounted ? undefined : model.mount?.()
+  );
+  if (isSsr && isThenable(mountResult)) {
+    ssrEntries?.set(id, { model, mountResult });
+  }
 
   if (isViewModelSimple(model)) {
     model.parentViewModel = parentViewModel;
     model.setPayload?.(initialPayload);
   }
 
-  onCleanup(() => {
-    if (viewModels) {
-      viewModels.unmount(model);
-    } else {
-      model.unmount?.();
-    }
-  });
+  const cleanup = () => {
+    if (viewModels) viewModels.unmount(model);
+    else model.unmount?.();
+  };
+  if (isSsr && isThenable(mountResult) && !previous) {
+    registerSsrCleanup(cleanup);
+  } else if (!previous) {
+    onCleanup(cleanup);
+  }
 
   createEffect((isUpdate: boolean) => {
     const next = resolvePayload(payload);
@@ -159,12 +198,9 @@ export function useCreateViewModel(
     return true;
   }, false);
 
-  if (
-    viewModelsConfig.mode === 'ssr' &&
-    isThenable(mountResult) &&
-    isServer
-  ) {
-    throw mountResult;
+  if (viewModelsConfig.mode === 'ssr' && isThenable(mountResult)) {
+    const [ready] = createResource(() => Promise.resolve(mountResult).then(() => true));
+    ready();
   }
 
   return model;

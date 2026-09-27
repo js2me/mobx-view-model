@@ -7,11 +7,13 @@ import type {
   ViewModelSimple,
   ViewModelStore
 } from 'mobx-view-model';
-import { _internals, isViewModel, viewModelsConfig } from 'mobx-view-model';
+import { _internals, isViewModel, isViewModelClass, viewModelsConfig } from 'mobx-view-model';
 import { observer } from 'mobx-react-lite';
 import {
+  createContext,
   createElement,
   forwardRef,
+  use,
   useContext,
   useRef,
   useSyncExternalStore,
@@ -32,6 +34,7 @@ import {
   type UseCreateViewModelConfig,
   useCreateViewModel,
 } from '../hooks/index.js';
+import { viewModelPayloadVersions } from '../hooks/use-create-view-model.js';
 import {
   RComponentClass,
   RComponentType,
@@ -303,7 +306,16 @@ export function withViewModel(
     throw new Error('Error #4: https://js2me.github.io/mobx-view-model/errors/4');
   }
 
-  const View = observer(renderFn as RFunctionComponent<any>);
+  const simpleView = !isViewModelClass(VM);
+  const PayloadVersionContext = createContext(0);
+  const View = observer((simpleView
+    ? (props: any) => {
+        // Subscribe to the revision: plain ViewModelSimple fields do not notify
+        // observer, and unchanged props alone would not rerender this view.
+        useContext(PayloadVersionContext);
+        return renderFn(props);
+      }
+    : renderFn) as RFunctionComponent<any>);
 
   if (process.env.NODE_ENV !== 'production') {
     View.displayName = `View(${VM.name})`;
@@ -364,7 +376,9 @@ export function withViewModel(
     }
 
     const getServerSnapshot =
-      typeof window !== 'undefined' && viewModelsConfig.mode === 'ssr'
+      typeof window !== 'undefined' &&
+      viewModelsConfig.mode === 'ssr' &&
+      typeof use === 'function'
         ? getServerReadySnapshot
         : cacheRef.current.getSnapshot;
 
@@ -383,6 +397,14 @@ export function withViewModel(
         viewProps.ref = ref;
       }
       child = createElement(View, viewProps);
+      if (simpleView) {
+        // The revision is internal; never add it to the user's view props.
+        child = createElement(
+          PayloadVersionContext.Provider,
+          { value: viewModelPayloadVersions.get(model) ?? 0 },
+          child,
+        );
+      }
     } else if (Fallback) {
       child = createElement(Fallback);
     }

@@ -176,6 +176,29 @@ describe('useCreateViewModel', () => {
       expect(setPayloadSpy).toHaveBeenLastCalledWith({ n: 2 });
     });
 
+    test('direct hook refreshes a non-observable simple VM after committing a new payload', async () => {
+      class PlainVM implements ViewModelSimple<{ value: string }> {
+        id = 'plain';
+        private current = '';
+
+        setPayload(payload: { value: string }) {
+          this.current = payload.value;
+        }
+
+        get value() { return this.current; }
+      }
+
+      const Page = ({ value }: { value: string }) => {
+        const vm = useCreateViewModel(PlainVM, { value });
+        return <span data-testid="plain">{vm.value}</span>;
+      };
+
+      const view = await act(async () => render(<Page value="first" />));
+      expect(screen.getByTestId('plain').textContent).toBe('first');
+      await act(async () => view.rerender(<Page value="second" />));
+      expect(screen.getByTestId('plain').textContent).toBe('second');
+    });
+
     test('ViewModelSimple with literal payload type: useCreateViewModel accepts typed item', () => {
       type Foo = PartialKeys<
         {

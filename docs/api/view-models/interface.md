@@ -141,7 +141,7 @@ Updates the view model's payload data.
 Returns `true` when the new payload is considered equal to the current one (no update applied), and `false` when the payload was updated.
 
 ::: warning React / Solid integration
-[`useCreateViewModel`](/react/api/use-create-view-model) and [`withViewModel`](/react/api/with-view-model) can call `setPayload` on **every render** while the component is in the tree. That includes moments **before** [`mount()`](#mount-void-promise-void) has run or finished — so `isMounted` may still be `false`. Do not assume a fully mounted view model inside `setPayload` or logic it triggers (e.g. avoid starting work that must only run after `mount()` unless you guard on `isMounted`).
+React applies payload updates to an existing view model after the render commits. Initial `ViewModelSimple` binding and Solid setup may still call `setPayload` before [`mount()`](#mount-void-promise-void) finishes, when `isMounted` is `false`. Guard any work in `setPayload` that requires a mounted view model.
 :::
 
 ::: tip

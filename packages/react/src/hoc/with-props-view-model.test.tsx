@@ -541,6 +541,32 @@ describe('withPropsViewModel', () => {
       expect(setPayloadSpy).toHaveBeenLastCalledWith({ value: 'second' });
     });
 
+    it('does not pass internal payload revision props to the view', async () => {
+      class PlainVM implements ViewModelSimple<{ value: string }> {
+        id = 'plain';
+        value = '';
+
+        setPayload(payload: { value: string }) {
+          this.value = payload.value;
+        }
+      }
+
+      const receivedKeys: string[][] = [];
+      const Plain = withPropsViewModel(PlainVM, (props) => {
+        receivedKeys.push(Object.keys(props).sort());
+        return <span>{props.model.value}</span>;
+      });
+
+      const view = await act(async () => render(<Plain value="first" />));
+      await act(async () => view.rerender(<Plain value="second" />));
+
+      expect(view.getByText('second')).toBeDefined();
+      expect(receivedKeys.length).toBeGreaterThanOrEqual(2);
+      for (const keys of receivedKeys) {
+        expect(keys).toEqual(['model', 'value']);
+      }
+    });
+
     it('passes payload fields to the view and into setPayload', async () => {
       interface Payload {
         label: string;

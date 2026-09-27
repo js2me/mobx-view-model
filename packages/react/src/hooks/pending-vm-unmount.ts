@@ -16,6 +16,30 @@ export type UnconfirmedCreation = { vm: VmInstance };
 
 const unconfirmed = new Map<VmInstance, ViewModelStore | null>();
 let orphanCleanupScheduled = false;
+const committedOwners = new WeakMap<VmInstance, number>();
+
+/** Only committed fibers own a VM. A speculative Suspense render does not. */
+export const acquireVm = (vm: VmInstance): void => {
+  committedOwners.set(vm, (committedOwners.get(vm) ?? 0) + 1);
+};
+
+export const releaseVm = (
+  vm: VmInstance,
+  store: ViewModelStore | null,
+): void => {
+  const owners = committedOwners.get(vm);
+  if (!owners) return;
+  if (owners > 1) {
+    committedOwners.set(vm, owners - 1);
+    return;
+  }
+  committedOwners.delete(vm);
+  // The store may already have replaced this ID with a different instance.
+  runInAction(() => {
+    if (store && (vm.id == null || store.get(vm.id) === vm)) store.unmount(vm);
+    else vm.unmount?.();
+  });
+};
 
 /** Register a VM until its commit effect; cleanup is scheduled from {@link confirmCreation}. */
 export const registerUnconfirmed = (
@@ -48,14 +72,4 @@ export const confirmCreation = (entry: UnconfirmedCreation): void => {
   if (unconfirmed.size > 0) {
     scheduleOrphanCleanup();
   }
-};
-
-export const unmountVm = (
-  vm: VmInstance,
-  store: ViewModelStore | null,
-): void => {
-  runInAction(() => {
-    if (store) store.unmount(vm);
-    else vm.unmount?.();
-  });
 };

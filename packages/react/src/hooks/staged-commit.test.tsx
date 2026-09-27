@@ -9,6 +9,7 @@ import {
   isViewModel,
   type AnyViewModel,
   type AnyViewModelSimple,
+  type ViewModelSimple,
   type ViewModelParams,
 } from 'mobx-view-model';
 import {
@@ -66,12 +67,48 @@ afterEach(() => {
 });
 
 describe('render-phase VM staging', () => {
-  test('a suspended transition changes a committed VM payload before the UI commits', async () => {
+  test('a speculative second consumer cannot mutate a committed simple VM', async () => {
+    const store = new ViewModelStoreBaseMock();
+    class PlainVM implements ViewModelSimple<{ value: string }> {
+      id = 'shared';
+      private current = '';
+      setPayload(payload: { value: string }) { this.current = payload.value; }
+      get value() { return this.current; }
+    }
+
+    const never = new Promise<{ default: ComponentType }>(() => {});
+    const Pending = lazy(() => never);
+    const Consumer = ({ value, suspend = false }: { value: string; suspend?: boolean }) => {
+      const vm = useCreateViewModel(PlainVM, { value }, {
+        id: 'shared', VM: PlainVM, payload: { value },
+      });
+      return suspend ? <Pending /> : <span data-testid="first">{vm.value}</span>;
+    };
+    const App = ({ showPending }: { showPending: boolean }) => (
+      <ViewModelsProvider value={store}>
+        <Consumer value="initial" />
+        {showPending && <Suspense fallback="Loading"><Consumer value="next" suspend /></Suspense>}
+      </ViewModelsProvider>
+    );
+
+    const view = render(<App showPending={false} />);
+    const vm = store.get<PlainVM>('shared');
+    expect(vm?.value).toBe('initial');
+    await act(async () => view.rerender(<App showPending />));
+    expect(store.get('shared')).toBe(vm);
+    expect(vm?.value).toBe('initial');
+    expect(screen.getByTestId('first').textContent).toBe('initial');
+  });
+
+  test('a suspended transition leaves the committed VM payload unchanged until commit', async () => {
     const vmStore = new ViewModelStoreBaseMock();
     class PageVM extends ViewModelBaseMock<{ value: string }> {}
 
+    let resolveChild!: (module: { default: ComponentType }) => void;
     const LazyChild = lazy(
-      () => new Promise<{ default: ComponentType }>(() => {}),
+      () => new Promise<{ default: ComponentType }>((resolve) => {
+        resolveChild = resolve;
+      }),
     );
     const Page = ({ value }: { value: string }) => {
       useCreateViewModel(PageVM, { value }, { id: 'page' });
@@ -107,10 +144,16 @@ describe('render-phase VM staging', () => {
       navigate();
     });
 
-    // The transition has not committed, but useCreateViewModel updated the live VM.
+    // The suspended render must not mutate the committed VM.
     expect(screen.getByTestId('page').textContent).toBe('initial');
     expect(screen.queryByTestId('loading')).toBeNull();
     expect(vmStore.get('page')).toBe(vm);
+    expect(vm?.payload.value).toBe('initial');
+
+    await act(async () => {
+      resolveChild({ default: () => <span>child</span> });
+    });
+    expect(screen.getByTestId('page').textContent).toBe('next');
     expect(vm?.payload.value).toBe('next');
   });
 

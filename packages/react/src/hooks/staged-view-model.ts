@@ -170,6 +170,13 @@ export const commitStagedViewModel = (
   }
   stagedVmRegistry?.unregister(vm);
 
+  // Two committed fibers may share an explicit ID and the same staged VM.
+  // connect() invokes init(), so it must run only for the first commit.
+  if (store.get(config.id) === vm) {
+    scheduleSweep(stagedStore);
+    return;
+  }
+
   runInAction(() => {
     store.connect(vm, config);
   });

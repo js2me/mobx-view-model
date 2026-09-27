@@ -1,5 +1,6 @@
 import { cleanup, render, waitFor } from '@solidjs/testing-library';
 import { viewModelsConfig } from 'mobx-view-model';
+import { Suspense } from 'solid-js';
 import { hydrate } from 'solid-js/web';
 import { afterEach, expect, test, vi } from 'vitest';
 import { ViewModelsProvider } from '../components/index.js';
@@ -43,7 +44,7 @@ test('hydrates a synchronously mounted VM without replacing its view', () => {
   }
 });
 
-test('hydrating a pre-rendered fallback reveals the view after async mount', async () => {
+test('hydrates an async SSR Suspense fallback and reveals the mounted view', async () => {
   const previousMode = viewModelsConfig.mode;
   viewModelsConfig.mode = 'ssr';
   const store = new ViewModelStoreBaseMock({});
@@ -59,17 +60,23 @@ test('hydrating a pre-rendered fallback reveals the view after async mount', asy
   });
 
   const container = document.createElement('div');
-  container.innerHTML = '<span data-hk="10000" data-testid="fallback">Loading</span>';
+  // Shell markup asserted by module-load.ssr.test.tsx in the server build.
+  container.innerHTML = '<span data-hk="0000F0" data-testid="loading">Loading</span><script>self.$R=self.$R||[];_$HY.r["0000"]="$$f";</script>';
   document.body.appendChild(container);
   installHydrationRuntime();
+  (globalThis as any)._$HY.r['0000'] = '$$f';
   const errors = vi.spyOn(console, 'error').mockImplementation(() => {});
   let dispose: (() => void) | undefined;
   try {
     dispose = hydrate(() => (
-      <ViewModelsProvider value={store}><Page /></ViewModelsProvider>
+      <ViewModelsProvider value={store}>
+        <Suspense fallback={<span data-testid="loading">Loading</span>}>
+          <Page />
+        </Suspense>
+      </ViewModelsProvider>
     ), container);
 
-    expect(container.querySelector('[data-testid="fallback"]')?.textContent).toBe('Loading');
+    expect(container.textContent).toContain('Loading');
     expect(container.querySelector('[data-testid="view"]')).toBeNull();
     expect(store.get<PageVM>('async-page')?.isMounted).toBe(false);
 

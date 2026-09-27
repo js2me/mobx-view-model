@@ -84,5 +84,5 @@ export const YourComponent = () => {
 ## Notes
 
 - Ids use Solid [`createUniqueId()`](https://docs.solidjs.com/reference/component-apis/create-unique-id) when `config.id` is omitted (stable across SSR hydration).
-- In `viewModelsConfig.mode === 'ssr'`, a thenable from `mount()` is thrown on the server so Solid `<Suspense>` can wait.
+- In `viewModelsConfig.mode === 'ssr'`, a thenable from `mount()` is registered as a Solid resource so `<Suspense>` can wait during server rendering.
 - The hook calls `enableObservableTracking()` as a safety net.

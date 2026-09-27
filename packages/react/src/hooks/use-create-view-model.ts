@@ -20,6 +20,7 @@ import {
   useId,
   useLayoutEffect,
   useRef,
+  useState,
   useSyncExternalStore,
 } from 'react';
 import type { AnyObject, Class, IsPartial, Maybe } from 'yummies/types';
@@ -29,9 +30,10 @@ import {
 } from '../contexts/index.js';
 import {
   type UnconfirmedCreation,
+  acquireVm,
   confirmCreation,
   registerUnconfirmed,
-  unmountVm,
+  releaseVm,
 } from './pending-vm-unmount.js';
 import { commitStagedViewModel, stageViewModel } from './staged-view-model.js';
 
@@ -46,10 +48,16 @@ const useCommitEffect =
   typeof window === 'undefined' ? useEffect : useLayoutEffect;
 
 type VmInstance = AnyViewModel | AnyViewModelSimple;
+/** Internal revision for non-observable ViewModelSimple values. */
+export const viewModelPayloadVersions = new WeakMap<VmInstance, number>();
 
 type Cache = {
   vm: VmInstance;
   config: ViewModelCreateConfig<any>;
+  appliedPayload: any;
+  appliedProps?: any;
+  skipForcedCommit?: boolean;
+  bindAfterCommit?: boolean;
   promise?: PromiseLike<void>;
   isSSR: boolean;
   fn: () => () => void;
@@ -120,24 +128,6 @@ const mountLifecycle = (instance: VmInstance) =>
       ? undefined
       : instance.mount?.(),
   );
-
-const reattachVm = (
-  vm: VmInstance,
-  config: ViewModelCreateConfig<any>,
-  viewModels: ViewModelStore,
-) =>
-  runInAction(() =>
-    viewModels.define({
-      ...config,
-      factory: () => vm,
-    }),
-  );
-
-const isDetachedFromStore = (
-  vm: VmInstance,
-  store: ViewModelStore | null,
-): store is ViewModelStore =>
-  !!store && isViewModel(vm) && vm.id != null && !store.has(vm.id);
 
 export interface UseCreateViewModelConfig<TViewModel extends AnyViewModel>
   extends Pick<
@@ -218,12 +208,12 @@ export function useCreateViewModel(
   const parentViewModel = useContext(ActiveViewModelContext);
   const cache = useRef<Cache>(null!);
   const reactId = useId();
+  const isUpdate = !!cache.current;
+  const [, forceRender] = useState(0);
 
   if (cache.current) {
     // The VM and its store belong to this fiber for its entire mounted lifetime.
     // Changing the provider's store requires remounting the subtree.
-    const model = cache.current.vm;
-    model.setPayload?.(payload);
     // Don't revive here — this render may still be discarded.
     // The commit effect reattaches after React confirms the fiber is alive.
   } else {
@@ -250,7 +240,9 @@ export function useCreateViewModel(
       parentViewModel,
       useStaging ? cache : undefined,
     );
-    if (isClient) {
+    const bindAfterCommit = isClient && !!viewModels &&
+      viewModels.get(config.id) === model;
+    if (isClient && !bindAfterCommit) {
       bindModel(model, payload, parentViewModel);
     }
     const lifecycleResult =
@@ -268,6 +260,9 @@ export function useCreateViewModel(
     cache.current = {
       vm: model,
       config,
+      appliedPayload: payload,
+      appliedProps: props,
+      bindAfterCommit,
       promise: lifecycleResult,
       isSSR,
       creationEntry,
@@ -285,10 +280,13 @@ export function useCreateViewModel(
           commitStagedViewModel(viewModels!, cache.current.config, vm);
         }
 
-        if (isDetachedFromStore(vm, viewModels)) {
-          reattachVm(vm, cache.current.config, viewModels!);
+        if (viewModels && isViewModel(vm) && vm.id != null && !viewModels.has(vm.id)) {
+          runInAction(() => {
+            viewModels.define({ ...cache.current.config, factory: () => vm });
+          });
         }
 
+        acquireVm(vm);
         const mountResult = mountLifecycle(vm) as
           | PromiseLike<void>
           | undefined;
@@ -305,7 +303,7 @@ export function useCreateViewModel(
         }
 
         return () => {
-          unmountVm(cache.current.vm, viewModels);
+          releaseVm(cache.current.vm, viewModels);
         };
       },
     };
@@ -314,6 +312,33 @@ export function useCreateViewModel(
   const model = cache.current.vm;
 
   useCommitEffect(cache.current.fn, EMPTY_ARR);
+
+  // Defer mutations of an existing VM until React commits this render.
+  // The initial render already binds the payload when the VM is created.
+  useCommitEffect(() => {
+    if (cache.current.skipForcedCommit) {
+      cache.current.skipForcedCommit = false;
+      if (cache.current.appliedProps === props) return;
+    }
+    if (cache.current.bindAfterCommit) {
+      cache.current.bindAfterCommit = false;
+      runInAction(() => bindModel(model, payload, parentViewModel));
+      if (isViewModelSimple(model)) {
+        viewModelPayloadVersions.set(model, (viewModelPayloadVersions.get(model) ?? 0) + 1);
+        cache.current.skipForcedCommit = true;
+        forceRender((revision) => revision + 1);
+      }
+    } else if (isUpdate && !Object.is(cache.current.appliedPayload, payload)) {
+      cache.current.appliedPayload = payload;
+      cache.current.appliedProps = props;
+      model.setPayload?.(payload);
+      if (isViewModelSimple(model)) {
+        viewModelPayloadVersions.set(model, (viewModelPayloadVersions.get(model) ?? 0) + 1);
+        cache.current.skipForcedCommit = true;
+        forceRender((revision) => revision + 1);
+      }
+    }
+  }, [payload]);
 
   if (cache.current.isSSR) {
     const pending = cache.current.promise;

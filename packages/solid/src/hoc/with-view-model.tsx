@@ -200,7 +200,7 @@ export function withViewModel(
     return (
       <ActiveViewModelProvider value={model}>
         <Show
-          when={() => !isViewModel(model) || model.isMounted}
+          when={!isViewModel(model) || model.isMounted}
           fallback={Fallback ? <Fallback /> : null}
         >
           <View {...rest} model={model} />
