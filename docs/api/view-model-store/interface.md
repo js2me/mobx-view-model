@@ -4,13 +4,13 @@ title: View Model Store interface
 
 # `ViewModelStore` interface   
 
-Interface representing a store for managing [`ViewModels`](/api/view-models/interface)  
+Interface representing a store for registering and looking up [`ViewModels`](/api/view-models/interface).
 
 ::: tip OPTIONAL USE
 This is not required for targeted usage of this package, but can be helpful for accessing [ViewModels](/api/view-models/overview) from everywhere by [ViewModelLookup](/api/other/view-model-lookup)  
 :::
 
-[Reference to source code](/src/view-model/view-model.store.ts)  
+[Reference to source code](https://github.com/js2me/mobx-view-model/blob/master/packages/core/src/view-model/view-model.store.ts)
 
 ## Method and properties  
 
@@ -21,12 +21,12 @@ Effective merged [`ViewModelsConfig`](/api/view-models/view-models-config) for t
 ### `resource`
 
 Optional data source scoped to this store. The React integration calls
-`resource.read(viewModelId)` while creating a view model and passes the returned
-value to the view model as `vmData`. This is useful for data that belongs to a
-single request during SSR: create a new store for each request instead of
-putting request data in the global configuration.
+`resource.read(viewModelId)` during view model creation on both the client and
+server, and passes the returned value to the view model as `vmData`. For SSR,
+create a new store and resource for each request rather than putting
+request-specific data in the global configuration.
 
-`read` follows the React Suspense resource convention:
+`read` can follow the React Suspense resource convention:
 
 - return data when it is already available;
 - throw a `Promise` while the data is loading;
@@ -42,23 +42,9 @@ import {
   ViewModelStoreBase,
 } from 'mobx-view-model';
 import { ViewModelsProvider, useCreateViewModel } from 'mobx-view-model-react';
+import { useState } from 'react';
 
 type User = { id: string; name: string };
-
-// In a real SSR application, create this map from the current request.
-const users = new Map<string, User>([
-  ['user-42', { id: 'user-42', name: 'Ada Lovelace' }],
-]);
-
-const store = new ViewModelStoreBase({
-  resource: {
-    read(id) {
-      const user = users.get(id);
-      if (!user) throw new Error(`User ${id} was not found`);
-      return user;
-    },
-  },
-});
 
 class UserVM extends ViewModelBase {
   get user(): User {
@@ -72,6 +58,22 @@ function UserView() {
 }
 
 export function RequestApp() {
+  const [store] = useState(() => {
+    // Replace this data with values from the current request.
+    const users = new Map<string, User>([
+      ['user-42', { id: 'user-42', name: 'Ada Lovelace' }],
+    ]);
+    return new ViewModelStoreBase({
+      resource: {
+        read(id) {
+          const user = users.get(id);
+          if (!user) throw new Error(`User ${id} was not found`);
+          return user;
+        },
+      },
+    });
+  });
+
   return (
     <ViewModelsProvider value={store}>
       <UserView />
@@ -80,11 +82,11 @@ export function RequestApp() {
 }
 ```
 
-When `UserVM` is created with the id `user-42`, the integration calls
+When `UserVM` is created with the ID `user-42`, the integration calls
 `store.resource.read('user-42')` and passes the returned object to the VM as
 `vmData`. The same store can be shared by all view models rendered for one
-request. For SSR, create the `users` map and the store per request rather than
-sharing them between requests.
+request. Create the map and store per request rather than sharing them between
+requests.
 
 To load missing data asynchronously, replace the `throw new Error(...)` branch
 with `throw promise`. The promise must populate the cache before it resolves;
@@ -126,6 +128,8 @@ const requestStore = new ViewModelStoreBase({
 ### `getIds(vmLookup)`  
 
 Retrieves ids of [ViewModels](/api/view-models/interface) based on [vmLookup](/api/other/view-model-lookup).  
+
+When given a string ID, this returns that ID even if no instance is registered; use [`has`](#has-vmlookup) to test for an existing instance.
 
 #### Example  
 
@@ -179,34 +183,23 @@ vmStore.get(UserSelectVM)?.selectedUser.id; // '1'
 ### `getAll(vmLookup)`  
 Retrieves all [ViewModel](/api/view-models/overview) instances from the store based on [vmLookup](/api/other/view-model-lookup).  
 
+For a string ID that is not registered, the base implementation returns `[undefined]`; use `has(id)` before calling `getAll(id)`.
+
 ### `define(config)`  
-Recommended way to obtain a VM from the store: returns the existing instance if one with the same ID is already registered, otherwise creates a new instance, connects it to the store, and returns it.
+Recommended way to obtain a VM from the store: calls `generateId(config)`, returns the existing instance if one with that ID is already registered, otherwise creates a new instance, connects it to the store, and returns it. IDs must identify the intended VM; an ID collision returns the previously registered instance.
 
 Replaces the manual `generateId` → `get` → `create` → `connect` flow.
 
 ### `create(config)`  
 Creates a new [ViewModel](/api/view-models/overview) instance based on the provided configuration (does **not** register it in the store by itself).  
 
-Example:   
-```ts
-import {
-  ViewModelStoreBase,
-  ViewModel,
-  ViewModelCreateConfig,
-} from 'mobx-view-model';
+The base implementation merges store-level and per-view-model `vmConfig` and uses the creation config's `factory` when supplied. If you override `create()`, call `super.create(config)` unless you intend to replace that behavior.
 
-export class ViewModelStoreImpl extends ViewModelStoreBase {
-  create<VM extends ViewModel>(
-    config: ViewModelCreateConfig<VM>,
-  ): VM {
-    const VM = config.VM;
-    return new VM(config);
-  }
-}
-```
+### `connect(instance, config)`
+Registers an existing instance with the supplied configuration and calls its `init` method if present. Does not mount the instance.
 
 ### `unmount(instance)`  
-Unmounts the instance (if it has `unmount`) and removes it from the store indexes.
+Unmounts the instance (if it has `unmount`) and removes it from the store's instance and class indexes.
 
 ### `link()`  
 Links anchors (React / Solid components) with [ViewModel](/api/view-models/overview) class.  
@@ -215,9 +208,8 @@ Links anchors (React / Solid components) with [ViewModel](/api/view-models/overv
 Unlinks anchors (React / Solid components) with [ViewModel](/api/view-models/overview) class.  
 
 ### `generateId(config)`   
-Generates a unique ID for a [ViewModel](/api/view-models/overview) based on the provided configuration.  
-In [`ViewModelStoreBase`](/api/view-model-store/base-implementation) the default implementation returns `config.id`.
+Generates an ID for a [ViewModel](/api/view-models/overview) based on the provided configuration.
+In [`ViewModelStoreBase`](/api/view-model-store/base-implementation) the default implementation returns `config.id` unchanged; callers must supply distinct IDs for distinct instances.
 
 ### `clean()`  
-Cleans up resources associated with the [ViewModel](/api/view-models/overview) store.  
-Cleans all inner data structures.  
+Clears the store's internal instance, class, and anchor indexes. It does not unmount registered instances.

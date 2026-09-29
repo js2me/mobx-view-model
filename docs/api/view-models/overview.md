@@ -4,7 +4,7 @@ title: View Models Overview
 
 # ViewModel
 
-A ViewModel keeps view-specific state, derived values, actions, and lifecycle work outside the UI component. MobX tracks observable values read by the view and updates that view when they change.
+A ViewModel keeps view-specific state, derived values, actions, and lifecycle work outside the UI component. With the appropriate framework integration, MobX tracks observable values read by the view and updates that view when they change.
 
 ## Choose an implementation
 
@@ -15,11 +15,16 @@ Connect a ViewModel with the [React integration](/react/integration) or [SolidJS
 
 ## Example
 
+The example assumes an application-provided `getUserData` helper that accepts a user ID getter and an `AbortSignal`.
+
 ```ts
 import { ViewModelBase } from 'mobx-view-model';
 
 export class CurrentUserBadgeVM extends ViewModelBase<{ userId: string }> {
-  private userData = /* some data source */;
+  private userData = getUserData(
+    () => this.payload.userId,
+    this.unmountSignal,
+  );
 
   get badgeTitle() {
     return `User badge: ${this.userData.fullName || ''}`;

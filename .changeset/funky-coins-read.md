@@ -4,4 +4,4 @@
 "mobx-view-model": patch
 ---
 
-Rework react\solid contexts creation to support microfrontends architecture
+Namespace React and Solid view-model contexts to prevent cross-framework collisions.

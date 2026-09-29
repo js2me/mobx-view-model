@@ -413,6 +413,9 @@ importers:
       mobx-view-model:
         specifier: workspace:*
         version: link:../core/dist
+      yummies:
+        specifier: ^7.20.1
+        version: 7.20.1(mobx@6.15.0)(react@19.2.5)
     devDependencies:
       '@solidjs/testing-library':
         specifier: ^0.8.10
@@ -432,9 +435,6 @@ importers:
       vite-plugin-solid:
         specifier: ^2.11.13
         version: 2.11.13(solid-js@1.9.14)(vite@8.0.16(@types/node@25.9.2)(esbuild@0.27.7)(jiti@2.6.1)(terser@5.46.1)(tsx@4.21.0))
-      yummies:
-        specifier: ^7.20.1
-        version: 7.20.1(mobx@6.15.0)(react@19.2.5)
     publishDirectory: dist
 
   packages/vite-plugin:

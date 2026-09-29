@@ -12,13 +12,13 @@ slug: /react/integration
 
 ## Import path `mobx-view-model-react`
 
-React integration APIs — [`withViewModel`](/react/api/with-view-model), [`withPropsViewModel`](/react/api/with-props-view-model), [`useCreateViewModel`](/react/api/use-create-view-model), [`useViewModel`](/react/api/use-view-model), [`ViewModelsProvider`](/react/api/view-models-provider), [`OnlyViewModel`](/react/api/only-view-model), and related types such as `ViewModelProps` — are published under the **`mobx-view-model-react`** subpath.
+React integration APIs — [`withViewModel`](/react/api/with-view-model), [`withPropsViewModel`](/react/api/with-props-view-model), [`useCreateViewModel`](/react/api/use-create-view-model), [`useViewModel`](/react/api/use-view-model), [`ViewModelsProvider`](/react/api/view-models-provider), [`OnlyViewModel`](/react/api/only-view-model), and related types such as `ViewModelProps` — are published in the separate **`mobx-view-model-react`** package.
 
 Keep importing view-model classes, stores, and global configuration from **`mobx-view-model`**:
 
 ```ts
 import { ViewModelBase, ViewModelStoreBase, viewModelsConfig } from "mobx-view-model";
-import { withViewModel, ViewModelProps } from "mobx-view-model-react";
+import { withViewModel, type ViewModelProps } from "mobx-view-model-react";
 ```
 
 The **`mobx-view-model-react`** package contains React integration APIs; **`mobx-view-model`** contains the core view-model classes, stores, and configuration.
@@ -39,8 +39,7 @@ Then you should render the component returned from this function
 
 ```tsx
 import { ViewModelBase } from "mobx-view-model";
-import { ViewModelProps, withViewModel } from "mobx-view-model-react";
-import { observer } from "mobx-react-lite";
+import { withViewModel, type ViewModelProps } from "mobx-view-model-react";
 
 class YourComponentVM extends ViewModelBase {}
 
@@ -51,7 +50,7 @@ export interface YourComponentProps extends ViewModelProps<YourComponentVM> {
 const YourComponent = withViewModel(
   YourComponentVM,
   ({ model, yourProp }: YourComponentProps) => {
-    return <div>{model.id}</div>;
+    return <div>{model.id} {yourProp}</div>;
   },
 );
 
@@ -111,7 +110,7 @@ const YourApp = () => {
   )
 }
 ```
-With this step you can use the [`useViewModel()`](/react/api/use-view-model) hook with the first argument  
+With this step you can use [`useViewModel()`](/react/api/use-view-model) to look up registered view models by class, component, or ID.
 
 ::: tip [`isMounted`](/api/view-models/interface#ismounted-boolean) state  
 This state is based on calling the [`mount()` method](/api/view-models/interface#mount-void-promise-void). On the client, [`useCreateViewModel()`](/react/api/use-create-view-model) runs it in a commit effect after connecting a store-backed ViewModel. During SSR it runs during render.
@@ -122,5 +121,5 @@ On the client, the initial render can see `isMounted === false`; the component r
 :::
 
 ::: warning Do not call [`mount()`](/api/view-models/interface#mount-void-promise-void) / [`unmount()`](/api/view-models/interface#unmount-void) manually  
-These methods are already called inside [`useCreateViewModel`](/react/api/use-create-view-model) (via the store's `connect()` / [`unmount`](/api/view-model-store/interface#unmountinstance) when a store is present).
+On the client, `useCreateViewModel` calls `mount()` in its commit effect; during SSR it handles the lifecycle while rendering. When a store is present, `connect()` registers the instance but does not mount it; the hook delegates unmounting to the store's [`unmount()`](/api/view-model-store/interface#unmount-instance).
 :::

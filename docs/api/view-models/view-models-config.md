@@ -1,5 +1,5 @@
 # `ViewModelsConfig` configuration object   
-This configuration contains all options for the behavior of [`ViewModel`](/api/view-models/overview) instances.  
+This configuration defines the behavior of [`ViewModel`](/api/view-models/overview) instances and the framework integrations.
 
 The package provides a **global object** with this configuration. You can override supported options for a [`ViewModel`](/api/view-models/overview) or [`ViewModelStore`](/api/view-model-store/overview) with the `vmConfig` field.
 
@@ -22,7 +22,7 @@ new ViewModelStoreBase({
 })
 ```
 
-[Reference to source code](/src/config/types.ts)  
+[Reference to source code](https://github.com/js2me/mobx-view-model/blob/master/packages/core/src/config/types.ts)
 
 ## Recommendations  
 
@@ -50,15 +50,16 @@ Runtime mode for the library integration:
 
 ## `resource`
 
-An optional default data source for render-time React SSR resources. Its
-`read(id)` method is called with the view model id while the integration creates
+An optional default data source for the React integration. Its
+`read(id)` method is called with the view model ID while the integration creates
 the view model. The returned value is available as `vmData` on the view model
 (`ViewModelBase` initializes it from `ViewModelParams.vmData`).
 
 `read` may return data or throw a `Promise` or `Error` following the React
-Suspense resource convention. A store-level `resource` overrides this global
-default; see [`ViewModelStore.resource`](/api/view-model-store/interface#resource)
-for a request-scoped example.
+Suspense resource convention. It runs on both client and server when the view
+model is created. A store-level `resource` overrides this global default; see
+[`ViewModelStore.resource`](/api/view-model-store/interface#resource) for a
+request-scoped example.
 
 ```ts
 import { viewModelsConfig } from 'mobx-view-model';
@@ -141,8 +142,8 @@ Can be helpful if you want to add some constructor arguments for your own [`View
 
 
 ::: tip Default implementation  
-Creates `ViewModelSimple` with `new VM()`, and full `ViewModel` with `new VM({ ...config, vmConfig })`.  
-See [global-config.ts](/src/config/global-config.ts).  
+Creates `ViewModelSimple` with `new VM()`, and full `ViewModel` with `new VM({ ...config, vmConfig: mergeVMConfigs(config.vmConfig) })`. Store-level factories receive merged configuration; per-creation factories receive the raw creation config and must merge it themselves if needed.
+See [global-config.ts](https://github.com/js2me/mobx-view-model/blob/master/packages/core/src/config/global-config.ts).
 :::
 
 #### Example  
@@ -231,7 +232,7 @@ viewModelsConfig.processRender = (Component) => {
   }
 }
 ```
-This option is used by the `withViewModel` integration in both React and SolidJS. The example above uses React's `observer()`; use the tracking mechanism for your framework when wrapping the render function.
+This option is used by `withViewModel` in both React and SolidJS. The example above uses React's `observer()`; use the tracking mechanism for your framework when wrapping the render function. The callback also receives the ViewModel class and HOC configuration.
 
 ## `observable`  
 

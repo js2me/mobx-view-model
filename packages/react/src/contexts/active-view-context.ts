@@ -1,7 +1,7 @@
 import { _internals, type AnyViewModel, type AnyViewModelSimple } from 'mobx-view-model';
 import { createContext } from 'react';
 
-const symbol = Symbol.for(`${_internals.key}/avm-ctx`);
+const symbol = Symbol.for(`${_internals.key}/react/avm-ctx`);
 
 type Context = ReturnType<typeof createContext<AnyViewModel | AnyViewModelSimple>>
 

@@ -1,27 +1,27 @@
 # Getting started  
 
-The `mobx-view-model` source code is written in TypeScript and compiled with the `NodeNext` module target.   
+`mobx-view-model` provides framework-agnostic view models; install the bindings for your UI framework separately.
 
 ## Requirements  
 
-- [`MobX`](https://mobx.js.org) **^6**  
-- For **React**: [`React`](https://reactjs.org) **^18|^19** + [`mobx-view-model-react`](https://www.npmjs.com/package/mobx-view-model-react)  
-- For **SolidJS**: [`solid-js`](https://www.solidjs.com) **^1.6** + [`mobx-solid`](https://www.npmjs.com/package/mobx-solid) + [`mobx-view-model-solid`](https://www.npmjs.com/package/mobx-view-model-solid)  
+- [`MobX`](https://mobx.js.org) **^6.12.4**
+- For **React**: [`React`](https://react.dev) and `react-dom` **^18 or ^19**, `mobx-react-lite` **^4.0.7**, and [`mobx-view-model-react`](https://www.npmjs.com/package/mobx-view-model-react)
+- For **SolidJS**: [`solid-js`](https://www.solidjs.com) **^1.9.9**, [`mobx-solid`](https://www.npmjs.com/package/mobx-solid) **^0.3.1**, and [`mobx-view-model-solid`](https://www.npmjs.com/package/mobx-view-model-solid)
 
 ## Installation
 
 ::: code-group
 
 ```bash [npm]
-npm install @{packageJson.name}
+npm install @{packageJson.name} mobx
 ```
 
 ```bash [pnpm]
-pnpm add @{packageJson.name}
+pnpm add @{packageJson.name} mobx
 ```
 
 ```bash [yarn]
-yarn add @{packageJson.name}
+yarn add @{packageJson.name} mobx
 ```
 
 :::
@@ -29,7 +29,7 @@ yarn add @{packageJson.name}
 React bindings:
 
 ```bash
-pnpm add mobx-view-model-react mobx-react-lite
+pnpm add mobx-view-model-react mobx-react-lite react react-dom
 ```
 
 Solid bindings:
@@ -37,6 +37,8 @@ Solid bindings:
 ```bash
 pnpm add mobx-view-model-solid mobx-solid solid-js
 ```
+
+The React and Solid examples below use MobX decorators; see [MobX decorators](/introduction/decorators) for build setup and an alternative without decorators.
 
 ## Writing your first ViewModel
 
@@ -75,10 +77,9 @@ export const PetCard = withViewModel(PetCardVM, ({ model }) => {
     </div>
   );
 });
-
-...
-<PetCard />
 ```
+
+Render `<PetCard />` in your application.
 
 See the full [React integration guide](/react/integration).
 

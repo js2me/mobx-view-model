@@ -35,8 +35,9 @@ features:
     link: /other/vite-plugin
   - title: SSR Ready
     icon: 🖥️
-    details: Server-side rendering support out of the box
+    details: Server-side rendering and hydration with per-request stores and matching client data
+    link: /react/ssr
   - title: Microfrontend Friendly
     icon: 🌐
-    details: Share ViewModel contexts across independently deployed microfrontends
+    details: Share framework contexts across separately bundled copies of the bindings
 ---

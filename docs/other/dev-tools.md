@@ -22,8 +22,8 @@ The easiest way to inject the devtools is via a `<script>` tag — no npm instal
 ```html
 <script
   async
-  crossOrigin="anonymous"
-  src="//unpkg.com/mobx-view-model-devtools/auto.global.js"
+  crossorigin="anonymous"
+  src="https://unpkg.com/mobx-view-model-devtools/auto.global.js"
 ></script>
 ```
 
@@ -33,7 +33,7 @@ Use this approach when you need finer control over when the script is loaded (e.
 
 ```html
 <script>
-  fetch('//unpkg.com/mobx-view-model-devtools/auto.global.js').then(async response => {
+  fetch('https://unpkg.com/mobx-view-model-devtools/auto.global.js').then(async response => {
     const script = await response.text();
     const scriptElement = document.createElement('script');
     scriptElement.innerHTML = script;
@@ -96,7 +96,7 @@ export default {
 
 ## Connecting to a ViewModelStore
 
-The automatic script and the Vite plugin connect stores for you. Call `connect()` only when you install the package directly:
+The automatic script and the Vite plugin subscribe to store creation and connect stores for you. The automatic script also connects the most recently created store if it loads after that store. Call `connect()` only when you import the package directly:
 
 ```ts
 ViewModelDevtools.connect(viewModelStore);
@@ -133,12 +133,9 @@ To avoid loading devtools in production, wrap the injection in a condition:
 ```ts
 if (import.meta.env.DEV) {
   const script = document.createElement('script');
-  script.src = '//unpkg.com/mobx-view-model-devtools/auto.global.js';
+  script.src = 'https://unpkg.com/mobx-view-model-devtools/auto.global.js';
   script.crossOrigin = 'anonymous';
   script.async = true;
-  script.onload = () => {
-    ViewModelDevtools.connect(viewModelStore);
-  };
   document.head.appendChild(script);
 }
 ```

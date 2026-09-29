@@ -1,7 +1,7 @@
 import { _internals, type ViewModelStore } from 'mobx-view-model';
 import { createContext } from 'solid-js';
 
-const symbol = Symbol.for(`${_internals.key}/vms-ctx`);
+const symbol = Symbol.for(`${_internals.key}/solid/vms-ctx`);
 
 type Context = ReturnType<
   typeof createContext<ViewModelStore>

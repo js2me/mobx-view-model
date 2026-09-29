@@ -1,7 +1,7 @@
 import { _internals, type AnyViewModel, type AnyViewModelSimple } from 'mobx-view-model';
 import { createContext } from 'solid-js';
 
-const symbol = Symbol.for(`${_internals.key}/avm-ctx`);
+const symbol = Symbol.for(`${_internals.key}/solid/avm-ctx`);
 
 type Context = ReturnType<typeof createContext<AnyViewModel | AnyViewModelSimple>>;
 

@@ -1,6 +1,6 @@
 # Usage with View Model Store
 
-`ViewModelStore` owns view model instances and lets registered view models look up one another. Add it when several components need to share or find the same instances.
+`ViewModelStore` registers view model instances and lets them look up one another. Add it when components need to find registered instances by class, component, or ID.
 
 ## 1. Create a store
 
@@ -10,9 +10,13 @@ import { ViewModelStoreBase } from "mobx-view-model";
 export class MyViewModelStore extends ViewModelStoreBase {}
 ```
 
-## 2. Create one application-level instance
+## 2. Create an application-level instance
 
-```ts
+For SSR, create the store per request instead of sharing an application-level instance across requests.
+
+```ts title="/src/shared/lib/mobx/index.ts"
+import { MyViewModelStore } from './view-model-store';
+
 export const viewModelStore = new MyViewModelStore();
 ```
 
@@ -20,18 +24,20 @@ export const viewModelStore = new MyViewModelStore();
 
 ```tsx
 import { ViewModelsProvider } from 'mobx-view-model-react';
-import { viewModelStore } from './view-model-store';
+import { viewModelStore } from '@/shared/lib/mobx';
 
 export function App() {
   return (
-<ViewModelsProvider value={viewModelStore}>
-  {/* application */}
-</ViewModelsProvider>
+    <ViewModelsProvider value={viewModelStore}>
+      {/* application */}
+    </ViewModelsProvider>
   );
 }
 ```
 
 ## 4. Access other registered ViewModels
+
+The components that create these view models must be rendered under the same provider. The store's `get()` returns `null` until an instance is registered; React's `useViewModel()` throws if it cannot find the requested instance.
 
 ```ts
 import { ViewModelBase } from "mobx-view-model";
@@ -53,5 +59,3 @@ export class YourVM extends ViewModelBase {
   }
 }
 ```
-
-

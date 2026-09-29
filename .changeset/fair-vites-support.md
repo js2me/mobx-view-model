@@ -2,4 +2,4 @@
 "mobx-view-model-vite-plugin": patch
 ---
 
-Add compatibility with mobx-view-model and mobx-view-model-react v11.
+Restrict the mobx-view-model and mobx-view-model-react peer ranges to verified v10 releases.

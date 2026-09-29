@@ -1,7 +1,7 @@
 import { _internals, ViewModelStore } from 'mobx-view-model';
 import { createContext } from 'react';
 
-const symbol = Symbol.for(`${_internals.key}/vms-ctx`);
+const symbol = Symbol.for(`${_internals.key}/react/vms-ctx`);
 
 type Context = ReturnType<typeof createContext<ViewModelStore>>
 
