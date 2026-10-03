@@ -146,7 +146,9 @@ export function useCreateViewModel(
   const vmResource = viewModels?.resource ?? viewModelsConfig.resource;
   const existingModel = existing ?? previous?.model;
   const data = existingModel
-    ? (existingModel as { vm?: { data?: unknown } }).vm?.data
+    ? isViewModel(existingModel)
+      ? existingModel.vm.data
+      : undefined
     : vmResource?.read(id);
 
   const config = {

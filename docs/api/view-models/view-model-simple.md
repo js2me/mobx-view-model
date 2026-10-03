@@ -130,9 +130,9 @@ To retrieve an existing instance elsewhere in your app:
 1. Use the [`useViewModel`](/react/api/use-view-model) hook.  
 2. Ensure the instance is registered in a [`ViewModelStore`](/api/view-model-store/overview)  
 
-## Usage in SolidJS
+## <SolidMark /> Usage in SolidJS
 
-### Usage with [`withViewModel`](/solid/api/with-view-model) HOC
+### <SolidMark /> Usage with [`withViewModel`](/solid/api/with-view-model) HOC
 
 ```tsx
 import { withViewModel } from "mobx-view-model-solid";
@@ -150,7 +150,7 @@ export const FruitComponent = withViewModel(FruitViewModel, (props) => {
 });
 ```
 
-### Usage with [`useCreateViewModel`](/solid/api/use-create-view-model) hook
+### <SolidMark /> Usage with [`useCreateViewModel`](/solid/api/use-create-view-model) hook
 
 ```tsx
 import { useCreateViewModel } from "mobx-view-model-solid";
@@ -170,7 +170,7 @@ export const FruitComponent = () => {
 };
 ```
 
-### Accessing instances
+### <SolidMark /> Accessing instances
 
 1. Use [`useViewModel`](/solid/api/use-view-model).
 2. Register instances via [`ViewModelStore`](/api/view-model-store/overview) + [`ViewModelsProvider`](/solid/api/view-models-provider).

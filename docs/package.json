@@ -12,7 +12,7 @@
     "react-dom": "^19.2.4"
   },
   "devDependencies": {
-    "docusite": "0.1.2"
+    "docusite": "0.2.0"
   },
   "scripts": {
     "dev": "docusite dev",

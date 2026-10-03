@@ -111,6 +111,36 @@ describe('useCreateViewModel', () => {
     }
   });
 
+  test('reuses data from an existing ViewModel without rereading the resource', () => {
+    const read = vi.fn((id: string) => ({ id, value: 42 }));
+    const vmStore = new ViewModelStoreBaseMock({ resource: { read } });
+    class ResourceVM extends ViewModelBaseMock {}
+
+    vmStore.define({
+      VM: ResourceVM,
+      id: 'existing-resource-vm',
+      payload: {},
+      data: { value: 21 },
+    });
+
+    const Component = () => {
+      const model = useCreateViewModel(ResourceVM, undefined, {
+        id: 'existing-resource-vm',
+      });
+      return <span>{String((model.vm.data as { value: number }).value)}</span>;
+    };
+
+    const Wrapper = createVMStoreWrapper(vmStore);
+    render(() => (
+      <Wrapper>
+        <Component />
+      </Wrapper>
+    ));
+
+    expect(screen.getByText('21').textContent).toBe('21');
+    expect(read).not.toHaveBeenCalled();
+  });
+
   test('useViewModel resolves active parent from withViewModel', async () => {
     const vmStore = new ViewModelStoreBaseMock();
 

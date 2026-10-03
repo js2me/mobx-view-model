@@ -272,7 +272,7 @@ export default defineConfig({
         ],
       },
       {
-        text: 'SolidJS',
+        text: 'SolidJS <SolidMark />',
         link: '/solid/integration',
         items: [
           {

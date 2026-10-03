@@ -83,7 +83,7 @@ Render `<PetCard />` in your application.
 
 See the full [React integration guide](/react/integration).
 
-## Integration with SolidJS
+## <SolidMark /> Integration with SolidJS
 
 ```tsx
 import {

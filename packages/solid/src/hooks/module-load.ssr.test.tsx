@@ -1,7 +1,7 @@
 /**
  * @vitest-environment node
  */
-import { expect, test } from 'vitest';
+import { expect, test, vi } from 'vitest';
 
 test('imports the Solid bindings without window and mounts during SSR', async () => {
   expect(typeof window).toBe('undefined');
@@ -224,6 +224,47 @@ test('keeps a store-backed VM through SSR retries and cleans it up afterward', a
   } finally {
     resolveMount();
     viewModelsConfig.mode = previousMode;
+  }
+});
+
+test('reuses global resource data across async SSR retries', async () => {
+  const { ViewModelBase, viewModelsConfig } = await import('mobx-view-model');
+  const { Suspense } = await import('solid-js');
+  const { renderToStringAsync } = await import('solid-js/web');
+  const { withViewModel } = await import('../index.js');
+
+  let resolveMount!: () => void;
+  const pending = new Promise<void>((resolve) => { resolveMount = resolve; });
+  const resource = {
+    read: vi.fn((id: string) => ({ id, value: 'resource-ready' })),
+  };
+  class ResourceVM extends ViewModelBase<{}> {
+    protected willMount() {
+      return pending;
+    }
+  }
+  const Page = withViewModel(ResourceVM, ({ model }) => (
+    <span>{(model.vm.data as { value: string }).value}</span>
+  ));
+  const previousMode = viewModelsConfig.mode;
+  const previousResource = viewModelsConfig.resource;
+
+  try {
+    viewModelsConfig.mode = 'ssr';
+    viewModelsConfig.resource = resource;
+    queueMicrotask(resolveMount);
+
+    const html = await renderToStringAsync(
+      () => <Suspense fallback="Loading"><Page /></Suspense>,
+      { timeoutMs: 1000 },
+    );
+
+    expect(html).toContain('resource-ready');
+    expect(resource.read).toHaveBeenCalledTimes(1);
+  } finally {
+    resolveMount();
+    viewModelsConfig.mode = previousMode;
+    viewModelsConfig.resource = previousResource;
   }
 });
 
