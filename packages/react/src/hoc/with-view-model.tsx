@@ -13,7 +13,6 @@ import {
   createContext,
   createElement,
   forwardRef,
-  use,
   useContext,
   useRef,
   useSyncExternalStore,
@@ -35,6 +34,7 @@ import {
   useCreateViewModel,
 } from '../hooks/index.js';
 import { viewModelPayloadVersions } from '../hooks/use-create-view-model.js';
+import { reactUse } from '../lib/react-use.js';
 import {
   RComponentClass,
   RComponentType,
@@ -378,7 +378,7 @@ export function withViewModel(
     const getServerSnapshot =
       typeof window !== 'undefined' &&
       viewModelsConfig.mode === 'ssr' &&
-      typeof use === 'function'
+      typeof reactUse === 'function'
         ? getServerReadySnapshot
         : cacheRef.current.getSnapshot;
 

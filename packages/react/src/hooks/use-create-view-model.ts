@@ -14,7 +14,6 @@ import {
 } from 'mobx-view-model';
 import { runInAction } from 'mobx';
 import {
-  use,
   useContext,
   useEffect,
   useId,
@@ -24,6 +23,7 @@ import {
   useSyncExternalStore,
 } from 'react';
 import type { AnyObject, Class, IsPartial, Maybe } from 'yummies/types';
+import { reactUse } from '../lib/react-use.js';
 import {
   ActiveViewModelContext,
   ViewModelsContext,
@@ -347,8 +347,8 @@ export function useCreateViewModel(
       getClientHydrated,
       getServerHydrated,
     );
-    if (use && pending && (!_internals.isClient || !isHydrated)) {
-      use(pending);
+    if (reactUse && pending && (!_internals.isClient || !isHydrated)) {
+      reactUse(pending);
     }
   }
 
