@@ -88,9 +88,12 @@ export default defineConfig({
   title: '@{packageJson.name}',
   description: '@{packageJson.description}',
   search: 'local',
-  changelog: {
-    src: '../packages/core/CHANGELOG.md',
-  },
+  changelog: [
+    { name: 'Core', path: '../packages/core/CHANGELOG.md' },
+    { name: 'React', path: '../packages/react/CHANGELOG.md' },
+    { name: 'DevTools', path: '../packages/devtools/CHANGELOG.md' },
+    { name: 'Vite Plugin', path: '../packages/vite-plugin/CHANGELOG.md' },
+  ],
   github: 'https://github.com/@{packageJson.author}/@{packageJson.name}',
   colors: {
     light: ['#3ba235', '#ff8a4f', '#ff6a07'],
