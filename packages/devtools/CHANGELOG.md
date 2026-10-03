@@ -1,5 +1,16 @@
 # mobx-view-model-devtools
 
+## 0.1.5
+
+### Patch Changes
+
+- 3266f80: Update DevTools to use the separated `mobx-view-model-react` bindings.
+- Updated dependencies [3266f80]
+- Updated dependencies [3266f80]
+- Updated dependencies [3266f80]
+  - mobx-view-model@11.0.0
+  - mobx-view-model-react@11.0.0
+
 ## 0.1.4
 
 ### Patch Changes

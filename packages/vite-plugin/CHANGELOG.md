@@ -1,5 +1,17 @@
 # mobx-view-model-vite-plugin
 
+## 2.0.0
+
+### Patch Changes
+
+- Updated dependencies [3266f80]
+- Updated dependencies [3266f80]
+- Updated dependencies [3266f80]
+- Updated dependencies [3266f80]
+  - mobx-view-model@11.0.0
+  - mobx-view-model-react@11.0.0
+  - mobx-view-model-devtools@0.1.5
+
 ## 1.4.4
 
 ### Patch Changes
