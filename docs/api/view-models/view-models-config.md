@@ -237,11 +237,9 @@ This option is used by `withViewModel` in both React and SolidJS. The example ab
 ## `observable`  
 
 This is a large configuration object for all base implementations in `mobx-view-model`, like `ViewModelBase` or `ViewModelStoreBase`.   
-You can modify the default behavior of wrapping in [`makeObservable()` MobX functions](https://mobx.js.org/observable-state.html#makeobservable).   
+Base implementations automatically apply MobX annotations using [`makeObservable()`](https://mobx.js.org/observable-state.html#makeobservable). Use `useDecorators` to choose the annotation style, or `custom` to provide your own annotation application function.
 
 Properties of the nested observable configs:  
-### - `disableWrapping`  
-This removes `makeObservable(this, annotations)`/`makeObservable(this)` calls  
 ### - `useDecorators`  
 This changes the style of marking `MobX` annotations from "decorators style" to "non-decorators style".   
 Very helpful if you want to write code with "non decorators style".   

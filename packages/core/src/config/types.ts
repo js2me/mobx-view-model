@@ -11,10 +11,6 @@ import type {
 
 export interface ViewModelObservableConfig {
   /**
-   * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config.html#disablewrapping)
-   */
-  disableWrapping?: boolean;
-  /**
    * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config.html#usedecorators)
    */
   useDecorators: boolean;

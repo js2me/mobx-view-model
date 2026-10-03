@@ -15,9 +15,5 @@ export const applyObservable = (
     return observableConfig.custom(context, annotationsArray);
   }
 
-  if (observableConfig.disableWrapping) {
-    return;
-  }
-
   applyObservableLib(context, annotationsArray, observableConfig.useDecorators);
 };
