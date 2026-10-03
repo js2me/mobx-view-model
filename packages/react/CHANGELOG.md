@@ -1,5 +1,11 @@
 # mobx-view-model-react
 
+## 10.3.2
+
+### Patch Changes
+
+- 94a5cdc: fix React.use usage
+
 ## 10.3.1
 
 ### Patch Changes
