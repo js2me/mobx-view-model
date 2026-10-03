@@ -53,7 +53,7 @@ Runtime mode for the library integration:
 An optional default data source for the React integration. Its
 `read(id)` method is called with the view model ID while the integration creates
 the view model. The returned value is available as `vm.data` on the view model
-(`ViewModelBase` initializes it from `ViewModelParams.vmData`).
+(`ViewModelBase` initializes it from `ViewModelParams.data`).
 
 `read` may return data or throw a `Promise` or `Error` following the React
 Suspense resource convention. It runs on both client and server when the view

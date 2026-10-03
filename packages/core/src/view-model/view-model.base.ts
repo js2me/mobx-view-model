@@ -65,7 +65,7 @@ export class ViewModelBase<
     this.#vm = makeObservable({
       params,
       config,
-      data: params.vmData,
+      data: params.data,
       state: 'init',
       payloadComparator: _internals.comparer[config.comparePayload as 'strict'] || config.comparePayload || undefined,
       payload: params.payload,

@@ -69,7 +69,7 @@ const instantiateVm = (
   id: string,
   VM: Class<any>,
   payload: any,
-  vmData: unknown,
+  data: unknown,
   rawCfg: any,
   props: any,
   viewModels: ViewModelStore | null,
@@ -81,7 +81,7 @@ const instantiateVm = (
       ...rawCfg,
       id,
       payload,
-      vmData,
+      data,
       VM,
       viewModels,
       parentViewModel,
@@ -223,7 +223,7 @@ export function useCreateViewModel(
     const vmId = explicitId ?? (isProd ? reactId : `${reactId}:${VM.name}`);
     const existing = viewModels?.get(vmId) as VmInstance | null;
     const vmResource = viewModels?.resource ?? viewModelsConfig.resource;
-    const vmData = existing
+    const data = existing
       ? (existing as { vm?: { data?: unknown } }).vm?.data
       : vmResource?.read(vmId);
 
@@ -233,7 +233,7 @@ export function useCreateViewModel(
       vmId,
       VM,
       payload,
-      vmData,
+      data,
       rawCfg,
       props,
       viewModels,

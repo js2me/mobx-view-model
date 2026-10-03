@@ -153,6 +153,8 @@ The base implementation of this method compares the current payload and the new 
 Configure the comparison with [`comparePayload`](/api/view-models/view-models-config#comparepayload):
 
 ```ts
+import { ViewModelBase } from "mobx-view-model";
+
 class PostcardBox extends ViewModelBase<{ postcardId: string }> {}
 
 new PostcardBox({

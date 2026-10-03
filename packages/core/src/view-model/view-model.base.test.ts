@@ -98,6 +98,12 @@ describe('ViewModelBase', () => {
     expect(vm.payload).toEqual({ test: 1 });
   });
 
+  it('initializes vm.data from params.data', () => {
+    const data = { postcardId: 'one' };
+    const vm = new ViewModelBaseMock({ data });
+    expect(vm.vm.data).toBe(data);
+  });
+
   it('has isMounted', () => {
     const vm = new ViewModelBaseMock();
     expect(vm.isMounted).toBe(false);

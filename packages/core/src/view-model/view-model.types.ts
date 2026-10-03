@@ -48,7 +48,7 @@ export interface ViewModelParams<
    */
   props?: ComponentProps;
   /** Data resolved by the store resource for this VM id. */
-  vmData?: unknown;
+  data?: unknown;
 }
 
 

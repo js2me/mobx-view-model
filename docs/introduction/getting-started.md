@@ -95,15 +95,15 @@ import { PetCardVM } from './model';
 
 enableObservableTracking();
 
-export const PetCard = withViewModel(PetCardVM, (props: ViewModelProps<PetCardVM>) => {
+export const PetCard = withViewModel(PetCardVM, ({ model }) => {
   return (
     <div>
-      <span>{`Pet name: ${props.model.petName}`}</span>
+      <span>{`Pet name: ${model.petName}`}</span>
       <input
         placeholder="name"
-        value={props.model.petName}
+        value={model.petName}
         onInput={(e) => {
-          props.model.setPetName(e.currentTarget.value);
+          model.setPetName(e.currentTarget.value);
         }}
       />
     </div>
