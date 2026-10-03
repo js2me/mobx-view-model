@@ -12,7 +12,7 @@ An optional but powerful container for managing ViewModel instances within a Rea
   - Class reference
   - Component reference (`withViewModel` / anchors)
   - Custom unique IDs  
-- **Factory Pattern** - Unified creation interface via [`define`](/api/view-model-store/interface#define) / [`create`](/api/view-model-store/interface#create-config)
+- **Factory Pattern** - Unified creation interface via [`define`](/api/view-model-store/interface#define-config) / [`create`](/api/view-model-store/interface#create-config)
 
 ## When to Use
 Consider ViewModelStore when your application requires:

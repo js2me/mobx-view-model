@@ -161,7 +161,7 @@ Additional React component anchors for the same VM instance.
 When you pass anchor components here, `useViewModel(AnchorComponent)` will return this VM when the connected component is mounted.  
 Useful when multiple components need to access the same ViewModel instance.
 
-Anchors are stored in config and passed to the store's [`link()`](/api/view-model-store/interface#link) when the instance is connected via [`define`](/api/view-model-store/interface#define).
+Anchors are stored in config and passed to the store's [`link()`](/api/view-model-store/interface#link) when the instance is connected via [`define`](/api/view-model-store/interface#define-config).
 
 Example:
 ```tsx
@@ -262,7 +262,7 @@ You can still use `loadable()` from `react-simple-loadable` (or similar) and reg
 
 ### Concurrent Mode
 
-In concurrent mode, React may discard a render without committing it, which means cleanup effects never run. Since `define()` / `mount()` run during render (required for SSR) and [`unmount`](/api/view-model-store/interface#unmountinstance) runs only in an effect, an orphaned instance can occur for **both** store-backed and no-store paths when a concurrent render is discarded.
+In concurrent mode, React may discard a render without committing it, which means cleanup effects never run. Since `define()` / `mount()` run during render (required for SSR) and [`unmount`](/api/view-model-store/interface#unmount-instance) runs only in an effect, an orphaned instance can occur for **both** store-backed and no-store paths when a concurrent render is discarded.
 
 **Recommendation:** Prefer patterns that avoid discarded mounts when possible. The no-store path is mainly for simple client-side cases where SSR is not needed; a store alone does not give full concurrent-mode safety.
 
