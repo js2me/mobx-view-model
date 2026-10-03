@@ -59,6 +59,9 @@ Controls the rendering of the connected view component:
 - `true`: Component is rendered
 - `false`: Component is not rendered
 
+### `isHydrated: boolean`
+Indicates whether the `ViewModel` was hydrated from SSR data.
+
 ### `vm.state: ViewModelLifecycleState`
 The current lifecycle state of the `ViewModel`, exposed through `vm`. Possible values:
 

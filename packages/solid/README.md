@@ -24,7 +24,8 @@ pnpm add mobx-view-model-solid mobx-view-model mobx-solid mobx solid-js
 
 ## Quick start
 
-Call `enableObservableTracking()` once at the app entry (also re-exported from this package). Hooks/HOCs call it as a safety net.
+Call `enableObservableTracking()` once at the app entry before MobX observables are read (also
+re-exported from this package). Hooks and HOCs do not enable tracking automatically.
 
 ```tsx
 import { enableObservableTracking } from 'mobx-view-model-solid';

@@ -25,7 +25,7 @@ import type {
 import { _internals } from '../internals.js';
 
 const baseAnnotations: ObservableAnnotationsArray = [
-  [computed, 'isMounted', 'parentViewModel'],
+  [computed, 'isMounted', 'isHydrated', 'parentViewModel'],
   [
     action,
     'willMount',
@@ -120,6 +120,10 @@ export class ViewModelBase<
 
   get isMounted() {
     return this.#vm.state === 'mounted' || this.#vm.state === 'hydrated';
+  }
+
+  get isHydrated() {
+    return this.#vm.state === 'hydrated';
   }
 
   protected willUnmount(): void {

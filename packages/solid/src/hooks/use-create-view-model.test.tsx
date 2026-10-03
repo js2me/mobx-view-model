@@ -86,11 +86,130 @@ describe('useCreateViewModel', () => {
     }
   });
 
+  test('uses the store-generated ID to read resource data', () => {
+    const read = vi.fn((id: string) => ({ id, value: 42 }));
+    class CanonicalIdStore extends ViewModelStoreBaseMock {
+      generateIdCalls = 0;
+
+      override generateId(config: any) {
+        this.generateIdCalls += 1;
+        return `canonical:${config.id}`;
+      }
+    }
+    const vmStore = new CanonicalIdStore({ resource: { read } });
+    const create = vi.spyOn(vmStore, 'create');
+    const connect = vi.spyOn(vmStore, 'connect');
+    const define = vi.spyOn(vmStore, 'define');
+    class ResourceVM extends ViewModelBaseMock {}
+
+    let model: ResourceVM | undefined;
+    const Component = () => {
+      model = useCreateViewModel(ResourceVM, undefined, {
+        id: 'requested-resource-vm',
+      });
+      return <span>{String((model.vm.data as { value: number }).value)}</span>;
+    };
+
+    const Wrapper = createVMStoreWrapper(vmStore);
+    render(() => (
+      <Wrapper>
+        <Component />
+      </Wrapper>
+    ));
+
+    expect(screen.getByText('42').textContent).toBe('42');
+    expect(read).toHaveBeenCalledWith('canonical:requested-resource-vm');
+    expect(model?.id).toBe('canonical:requested-resource-vm');
+    expect(vmStore.generateIdCalls).toBe(1);
+    expect(create).toHaveBeenCalledTimes(1);
+    expect(connect).toHaveBeenCalledTimes(1);
+    expect(define).not.toHaveBeenCalled();
+  });
+
+  test('looks up existing models by the store-generated ID', () => {
+    const read = vi.fn((id: string) => ({ id, value: 42 }));
+    class CanonicalIdStore extends ViewModelStoreBaseMock {
+      generateIdCalls = 0;
+
+      override generateId(config: any) {
+        this.generateIdCalls += 1;
+        return `canonical:${config.id}`;
+      }
+    }
+    const vmStore = new CanonicalIdStore({ resource: { read } });
+    class ResourceVM extends ViewModelBaseMock {}
+    const config = {
+      VM: ResourceVM,
+      id: 'canonical:requested-existing-vm',
+      payload: {},
+      data: { value: 21 },
+      viewModels: vmStore,
+    };
+    const existing = vmStore.create(config);
+    vmStore.connect(existing, config);
+    const create = vi.spyOn(vmStore, 'create');
+    const connect = vi.spyOn(vmStore, 'connect');
+    const define = vi.spyOn(vmStore, 'define');
+
+    const Component = () => {
+      const model = useCreateViewModel(ResourceVM, undefined, {
+        id: 'requested-existing-vm',
+      });
+      return <span>{String((model.vm.data as { value: number }).value)}</span>;
+    };
+
+    const Wrapper = createVMStoreWrapper(vmStore);
+    render(() => (
+      <Wrapper>
+        <Component />
+      </Wrapper>
+    ));
+
+    expect(screen.getByText('21').textContent).toBe('21');
+    expect(vmStore.get('canonical:requested-existing-vm')).toBe(existing);
+    expect(read).not.toHaveBeenCalled();
+    expect(vmStore.generateIdCalls).toBe(1);
+    expect(create).not.toHaveBeenCalled();
+    expect(connect).not.toHaveBeenCalled();
+    expect(define).not.toHaveBeenCalled();
+  });
+
+  test('canonicalizes Solid-generated IDs before reading resource data', () => {
+    const read = vi.fn((id: string) => ({ id, value: 7 }));
+    const generatedIds: string[] = [];
+    class CanonicalIdStore extends ViewModelStoreBaseMock {
+      override generateId(config: any) {
+        generatedIds.push(config.id);
+        return `canonical:${config.id}`;
+      }
+    }
+    const vmStore = new CanonicalIdStore({ resource: { read } });
+    class ResourceVM extends ViewModelBaseMock {}
+
+    let model: ResourceVM | undefined;
+    const Component = () => {
+      model = useCreateViewModel(ResourceVM);
+      return <span>{String((model.vm.data as { value: number }).value)}</span>;
+    };
+
+    const Wrapper = createVMStoreWrapper(vmStore);
+    render(() => (
+      <Wrapper>
+        <Component />
+      </Wrapper>
+    ));
+
+    expect(generatedIds).toHaveLength(1);
+    expect(generatedIds[0]).toBeTruthy();
+    expect(read).toHaveBeenCalledWith(`canonical:${generatedIds[0]}`);
+    expect(model?.id).toBe(`canonical:${generatedIds[0]}`);
+    expect(vmStore.get(model!.id)).toBe(model);
+  });
+
   test('uses the global resource without a ViewModelStore', () => {
     const previousResource = viewModelsConfig.resource;
-    const resource = {
-      read: (id: string) => ({ id, value: 84 }),
-    };
+    const read = vi.fn((id: string) => ({ id, value: 84 }));
+    const resource = { read };
     viewModelsConfig.resource = resource;
 
     try {
@@ -106,6 +225,7 @@ describe('useCreateViewModel', () => {
       render(() => <Component />);
 
       expect(screen.getByText('84').textContent).toBe('84');
+      expect(read).toHaveBeenCalledWith('global-resource-vm');
     } finally {
       viewModelsConfig.resource = previousResource;
     }

@@ -34,9 +34,8 @@ enableObservableTracking();
 render(() => <App />, document.getElementById("app")!);
 ```
 
-::: tip Safety net  
-`useCreateViewModel` / `withViewModel` also call `enableObservableTracking()` (it is a no-op if already enabled). Prefer an explicit call at entry for clarity.  
-:::
+This call is required: hooks and HOCs do not enable tracking automatically. Without it, MobX
+observable reads in JSX will not trigger Solid updates.
 
 `enableObservableTracking` and `obs` are re-exported from `mobx-view-model-solid` for convenience. See [mobx-solid docs](https://js2me.github.io/mobx-solid/).
 

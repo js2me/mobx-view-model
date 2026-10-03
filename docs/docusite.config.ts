@@ -91,6 +91,7 @@ export default defineConfig({
   changelog: [
     { name: 'Core', path: '../packages/core/CHANGELOG.md' },
     { name: 'React', path: '../packages/react/CHANGELOG.md' },
+    { name: 'Solid', path: '../packages/solid/CHANGELOG.md' },
     { name: 'DevTools', path: '../packages/devtools/CHANGELOG.md' },
     { name: 'Vite Plugin', path: '../packages/vite-plugin/CHANGELOG.md' },
   ],

@@ -25,6 +25,8 @@ export interface ViewModel<
   readonly payload: Payload;
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/interface#ismounted-boolean) */
   readonly isMounted: boolean;
+  /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/interface#ishydrated-boolean) */
+  readonly isHydrated: boolean;
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/interface#parentviewmodel-parentviewmodel-null) */
   readonly parentViewModel: ParentViewModel;
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/interface#init) */

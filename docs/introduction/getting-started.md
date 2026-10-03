@@ -89,7 +89,6 @@ See the full [React integration guide](/react/integration).
 import {
   enableObservableTracking,
   withViewModel,
-  type ViewModelProps,
 } from 'mobx-view-model-solid';
 import { PetCardVM } from './model';
 

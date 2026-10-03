@@ -139,21 +139,11 @@ export function useCreateViewModel(
   const generatedId =
     process.env.NODE_ENV === 'production' ? solidId : `${solidId}:${VM.name}`;
   const id = rawCfg?.id ?? generatedId;
-  const isSsr = isServer && viewModelsConfig.mode === 'ssr';
-  const ssrEntries = isSsr ? getSsrVms() : undefined;
-  const previous = ssrEntries?.get(id);
-  const existing = viewModels?.get(id) as VmInstance | null;
-  const vmResource = viewModels?.resource ?? viewModelsConfig.resource;
-  const existingModel = existing ?? previous?.model;
-  const data = existingModel
-    ? (existingModel as { vm?: { data?: any } }).vm?.data
-    : vmResource?.read(id);
-
   const config = {
     ...rawCfg,
     id,
     payload: initialPayload,
-    data,
+    data: undefined,
     VM,
     viewModels,
     parentViewModel,
@@ -161,12 +151,31 @@ export function useCreateViewModel(
     props: props ?? rawCfg?.props,
   } satisfies ViewModelCreateConfig<any>;
 
+  // Resolve the store ID before looking up an existing model or its resource.
+  if (viewModels) {
+    config.id = viewModels.generateId(config);
+  }
+
+  const canonicalId = config.id;
+  const isSsr = isServer && viewModelsConfig.mode === 'ssr';
+  const ssrEntries = isSsr ? getSsrVms() : undefined;
+  const previous = ssrEntries?.get(canonicalId);
+  const existing = viewModels?.get(canonicalId) as VmInstance | null;
+  const vmResource = viewModels?.resource ?? viewModelsConfig.resource;
+  const existingModel = existing ?? previous?.model;
+  config.data = existingModel
+    ? (existingModel as { vm?: { data?: any } }).vm?.data
+    : vmResource?.read(canonicalId);
+
   let model: VmInstance;
 
   if (previous) {
     model = previous.model;
   } else if (viewModels) {
-    model = viewModels.define(config);
+    // define() would call generateId() a second time; create/connect preserve
+    // the canonical ID already used for lookup and resource loading.
+    model = existing ?? viewModels.create(config);
+    if (!existing) viewModels.connect(model, config);
   } else {
     model = config.factory?.(config) ?? viewModelsConfig.factory(config);
     model.init?.(config);
@@ -176,7 +185,7 @@ export function useCreateViewModel(
     isViewModel(model) && model.isMounted ? undefined : model.mount?.()
   );
   if (isSsr && isThenable(mountResult)) {
-    ssrEntries?.set(id, { model, mountResult });
+    ssrEntries?.set(canonicalId, { model, mountResult });
   }
 
   if (isViewModelSimple(model)) {

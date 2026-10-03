@@ -1,4 +1,4 @@
-import { makeObservable, reaction } from 'mobx';
+import { makeObservable, reaction, runInAction } from 'mobx';
 import type { Mock } from 'vitest';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -107,6 +107,18 @@ describe('ViewModelBase', () => {
   it('has isMounted', () => {
     const vm = new ViewModelBaseMock();
     expect(vm.isMounted).toBe(false);
+  });
+
+  it('has isHydrated', () => {
+    const vm = new ViewModelBaseMock();
+    expect(vm.isHydrated).toBe(false);
+
+    runInAction(() => {
+      vm.vm.state = 'hydrated';
+    });
+
+    expect(vm.isHydrated).toBe(true);
+    expect(vm.isMounted).toBe(true);
   });
 
   it('has mount method', () => {
