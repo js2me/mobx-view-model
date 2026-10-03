@@ -6,7 +6,8 @@ import type {
   ViewModelsConfig,
 } from 'mobx-view-model';
 import { viewModelsConfig } from 'mobx-view-model';
-import { use, useContext, useId, useRef } from 'react';
+import { useContext, useId, useRef } from 'react';
+import * as React from 'react';
 import { flushPendingReactions } from 'yummies/mobx';
 import type { AnyObject, Class, IsPartial, Maybe } from 'yummies/types';
 import { isViewModelClass } from 'mobx-view-model';
@@ -15,6 +16,9 @@ import {
   ViewModelsContext,
 } from '../contexts/index.js';
 import { useIsomorphicLayoutEffect, useValue } from '../lib/hooks/index.js';
+
+// React 18 has no `use` export; keep it optional without a static named import.
+const reactUse = React.use;
 
 export interface UseCreateViewModelConfig<TViewModel extends AnyViewModel>
   extends Pick<
@@ -206,8 +210,8 @@ const useCreateViewModelBase = (
 
   if (suspendUntil != null) {
     const usable = suspendUntil(instance);
-    if (usable) {
-      use(usable);
+    if (usable && reactUse) {
+      reactUse(usable);
     }
   }
 
@@ -271,8 +275,8 @@ const useCreateViewModelSimple = (
 
   if (suspendUntil != null) {
     const usable = suspendUntil(instance);
-    if (usable) {
-      use(usable);
+    if (usable && reactUse) {
+      reactUse(usable);
     }
   }
 
