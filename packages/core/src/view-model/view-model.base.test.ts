@@ -20,6 +20,7 @@ export class ViewModelBaseMock<
     init: Mock<(config: unknown) => void>;
     mount: Mock<() => void>;
     unmount: Mock<() => void>;
+    setPayload: Mock<(payload: any, isEqual: boolean) => void>;
     willMount: Mock<() => void>;
     didMount: Mock<() => void>;
     willUnmount: Mock<() => void>;
@@ -28,6 +29,7 @@ export class ViewModelBaseMock<
     init: vi.fn(),
     mount: vi.fn(),
     unmount: vi.fn(),
+    setPayload: vi.fn(),
     willMount: vi.fn(),
     didMount: vi.fn(),
     willUnmount: vi.fn(),
@@ -63,6 +65,12 @@ export class ViewModelBaseMock<
   unmount(): void {
     this.spies.unmount();
     super.unmount();
+  }
+
+  setPayload(payload: any) {
+    const isEqual = super.setPayload(payload);
+    this.spies.setPayload(payload, isEqual);
+    return isEqual;
   }
 
   protected didUnmount(): void {
@@ -236,6 +244,10 @@ describe('ViewModelBase', () => {
 
     expect(vm.setPayload(payload3)).toBe(false);
     expect(vm.payload).toBe(payload3);
+
+    expect(vm.spies.setPayload).toHaveBeenCalledTimes(2);
+    expect(vm.spies.setPayload).toHaveBeenNthCalledWith(1, payload2, true);
+    expect(vm.spies.setPayload).toHaveBeenNthCalledWith(2, payload3, false);
   });
 
   it('re-entrant mount reuses in-flight promise', async () => {

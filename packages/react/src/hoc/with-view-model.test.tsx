@@ -104,14 +104,14 @@ describe('withViewModel', () => {
     test('renders view on SSR without store (sync mount)', () => {
       class VM extends ViewModelBaseMock {}
       const View = ({ model }: ViewModelProps<VM>) => {
-        return <div data-testid={'view'}>{`hello ${model.id}`}</div>;
+        return <div data-testid={'view'}>{`view rendered ${model.id}`}</div>;
       };
       const VMChargedComponent = withViewModel(VM, View, {
         fallback: () => 'fallback-ssr'
 });
 
       const html = renderOnServer(<VMChargedComponent />);
-      expect(html).toMatch(/hello /);
+      expect(html).toMatch(/view rendered /);
       expect(html).not.toContain('fallback-ssr');
     });
 
@@ -556,6 +556,8 @@ describe('withViewModel', () => {
 
       expect(container.textContent).toContain('first 2');
       expect(container.textContent).toContain('second 20');
+      expect(vmFirst.spies.setPayload).toHaveBeenCalled();
+      expect(vmSecond.spies.setPayload).toHaveBeenCalled();
       root?.unmount();
     });
 
