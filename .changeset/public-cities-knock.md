@@ -77,6 +77,8 @@ Strict Mode, Suspense, lazy-loaded components, and SSR.
   store.
 - `ViewModelStore.resource` and `ViewModelResource` for request-scoped SSR
   resources.
+- Solid now resolves synchronous store or global resource data into `vm.data`
+  when creating a view model.
 - `ViewModelSimple.init()` as the initialization hook for simple view models.
 - Required `ViewModel.vm` metadata containing lifecycle `state` and resource
   `data`.

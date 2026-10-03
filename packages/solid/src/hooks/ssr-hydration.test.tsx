@@ -1,4 +1,5 @@
 import { cleanup, render, waitFor } from '@solidjs/testing-library';
+import { enableObservableTracking } from 'mobx-solid';
 import { viewModelsConfig } from 'mobx-view-model';
 import { Suspense } from 'solid-js';
 import { hydrate } from 'solid-js/web';
@@ -6,6 +7,8 @@ import { afterEach, expect, test, vi } from 'vitest';
 import { ViewModelsProvider } from '../components/index.js';
 import { withViewModel } from '../hoc/index.js';
 import { ViewModelBaseMock, ViewModelStoreBaseMock } from '../lib/test-mocks.js';
+
+enableObservableTracking();
 
 afterEach(() => {
   cleanup();

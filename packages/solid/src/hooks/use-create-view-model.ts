@@ -1,4 +1,3 @@
-import { enableObservableTracking } from 'mobx-solid';
 import type {
   AnyViewModel,
   AnyViewModelSimple,
@@ -79,8 +78,8 @@ export interface UseCreateViewModelConfig<TViewModel extends AnyViewModel>
 /**
  * Creates a new ViewModel instance (Solid setup runs once per component).
  *
- * Prefer calling `enableObservableTracking()` from `mobx-solid` once at app entry
- * so MobX reads inside JSX stay reactive — this hook also enables it as a safety net.
+ * Call `enableObservableTracking()` from `mobx-solid` once at app entry so MobX
+ * reads inside JSX stay reactive.
  */
 export function useCreateViewModel<TViewModel extends AnyViewModel>(
   VM: Class<TViewModel>,
@@ -132,8 +131,6 @@ export function useCreateViewModel(
   rawCfg?: any,
   props?: any,
 ) {
-  enableObservableTracking();
-
   const viewModels = useContext(ViewModelsContext);
   const parentViewModel = useContext(ActiveViewModelContext);
   const solidId = createUniqueId();
@@ -142,11 +139,21 @@ export function useCreateViewModel(
   const generatedId =
     process.env.NODE_ENV === 'production' ? solidId : `${solidId}:${VM.name}`;
   const id = rawCfg?.id ?? generatedId;
+  const isSsr = isServer && viewModelsConfig.mode === 'ssr';
+  const ssrEntries = isSsr ? getSsrVms() : undefined;
+  const previous = ssrEntries?.get(id);
+  const existing = viewModels?.get(id) as VmInstance | null;
+  const vmResource = viewModels?.resource ?? viewModelsConfig.resource;
+  const existingModel = existing ?? previous?.model;
+  const data = existingModel
+    ? (existingModel as { vm?: { data?: unknown } }).vm?.data
+    : vmResource?.read(id);
 
   const config = {
     ...rawCfg,
     id,
     payload: initialPayload,
+    data,
     VM,
     viewModels,
     parentViewModel,
@@ -154,9 +161,6 @@ export function useCreateViewModel(
     props: props ?? rawCfg?.props,
   } satisfies ViewModelCreateConfig<any>;
 
-  const isSsr = isServer && viewModelsConfig.mode === 'ssr';
-  const ssrEntries = isSsr ? getSsrVms() : undefined;
-  const previous = ssrEntries?.get(id);
   let model: VmInstance;
 
   if (previous) {

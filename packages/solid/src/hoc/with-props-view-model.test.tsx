@@ -1,9 +1,14 @@
 import { render, screen, waitFor } from '@solidjs/testing-library';
+import { enableObservableTracking } from 'mobx-solid';
 import { createSignal } from 'solid-js';
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 import { ViewModelsProvider } from '../components/index.js';
 import { ViewModelStoreBaseMock, ViewModelBaseMock } from '../lib/test-mocks.js';
 import { withPropsViewModel } from './with-props-view-model.js';
+
+beforeAll(() => {
+  enableObservableTracking();
+});
 
 describe('withPropsViewModel', () => {
   it('takes a fresh shallow snapshot when either prop changes', async () => {

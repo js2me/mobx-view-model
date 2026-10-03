@@ -28,9 +28,9 @@ export type CreateViewModelFactoryFn<
 > = (config: ViewModelCreateConfig<TViewModel>) => TViewModel;
 
 /**
- * Request/application-owned data source used by render-time SSR resources.
- * `read` may return data or throw a Promise/Error following React Suspense's
- * resource convention.
+ * Request/application-owned data source used while creating view models.
+ * Solid expects `read` to return synchronously; React also supports throwing
+ * a Promise/Error following its Suspense resource convention.
  */
 export interface ViewModelResource<TData = unknown> {
   read(id: string): TData;

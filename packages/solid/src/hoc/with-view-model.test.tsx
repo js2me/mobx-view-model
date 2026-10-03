@@ -1,9 +1,14 @@
 import { render, screen, waitFor } from '@solidjs/testing-library';
+import { enableObservableTracking } from 'mobx-solid';
 import { createSignal } from 'solid-js';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { ViewModelsProvider } from '../components/index.js';
 import { ViewModelStoreBaseMock, ViewModelBaseMock } from '../lib/test-mocks.js';
 import { withViewModel } from './with-view-model.js';
+
+beforeAll(() => {
+  enableObservableTracking();
+});
 
 describe('withViewModel', () => {
   it('updates a full VM payload without replacing the store instance', async () => {

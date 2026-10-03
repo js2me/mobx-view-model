@@ -1,4 +1,3 @@
-import { enableObservableTracking } from 'mobx-solid';
 import type {
   AnyViewModel,
   AnyViewModelSimple,
@@ -160,8 +159,6 @@ export function withViewModel(
   rawRenderFn?: SRenderFn<AnyObject>,
   rawConfig?: ViewModelSimpleHocConfig<any> & ViewModelHocConfig<any>,
 ): any {
-  enableObservableTracking();
-
   const config = (rawConfig ?? {}) as VMHocFullConfig;
   const anchors = (config.anchors ??= []);
   const getPayload: Defined<VMHocFullConfig['getPayload']> =

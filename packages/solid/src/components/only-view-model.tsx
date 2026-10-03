@@ -1,4 +1,3 @@
-import { enableObservableTracking } from 'mobx-solid';
 import type { AnyViewModel } from 'mobx-view-model';
 import { Show, type JSX } from 'solid-js';
 import type { Class, IsPartial } from 'yummies/types';
@@ -23,8 +22,6 @@ export type OnlyViewModelProps<TViewModel extends AnyViewModel> = {
 export const OnlyViewModel = <TViewModel extends AnyViewModel>(
   props: OnlyViewModelProps<TViewModel>,
 ) => {
-  enableObservableTracking();
-
   const vm = useCreateViewModel(
     props.model,
     () => props.payload,

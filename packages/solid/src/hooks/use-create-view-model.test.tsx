@@ -1,8 +1,8 @@
 import { render, screen } from '@solidjs/testing-library';
 import { enableObservableTracking } from 'mobx-solid';
-import type { ViewModelStore } from 'mobx-view-model';
+import { viewModelsConfig, type ViewModelStore } from 'mobx-view-model';
 import { createSignal, type ParentComponent } from 'solid-js';
-import { beforeAll, describe, expect, test } from 'vitest';
+import { beforeAll, describe, expect, test, vi } from 'vitest';
 import { ViewModelsProvider } from '../components/index.js';
 import { withPropsViewModel, withViewModel } from '../hoc/index.js';
 import { useCreateViewModel, useViewModel } from '../hooks/index.js';
@@ -49,6 +49,66 @@ describe('useCreateViewModel', () => {
 
     button.click();
     expect(button.textContent).toBe('count:1');
+  });
+
+  test('resolves vm.data from the store resource before the global resource', () => {
+    const previousResource = viewModelsConfig.resource;
+    const globalRead = vi.fn((id: string) => ({ id, value: 13 }));
+    const storeRead = vi.fn((id: string) => ({ id, value: 42 }));
+    viewModelsConfig.resource = { read: globalRead };
+
+    try {
+      const vmStore = new ViewModelStoreBaseMock({
+        resource: { read: storeRead },
+      });
+
+      class ResourceVM extends ViewModelBaseMock {}
+
+      const Component = () => {
+        const model = useCreateViewModel(ResourceVM, undefined, {
+          id: 'resource-vm',
+        });
+        return <span>{String((model.vm.data as { value: number }).value)}</span>;
+      };
+
+      const Wrapper = createVMStoreWrapper(vmStore);
+      render(() => (
+        <Wrapper>
+          <Component />
+        </Wrapper>
+      ));
+
+      expect(screen.getByText('42').textContent).toBe('42');
+      expect(storeRead).toHaveBeenCalledWith('resource-vm');
+      expect(globalRead).not.toHaveBeenCalled();
+    } finally {
+      viewModelsConfig.resource = previousResource;
+    }
+  });
+
+  test('uses the global resource without a ViewModelStore', () => {
+    const previousResource = viewModelsConfig.resource;
+    const resource = {
+      read: (id: string) => ({ id, value: 84 }),
+    };
+    viewModelsConfig.resource = resource;
+
+    try {
+      class ResourceVM extends ViewModelBaseMock {}
+
+      const Component = () => {
+        const model = useCreateViewModel(ResourceVM, undefined, {
+          id: 'global-resource-vm',
+        });
+        return <span>{String((model.vm.data as { value: number }).value)}</span>;
+      };
+
+      render(() => <Component />);
+
+      expect(screen.getByText('84').textContent).toBe('84');
+    } finally {
+      viewModelsConfig.resource = previousResource;
+    }
   });
 
   test('useViewModel resolves active parent from withViewModel', async () => {

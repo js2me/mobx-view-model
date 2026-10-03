@@ -20,11 +20,13 @@ Effective merged [`ViewModelsConfig`](/api/view-models/view-models-config) for t
 
 ### `resource`
 
-Optional data source scoped to this store. The React integration calls
+Optional data source scoped to this store. The React and Solid integrations call
 `resource.read(viewModelId)` during view model creation on both the client and
-server, and exposes the returned value as `vm.data`. For SSR,
-create a new store and resource for each request rather than putting
-request-specific data in the global configuration.
+server, and expose the returned value as `vm.data`. The Solid integration
+requires `read` to return synchronously; React also supports throwing a
+`Promise` while loading to trigger Suspense. For SSR, create a new store and
+resource for each request rather than putting request-specific data in the
+global configuration.
 
 `read` can follow the React Suspense resource convention:
 
