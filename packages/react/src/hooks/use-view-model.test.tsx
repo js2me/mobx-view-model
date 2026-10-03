@@ -66,7 +66,7 @@ describe('useViewModel', () => {
         </div>
       );
     },{
-      id: `depth-${depth}`,
+      id: accessUsing === 'id' ? `depth-${depth}` : undefined,
     });
 
     Object.assign(Component, { VM: VM1, depth, id: `depth-${depth}` });
