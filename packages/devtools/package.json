@@ -43,6 +43,7 @@
     "serve": "pnpm exec http-server dist -p 15000",
     "build:watch-server": "nodemon --watch src --delay 600ms --ext ts,tsx,css --exec \"pnpm build && pnpm serve\"",
     "build:watch-server-global-only": "nodemon --watch src --delay 600ms --ext ts,tsx,css --exec \"pnpm build:dev:global-only && pnpm serve\"",
+    "test:e2e": "pnpm --workspace-root build && playwright test --config playwright.config.ts",
     "test": "vitest run --config vitest.config.ts",
     "test:watch": "vitest watch --config vitest.config.ts"
   },
@@ -61,6 +62,7 @@
     "yummies": "^7.20.1"
   },
   "devDependencies": {
+    "@playwright/test": "^1.63.0",
     "@types/lodash-es": "^4.17.12",
     "@types/node": "^25.9.0",
     "@types/react": "^18.3.23",

@@ -46,6 +46,22 @@ describe('ViewModelSimple', () => {
   });
 
   describe('work with vm store', () => {
+    it('assigns the generated id to a simple VM without an id', () => {
+      class IdlessSimpleVM implements ViewModelSimple {
+        id?: string;
+      }
+
+      const vmStore = new ViewModelStoreBaseMock();
+      const vm = vmStore.define({ id: 'generated', VM: IdlessSimpleVM, payload: {} });
+
+      expect(vm.id).toBe('generated');
+      expect(vmStore.get(IdlessSimpleVM)).toBe(vm);
+
+      vmStore.unmount(vm);
+      expect(vmStore.get('generated')).toBeNull();
+      expect(vmStore.get(IdlessSimpleVM)).toBeNull();
+    });
+
     it('should call init on connect/define', () => {
       const vmStore = new ViewModelStoreBaseMock();
       const vm = vmStore.define({

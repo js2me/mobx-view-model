@@ -11,6 +11,7 @@
     "build": "pnpm --filter mobx-view-model-react run build && pnpm --filter mobx-view-model-solid run build && pnpm --filter mobx-view-model run build && pnpm --filter mobx-view-model-devtools run build && pnpm --filter mobx-view-model-vite-plugin run build",
     "build:watch": "pnpm -r --filter './packages/*' run build:watch",
     "test": "pnpm -r --filter './packages/*' run test",
+    "test:e2e": "pnpm --filter mobx-view-model-devtools run test:e2e",
     "test:examples": "pnpm -r --filter './examples/*' run test",
     "test:watch": "pnpm -r --filter './packages/*' run test:watch",
     "test:coverage": "pnpm -r --filter './packages/*' run test:coverage",

@@ -3,6 +3,8 @@ packages/*/node_modules
 dist
 coverage
 unit-tests-coverage
+playwright-report/
+test-results/
 docs/.vitepress/cache
 packalink.config.mjs
 .pnpm-store/

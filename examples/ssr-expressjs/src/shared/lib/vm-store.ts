@@ -21,7 +21,7 @@ export class VMStore extends ViewModelStoreBase {
     config: ViewModelCreateConfig<VM>,
   ): VM {
     if (isViewModelSimpleClass(config.VM)) {
-      return new config.VM() as VM;
+      return super.create(config);
     }
 
     return new (config.VM as any)(this.rootStore, {

@@ -56,7 +56,7 @@ const YourComponent = withViewModel(
 
 const YourApp = () => {
   return (
-    <YourComponent />
+    <YourComponent yourProp="hi" />
   )
 }
 ```

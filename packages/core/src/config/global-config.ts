@@ -30,7 +30,9 @@ globalThis[_internals.marker] ??= {
     const VM = config.VM;
 
     if (isViewModelSimpleClass(VM)) {
-      return new VM()
+      const instance = new VM();
+      instance.id ??= config.id;
+      return instance;
     }
 
     return new VM({
