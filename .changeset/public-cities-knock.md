@@ -37,8 +37,7 @@ Strict Mode, Suspense, lazy-loaded components, and SSR.
 - `ViewModelStoreBase.getOrCreateVmId()` and its attachment/mounting state
 - `ViewModel.isUnmounting` and `ViewModel.payloadChanged` from the `ViewModel`
   interface; lifecycle state is available through the new `ViewModel.vm.state`.
-- `ViewModelBase.vmData`, `ViewModelBase.vmConfig`, and
-  `ViewModelBase.isPayloadEqual`.
+- `ViewModelBase.vmConfig` and `ViewModelBase.isPayloadEqual`.
 - `ViewModelParams.parentViewModelId`
 - `ViewModelSimple.attachViewModelStore()`
 - `ViewModelStore.mountedViewsCount`
