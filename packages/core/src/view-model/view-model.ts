@@ -1,9 +1,11 @@
 import type { AnyObject, EmptyObject, MaybePromise } from 'yummies/types';
-import type { ViewModelsConfig } from '../config/types.js';
 
-import type { AnyViewModel, AnyViewModelSimple, ViewModelInitConfig } from './view-model.types.js';
-import type { ViewModelLifecycleState } from './view-model.base.types.js';
-import { ViewModelCreateConfig, ViewModelStore } from './index.js';
+import type {
+  AnyViewModel,
+  AnyViewModelSimple,
+  ViewModelInfo,
+  ViewModelInitConfig,
+} from './view-model.types.js';
 
 /**
  * The main interface for all view models.
@@ -14,14 +16,15 @@ export interface ViewModel<
   Payload extends AnyObject = EmptyObject,
   ParentViewModel extends AnyViewModel | AnyViewModelSimple | null = null,
 > {
+  /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/interface#vm-viewmodelinfo) */
+  readonly vm: ViewModelInfo;
+
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/interface#id-string) */
   readonly id: string;
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/interface#payload-payload) */
   readonly payload: Payload;
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/interface#ismounted-boolean) */
   readonly isMounted: boolean;
-  /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/interface#lifecyclestate-viewmodellifecyclestate) */
-  lifecycleState: ViewModelLifecycleState;
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/interface#parentviewmodel-parentviewmodel-null) */
   readonly parentViewModel: ParentViewModel;
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/interface#init) */

@@ -224,7 +224,7 @@ export function useCreateViewModel(
     const existing = viewModels?.get(vmId) as VmInstance | null;
     const vmResource = viewModels?.resource ?? viewModelsConfig.resource;
     const vmData = existing
-      ? (existing as { vmData?: unknown }).vmData
+      ? (existing as { vm?: { data?: unknown } }).vm?.data
       : vmResource?.read(vmId);
 
     const useStaging = isClient && viewModels != null;
@@ -295,10 +295,10 @@ export function useCreateViewModel(
         }
 
         const shouldHydrate =
-          isViewModel(vm) && vm.lifecycleState === 'mounted' && cache.current.isSSR;
+          isViewModel(vm) && vm.vm.state === 'mounted' && cache.current.isSSR;
         if (shouldHydrate) {
           runInAction(() => {
-            (vm as any).lifecycleState = 'hydrated';
+            vm.vm.state = 'hydrated';
           });
         }
 

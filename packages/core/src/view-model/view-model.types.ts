@@ -1,9 +1,10 @@
 import type { AnyObject, EmptyObject, Maybe } from 'yummies/types';
-import type { ViewModelsRawConfig } from '../config/index.js';
+import type { ViewModelsConfig, ViewModelsRawConfig } from '../config/index.js';
 import type { ViewModel } from './view-model.js';
 import type { ViewModelStore } from './view-model.store.js';
 import type { ViewModelSimple } from './view-model-simple.js';
-import { ViewModelCreateConfig } from './index.js';
+import type { ViewModelCreateConfig } from './view-model.store.types.js';
+import type { ViewModelLifecycleState } from './view-model.base.types.js';
 
 export type AnyViewModel = ViewModel<any, any>;
 
@@ -51,4 +52,22 @@ export interface ViewModelParams<
 }
 
 
-export type ViewModelInitConfig<VM extends AnyViewModel | AnyViewModelSimple> = ViewModelCreateConfig<VM> & { viewModels?: ViewModelStore }
+export type ViewModelInitConfig<VM extends AnyViewModel | AnyViewModelSimple> =
+  ViewModelCreateConfig<VM> & { viewModels?: ViewModelStore };
+
+export interface ViewModelInfo {
+  /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/interface#vm-state-viewmodellifecyclestate) */
+  state: ViewModelLifecycleState;
+  data: unknown;
+}
+
+export interface ViewModelFullInfo<
+  Payload extends AnyObject = AnyObject,
+  ParentViewModel extends AnyViewModel | AnyViewModelSimple | null = null,
+  ComponentProps extends AnyObject = AnyObject,
+> extends ViewModelInfo {
+  params: ViewModelParams<Payload, ParentViewModel, ComponentProps>;
+  config: ViewModelsConfig;
+  payloadComparator?: PayloadCompareFn<Payload>;
+  payload: Payload;
+}

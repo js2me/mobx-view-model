@@ -1,6 +1,7 @@
 ---
 "mobx-view-model-react": major
 "mobx-view-model": major
+"mobx-view-model-solid": patch
 ---
 
 **Breaking:** `mobx-view-model` is now framework-agnostic. React bindings must
@@ -13,10 +14,14 @@ and global core view-model ID generation have been removed; store callers must
 provide an ID, while framework integrations own any render-time ID generation
 or custom `generateId()` behavior.
 
-**Breaking:** ViewModel lifecycle and configuration APIs have been simplified:
-use `lifecycleState` and `setPayload()` instead of `isUnmounting` and
-`payloadChanged`; replace `ViewModelSimple.attachViewModelStore` with `init()`;
-and replace `processViewComponent` with framework-agnostic `processRender`.
+**Breaking:** ViewModel lifecycle and metadata APIs have changed. The
+`ViewModel` interface now requires `vm` metadata, with lifecycle state available
+as `vm.state` instead of `isUnmounting`. Resource data is available as
+`vm.data`.
+`ViewModelBase.vmConfig` and `ViewModelBase.isPayloadEqual` are no longer
+exposed; configure payload comparison with `comparePayload`. Also replace
+`ViewModelSimple.attachViewModelStore` with `init()`, and
+`processViewComponent` with framework-agnostic `processRender`.
 
 Improve view-model creation and lifecycle handling for React 18 and React 19
 Strict Mode, Suspense, lazy-loaded components, and SSR.
@@ -31,8 +36,9 @@ Strict Mode, Suspense, lazy-loaded components, and SSR.
 - `ViewModelStore.generateViewModelId()`
 - `ViewModelStoreBase.getOrCreateVmId()` and its attachment/mounting state
 - `ViewModel.isUnmounting` and `ViewModel.payloadChanged` from the `ViewModel`
-  interface; `ViewModel.vmConfig` is no longer part of that interface, although
-  `ViewModelBase` still exposes its merged `vmConfig` configuration
+  interface; lifecycle state is available through the new `ViewModel.vm.state`.
+- `ViewModelBase.vmData`, `ViewModelBase.vmConfig`, and
+  `ViewModelBase.isPayloadEqual`.
 - `ViewModelParams.parentViewModelId`
 - `ViewModelSimple.attachViewModelStore()`
 - `ViewModelStore.mountedViewsCount`
@@ -49,8 +55,9 @@ Strict Mode, Suspense, lazy-loaded components, and SSR.
 - `ViewModelBase.setPayload()` now returns whether the payload was unchanged.
 - `ViewModelBase.willMount()` may be asynchronous, and concurrent `mount()`
   calls are deduplicated.
-- `ViewModelBase.unmount()` is synchronous; lifecycle is represented by
-  `lifecycleState` instead of `isUnmounting`.
+- `ViewModelBase.unmount()` is synchronous; lifecycle state is exposed through
+  `vm.state` instead of `isUnmounting`.
+- View-model resource data is exposed through `vm.data`.
 - Parent view models must be passed through `parentViewModel`; the store no
   longer resolves them from `parentViewModelId`.
 - `ViewModelsConfig.processViewComponent` was renamed to `processRender` and
@@ -72,6 +79,8 @@ Strict Mode, Suspense, lazy-loaded components, and SSR.
 - `ViewModelStore.resource` and `ViewModelResource` for request-scoped SSR
   resources.
 - `ViewModelSimple.init()` as the initialization hook for simple view models.
+- Required `ViewModel.vm` metadata containing lifecycle `state` and resource
+  `data`.
 - `ViewModelsConfig.processRender()` as the framework-agnostic render hook.
 - More reliable `isViewModel()`, `isViewModelClass()`, `isViewModelSimple()`,
   and `isViewModelSimpleClass()` classification for custom view-model classes.

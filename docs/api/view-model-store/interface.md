@@ -22,7 +22,7 @@ Effective merged [`ViewModelsConfig`](/api/view-models/view-models-config) for t
 
 Optional data source scoped to this store. The React integration calls
 `resource.read(viewModelId)` during view model creation on both the client and
-server, and passes the returned value to the view model as `vmData`. For SSR,
+server, and exposes the returned value as `vm.data`. For SSR,
 create a new store and resource for each request rather than putting
 request-specific data in the global configuration.
 
@@ -48,7 +48,7 @@ type User = { id: string; name: string };
 
 class UserVM extends ViewModelBase {
   get user(): User {
-    return this.vmData as User;
+    return this.vm.data as User;
   }
 }
 
@@ -83,8 +83,8 @@ export function RequestApp() {
 ```
 
 When `UserVM` is created with the ID `user-42`, the integration calls
-`store.resource.read('user-42')` and passes the returned object to the VM as
-`vmData`. The same store can be shared by all view models rendered for one
+`store.resource.read('user-42')` and exposes the returned object as
+`vm.data`. The same store can be shared by all view models rendered for one
 request. Create the map and store per request rather than sharing them between
 requests.
 

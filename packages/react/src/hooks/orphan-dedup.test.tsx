@@ -8,6 +8,7 @@ import {
   type AnyViewModel,
   type AnyViewModelSimple,
   type ViewModelParams,
+  viewModelsConfig,
 } from 'mobx-view-model';
 import { ViewModelsProvider } from '../components/index.js';
 import { useCreateViewModel } from '../hooks/index.js';
@@ -48,7 +49,7 @@ afterEach(() => {
  * cleanup unmounts a VM that's still in use.
  */
 describe('Orphan cleanup dedup: same VM instance from two fibers', () => {
-  test('resolves vmData from the store resource by VM id', () => {
+  test('resolves vm.data from the store resource by VM id', () => {
     const vmStore = new ViewModelStoreBase({
       resource: {
         read: (id) => ({ id, value: 42 }),
@@ -59,7 +60,7 @@ describe('Orphan cleanup dedup: same VM instance from two fibers', () => {
 
     const Component = () => {
       const vm = useCreateViewModel(ResourceVM, undefined, { id: 'resource-vm' });
-      return <span data-testid="vm-data">{String((vm.vmData as any).value)}</span>;
+      return <span data-testid="vm-data">{String((vm.vm.data as any).value)}</span>;
     };
 
     render(
@@ -69,6 +70,42 @@ describe('Orphan cleanup dedup: same VM instance from two fibers', () => {
     );
 
     expect(screen.getByTestId('vm-data').textContent).toBe('42');
+  });
+
+  test('uses the global config resource when the store does not provide one', () => {
+    const previousResource = viewModelsConfig.resource;
+    const resource = {
+      read: (id: string) => ({ id, value: 84 }),
+    };
+    viewModelsConfig.resource = resource;
+
+    try {
+      const vmStore = new ViewModelStoreBase({});
+
+      class ResourceVM extends ViewModelBaseMock {}
+
+      const Component = () => {
+        const vm = useCreateViewModel(ResourceVM, undefined, {
+          id: 'global-resource-vm',
+        });
+        return <span data-testid="vm-data">{String((vm.vm.data as any).value)}</span>;
+      };
+
+      const view = render(
+        <ViewModelsProvider value={vmStore}>
+          <Component />
+        </ViewModelsProvider>,
+      );
+
+      try {
+        expect(vmStore.resource).toBe(resource);
+        expect(screen.getByTestId('vm-data').textContent).toBe('84');
+      } finally {
+        view.unmount();
+      }
+    } finally {
+      viewModelsConfig.resource = previousResource;
+    }
   });
 
   test('constructor reactions stop when the VM is unmounted', async () => {

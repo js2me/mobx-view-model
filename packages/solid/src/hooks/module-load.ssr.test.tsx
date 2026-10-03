@@ -18,7 +18,7 @@ test('imports the Solid bindings without window and mounts during SSR', async ()
     protected willMount() { mounts++; }
   }
   const Page = withViewModel(PageVM, ({ model }) => (
-    <span data-testid="view">{model.lifecycleState}</span>
+    <span data-testid="view">{model.vm.state}</span>
   ));
   const previousMode = viewModelsConfig.mode;
   try {
@@ -162,7 +162,7 @@ test('retries a no-store async VM without constructing or mounting it twice', as
     }
   }
   const Page = withViewModel(PageVM, ({ model }) => (
-    <span data-testid="view">{model.lifecycleState}</span>
+    <span data-testid="view">{model.vm.state}</span>
   ));
   const previousMode = viewModelsConfig.mode;
   try {

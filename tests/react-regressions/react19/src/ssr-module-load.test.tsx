@@ -22,7 +22,7 @@ test('imports the React bindings without window and mounts during server render'
   }
 
   const Page = withViewModel(PageVM, ({ model }) =>
-    createElement('span', null, model.lifecycleState),
+    createElement('span', null, model.vm.state),
   );
   const previousMode = viewModelsConfig.mode;
   try {

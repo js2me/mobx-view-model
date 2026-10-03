@@ -48,7 +48,7 @@ export class StarWarsBattlefieldVM extends ViewModelBase {
 
 
 ### `unmountSignal`   
-This is an [`AbortSignal`](https://developer.mozilla.org/ru/docs/Web/API/AbortSignal) that is signaled when your [`ViewModel`](/api/view-models/interface) is unmounted. It happens after `unmount()` completes in the base implementation.   
+This is an [`AbortSignal`](https://developer.mozilla.org/ru/docs/Web/API/AbortSignal) that is signaled when your [`ViewModel`](/api/view-models/interface) is unmounted. It happens after `unmount()` completes in the base implementation. If the same view model instance is mounted again, the base implementation creates a fresh signal; the signal from the previous mount remains aborted.
 
 #### Example   
 ```ts
@@ -69,9 +69,11 @@ export class TestVM extends ViewModelBase {
 }
 ```
 
-### `vmConfig`  
-Configuration object for the view model.  
-See [ViewModelsConfig](/api/view-models/view-models-config) for detailed configuration options.
+### `vm: ViewModelInfo`
+Metadata for this view model. `vm.state` contains its lifecycle state and
+`vm.data` contains data loaded from the configured resource. See the
+[`ViewModel` interface](/api/view-models/interface#vm-viewmodelinfo) for the
+state values and a resource-data example.
 
 ### `isMounted: boolean` <Badge type="tip" text="computed" />  
 Indicates whether the `ViewModel` is currently mounted with its associated component.  
@@ -148,21 +150,7 @@ Updates the view model's payload data.
 Returns `true` when the payload is considered equal (no change applied), and `false` when it was updated.
 
 The base implementation of this method compares the current payload and the new payload before setting it.  
-This can be overridden using [view models configuration](/api/view-models/view-models-config) or by overriding the protected [`isPayloadEqual`](#ispayloadequal-current-payload-next-payload-boolean) method.    
-
-#### `isPayloadEqual?.(current: Payload, next: Payload): boolean` <Badge type="danger" text="protected" />   
-This method is used for comparing the current and next payloads.   
-
-You can customize payload comparison overriding this method or configure [`viewModelsConfig`](/api/view-models/view-models-config)  
-
-Example:  
-```ts
-class PostcardBox extends ViewModelBase {
-  isPayloadEqual() {
-    return true;
-  }
-}
-```
+Configure the comparison with [`comparePayload`](/api/view-models/view-models-config#comparepayload). To customize payload handling further, override `setPayload()` and call `super.setPayload(payload)` when appropriate.
 
 ### `hasChild(vm, deep?): boolean` <Badge type="info" text="protected" /> {#haschild-vm-anyviewmodel--anyviewmodelsimple-deep-boolean-boolean}
 Checks whether the given view model is a child of the current view model.

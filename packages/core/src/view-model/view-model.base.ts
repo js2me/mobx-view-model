@@ -1,28 +1,41 @@
-import { action, comparer, computed, observable, runInAction } from 'mobx';
+import {
+  action,
+  comparer,
+  computed,
+  makeObservable,
+  observable,
+  runInAction,
+} from 'mobx';
 import { isShallowEqual } from 'yummies/data';
 import { startViewTransitionSafety } from 'yummies/html';
 import type { ObservableAnnotationsArray } from 'yummies/mobx';
 import type { AnyObject, EmptyObject, Maybe, MaybePromise } from 'yummies/types';
 import {
   applyObservable,
-  mergeVMConfigs,
-  type ViewModelsConfig,
+  mergeVMConfigs
 } from '../config/index.js';
 import type { ViewModel } from './view-model.js';
 import type { ViewModelStore } from './view-model.store.js';
 import type {
   AnyViewModel,
   AnyViewModelSimple,
-  PayloadCompareFn,
+  ViewModelFullInfo,
+  ViewModelInfo,
   ViewModelParams,
 } from './view-model.types.js';
-import { ViewModelLifecycleState } from './view-model.base.types.js';
 import { _internals } from '../internals.js';
 
 const baseAnnotations: ObservableAnnotationsArray = [
-  [observable.ref, 'lifecycleState'],
   [computed, 'isMounted', 'parentViewModel'],
-  [action, 'willMount', 'didMount', 'didUnmount', 'willUnmount', 'mount', 'unmount'],
+  [
+    action,
+    'willMount',
+    'didMount',
+    'didUnmount',
+    'willUnmount',
+    'mount',
+    'unmount',
+  ],
 ];
 
 export class ViewModelBase<
@@ -36,57 +49,45 @@ export class ViewModelBase<
 
   id: string;
 
-  lifecycleState: ViewModelLifecycleState;
-
-  /** In-flight mount(); re-entrant calls must reuse the same Promise. */
-  #mountPromise?: Promise<void>;
-
-  private _payload: Payload;
-
-  /** Data resolved by the store resource for this VM id. */
-  public vmData: unknown;
-
-  public vmConfig: ViewModelsConfig;
-
-  protected isPayloadEqual?: PayloadCompareFn<Payload>;
+  readonly vm: ViewModelInfo;
 
   protected props: ComponentProps;
 
   constructor(
-    protected vmParams: ViewModelParams<
+    params: ViewModelParams<
       Payload,
       ParentViewModel,
       ComponentProps
     >,
   ) {
-    this.id = vmParams.id;
-    this.lifecycleState = 'init';
-    this.vmConfig = mergeVMConfigs(vmParams.vmConfig);
-    this._payload = vmParams.payload;
-    this.vmData = vmParams.vmData;
-    this.props = vmParams.props ?? ({} as ComponentProps);
+    this.id = params.id;
+    const config = mergeVMConfigs(params.vmConfig);
+
+    this.#vm = makeObservable({
+      params,
+      config,
+      data: params.vmData,
+      state: 'init',
+      payloadComparator:
+        config.comparePayload === 'strict'
+          ? comparer.structural
+          : config.comparePayload === 'shallow'
+            ? isShallowEqual
+            : config.comparePayload || undefined,
+      payload: params.payload,
+    }, {
+      state: observable.ref,
+      payload: config.payloadObservable && observable[config.payloadObservable],
+    });
+    this.vm = this.#vm;
+    this.props = params.props ?? ({} as ComponentProps);
     this.abortController = new AbortController();
     this.unmountSignal = this.abortController.signal;
 
-    if (this.vmConfig.comparePayload === 'strict') {
-      this.isPayloadEqual = comparer.structural;
-    } else if (this.vmConfig.comparePayload === 'shallow') {
-      this.isPayloadEqual = isShallowEqual;
-    } else if (typeof this.vmConfig.comparePayload === 'function') {
-      this.isPayloadEqual = this.vmConfig.comparePayload;
-    }
-
     const annotations: ObservableAnnotationsArray = [...baseAnnotations];
 
-    if (this.vmConfig.payloadObservable !== false) {
-      annotations.push([
-        observable[this.vmConfig.payloadObservable],
-        '_payload',
-      ]);
-    }
-
-    if (this.vmConfig.payloadComputed) {
-      if (this.vmConfig.payloadComputed === 'struct') {
+    if (this.#vm.config.payloadComputed) {
+      if (this.#vm.config.payloadComputed === 'struct') {
         annotations.push([
           computed({ equals: comparer.structural }),
           'payload',
@@ -95,24 +96,24 @@ export class ViewModelBase<
         annotations.push([
           computed({
             equals:
-              this.vmConfig.payloadComputed === true
+              this.#vm.config.payloadComputed === true
                 ? undefined
-                : this.vmConfig.payloadComputed,
+                : this.#vm.config.payloadComputed,
           }),
           'payload',
         ]);
       }
     }
 
-    applyObservable(this, annotations, this.vmConfig.observable.viewModels);
+    applyObservable(this, annotations, this.#vm.config.observable.viewModels);
   }
 
   get payload() {
-    return this._payload;
+    return this.#vm.payload;
   }
 
   protected get viewModels(): ViewModelStore {
-    if (process.env.NODE_ENV !== 'production' && !this.vmParams.viewModels) {
+    if (process.env.NODE_ENV !== 'production' && !this.#vm.params.viewModels) {
       console.error(
         `Error #3: No access to ViewModelStore.\n` +
         'This happened because [viewModels] param is not provided during to creating instance ViewModelBase.\n' +
@@ -120,11 +121,11 @@ export class ViewModelBase<
       );
     }
 
-    return this.vmParams.viewModels!;
+    return this.#vm.params.viewModels!;
   }
 
   get isMounted() {
-    return this.lifecycleState === 'mounted' || this.lifecycleState === 'hydrated';
+    return this.#vm.state === 'mounted' || this.#vm.state === 'hydrated';
   }
 
   protected willUnmount(): void {
@@ -157,20 +158,20 @@ export class ViewModelBase<
       this.unmountSignal = this.abortController.signal;
     }
 
-    this.lifecycleState = 'mounting';
+    this.#vm.state = 'mounting';
     const result = this.willMount();
 
     const finalizeMount = () => {
-      if (this.lifecycleState !== 'mounting') return;
-      this.vmConfig.onMount?.(this);
+      if (this.#vm.state !== 'mounting') return;
+      this.#vm.config.onMount?.(this);
       startViewTransitionSafety(
         () => {
           runInAction(() => {
-            this.lifecycleState = 'mounted';
+            this.#vm.state = 'mounted';
             this.didMount();
           });
         },
-        { disabled: !this.vmConfig.startViewTransitions.mount },
+        { disabled: !this.#vm.config.startViewTransitions.mount },
       );
     };
 
@@ -197,20 +198,20 @@ export class ViewModelBase<
    */
   unmount() {
     this.#mountPromise = undefined;
-    runInAction(() => (this.lifecycleState = 'unmounting'));
+    runInAction(() => (this.#vm.state = 'unmounting'));
     this.willUnmount();
-    this.vmConfig.onUnmount?.(this);
+    this.#vm.config.onUnmount?.(this);
     startViewTransitionSafety(
       () => {
         // mount() may have been re-entered (revive) while the view transition
         // was pending — mirror finalizeMount()'s guard.
-        if (this.lifecycleState !== 'unmounting') return;
-        runInAction(() => (this.lifecycleState = 'unmounted'));
+        if (this.#vm.state !== 'unmounting') return;
+        runInAction(() => (this.#vm.state = 'unmounted'));
         this.didUnmount();
         this.abortController.abort();
       },
       {
-        disabled: !this.vmConfig.startViewTransitions.unmount,
+        disabled: !this.#vm.config.startViewTransitions.unmount,
       },
     );
   }
@@ -273,19 +274,19 @@ export class ViewModelBase<
    * Returns the parent view model
    */
   get parentViewModel() {
-    return this.vmParams.parentViewModel as ParentViewModel;
+    return this.#vm.params.parentViewModel as ParentViewModel;
   }
 
   /**
    * The method is called when the payload changes in the react component
    */
   setPayload(payload: Payload) {
-    const isEqual = !!this.isPayloadEqual?.(this._payload, payload)
+    const isEqual = !!this.#vm.payloadComparator?.(this.#vm.payload, payload);
 
     if (!isEqual) {
       startViewTransitionSafety(
-        () => runInAction(() => (this._payload = payload)),
-        { disabled: !this.vmConfig.startViewTransitions.payloadChange },
+        () => runInAction(() => (this.#vm.payload = payload)),
+        { disabled: !this.#vm.config.startViewTransitions.payloadChange },
       );
     }
 
@@ -296,4 +297,7 @@ export class ViewModelBase<
     // @ts-ignore
     this.prototype[_internals.marker] = true;
   }
+  /** In-flight mount(); re-entrant calls must reuse the same Promise. */
+  #mountPromise?: Promise<void>;
+  #vm: ViewModelFullInfo<Payload, ParentViewModel, ComponentProps>;
 }

@@ -35,12 +35,11 @@ Used for tracking and managing view model lifecycle.
 ### `payload: Payload`  
 Data object passed from the parent component to the view model.  
 
-### `ViewModelBase.vmData: unknown`
-Data returned by the configured [`ViewModelResource`](/api/view-models/view-models-config#resource)
-for this view model's `id`. It is resolved during creation and can be used by
-`ViewModelBase` without duplicating the request-loading logic. This property is
-available on the base implementation; it is not part of the framework-agnostic
-`ViewModel` interface.
+### `vm: ViewModelInfo`
+Metadata exposed by the view model. Its `state` describes the current lifecycle
+state, and `data` contains data returned by the configured
+[`ViewModelResource`](/api/view-models/view-models-config#resource) for this
+view model's `id` (or `undefined` when no resource is configured).
 
 ```ts
 import { ViewModelBase } from 'mobx-view-model';
@@ -49,7 +48,7 @@ type Product = { id: string; title: string };
 
 class ProductVM extends ViewModelBase {
   get product(): Product {
-    return this.vmData as Product;
+    return this.vm.data as Product;
   }
 }
 ```
@@ -60,8 +59,8 @@ Controls the rendering of the connected view component:
 - `true`: Component is rendered
 - `false`: Component is not rendered
 
-### `lifecycleState: ViewModelLifecycleState`  
-The current lifecycle state of the `ViewModel`. Possible values:
+### `vm.state: ViewModelLifecycleState`
+The current lifecycle state of the `ViewModel`, exposed through `vm`. Possible values:
 
 | State | Description |
 |---|---|
@@ -72,7 +71,10 @@ The current lifecycle state of the `ViewModel`. Possible values:
 | `'unmounting'` | `unmount()` started |
 | `'unmounted'` | Fully unmounted |
 
-This is a MobX `observable.ref` — you can observe it in reactions or use it to distinguish between `init` (not yet mounted) and `mounting` (mount in progress), which `isMounted` alone cannot do.
+`vm.state` is a MobX `observable.ref` — you can observe it in reactions or use
+it to distinguish between `init` (not yet mounted) and `mounting` (mount in
+progress), which `isMounted` alone cannot do. The `vm` metadata object also
+exposes resource data as `vm.data`.
 
 ### `parentViewModel: ParentViewModel`   
 Reference to the parent `ViewModel` in the component hierarchy.  

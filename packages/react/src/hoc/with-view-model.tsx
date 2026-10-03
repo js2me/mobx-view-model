@@ -368,8 +368,8 @@ export function withViewModel(
           // suspend → loop.
           return (
             current.isMounted !== false ||
-            current.lifecycleState === 'unmounting' ||
-            current.lifecycleState === 'unmounted'
+            current.vm.state === 'unmounting' ||
+            current.vm.state === 'unmounted'
           );
         },
       };
