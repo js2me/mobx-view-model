@@ -1,10 +1,10 @@
 import { render, screen } from '@solidjs/testing-library';
 import { enableObservableTracking } from 'mobx-solid';
 import type { ViewModelStore } from 'mobx-view-model';
-import type { ParentComponent } from 'solid-js';
+import { createSignal, type ParentComponent } from 'solid-js';
 import { beforeAll, describe, expect, test } from 'vitest';
 import { ViewModelsProvider } from '../components/index.js';
-import { withViewModel } from '../hoc/index.js';
+import { withPropsViewModel, withViewModel } from '../hoc/index.js';
 import { useCreateViewModel, useViewModel } from '../hooks/index.js';
 import {
   CounterVM,
@@ -101,5 +101,29 @@ describe('withViewModel', () => {
     ));
 
     expect((await screen.findByText('hello')).textContent).toBe('hello');
+  });
+});
+
+describe('withPropsViewModel', () => {
+  test('updates a simple VM payload when a prop changes', async () => {
+    const received: string[] = [];
+
+    class SimpleVM {
+      setPayload(payload: { label: string }) {
+        received.push(payload.label);
+      }
+    }
+
+    const Label = withPropsViewModel(SimpleVM, ({ label }) => (
+      <span>{label}</span>
+    ));
+    const [label, setLabel] = createSignal('first');
+
+    render(() => <Label label={label()} />);
+    expect(received).toEqual(['first']);
+
+    setLabel('second');
+    await Promise.resolve();
+    expect(received).toContain('second');
   });
 });

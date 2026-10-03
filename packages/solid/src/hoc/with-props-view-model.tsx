@@ -60,7 +60,7 @@ export type PropsViewModelSimpleHocConfig<VM> = Omit<
   'getPayload'
 >;
 
-const allPropsAsPayload = (props: AnyObject) => props;
+const allPropsAsPayload = (props: AnyObject) => ({ ...props });
 
 /**
  * Like `withViewModel`, but treats all component props as the ViewModel payload.

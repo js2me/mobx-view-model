@@ -41,8 +41,12 @@ The ViewModel pattern delivers:
 ```ts
 import { ViewModelBase } from "mobx-view-model";
 
+function createUserData() {
+  return { fullName: "", isLoading: false };
+}
+
 export class CurrentUserBadgeVM extends ViewModelBase<{ userId: string }> {
-  private userData = /* some data source */
+  private userData = createUserData();
 
   get badgeTitle() {
     return `user badge: ${this.userData.fullName || ''}`

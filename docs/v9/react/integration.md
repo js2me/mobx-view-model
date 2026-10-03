@@ -50,13 +50,13 @@ export interface YourComponentProps extends ViewModelProps<YourComponentVM> {
 const YourComponent = withViewModel(
   YourComponentVM,
   ({ model, yourProp }: YourComponentProps) => {
-    return <div>{model.id}</div>;
+    return <div>{model.id} {yourProp}</div>;
   },
 );
 
 const YourApp = () => {
   return (
-    <YourComponent />
+    <YourComponent yourProp="hi v9" />
   )
 }
 ```
@@ -110,7 +110,7 @@ const YourApp = () => {
   )
 }
 ```
-With this step you can use the [`useViewModel()`](/react/api/use-view-model) hook with the first argument  
+With the store connected, pass a [`ViewModelLookup`](/api/other/view-model-lookup) as the first argument to [`useViewModel()`](/react/api/use-view-model): a view-model id (for example, `useViewModel('view-model-id')`), a view-model class, or a registered anchor component.
 
 ::: tip [`isMounted`](/api/view-models/interface#ismounted-boolean) state  
 This state is based on calling the [`mount()` method](/api/view-models/interface#mount-void-promise-void), which is triggered inside the [`useCreateViewModel()`](/react/api/use-create-view-model) hook or the store lifecycle.  

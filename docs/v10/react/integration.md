@@ -51,13 +51,13 @@ export interface YourComponentProps extends ViewModelProps<YourComponentVM> {
 const YourComponent = withViewModel(
   YourComponentVM,
   ({ model, yourProp }: YourComponentProps) => {
-    return <div>{model.id}</div>;
+    return <div>{model.id} {yourProp}</div>;
   },
 );
 
 const YourApp = () => {
   return (
-    <YourComponent />
+    <YourComponent yourProp="hi v10" />
   )
 }
 ```

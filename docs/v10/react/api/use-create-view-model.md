@@ -76,8 +76,7 @@ export const YourComponent = observer(() => {
     // vmConfig: { suspendUntil: ... }, // see #suspenduntil
     ctx: {}, // internal object used as cache key source inside this hook
     factory: (config) => new config.VM(config), // factory method for creating VM instances
-    generateId, // custom fn for generating ids for VM instances
-    id, // unique id if you need to create 1 instance of your VM
+    id: 'your-vm-id', // unique id if you need to create 1 instance of your VM
     anchors: [], // additional components for useViewModel lookup
   });
 })
