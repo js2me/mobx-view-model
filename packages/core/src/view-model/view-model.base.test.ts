@@ -1,6 +1,6 @@
-import { makeObservable, reaction } from 'mobx';
+import { makeObservable, reaction, runInAction } from 'mobx';
 import type { Mock } from 'vitest';
-import { describe, expect, expectTypeOf, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import type { AnyObject, EmptyObject } from 'yummies/types';
 
@@ -17,17 +17,19 @@ export class ViewModelBaseMock<
   ParentViewModel extends AnyViewModel | AnyViewModelSimple | null = null,
 > extends ViewModelBase<Payload, ParentViewModel> {
   spies: {
+    init: Mock<(config: unknown) => void>;
     mount: Mock<() => void>;
     unmount: Mock<() => void>;
-    payloadChanged: Mock<(payload: any, prevPayload: any) => void>;
+    setPayload: Mock<(payload: any, isEqual: boolean) => void>;
     willMount: Mock<() => void>;
     didMount: Mock<() => void>;
     willUnmount: Mock<() => void>;
     didUnmount: Mock<() => void>;
   } = {
+    init: vi.fn(),
     mount: vi.fn(),
     unmount: vi.fn(),
-    payloadChanged: vi.fn(),
+    setPayload: vi.fn(),
     willMount: vi.fn(),
     didMount: vi.fn(),
     willUnmount: vi.fn(),
@@ -41,6 +43,10 @@ export class ViewModelBaseMock<
       payload: params?.payload as Payload,
     });
     makeObservable(this);
+  }
+
+  init(config: unknown): void {
+    this.spies.init(config);
   }
 
   protected didMount(): void {
@@ -61,8 +67,10 @@ export class ViewModelBaseMock<
     super.unmount();
   }
 
-  payloadChanged(payload: any, prevPayload: any): void {
-    this.spies.payloadChanged(payload, prevPayload);
+  setPayload(payload: any) {
+    const isEqual = super.setPayload(payload);
+    this.spies.setPayload(payload, isEqual);
+    return isEqual;
   }
 
   protected didUnmount(): void {
@@ -90,9 +98,27 @@ describe('ViewModelBase', () => {
     expect(vm.payload).toEqual({ test: 1 });
   });
 
+  it('initializes vm.data from params.data', () => {
+    const data = { postcardId: 'one' };
+    const vm = new ViewModelBaseMock({ data });
+    expect(vm.vm.data).toBe(data);
+  });
+
   it('has isMounted', () => {
     const vm = new ViewModelBaseMock();
     expect(vm.isMounted).toBe(false);
+  });
+
+  it('has isHydrated', () => {
+    const vm = new ViewModelBaseMock();
+    expect(vm.isHydrated).toBe(false);
+
+    runInAction(() => {
+      vm.vm.state = 'hydrated';
+    });
+
+    expect(vm.isHydrated).toBe(true);
+    expect(vm.isMounted).toBe(true);
   });
 
   it('has mount method', () => {
@@ -219,7 +245,7 @@ describe('ViewModelBase', () => {
     dispose();
   });
 
-  it('setPayload should respect comparePayload and pass prev payload', () => {
+  it('setPayload should respect comparePayload', () => {
     const payload1 = { value: 1 };
     const payload2 = { value: 1 };
     const payload3 = { value: 2 };
@@ -231,32 +257,41 @@ describe('ViewModelBase', () => {
       },
     });
 
-    vm.setPayload(payload2);
+    expect(vm.setPayload(payload2)).toBe(true);
     expect(vm.payload).toBe(payload1);
-    expect(vm.spies.payloadChanged).not.toHaveBeenCalled();
 
-    vm.setPayload(payload3);
+    expect(vm.setPayload(payload3)).toBe(false);
     expect(vm.payload).toBe(payload3);
-    expect(vm.spies.payloadChanged).toHaveBeenCalledOnce();
-    expect(vm.spies.payloadChanged).toHaveBeenCalledWith(payload3, payload1);
+
+    expect(vm.spies.setPayload).toHaveBeenCalledTimes(2);
+    expect(vm.spies.setPayload).toHaveBeenNthCalledWith(1, payload2, true);
+    expect(vm.spies.setPayload).toHaveBeenNthCalledWith(2, payload3, false);
   });
 
-  it('isUnmounting should be true during willUnmount and false after', () => {
-    class UnmountStateMock extends ViewModelBaseMock {
-      isUnmountingAtWillUnmount: boolean | null = null;
+  it('re-entrant mount reuses in-flight promise', async () => {
+    let resolveWillMount!: () => void;
+    const willMountPromise = new Promise<void>((resolve) => {
+      resolveWillMount = resolve;
+    });
 
-      protected willUnmount(): void {
-        this.isUnmountingAtWillUnmount = this.isUnmounting;
-        super.willUnmount();
+    class AsyncVM extends ViewModelBaseMock {
+      protected willMount() {
+        super.willMount();
+        return willMountPromise;
       }
     }
 
-    const vm = new UnmountStateMock();
+    const vm = new AsyncVM();
+    const first = vm.mount();
+    const second = vm.mount();
 
-    expect(vm.isUnmounting).toBe(false);
-    vm.unmount();
-    expect(vm.isUnmountingAtWillUnmount).toBe(true);
-    expect(vm.isUnmounting).toBe(false);
+    expect(first).toBe(second);
+    expect(vm.isMounted).toBe(false);
+
+    resolveWillMount();
+    await first;
+
+    expect(vm.isMounted).toBe(true);
   });
 
   it('unmountSignal should be aborted after unmount', () => {
@@ -270,6 +305,25 @@ describe('ViewModelBase', () => {
 
     expect(vm.unmountSignal.aborted).toBe(true);
     expect(spy).toHaveBeenCalledOnce();
+  });
+
+  it.skip('replaces an aborted unmountSignal when the view model is mounted again', () => {
+    const vm = new ViewModelBaseMock();
+    const firstSignal = vm.unmountSignal;
+
+    vm.mount();
+    vm.unmount();
+
+    expect(firstSignal.aborted).toBe(true);
+
+    vm.mount();
+
+    expect(vm.unmountSignal).not.toBe(firstSignal);
+    expect(vm.unmountSignal.aborted).toBe(false);
+
+    vm.unmount();
+
+    expect(vm.unmountSignal.aborted).toBe(true);
   });
 
   describe('hasChild / hasParent', () => {

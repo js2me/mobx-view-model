@@ -48,7 +48,7 @@ export class StarWarsBattlefieldVM extends ViewModelBase {
 
 
 ### `unmountSignal`   
-This is an [`AbortSignal`](https://developer.mozilla.org/ru/docs/Web/API/AbortSignal) that is signaled when your [`ViewModel`](/api/view-models/interface) is unmounted. It happens after `unmount()` completes in the base implementation.   
+This is an [`AbortSignal`](https://developer.mozilla.org/ru/docs/Web/API/AbortSignal) that is signaled when your [`ViewModel`](/api/view-models/interface) is unmounted. It happens after `unmount()` completes in the base implementation. If the same view model instance is mounted again, the base implementation creates a fresh signal; the signal from the previous mount remains aborted.
 
 #### Example   
 ```ts
@@ -69,38 +69,36 @@ export class TestVM extends ViewModelBase {
 }
 ```
 
-### `vmConfig`  
-Configuration object for the view model.  
-See [ViewModelsConfig](/api/view-models/view-models-config) for detailed configuration options.
+### `vm: ViewModelInfo`
+Metadata for this view model. `vm.state` contains its lifecycle state and
+`vm.data` contains data loaded from the configured resource. See the
+[`ViewModel` interface](/api/view-models/interface#vm-viewmodelinfo) for the
+state values and a resource-data example.
 
 ### `isMounted: boolean` <Badge type="tip" text="computed" />  
 Indicates whether the `ViewModel` is currently mounted with its associated component.  
 
-### `isUnmounting: boolean` <Badge type="tip" text="computed" />  
-Indicates whether the `ViewModel` is in the process of unmounting.  
+### `willMount(): void | Promise<void>` <Badge type="info" text="protected" /> {#willmount-void}  
+Called when the component begins mounting.  
+Executes before `isMounted` becomes `true`.  
 
-### `willMount(): void` <Badge type="info" text="protected" />  
-Called when the component begins mounting in the React tree.  
-Executes before the `mount()` method.
+May return a `Promise` — `mount()` waits for it, then finalizes mounting. Prefer this over overriding `mount()` for async setup.
 
-### `mount(): void | Promise<void>` <Badge type="info" text="action.bound" />  
-Called when the component is mounted in the React tree.  
+### `mount(): void | Promise<void>` <Badge type="info" text="action" />
+Called when the component is mounted in the React / Solid tree.  
 
-This method sets [`isMounted`](/api/view-models/interface#ismounted-boolean) to `true`.   
+This method sets [`isMounted`](/api/view-models/interface#ismounted-boolean) to `true` after [`willMount()`](#willmount-void) completes.   
 If you override this method, be sure to call [`super.mount()`](/api/view-models/interface#mount-void-promise-void); 
 otherwise your view component connected to this `ViewModel` will never be rendered
 because the [`withViewModel`](/react/api/with-view-model) HOC checks the [`isMounted`](/api/view-models/interface#ismounted-boolean) flag before rendering the view component.  
 
-This method can be async. This feature is helpful if you want to load some data or do something before the view component will be rendered  
-
-#### Example: Async Mounting
+#### Example: Async work in `willMount`
 ```ts
 import { ViewModelBase } from "mobx-view-model";
 
 class JediProfileVM extends ViewModelBase<{ jediId: string }> {
-  async mount() {
+  protected async willMount() {
     await this.loadJediData();
-    await super.mount();
   }
 
   private async loadJediData() {
@@ -131,40 +129,44 @@ class ForceAlertVM extends ViewModelBase<{ message: string }> {
 ```
 
 ### `willUnmount(): void` <Badge type="info" text="protected" />  
-Called when the component begins unmounting from the React tree.  
-Executes before the `unmount()` method.
+Called when the component begins unmounting from the React / Solid tree.  
+Executes before the `unmount()` method finishes.
 
-### `unmount(): void | Promise<void>` <Badge type="info" text="action.bound" />    
-Called when the component is unmounted from the React tree.  
+### `unmount(): void` <Badge type="info" text="action" />
+Called when the component is unmounted from the React / Solid tree.  
 
-This method sets [`isMounted`](/api/view-models/interface#ismounted-boolean) to `false`.   
-If you override this method, be sure to call [`super.unmount()`](/api/view-models/interface#unmount-void-promise-void); 
-otherwise your view component connected to this `ViewModel` will never be unmounted.  
+This method sets [`isMounted`](/api/view-models/interface#ismounted-boolean) to `false` and aborts [`unmountSignal`](#unmountsignal).   
+If you override this method, be sure to call [`super.unmount()`](/api/view-models/interface#unmount-void); 
+otherwise your view component connected to this `ViewModel` will never be unmounted correctly.  
 
 ### `didUnmount(): void` <Badge type="info" text="protected" />    
 Called after the view model is fully unmounted.  
 Ideal for final cleanup operations.
 
-### [`setPayload(payload: Payload): void`](/api/view-models/interface#setpayload-payload-payload-void)  
+### [`setPayload(payload: Payload): boolean`](/api/view-models/interface#setpayload-payload-payload-boolean)  
 
 Updates the view model's payload data.
 
+Returns `true` when the payload is considered equal (no change applied), and `false` when it was updated.
+
 The base implementation of this method compares the current payload and the new payload before setting it.  
-This can be overridden using [view models configuration](/api/view-models/view-models-config) or by overriding the protected [`isPayloadEqual`](#ispayloadequal-current-payload-next-payload-boolean) method.    
+Configure the comparison with [`comparePayload`](/api/view-models/view-models-config#comparepayload):
 
-#### `isPayloadEqual?.(current: Payload, next: Payload): boolean` <Badge type="danger" text="protected" />   
-This method is used for comparing the current and next payloads.   
-
-You can customize payload comparison overriding this method or configure [`viewModelsConfig`](/api/view-models/view-models-config)  
-
-Example:  
 ```ts
-class PostcardBox extends ViewModelBase {
-  isPayloadEqual() {
-    return true;
-  }
-}
+import { ViewModelBase } from "mobx-view-model";
+
+class PostcardBox extends ViewModelBase<{ postcardId: string }> {}
+
+new PostcardBox({
+  id: "postcard-box",
+  payload: { postcardId: "one" },
+  vmConfig: {
+    comparePayload: (current, next) => current?.postcardId === next.postcardId,
+  },
+});
 ```
+
+To customize payload handling further, override `setPayload()` and call `super.setPayload(payload)` when appropriate.
 
 ### `hasChild(vm, deep?): boolean` <Badge type="info" text="protected" /> {#haschild-vm-anyviewmodel--anyviewmodelsimple-deep-boolean-boolean}
 Checks whether the given view model is a child of the current view model.
@@ -234,3 +236,6 @@ class UserVM extends ViewModelBase<
   }
 }
 ```
+
+### `InferViewModelPayload<T>` / `InferViewModelProps<T>`  
+Helpers that extract `payload` and `props` types from a `ViewModelBase` subclass.

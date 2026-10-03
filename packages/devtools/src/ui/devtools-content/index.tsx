@@ -7,7 +7,7 @@ import {
   Magnifier,
   Xmark,
 } from '@gravity-ui/icons';
-import { type ViewModelProps, withViewModel } from 'mobx-view-model';
+import { type ViewModelProps, withViewModel } from 'mobx-view-model-react';
 import type { CSSProperties, ReactNode } from 'react';
 import { cx } from 'yummies/css';
 import { VMListItem } from '@/model/list-item/vm-list-item';

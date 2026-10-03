@@ -6,31 +6,41 @@ title: View Model Store base implementation
 
 This is the base implementation of the [`ViewModelStore`](/api/view-model-store/interface) interface.  
 
-[Reference to source code](/src/view-model/view-model.store.base.ts)  
+[Reference to source code](https://github.com/js2me/mobx-view-model/blob/master/packages/core/src/view-model/view-model.store.base.ts)
 
 ## Methods and properties  
 Here is documentation about **base implementation** methods and properties.  
 If you need to read about [`ViewModelStore`](/api/view-model-store/interface) interface methods and properties, [go here](/api/view-model-store/interface).  
 
 ### `viewModels` (_protected_)  
-Map structure with created [ViewModel](/api/view-models/overview) instances in application.  
+Map structure with created [ViewModel](/api/view-models/overview) instances in application (`id` → instance).  
 
-### `instanceAttachedCount` (_protected_)  
-[ViewModel](/api/view-models/interface) instances count attached ([method attach()](/api/view-model-store/interface#attachviewmodel)) to current store  
+### `viewModelIdsByClasses` (_protected_)  
+Map from ViewModel class to the list of registered instance ids.
 
-### `mountingViews` (_protected_)  
-A `Set` with [ViewModel](/api/view-models/overview) ids which views are waiting for mount
+### `linkedAnchorVMClasses` (_protected_)
+Map from component anchors to their ViewModel classes, used for lookups by component.
 
-### `unmountingViews` (_protected_)  
-A `Set` with [ViewModel](/api/view-models/overview) ids which views are waiting for unmount
+### `vmConfig`  
+Effective [ViewModelsConfig](/api/view-models/view-models-config), merged from global defaults and store options.
 
-### `viewModelsTempHeap` (_protected_)  
-A `Map` with temp heap vm instances  
-Is needed to get access to view model instance before all initializations happens  
+### `resource`
+Store-scoped data source for view models. Defaults to the resource in `vmConfig` when no store resource is supplied. See the [interface documentation](/api/view-model-store/interface#resource).
 
-### `vmConfig` (_protected_)  
-[ViewModelsConfig](/api/view-models/view-models-config)  
+### `connect(instance, config)`  
+Registers an already created instance in the store: links anchors, indexes the instance by ID and class, and calls `init(...)` when present. It does not call `mount()`.
 
-### `getOrCreateVmId(model)`  
-Returns the model’s `id`, assigning one with the store’s configured [`generateId`](/api/view-models/view-models-config) when it was missing. Used by `attach`, `mount`, and related flows; override the store only if you extend `ViewModelStoreBase` and need the same behaviour.  
+### `define(config)`  
+See [interface](/api/view-model-store/interface#define-config). Generates an ID and returns an existing instance with that ID, or creates one via [`create`](/api/view-model-store/interface#create-config) and registers it via [`connect`](#connect-instance-config).
 
+### `create(config)`  
+See [interface](/api/view-model-store/interface#create-config). Uses `config.factory` or `vmConfig.factory`.
+
+### `unmount(instance)`  
+See [interface](/api/view-model-store/interface#unmount-instance).
+
+### `clean()`
+Clears the store's instance, class, and anchor indexes. It does not call `unmount()` on the instances.
+
+### `attachVMConstructor(model)` / `dettachVMConstructor(model)` (_protected_)  
+Maintain `viewModelIdsByClasses` so lookups by class work after connect / unmount.

@@ -1,114 +1,42 @@
 # Detailed configuration
 
-This approach can be helpful when: 
- - you need to override the default factory method for creating view model instances in [ViewModelStore](/api/view-model-store/interface);  
- - you need to inject a root store into [ViewModelStore](/api/view-model-store/interface);  
- - you need more control over mounting/unmounting [ViewModels](/api/view-models/overview).  
+Use configuration when the defaults do not match a view's payload or lifecycle requirements. Most applications only need the default setup from the previous guides.
 
+## Configure one view
 
-Follow the steps:   
+Pass `vmConfig` to `withViewModel` to change configuration for one view model. This leaves the global defaults unchanged.
 
-##### 1. Make your own `ViewModel` interface and implementation with customizations:  
+```tsx
+import { withViewModel } from 'mobx-view-model-react';
 
-```ts{9,10}
-// view-model.ts
-// interface for your view model
-import { ViewModel as ViewModelBase } from 'mobx-view-model';
-
-export interface ViewModel<
-  Payload extends AnyObject = EmptyObject,
-  ParentViewModel extends ViewModel<any, any> | null = null,
-> extends ViewModelBase<Payload, ParentViewModel> {
-  trackName: string;
-  getTrackTime(): Date;
-}
-```
-
-```ts{5,12,14,16,17,18}
-// view-model.impl.ts
-// implementation for your interface
-import { ViewModelBase, ViewModelParams } from 'mobx-view-model';
-
-import { ViewModel } from './view-model';
-
-export class ViewModelImpl<
-    Payload extends AnyObject = EmptyObject,
-    ParentViewModel extends ViewModel<any, any> | null = null,
-  >
-  extends ViewModelBase<Payload, ParentViewModel>
-  implements ViewModel<Payload, ParentViewModel>
-{
-  trackName = new Date().toISOString()
-
-  getTrackTime() {
-    return new Date();
-  }
-}
-
-```
-
-
-##### 2. Make your own `ViewModelStore` implementation   
-
-```ts{8,19,20,21}
-// view-model.store.impl.ts
-import {
-  ViewModelParams,
-  ViewModelStoreBase,
-  ViewModel,
-  ViewModelCreateConfig,
-} from 'mobx-view-model';
-import { ViewModelImpl } from "./view-model.impl.ts"
-
-export class ViewModelStoreImpl extends ViewModelStoreBase {
-  createViewModel<VM extends ViewModel<any, ViewModel<any, any>>>(
-    config: ViewModelCreateConfig<VM>,
-  ): VM {
-    const VM = config.VM;
-
-  // here you send rootStore as
-    // first argument into VM (your view model implementation)
-    if (ViewModelImpl.isPrototypeOf(VM)) {
-      const instance = super.createViewModel(config) as unknown as ViewModelImpl;
-      console.log(instance.getTrackTime());
-      return instance;
-    }
-
-    // otherwise it will be the default behavior
-    // of this method
-    return super.createViewModel(config);
-  }
-}
-```
-
-##### <ReactMark /> 3. Create a `View` with a `ViewModel`   
-
-```tsx{2,4,10}
-import { ViewModelProps, withViewModel } from 'mobx-view-model-react';
-import { ViewModelImpl } from '@/shared/lib/mobx';
-
-export class MyPageVM extends ViewModelImpl {
-  @observable
-  accessor state = '';
-
-  async mount() {
-    // this.isMounted = false;
-    console.log(this.trackName)
-    super.mount(); // this.isMounted = true
-  }
-
-  protected didMount() {
-    console.info('did mount');
-  }
-
-  unmount() {
-    super.unmount();
-  }
-}
-
-export const MyPage = withViewModel(MyPageVM, ({ model }) => {
-  return <div>{model.state}</div>;
+export const MyPage = withViewModel(MyPageVM, MyPageView, {
+  vmConfig: {
+    comparePayload: 'shallow',
+    payloadObservable: 'ref',
+  },
 });
 ```
 
-You may also find [**this recipe about integrating with `RootStore`**](/recipes/integration-with-root-store) helpful.   
+See the [`ViewModelsConfig` reference](/api/view-models/view-models-config) for every option and its default.
+
+## Configure a store
+
+Pass `vmConfig` to `ViewModelStoreBase` when the same settings should apply to every view model created by that store.
+
+```ts
+import { ViewModelStoreBase } from 'mobx-view-model';
+
+const viewModelStore = new ViewModelStoreBase({
+  vmConfig: {
+    comparePayload: false,
+    payloadComputed: 'struct',
+    payloadObservable: 'ref',
+  },
+});
+```
+
+## Customize instance creation
+
+Use a `factory` when a view model needs dependencies in addition to its standard configuration. A factory must preserve the construction contract of the ViewModel classes it handles: `ViewModelSimple` classes are constructed without arguments, while `ViewModelBase` classes receive their creation configuration. For an application-wide dependency such as a root store, follow the [RootStore integration recipe](/recipes/integration-with-root-store), which shows a custom store implementation.
+
+Set global configuration before creating stores or view models. Global settings act as defaults; a store or HOC can override them with `vmConfig`.

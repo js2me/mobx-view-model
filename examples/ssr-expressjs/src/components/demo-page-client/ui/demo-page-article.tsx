@@ -1,5 +1,5 @@
 import { observer } from 'mobx-react-lite';
-import { useViewModel } from 'mobx-view-model';
+import { useViewModel } from 'mobx-view-model-react';
 import { DemoPageVM } from '../model.js';
 
 export const DemoPageArticle = observer(() => {

@@ -1,6 +1,6 @@
 'use client';
 
-import { ViewModelsProvider } from 'mobx-view-model';
+import { ViewModelsProvider } from 'mobx-view-model-react';
 import { type ReactNode } from 'react';
 import { RootStoreContext } from '../context';
 import type { RootStore } from '..';

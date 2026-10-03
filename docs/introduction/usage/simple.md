@@ -1,16 +1,14 @@
 # Simple usage  
 
-The simplest way to integrate with this library is to use the [`ViewModelSimple` interface](/api/view-models/view-model-simple).  
+The simplest way to integrate with this library is a lightweight MobX class compatible with [`ViewModelSimple`](/api/view-models/view-model-simple). Implementing the interface is optional because all of its members are optional.
 
 Follow the steps:  
 
-##### 1. Create class or implement [`ViewModelSimple` interface](/api/view-models/view-model-simple)  
+## 1. Create a ViewModel class
 
 ```tsx
-import { ViewModelSimple } from 'mobx-view-model';
 import { makeAutoObservable } from 'mobx';
 
-// export class MyPageVM implements ViewModelSimple {
 export class MyPageVM {
   state = '';
 
@@ -24,7 +22,7 @@ export class MyPageVM {
 }
 ```
 
-##### <ReactMark /> 2. Create an instance of your `ViewModel` using [`withViewModel()` HOC](/react/api/with-view-model)   
+## 2. Connect it to a React view
 
 ```tsx
 import { withViewModel } from 'mobx-view-model-react';
@@ -34,7 +32,7 @@ const MyPage = withViewModel(MyPageVM, ({ model }) => {
 });
 ```
 
-##### 3. Use it  
+## 3. Render it
 
 ```tsx
 <MyPage />
@@ -43,4 +41,3 @@ const MyPage = withViewModel(MyPageVM, ({ model }) => {
 
 If you need access to more lifecycle methods or the full [ViewModel interface](/api/view-models/interface),  
 you can find that guide [on the next page](/introduction/usage/with-base-implementation).  
-

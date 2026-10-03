@@ -32,7 +32,7 @@ export default {
 };
 ```
 
-All features are on by default in dev mode. The plugin injects nothing in production builds.
+Smart HMR and automatic display names are enabled by default in development. Enable devtools explicitly with `devtools: true`. The plugin injects nothing in production builds.
 
 ## Features
 
@@ -43,7 +43,7 @@ Fixes [Error #2](/errors/2) that shows up when Vite HMR replaces a ViewModel cla
 
 ### Auto `displayName` for observer components
 
-In dev mode, the plugin automatically sets `displayName` on every component wrapped in `observer()` from `mobx-react-lite`.
+In dev mode, the plugin automatically sets `displayName` for direct named assignments wrapped in `observer()` from `mobx-react-lite` (for example, `const Header = observer(...)`).
 
 ```tsx
 // Before (no name in React DevTools)
@@ -91,7 +91,7 @@ Enables smart HMR for ViewModel classes. When a ViewModel class file changes, th
 - **Type:** `boolean`
 - **Default:** `true`
 
-Automatically injects `displayName` for all `observer()`-wrapped components. Instead of `Observer` in React DevTools, you'll see the actual component name.
+Automatically injects `displayName` for direct named assignments wrapped in `observer()`. Instead of `Observer` in React DevTools, you'll see the actual component name.
 
 ### `devtools`
 

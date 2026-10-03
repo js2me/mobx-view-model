@@ -4,37 +4,18 @@ This recipe may be helpful if you need access to your `RootStore` inside your `V
 
 Follow the steps:   
 
-1. Make your own `ViewModel` implementation that accepts `RootStore` as a `constructor` parameter   
+1. Make a base `ViewModel` implementation that accepts `RootStore` as a constructor parameter.
 
 ```ts
-// view-model.ts
-// interface for your view model
-import { ViewModel as ViewModelBase } from 'mobx-view-model';
-
-export interface ViewModel<
-  Payload extends AnyObject = EmptyObject,
-  ParentViewModel extends ViewModel<any, any> | null = null,
-> extends ViewModelBase<Payload, ParentViewModel> {}
-```
-
-```ts{6,16}
 // view-model.impl.ts
-// implementation for your interface
-import { ViewModelBase, ViewModelParams } from 'mobx-view-model';
+import { ViewModelBase, type ViewModelParams } from 'mobx-view-model';
 
-import { ViewModel } from './view-model';
-import { RootStore } from "@/shared/store";
+import type { RootStore } from '@/shared/store';
 
-export class ViewModelImpl<
-    Payload extends AnyObject = EmptyObject,
-    ParentViewModel extends ViewModel<any, any> | null = null,
-  >
-  extends ViewModelBase<Payload, ParentViewModel>
-  implements ViewModel<Payload, ParentViewModel>
-{
+export class ViewModelImpl extends ViewModelBase {
   constructor(
     protected rootStore: RootStore,
-    params: ViewModelParams<Payload, ParentViewModel>,
+    params: ViewModelParams,
   ) {
     super(params);
   }
@@ -49,46 +30,37 @@ export class ViewModelImpl<
 ```
 
 
-2. Make your own `ViewModelStore` implementation that accepts `RootStore` as a `constructor` parameter and overrides `createViewModel` to pass `rootStore`   
+2. Configure a `ViewModelStore` factory that passes `RootStore` to classes derived from that base implementation. Using the factory instead of overriding `create` preserves the store's `vmConfig` merging and per-creation `factory` overrides.
 
-```ts{8,9,12,23,24,25}
+```ts{13}
 // view-model.store.impl.ts
-import {
-  ViewModelParams,
-  ViewModelStoreBase,
-  ViewModel,
-  ViewModelCreateConfig,
-} from 'mobx-view-model';
-import { ViewModelImpl } from "./view-model.impl.ts"
-import { RootStore } from "@/shared/store";
+import { ViewModelStoreBase, viewModelsConfig } from 'mobx-view-model';
+import { ViewModelImpl } from './view-model.impl';
+import type { RootStore } from '@/shared/store';
 
 export class ViewModelStoreImpl extends ViewModelStoreBase {
   constructor(protected rootStore: RootStore) {
-    super();
-  }
-
-  createViewModel<VM extends ViewModel<any, ViewModel<any, any>>>(
-    config: ViewModelCreateConfig<VM>,
-  ): VM {
-    const VM = config.VM;
-
-    // here is you sending rootStore as
-    // first argument into VM (your view model implementation)
-    if (ViewModelImpl.isPrototypeOf(VM)) {
-      return new VM(this.rootStore, config);
-    }
-
-    // otherwise it will be the default behavior
-    // of this method
-    return super.createViewModel(config);
+    super({
+      vmConfig: {
+        factory: (params) => {
+          const VM = params.VM;
+          if (VM === ViewModelImpl || VM.prototype instanceof ViewModelImpl) {
+            return new VM(rootStore, params);
+          }
+          return viewModelsConfig.factory(params);
+        },
+      },
+    });
   }
 }
 ```
 
+An explicit `factory` in a creation config takes precedence; a per-view-model `vmConfig.factory` can also override this store default.
+
 3. Add `ViewModelStore` into your `RootStore`   
 
 ```ts{8}
-import { ViewModelStore } from 'mobx-view-model';
+import type { ViewModelStore } from 'mobx-view-model';
 import { ViewModelStoreImpl } from '@/shared/lib/mobx';
 
 export class RootStoreImpl implements RootStore {
@@ -102,32 +74,29 @@ export class RootStoreImpl implements RootStore {
 
 4. Create a `View` with a `ViewModel`   
 
-```tsx{2,4,10}
-import { ViewModelProps, withViewModel } from 'mobx-view-model-react';
+```tsx
+import { observable } from 'mobx';
+import { withViewModel } from 'mobx-view-model-react';
 import { ViewModelImpl } from '@/shared/lib/mobx';
 
 export class MyPageVM extends ViewModelImpl {
   @observable
   accessor state = '';
 
-  async mount() {
-    // this.isMounted = false;
+  protected async willMount() {
     await this.rootStore.beerApi.takeBeer();
-    super.mount(); // this.isMounted = true
   }
 
   protected didMount() {
     console.info('did mount');
   }
-
-  unmount() {
-    super.unmount();
-  }
 }
 
-const MyPageView = observer(({ model }: ViewModelProps<MyPageVM>) => {
+export const MyPage = withViewModel(MyPageVM, ({ model }) => {
   return <div>{model.state}</div>;
 });
-
-export const MyPage = withViewModel(MyPageVM, MyPageView);
 ```
+
+:::: warning View must not be wrapped
+`withViewModel` wraps the View in `observer` itself. Pass a plain render function; wrapping it in `observer` or `React.memo` first causes [Error #4](/errors/4).
+::::

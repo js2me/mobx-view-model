@@ -1,6 +1,6 @@
 'use client';
 
-import { withViewModel } from 'mobx-view-model';
+import { withViewModel } from 'mobx-view-model-react';
 import { DemoPageArticle } from '@/components/demo-page-client/ui/demo-page-article';
 import { DemoPageFallback } from '@/components/demo-page-client/ui/demo-page-fallback';
 import { DemoPageVM } from '@/components/demo-page-client/model';

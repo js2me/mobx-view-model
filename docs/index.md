@@ -3,21 +3,21 @@
 layout: home
 
 hero:
-  name: '{packageJson.name}'
-  text: '⚡ Clean MVVM for React + MobX ⚡'
+  name: '@{packageJson.name}'
+  text: '⚡ Clean MVVM for React / Solid + MobX ⚡'
   image:
     src: /logo.png
   actions:
     - theme: brand
       text: Get Started
-      link: /introduction/overview.md
+      link: /introduction/getting-started
     - theme: alt
       text: View on GitHub
-      link: https://github.com/{packageJson.author}/{packageJson.name}
+      link: https://github.com/@{packageJson.author}/@{packageJson.name}
 
 features:
   - title: MobX-based
-    icon: <span class="i-logos:mobx-icon"></span>
+    icon: <span class="i-logos:mobx"></span>
     details: Experience the power of MobX
   - title: TypeScript
     icon: <span class="i-logos:typescript-icon"></span>
@@ -35,5 +35,9 @@ features:
     link: /other/vite-plugin
   - title: SSR Ready
     icon: 🖥️
-    details: Server-side rendering support out of the box
+    details: Server-side rendering and hydration with per-request stores and matching client data
+    link: /react/ssr
+  - title: Microfrontend Friendly
+    icon: 🌐
+    details: Share framework contexts across separately bundled copies of the bindings
 ---

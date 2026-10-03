@@ -9,6 +9,7 @@ import {
   ActiveViewModelContext,
   ViewModelsContext,
 } from '../contexts/index.js';
+import { getRenderPhaseViewModel } from './staged-view-model.js';
 
 /**
  * Get access to **already created** instance of ViewModel
@@ -20,7 +21,9 @@ export const useViewModel = <T extends AnyViewModel | AnyViewModelSimple>(
 ): T => {
   const viewModels = useContext(ViewModelsContext);
   const activeViewModel = useContext(ActiveViewModelContext);
-  const model = viewModels?.get(vmLookup);
+  const model = viewModels
+    ? getRenderPhaseViewModel<T>(viewModels, vmLookup)
+    : undefined;
 
   // This ref is needed only for development
   // support better HMR in vite

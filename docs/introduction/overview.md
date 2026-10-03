@@ -1,24 +1,24 @@
 # Overview  
 
-**mobx-view-model** is a library for integrating the [MVVM](https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93viewmodel) pattern with MobX and React.  
+**mobx-view-model** is a library for integrating the [MVVM](https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93viewmodel) pattern with MobX and UI frameworks (**React**, **SolidJS**).  
 
 ## Motivation  
 
-The main goal of this library is to integrate the [MVVM](https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93viewmodel) architectural pattern with `React` and `MobX` reactivity.  
+The main goal of this library is to integrate the [MVVM](https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93viewmodel) architectural pattern with UI frameworks and `MobX` reactivity.  
 
 A key aspect of this integration is enabling strict isolation between business logic and presentation layers. By enforcing a clear separation through [ViewModels](/api/view-models/overview), developers can:
 1. Encapsulate state management and business rules within observable [ViewModels](/api/view-models/overview)  
-2. Keep React components focused only on rendering and user interactions  
+2. Keep view components focused only on rendering and user interactions  
 3. Eliminate direct dependencies between UI components and domain models  
 
 ## Pros and cons  
 
 Pros:  
- - More convenient separation of business logic from the presentation layer ([React](https://react.dev/)/etc).  
- - More flexible and seamless integration of the `React` ecosystem with `MobX`.  
+ - More convenient separation of business logic from the presentation layer ([React](https://react.dev/), [SolidJS](https://www.solidjs.com/), etc).  
+ - More flexible and seamless integration of the UI ecosystem with `MobX`.  
 
 Cons:  
- - An additional wrapper in the form of the [`withViewModel() HOC`](/react/api/with-view-model), which wraps the component in an extra layer. This wrapper further encloses the view component within [`observer()`](https://mobx.js.org/api.html#observer).  
+ - An additional wrapper in the form of the [`withViewModel()` HOC](/react/api/with-view-model) (React also wraps the view in [`observer()`](https://mobx.js.org/api.html#observer); Solid uses [mobx-solid](https://js2me.github.io/mobx-solid/) instead).  
  - Additional kilobytes for your bundle.  
 
 ## About MVVM  

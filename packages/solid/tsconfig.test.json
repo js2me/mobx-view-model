@@ -1,0 +1,13 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "../..",
+    "types": ["node"],
+    "lib": ["DOM", "DOM.Iterable", "ESNext"],
+    "paths": {
+      "mobx-view-model": ["../core/src/index.ts"],
+      "mobx-view-model-solid": ["./src/index.ts"]
+    }
+  },
+  "include": ["src/**/*.test.ts", "src/**/*.test.tsx", "src/**/*.fixture.ts"]
+}

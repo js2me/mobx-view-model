@@ -1,4 +1,4 @@
-import { withViewModel } from 'mobx-view-model';
+import { withViewModel } from 'mobx-view-model-react';
 import { AppNavVM } from './model.js';
 
 export const AppNav = withViewModel<AppNavVM, { pathname: string }>(

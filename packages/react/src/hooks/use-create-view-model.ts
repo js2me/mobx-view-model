@@ -4,26 +4,135 @@ import type {
   ViewModelCreateConfig,
   ViewModelSimple,
   ViewModelsConfig,
+  ViewModelStore,
 } from 'mobx-view-model';
-import { viewModelsConfig } from 'mobx-view-model';
-import { useContext, useId, useRef } from 'react';
-import * as React from 'react';
-import { flushPendingReactions } from 'yummies/mobx';
+import {
+  _internals,
+  isViewModel,
+  isViewModelSimple,
+  viewModelsConfig,
+} from 'mobx-view-model';
+import { runInAction } from 'mobx';
+import {
+  useContext,
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from 'react';
 import type { AnyObject, Class, IsPartial, Maybe } from 'yummies/types';
-import { isViewModelClass } from 'mobx-view-model';
+import { reactUse } from '../lib/react-use.js';
 import {
   ActiveViewModelContext,
   ViewModelsContext,
 } from '../contexts/index.js';
-import { useIsomorphicLayoutEffect, useValue } from '../lib/hooks/index.js';
+import {
+  type UnconfirmedCreation,
+  acquireVm,
+  confirmCreation,
+  registerUnconfirmed,
+  releaseVm,
+} from './pending-vm-unmount.js';
+import { commitStagedViewModel, stageViewModel } from './staged-view-model.js';
 
-// React 18 has no `use` export; keep it optional without a static named import.
-const reactUse = React.use;
+const EMPTY_ARR: any[] = [];
+const { emptyObject, noop } = _internals;
+const isProd = process.env.NODE_ENV === 'production';
+
+const subscribeNoop = () => noop;
+const getClientHydrated = () => true;
+const getServerHydrated = () => false;
+const useCommitEffect =
+  typeof window === 'undefined' ? useEffect : useLayoutEffect;
+
+type VmInstance = AnyViewModel | AnyViewModelSimple;
+/** Internal revision for non-observable ViewModelSimple values. */
+export const viewModelPayloadVersions = new WeakMap<VmInstance, number>();
+
+type Cache = {
+  vm: VmInstance;
+  config: ViewModelCreateConfig<any>;
+  appliedPayload: any;
+  appliedProps?: any;
+  skipForcedCommit?: boolean;
+  bindAfterCommit?: boolean;
+  promise?: PromiseLike<void>;
+  isSSR: boolean;
+  fn: () => () => void;
+  creationEntry?: UnconfirmedCreation;
+  staged?: boolean;
+};
+
+const instantiateVm = (
+  id: string,
+  VM: Class<any>,
+  payload: any,
+  data: any,
+  rawCfg: any,
+  props: any,
+  viewModels: ViewModelStore | null,
+  parentViewModel: VmInstance | null | undefined,
+  stagedOwner?: object,
+): { instance: VmInstance; config: ViewModelCreateConfig<any> } =>
+  runInAction(() => {
+    const config: ViewModelCreateConfig<any> = {
+      ...rawCfg,
+      id,
+      payload,
+      data,
+      VM,
+      viewModels,
+      parentViewModel,
+      ctx: rawCfg?.ctx ?? emptyObject,
+      props: props ?? rawCfg?.props,
+    };
+    const instance: VmInstance = viewModels
+      ? stagedOwner
+        ? stageViewModel(viewModels, config, stagedOwner)
+        : viewModels.define(config)
+      : (config.factory?.(config) ?? viewModelsConfig.factory(config));
+    if (!viewModels) {
+      instance.init?.({ ...config, viewModels: undefined } as any);
+    }
+    return { instance, config };
+  });
+
+const bindModel = (
+  instance: VmInstance,
+  payload: any,
+  parentViewModel: VmInstance | null | undefined,
+) => {
+  if (isViewModelSimple(instance)) {
+    instance.parentViewModel = parentViewModel;
+    instance.setPayload?.(payload);
+  }
+};
+
+const bindLifecycle = (
+  instance: VmInstance,
+  payload: any,
+  parentViewModel: VmInstance | null | undefined,
+) =>
+  runInAction(() => {
+    bindModel(instance, payload, parentViewModel);
+    return isViewModel(instance) && instance.isMounted
+      ? undefined
+      : instance.mount?.();
+  });
+
+const mountLifecycle = (instance: VmInstance) =>
+  runInAction(() =>
+    isViewModel(instance) && instance.isMounted
+      ? undefined
+      : instance.mount?.(),
+  );
 
 export interface UseCreateViewModelConfig<TViewModel extends AnyViewModel>
   extends Pick<
     ViewModelCreateConfig<TViewModel>,
-    'vmConfig' | 'ctx' | 'component' | 'anchors' | 'props'
+    'vmConfig' | 'ctx' | 'anchors' | 'props'
   > {
   /**
    * Unique identifier for the view
@@ -31,13 +140,6 @@ export interface UseCreateViewModelConfig<TViewModel extends AnyViewModel>
    * [**Documentation**](https://js2me.github.io/mobx-view-model/react/api/with-view-model.html#id)
    */
   id?: Maybe<string>;
-
-  /**
-   * Function to generate an identifier for the view model
-   *
-   * [**Documentation**](https://js2me.github.io/mobx-view-model/react/api/with-view-model.html#generateid)
-   */
-  generateId?: ViewModelsConfig<TViewModel>['generateId'];
 
   /**
    * Function to create an instance of the VM class
@@ -58,10 +160,12 @@ export function useCreateViewModel<TViewModel extends AnyViewModel>(
     ? [
         payload?: TViewModel['payload'],
         config?: UseCreateViewModelConfig<TViewModel>,
+        _props?: any,
       ]
     : [
         payload: TViewModel['payload'],
         config?: UseCreateViewModelConfig<TViewModel>,
+        _props?: any,
       ]
 ): TViewModel;
 
@@ -76,8 +180,8 @@ export function useCreateViewModel<
 >(
   VM: Class<TViewModelSimple>,
   ...args: IsPartial<TPayload> extends true
-    ? [payload?: TPayload]
-    : [payload: TPayload]
+    ? [payload?: TPayload, config?: ViewModelCreateConfig<TViewModelSimple>]
+    : [payload: TPayload, config?: ViewModelCreateConfig<TViewModelSimple>]
 ): TViewModelSimple;
 
 /**
@@ -96,189 +200,157 @@ export function useCreateViewModel<TViewModelSimple>(
  */
 export function useCreateViewModel(
   VM: Class<any>,
-  payload?: any,
-  config?: any,
+  payload: any = emptyObject,
+  rawCfg?: any,
+  props?: any,
 ) {
-  if (isViewModelClass(VM)) {
-    // scenario for ViewModelBase
-    return useCreateViewModelBase(VM, payload, config);
+  const viewModels = useContext(ViewModelsContext);
+  const parentViewModel = useContext(ActiveViewModelContext);
+  const cache = useRef<Cache>(null!);
+  const reactId = useId();
+  const isUpdate = !!cache.current;
+  const [, forceRender] = useState(0);
+
+  if (cache.current) {
+    // The VM and its store belong to this fiber for its entire mounted lifetime.
+    // Changing the provider's store requires remounting the subtree.
+    // Don't revive here — this render may still be discarded.
+    // The commit effect reattaches after React confirms the fiber is alive.
+  } else {
+    const isClient = _internals.isClient;
+    const isSSR = viewModelsConfig.mode === 'ssr';
+    const explicitId = rawCfg?.id as string | null | undefined;
+    const vmId = explicitId ?? (isProd ? reactId : `${reactId}:${VM.name}`);
+    const existing = viewModels?.get(vmId) as VmInstance | null;
+    const vmResource = viewModels?.resource ?? viewModelsConfig.resource;
+    const data = existing
+      ? (existing as { vm?: { data?: any } }).vm?.data
+      : vmResource?.read(vmId);
+
+    const useStaging = isClient && viewModels != null;
+
+    const { instance: model, config } = instantiateVm(
+      vmId,
+      VM,
+      payload,
+      data,
+      rawCfg,
+      props,
+      viewModels,
+      parentViewModel,
+      useStaging ? cache : undefined,
+    );
+    const bindAfterCommit = isClient && !!viewModels &&
+      viewModels.get(config.id) === model;
+    if (isClient && !bindAfterCommit) {
+      bindModel(model, payload, parentViewModel);
+    }
+    const lifecycleResult =
+      !isClient
+        ? (bindLifecycle(model, payload, parentViewModel) as
+            | PromiseLike<void>
+            | undefined)
+        : undefined;
+
+    const creationEntry =
+      useStaging || !isClient
+        ? undefined
+        : registerUnconfirmed(model, viewModels);
+
+    cache.current = {
+      vm: model,
+      config,
+      appliedPayload: payload,
+      appliedProps: props,
+      bindAfterCommit,
+      promise: lifecycleResult,
+      isSSR,
+      creationEntry,
+      staged: useStaging || undefined,
+      fn: () => {
+        if (cache.current.creationEntry) {
+          confirmCreation(cache.current.creationEntry);
+          cache.current.creationEntry = undefined;
+        }
+
+        const vm = cache.current.vm;
+
+        if (cache.current.staged) {
+          cache.current.staged = false;
+          commitStagedViewModel(viewModels!, cache.current.config, vm);
+        }
+
+        if (viewModels && isViewModel(vm) && vm.id != null && !viewModels.has(vm.id)) {
+          runInAction(() => {
+            viewModels.define({ ...cache.current.config, factory: () => vm });
+          });
+        }
+
+        acquireVm(vm);
+        const mountResult = mountLifecycle(vm) as
+          | PromiseLike<void>
+          | undefined;
+        if (mountResult) {
+          cache.current.promise = mountResult;
+        }
+
+        const shouldHydrate =
+          isViewModel(vm) && vm.vm.state === 'mounted' && cache.current.isSSR;
+        if (shouldHydrate) {
+          runInAction(() => {
+            vm.vm.state = 'hydrated';
+          });
+        }
+
+        return () => {
+          releaseVm(cache.current.vm, viewModels);
+        };
+      },
+    };
   }
 
-  // scenario for ViewModelSimple
-  return useCreateViewModelSimple(VM, payload);
+  const model = cache.current.vm;
+
+  useCommitEffect(cache.current.fn, EMPTY_ARR);
+
+  // Defer mutations of an existing VM until React commits this render.
+  // The initial render already binds the payload when the VM is created.
+  useCommitEffect(() => {
+    if (cache.current.skipForcedCommit) {
+      cache.current.skipForcedCommit = false;
+      if (cache.current.appliedProps === props) return;
+    }
+    if (cache.current.bindAfterCommit) {
+      cache.current.bindAfterCommit = false;
+      runInAction(() => bindModel(model, payload, parentViewModel));
+      if (isViewModelSimple(model)) {
+        viewModelPayloadVersions.set(model, (viewModelPayloadVersions.get(model) ?? 0) + 1);
+        cache.current.skipForcedCommit = true;
+        forceRender((revision) => revision + 1);
+      }
+    } else if (isUpdate && !Object.is(cache.current.appliedPayload, payload)) {
+      cache.current.appliedPayload = payload;
+      cache.current.appliedProps = props;
+      model.setPayload?.(payload);
+      if (isViewModelSimple(model)) {
+        viewModelPayloadVersions.set(model, (viewModelPayloadVersions.get(model) ?? 0) + 1);
+        cache.current.skipForcedCommit = true;
+        forceRender((revision) => revision + 1);
+      }
+    }
+  }, [payload]);
+
+  if (cache.current.isSSR) {
+    const pending = cache.current.promise;
+    const isHydrated = useSyncExternalStore(
+      subscribeNoop,
+      getClientHydrated,
+      getServerHydrated,
+    );
+    if (reactUse && pending && (!_internals.isClient || !isHydrated)) {
+      reactUse(pending);
+    }
+  }
+
+  return model;
 }
-
-const useCreateViewModelBase = (
-  VM: Class<AnyViewModel>,
-  payload?: any,
-  config?: Maybe<UseCreateViewModelConfig<AnyViewModel>>,
-) => {
-  const viewModels = useContext(ViewModelsContext);
-  const parentViewModel = useContext(ActiveViewModelContext);
-  /** Last VM this hook instance attached in render; per-hook, not keyed by `instance.id`. */
-  const lastAttachedInstanceRef = useRef<AnyViewModel | null>(null);
-
-  const ctx = config?.ctx ?? {};
-
-  const useReactIds = config?.vmConfig?.useReactIds ?? viewModels?.vmConfig?.useReactIds ?? viewModelsConfig.useReactIds;
-  const renderId = useReactIds ? useId() : undefined;
-
-  const instance = useValue(() => {
-    const id =
-      viewModels?.generateViewModelId({
-        ...config,
-        ctx,
-        VM,
-        renderId,
-        parentViewModelId: parentViewModel?.id ?? null,
-      }) ??
-      config?.id ??
-      viewModelsConfig.generateId({
-        ...ctx,
-        renderId,
-      });
-
-    const instanceFromStore = viewModels?.get(id);
-
-    if (instanceFromStore) {
-      return instanceFromStore as AnyViewModel;
-    } else {
-      const configCreate: ViewModelCreateConfig<any> = {
-        ...config,
-        vmConfig: config?.vmConfig,
-        id,
-        parentViewModelId: parentViewModel?.id,
-        payload: payload ?? {},
-        VM,
-        viewModels,
-        parentViewModel,
-        ctx,
-      };
-
-      viewModels?.processCreateConfig(configCreate);
-
-      const instance: AnyViewModel =
-        config?.factory?.(configCreate) ??
-        viewModels?.createViewModel<any>(configCreate) ??
-        viewModelsConfig.factory(configCreate);
-
-      flushPendingReactions(viewModelsConfig.flushPendingReactions);
-
-      viewModels?.markToBeAttached(instance);
-
-      return instance;
-    }
-  });
-
-  useIsomorphicLayoutEffect(() => {
-    const id = instance.id;
-    const vm = instance;
-    if (viewModels) {
-      return () => {
-        void viewModels.detach(id);
-        if (lastAttachedInstanceRef.current === vm) {
-          lastAttachedInstanceRef.current = null;
-        }
-      };
-    }
-    return () => {
-      vm.unmount();
-      if (lastAttachedInstanceRef.current === vm) {
-        lastAttachedInstanceRef.current = null;
-      }
-    };
-  }, [instance]);
-
-  // Same render pass as attach (SSR + first client frame). `flushPendingMobxReactions` is
-  // required when the VM is created under mobx-react `observer`: nested `reaction()` otherwise
-  // runs after `mount()` in the same tick.
-  if (lastAttachedInstanceRef.current !== instance) {
-    if (viewModels) {
-      void viewModels.attach(instance);
-    } else {
-      void instance.mount();
-    }
-    lastAttachedInstanceRef.current = instance;
-  }
-
-  instance.setPayload(payload ?? {});
-
-  const suspendUntil =
-    config?.vmConfig?.suspendUntil ??
-    viewModels?.vmConfig?.suspendUntil ??
-    viewModelsConfig.suspendUntil;
-
-  if (suspendUntil != null) {
-    const usable = suspendUntil(instance);
-    if (usable && reactUse) {
-      reactUse(usable);
-    }
-  }
-
-  return instance;
-};
-
-const useCreateViewModelSimple = (
-  VM: Class<AnyViewModelSimple>,
-  payload?: any,
-) => {
-  const viewModels = useContext(ViewModelsContext);
-  const parentViewModel = useContext(ActiveViewModelContext);
-  /** Last VM this hook instance attached in render; per-hook, not keyed by `instance.id`. */
-  const lastAttachedInstanceRef = useRef<AnyViewModelSimple | null>(null);
-
-  const instance = useValue(() => {
-    const instance = new VM();
-
-    instance.parentViewModel =
-      parentViewModel as unknown as (typeof instance)['parentViewModel'];
-
-    flushPendingReactions(viewModelsConfig.flushPendingReactions);
-
-    viewModels?.markToBeAttached(instance);
-
-    return instance;
-  });
-
-  useIsomorphicLayoutEffect(() => {
-    const id = instance.id;
-    const vm = instance;
-    if (viewModels) {
-      return () => {
-        void viewModels.detach(id);
-        if (lastAttachedInstanceRef.current === vm) {
-          lastAttachedInstanceRef.current = null;
-        }
-      };
-    }
-    return () => {
-      vm.unmount?.();
-      if (lastAttachedInstanceRef.current === vm) {
-        lastAttachedInstanceRef.current = null;
-      }
-    };
-  }, [instance]);
-
-  if (lastAttachedInstanceRef.current !== instance) {
-    if (viewModels) {
-      void viewModels.attach(instance);
-    } else {
-      void instance.mount?.();
-    }
-    lastAttachedInstanceRef.current = instance;
-  }
-
-  instance.setPayload?.(payload);
-
-  const suspendUntil =
-    viewModels?.vmConfig?.suspendUntil ?? viewModelsConfig.suspendUntil;
-
-  if (suspendUntil != null) {
-    const usable = suspendUntil(instance);
-    if (usable && reactUse) {
-      reactUse(usable);
-    }
-  }
-
-  return instance;
-};
