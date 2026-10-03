@@ -6,7 +6,6 @@ import {
   observable,
   runInAction,
 } from 'mobx';
-import { isShallowEqual } from 'yummies/data';
 import { startViewTransitionSafety } from 'yummies/html';
 import type { ObservableAnnotationsArray } from 'yummies/mobx';
 import type { AnyObject, EmptyObject, Maybe, MaybePromise } from 'yummies/types';
@@ -68,12 +67,7 @@ export class ViewModelBase<
       config,
       data: params.vmData,
       state: 'init',
-      payloadComparator:
-        config.comparePayload === 'strict'
-          ? comparer.structural
-          : config.comparePayload === 'shallow'
-            ? isShallowEqual
-            : config.comparePayload || undefined,
+      payloadComparator: _internals.comparer[config.comparePayload as 'strict'] || config.comparePayload || undefined,
       payload: params.payload,
     }, {
       state: observable.ref,

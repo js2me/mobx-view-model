@@ -40,6 +40,8 @@ export interface ViewModelResource<TData = unknown> {
   read(id: string): TData;
 }
 
+export type PayloadComparator = PayloadCompareFn | 'strict' | 'shallow' | false
+
 /**
  * Configuration options for view models.
  * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config)
@@ -61,7 +63,7 @@ export interface ViewModelsConfig<
     payloadChange: boolean;
   };
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#comparepayload) */
-  comparePayload?: PayloadCompareFn | 'strict' | 'shallow' | false;
+  comparePayload?: PayloadComparator;
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#payloadobservable) */
   payloadObservable: 'ref' | 'deep' | 'shallow' | 'struct' | false;
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#payloadcomputed) */
