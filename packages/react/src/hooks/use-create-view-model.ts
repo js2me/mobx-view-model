@@ -69,7 +69,7 @@ const instantiateVm = (
   id: string,
   VM: Class<any>,
   payload: any,
-  data: unknown,
+  data: any,
   rawCfg: any,
   props: any,
   viewModels: ViewModelStore | null,
@@ -224,7 +224,7 @@ export function useCreateViewModel(
     const existing = viewModels?.get(vmId) as VmInstance | null;
     const vmResource = viewModels?.resource ?? viewModelsConfig.resource;
     const data = existing
-      ? (existing as { vm?: { data?: unknown } }).vm?.data
+      ? (existing as { vm?: { data?: any } }).vm?.data
       : vmResource?.read(vmId);
 
     const useStaging = isClient && viewModels != null;

@@ -48,7 +48,7 @@ export interface ViewModelParams<
    */
   props?: ComponentProps;
   /** Data resolved by the store resource for this VM id. */
-  data?: unknown;
+  data?: any;
 }
 
 
@@ -58,7 +58,7 @@ export type ViewModelInitConfig<VM extends AnyViewModel | AnyViewModelSimple> =
 export interface ViewModelInfo {
   /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/interface#vm-state-viewmodellifecyclestate) */
   state: ViewModelLifecycleState;
-  data: unknown;
+  data: any;
 }
 
 export interface ViewModelFullInfo<
