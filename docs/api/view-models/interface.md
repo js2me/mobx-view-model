@@ -147,7 +147,7 @@ React applies payload updates to an existing view model after the render commits
 :::
 
 ::: tip
-When extending [`ViewModelBase`](/api/view-models/base-implementation), do not assign to `this.payload` directly (it is a getter): call `super.setPayload(payload)` or customize comparison via [`isPayloadEqual`](/api/view-models/base-implementation#ispayloadequal-current-payload-next-payload-boolean) / [`comparePayload`](/api/view-models/view-models-config#comparepayload).
+When extending [`ViewModelBase`](/api/view-models/base-implementation), do not assign to `this.payload` directly (it is a getter): call `super.setPayload(payload)` or customize comparison with [`comparePayload`](/api/view-models/view-models-config#comparepayload).
 :::
 
 #### Example: Payload Update with Validation

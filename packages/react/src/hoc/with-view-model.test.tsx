@@ -1083,7 +1083,7 @@ describe('withViewModel', () => {
       );
     };
 
-    test('View should have actual payload state (default isPayloadEqual)', async () => {
+    test('View should have actual payload state (comparePayload: unset)', async () => {
       await createTestPayloadChanges({
         expectedCounterInPayload: 3,
         expectedRerendersCountInVMComponentView: 1,

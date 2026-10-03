@@ -50,26 +50,39 @@ afterEach(() => {
  */
 describe('Orphan cleanup dedup: same VM instance from two fibers', () => {
   test('resolves vm.data from the store resource by VM id', () => {
-    const vmStore = new ViewModelStoreBase({
-      resource: {
-        read: (id) => ({ id, value: 42 }),
-      },
-    });
+    const previousResource = viewModelsConfig.resource;
+    viewModelsConfig.resource = undefined;
 
-    class ResourceVM extends ViewModelBaseMock {}
+    try {
+      const vmStore = new ViewModelStoreBase({
+        resource: {
+          read: (id) => ({ id, value: 42 }),
+        },
+      });
 
-    const Component = () => {
-      const vm = useCreateViewModel(ResourceVM, undefined, { id: 'resource-vm' });
-      return <span data-testid="vm-data">{String((vm.vm.data as any).value)}</span>;
-    };
+      class ResourceVM extends ViewModelBaseMock {}
 
-    render(
-      <ViewModelsProvider value={vmStore}>
-        <Component />
-      </ViewModelsProvider>,
-    );
+      const Component = () => {
+        const vm = useCreateViewModel(ResourceVM, undefined, {
+          id: 'resource-vm',
+        });
+        return <span data-testid="vm-data">{String((vm.vm.data as any).value)}</span>;
+      };
 
-    expect(screen.getByTestId('vm-data').textContent).toBe('42');
+      const view = render(
+        <ViewModelsProvider value={vmStore}>
+          <Component />
+        </ViewModelsProvider>,
+      );
+
+      try {
+        expect(screen.getByTestId('vm-data').textContent).toBe('42');
+      } finally {
+        view.unmount();
+      }
+    } finally {
+      viewModelsConfig.resource = previousResource;
+    }
   });
 
   test('uses the global config resource when the store does not provide one', () => {

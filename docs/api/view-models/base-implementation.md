@@ -150,7 +150,21 @@ Updates the view model's payload data.
 Returns `true` when the payload is considered equal (no change applied), and `false` when it was updated.
 
 The base implementation of this method compares the current payload and the new payload before setting it.  
-Configure the comparison with [`comparePayload`](/api/view-models/view-models-config#comparepayload). To customize payload handling further, override `setPayload()` and call `super.setPayload(payload)` when appropriate.
+Configure the comparison with [`comparePayload`](/api/view-models/view-models-config#comparepayload):
+
+```ts
+class PostcardBox extends ViewModelBase<{ postcardId: string }> {}
+
+new PostcardBox({
+  id: "postcard-box",
+  payload: { postcardId: "one" },
+  vmConfig: {
+    comparePayload: (current, next) => current?.postcardId === next.postcardId,
+  },
+});
+```
+
+To customize payload handling further, override `setPayload()` and call `super.setPayload(payload)` when appropriate.
 
 ### `hasChild(vm, deep?): boolean` <Badge type="info" text="protected" /> {#haschild-vm-anyviewmodel--anyviewmodelsimple-deep-boolean-boolean}
 Checks whether the given view model is a child of the current view model.
