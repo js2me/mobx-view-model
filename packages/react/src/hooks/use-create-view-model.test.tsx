@@ -4,7 +4,7 @@ import type { AnyObject, Maybe, PartialKeys } from 'yummies/types';
 import type { ViewModelSimple, ViewModelStore } from 'mobx-view-model';
 import { viewModelsConfig } from 'mobx-view-model';
 import type { ReactNode } from 'react';
-import { Suspense } from 'react';
+import { Suspense, use } from 'react';
 import { renderToReadableStream } from 'react-dom/server';
 import { ViewModelBaseMock } from '../../../core/src/view-model/view-model.base.test.js';
 import { ViewModelStoreBaseMock } from '../../../core/src/view-model/view-model.store.base.test.js';
@@ -19,6 +19,58 @@ describe('useCreateViewModel', () => {
       );
     };
   };
+
+  test('replaces unmountSignal when Suspense hides and reveals the same VM', async () => {
+    let resolveSuspense!: () => void;
+    const suspensePromise = new Promise<void>((resolve) => {
+      resolveSuspense = resolve;
+    });
+    let shouldSuspend = false;
+    let renderedVm: ViewModelBaseMock | undefined;
+
+    class PageVM extends ViewModelBaseMock {}
+
+    const Page = () => {
+      const vm = useCreateViewModel(PageVM);
+      renderedVm = vm;
+
+      if (shouldSuspend) {
+        use(suspensePromise);
+      }
+
+      return <span data-testid="page">ready</span>;
+    };
+
+    const App = () => (
+      <Suspense fallback={<span data-testid="loading">loading</span>}>
+        <Page />
+      </Suspense>
+    );
+
+    const view = await act(async () => render(<App />));
+    const vm = renderedVm!;
+    const firstSignal = vm.unmountSignal;
+
+    expect(vm.isMounted).toBe(true);
+    expect(screen.getByTestId('page').textContent).toBe('ready');
+
+    shouldSuspend = true;
+    await act(async () => view.rerender(<App />));
+
+    expect(screen.getByTestId('loading').textContent).toBe('loading');
+    expect(firstSignal.aborted).toBe(true);
+
+    await act(async () => {
+      resolveSuspense();
+      await suspensePromise;
+    });
+
+    expect(screen.getByTestId('page').textContent).toBe('ready');
+    expect(renderedVm).toBe(vm);
+    expect(vm.unmountSignal).not.toBe(firstSignal);
+    expect(vm.unmountSignal.aborted).toBe(false);
+    expect(vm.isMounted).toBe(true);
+  });
 
   describe('scenarios', () => {
     test('accessing to the previous VM', async ({ task }) => {

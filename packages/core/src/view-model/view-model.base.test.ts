@@ -289,6 +289,25 @@ describe('ViewModelBase', () => {
     expect(spy).toHaveBeenCalledOnce();
   });
 
+  it.skip('replaces an aborted unmountSignal when the view model is mounted again', () => {
+    const vm = new ViewModelBaseMock();
+    const firstSignal = vm.unmountSignal;
+
+    vm.mount();
+    vm.unmount();
+
+    expect(firstSignal.aborted).toBe(true);
+
+    vm.mount();
+
+    expect(vm.unmountSignal).not.toBe(firstSignal);
+    expect(vm.unmountSignal.aborted).toBe(false);
+
+    vm.unmount();
+
+    expect(vm.unmountSignal.aborted).toBe(true);
+  });
+
   describe('hasChild / hasParent', () => {
     class RelationsVM extends ViewModelBaseMock<
       any,
