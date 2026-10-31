@@ -51,7 +51,8 @@
     "build:storybook": "storybook build",
     "check:stories": "tsc --noEmit --project tsconfig.stories.json",
     "measure:performance": "node scripts/measure-performance.mjs",
-    "test:storybook": "playwright test --config playwright.storybook.config.ts"
+    "test:storybook": "playwright test --config playwright.storybook.config.ts",
+    "test:e2e:container": "bash scripts/test-browser-container.sh"
   },
   "dependencies": {
     "@gravity-ui/icons": "^2.18.0",
@@ -67,7 +68,7 @@
     "yummies": "^7.20.1"
   },
   "devDependencies": {
-    "@playwright/test": "^1.63.0",
+    "@playwright/test": "1.63.0",
     "@storybook/react-vite": "10.6.5",
     "@types/lodash-es": "^4.17.12",
     "@types/node": "^25.9.0",

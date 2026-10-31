@@ -78,3 +78,21 @@ pnpm --filter mobx-view-model-devtools test:storybook
 ```
 
 Large stores default to collapsed VM nodes above 100 VM. Expand all keeps property models lazy, and reopening reuses cached models. See [PERFORMANCE.md](./PERFORMANCE.md) for measurements, reproduction commands and limits.
+
+## Visual regression environment
+
+Screenshot baselines are generated in the same pinned Playwright Ubuntu container used by CI. System fonts and Chromium rendering differ between Linux distributions; a native local run can legitimately differ from these baselines.
+
+After `pnpm build`, run the browser suite from the repository root:
+
+```sh
+pnpm --filter mobx-view-model-devtools test:e2e:container --workers=2
+```
+
+For an intentional visual change, regenerate snapshots in that container, inspect the resulting PNGs, then run again without updating:
+
+```sh
+pnpm --filter mobx-view-model-devtools test:e2e:container --workers=2 --update-snapshots
+```
+
+Update the exact `@playwright/test` version, CI image and container script together. Failed CI runs upload browser screenshots/diffs and traces as `devtools-browser-diagnostics`.

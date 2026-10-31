@@ -13,6 +13,10 @@ jobs:
       matrix:
         node-version: [24]
     runs-on: ubuntu-latest
+    # Keep browser/fonts identical to the visual-baseline generator.
+    container:
+      image: mcr.microsoft.com/playwright:v1.63.0-noble@sha256:bc6ab0d6d44ff4826e4cb8c1e6d801e185bfc42bb0753f8e2a30efc70db054c7
+      options: --ipc=host
     steps:
       - name: Checkout tree
         uses: actions/checkout@v6
@@ -36,7 +40,6 @@ jobs:
 
       - name: DevTools browser regressions
         run: |
-          pnpm --filter mobx-view-model-devtools exec playwright install --with-deps chromium
           pnpm --filter mobx-view-model-devtools exec playwright test --workers=2
 
       - name: DevTools Storybook
@@ -58,3 +61,12 @@ jobs:
 
       - name: Tests (examples snapshots)
         run: pnpm test:examples
+
+      - name: Upload browser diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: devtools-browser-diagnostics
+          path: packages/devtools/test-results/
+          if-no-files-found: ignore
+          retention-days: 7
