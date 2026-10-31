@@ -26,7 +26,7 @@ export const retainModel = (store: ViewModelStore, model: Model) => {
       if (--ownership.count !== 0) return;
       entries.delete(model);
       // A stale owner must never remove a replacement registered under the same ID.
-      if (model.id && store.get(model.id) === model) void store.unmount(model);
+      if (!model.id || store.get(model.id) === model) void store.unmount(model);
       else void model.unmount?.();
     },
   };

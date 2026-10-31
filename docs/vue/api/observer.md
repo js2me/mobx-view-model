@@ -1,6 +1,6 @@
 # `observer`
 
-Wraps a Vue 3 component so that **MobX** tracking re-runs the render (or the `setup` render function) when observed values change. Implemented with a MobX `Reaction` and `forceUpdate`.
+Wraps a Vue 3 component so that **MobX** tracking re-runs the render (or the `setup` render function) when observed values change. A MobX `Reaction` invalidates a Vue ref, so updates use Vue's normal render scheduler.
 
 ## API signature
 

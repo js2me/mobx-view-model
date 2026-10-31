@@ -1,6 +1,6 @@
 import type { AnyViewModel, ViewModelSimple } from 'mobx-view-model';
-import type { PropType, VNodeChild } from 'vue';
-import { computed, defineComponent } from 'vue';
+import type { PropType, SetupContext, VNodeChild } from 'vue';
+import { computed, defineComponent, h } from 'vue';
 import type { Class, IsPartial } from 'yummies/types';
 import { observer } from './observer.js';
 import { useRenderAllowed } from './render-state.js';
@@ -63,8 +63,13 @@ const OnlyViewModelImpl = observer(
   }),
 );
 
-export const OnlyViewModel = OnlyViewModelImpl as unknown as <
-  TViewModel extends AnyViewModel,
->(
+/** Renders a real component vnode both as a Vue component and as a direct call. */
+export function OnlyViewModel<TViewModel extends AnyViewModel>(
   props: OnlyViewModelProps<TViewModel>,
-) => VNodeChild;
+  ctx?: Pick<SetupContext, 'attrs' | 'slots'>,
+): VNodeChild {
+  return h(OnlyViewModelImpl, { ...ctx?.attrs, ...props }, ctx?.slots);
+}
+
+OnlyViewModel.props = OnlyViewModelImpl.props;
+OnlyViewModel.inheritAttrs = false;

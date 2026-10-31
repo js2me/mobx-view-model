@@ -99,6 +99,9 @@ export function useCreateViewModel(
       ? store.create(config)
       : (rawConfig?.factory ?? viewModelsConfig.factory)(config));
   if (!existing) {
+    // Custom factories may return a simple model without an ID, just like
+    // the default factory. Assign the canonical ID before the store indexes it.
+    if (isViewModelSimple(model)) model.id ??= config.id;
     if (store) store.connect(model, config);
     else model.init?.({ ...config, viewModels: undefined });
   }
