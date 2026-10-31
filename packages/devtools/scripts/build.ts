@@ -67,7 +67,7 @@ const createBundle = async ({
       buildEnvs: JSON.stringify(buildEnvs),
     },
     build: {
-      cssMinify:mode === 'development' ? false : true,
+      cssMinify: mode !== 'development',
       cssCodeSplit: false,
       minify: mode === 'development' ? false : 'terser',
       emptyOutDir,
@@ -216,5 +216,4 @@ const main = async () => {
   patchWorkspaceDeps(configs);
 };
 
-// biome-ignore lint/nursery/noFloatingPromises: <explanation>
-main();
+await main();

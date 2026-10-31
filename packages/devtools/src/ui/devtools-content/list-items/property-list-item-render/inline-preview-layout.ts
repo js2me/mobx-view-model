@@ -1,4 +1,4 @@
-import { measureInlineTextWidth } from '@/model/utils/format-array-inline-preview';
+import { measureInlineTextWidth } from '@/model/inspection/format-array-inline-preview';
 
 export function getAvailableInlinePreviewWidth(element: HTMLElement): number {
   const parent = element.parentElement;

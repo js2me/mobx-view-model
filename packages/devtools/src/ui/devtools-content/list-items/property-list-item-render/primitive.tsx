@@ -1,8 +1,8 @@
 import { observer } from 'mobx-react-lite';
+import { INACCESSIBLE_DISPLAY_LABEL } from '@/model/inspection/safe-access';
 import type { PropertyListItemRenderProps } from '.';
-import css from './styles.module.css';
-import { INACCESSIBLE_DISPLAY_LABEL } from '@/model/utils/safe-access';
 import { PropertyValueEditInput } from './property-value-edit-input';
+import css from './styles.module.css';
 
 export const PrimitivePropertyContent = observer(
   ({ item }: PropertyListItemRenderProps) => {

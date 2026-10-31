@@ -6,10 +6,12 @@
 
 A standalone devtools panel for inspecting and debugging your `ViewModel` instances in real time.
 
+Open the floating **ViewModels** button on this site (or press `Ctrl+F12`) to try a live demo with 13 real ViewModels. Inspect parent/child models, edit the counter and try property-path search.
+
 ![DevTools screenshot 1](/devtools-screen-1.png)
 ![DevTools screenshot 2](/devtools-screen-2.png)  
 
-Source: [js2me/mobx-view-model-devtools](https://github.com/js2me/mobx-view-model-devtools)
+Source: [mobx-view-model/packages/devtools](https://github.com/js2me/mobx-view-model/tree/master/packages/devtools)
 
 ---
 

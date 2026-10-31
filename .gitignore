@@ -27,3 +27,5 @@ tests/react-regressions/react19/pnpm-lock.yaml
 index.db
 
 TEST_PROJECTS.md
+
+packages/devtools/storybook-static/

@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { cx } from 'yummies/css';
-import { getInspectorValueType } from '@/model/utils/get-inspector-value-type';
+import { getInspectorValueType } from '@/model/inspection/get-inspector-value-type';
 import css from './styles.module.css';
 
 export function getTypedValueClassName(
@@ -44,10 +44,7 @@ export function CollectionTypedValue({
 }) {
   return (
     <span
-      className={cx(
-        css.typedValue,
-        getTypedValueClassName(value, displayType),
-      )}
+      className={cx(css.typedValue, getTypedValueClassName(value, displayType))}
     >
       {children}
     </span>

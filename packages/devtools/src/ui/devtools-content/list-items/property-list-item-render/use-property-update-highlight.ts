@@ -4,12 +4,12 @@ import type { PropertyListItem } from '@/model/list-item/property-list-item';
 import {
   arePropertyValueSnapshotsEqual,
   createPropertyValueSnapshot,
-} from '@/model/utils/get-property-value-snapshot';
+} from '@/model/list-item/watch/get-property-value-snapshot';
 
 const HIGHLIGHT_MS = 900;
 
 export const usePropertyUpdateHighlight = (item: PropertyListItem) => {
-  const enabled = item.devtools.highlightUpdates;
+  const enabled = item.inspector.settings.highlightUpdates;
   const [isHighlighted, setIsHighlighted] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const rafRef = useRef<number | null>(null);

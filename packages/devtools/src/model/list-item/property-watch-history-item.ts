@@ -1,18 +1,18 @@
 import { Copy } from '@gravity-ui/icons';
 import { computed, makeObservable } from 'mobx';
 import type { Maybe } from 'yummies/types';
-import { createSnapshotPropertyChildren } from '../utils/create-snapshot-property-children';
+import type { DevtoolsInspector } from '../devtools-inspector';
 import {
   detectPropertyValueType,
   getPropertyInstanceClassName,
-} from '../utils/detect-property-value-type';
-import { formatPropertyWatchValue } from '../utils/format-property-watch-value';
-import { isInaccessible } from '../utils/safe-access';
-import type { PropertyWatchHistoryEntry } from '../utils/property-watcher';
-import type { ViewModelDevtools } from '../view-model-devtools';
+} from '../inspection/detect-property-value-type';
+import { isInaccessible } from '../inspection/safe-access';
+import { createPropertyChildren } from './create-property-children';
 import { ListItem, type ListItemOperation } from './list-item';
 import { MetaListItem } from './meta-list-item';
 import type { PropertyListItem } from './property-list-item';
+import type { PropertyWatchHistoryEntry } from './property-watch';
+import { formatPropertyWatchValue } from './watch/format-property-watch-value';
 
 export class PropertyWatchHistoryListItem extends ListItem<any> {
   get depth() {
@@ -73,11 +73,10 @@ export class PropertyWatchHistoryListItem extends ListItem<any> {
   }
 
   get children(): PropertyListItem[] {
-    return createSnapshotPropertyChildren(
-      this.devtools,
+    return createPropertyChildren(
       this,
       `${this.key}/value`,
-      this.devtools.sortPropertiesBy,
+      this.inspector.settings.sortPropertiesBy,
       this.type,
     );
   }
@@ -86,7 +85,7 @@ export class PropertyWatchHistoryListItem extends ListItem<any> {
     switch (this.type) {
       case 'array':
         return new MetaListItem(
-          this.devtools,
+          this.inspector,
           `${this.key}/closing-tag`,
           ']',
           this.depth,
@@ -94,7 +93,7 @@ export class PropertyWatchHistoryListItem extends ListItem<any> {
       case 'instance':
       case 'object':
         return new MetaListItem(
-          this.devtools,
+          this.inspector,
           `${this.key}/closing-tag`,
           '}',
           this.depth,
@@ -104,55 +103,23 @@ export class PropertyWatchHistoryListItem extends ListItem<any> {
     }
   }
 
-  get expandedChildren(): ListItem<any>[] {
-    if (!this.isExpanded || !this.isExpandable) {
-      return [];
-    }
-
-    const result: ListItem<any>[] = [];
-
-    let stackIndex = 0;
-    const stack: ListItem<any>[] = this.children;
-
-    while (true) {
-      const child = stack[stackIndex++];
-
-      if (!child) {
-        break;
-      }
-
-      result.push(child, ...child.expandedChildren);
-
-      for (const trailing of child.trailingItems) {
-        result.push(...trailing.expandedChildrenWithSelf);
-      }
-    }
-
-    if (this.closingItem) {
-      result.push(this.closingItem);
-    }
-
-    return result;
-  }
-
   get operations(): ListItemOperation<any>[] {
     return [
       {
         title: 'Copy',
         icon: Copy,
-        action: () =>
-          navigator.clipboard.writeText(this.entry.formattedValue),
+        action: () => navigator.clipboard.writeText(this.entry.formattedValue),
       },
     ];
   }
 
   constructor(
-    devtools: ViewModelDevtools,
+    inspector: DevtoolsInspector,
     public parent: PropertyListItem,
     public entry: PropertyWatchHistoryEntry,
     private _order: number,
   ) {
-    super(devtools, `${parent.key}-watch-${entry.id}`, undefined);
+    super(inspector, `${parent.key}-watch-${entry.id}`, undefined);
 
     computed(this, 'formattedTime');
     computed(this, 'type');
@@ -168,11 +135,13 @@ export class PropertyWatchHistoryListItem extends ListItem<any> {
   ) {
     const cache = parent.cache;
     const key = `${parent.key}-watch-${entry.id}/list-item`;
-    let item: Maybe<PropertyWatchHistoryListItem> = cache.get(key);
+    const cached = cache.get(key);
+    let item =
+      cached instanceof PropertyWatchHistoryListItem ? cached : undefined;
 
     if (!item) {
       item = new PropertyWatchHistoryListItem(
-        parent.devtools,
+        parent.inspector,
         parent,
         entry,
         order,

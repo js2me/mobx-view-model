@@ -1,6 +1,5 @@
 import { computed, makeObservable } from 'mobx';
-import type { Maybe } from 'yummies/types';
-import type { ViewModelDevtools } from '../view-model-devtools';
+import type { DevtoolsInspector } from '../devtools-inspector';
 import { ListItem } from './list-item';
 import type { PropertyListItem } from './property-list-item';
 
@@ -14,10 +13,10 @@ export class PropertyWatchHistoryHeaderListItem extends ListItem<any> {
   }
 
   constructor(
-    devtools: ViewModelDevtools,
+    inspector: DevtoolsInspector,
     public parent: PropertyListItem,
   ) {
-    super(devtools, `${parent.key}-watch-header`, undefined);
+    super(inspector, `${parent.key}-watch-header`, undefined);
 
     computed(this, 'label');
     makeObservable(this);
@@ -26,10 +25,12 @@ export class PropertyWatchHistoryHeaderListItem extends ListItem<any> {
   static create(parent: PropertyListItem) {
     const cache = parent.cache;
     const key = `${parent.key}-watch-header/list-item`;
-    let item: Maybe<PropertyWatchHistoryHeaderListItem> = cache.get(key);
+    const cached = cache.get(key);
+    let item =
+      cached instanceof PropertyWatchHistoryHeaderListItem ? cached : undefined;
 
     if (!item) {
-      item = new PropertyWatchHistoryHeaderListItem(parent.devtools, parent);
+      item = new PropertyWatchHistoryHeaderListItem(parent.inspector, parent);
       cache.set(key, item);
     }
 

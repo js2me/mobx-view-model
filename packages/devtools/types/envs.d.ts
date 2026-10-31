@@ -1,6 +1,6 @@
 declare interface BuildEnvVariables {
   version: 'global' | 'default';
-  isDev: boolean
+  isDev: boolean;
 }
 
 declare const buildEnvs: BuildEnvVariables;

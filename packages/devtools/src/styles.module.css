@@ -140,7 +140,7 @@
   font-family: inherit;
   font-size: inherit;
   font-weight: inherit;
-  color: var(--vmd-property-bg-content-color);
+  color: var(--vmd-base-color);
   white-space: nowrap;
   flex: none;
   cursor: inherit;
@@ -227,3 +227,5 @@
     color: var(--vmd-badge-color);
   }
 }
+
+.root button:focus-visible, .root input:focus-visible { outline: 1px solid #f5ac7266; outline-offset: 1px; }

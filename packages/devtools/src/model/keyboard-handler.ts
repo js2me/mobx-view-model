@@ -2,121 +2,50 @@ import {
   type KeyboardHandlerAction,
   KeyboardHandler as KeyboardHandlerLib,
 } from 'mobx-swiss-knife';
-import { typeGuard } from 'yummies/type-guard';
 import type { ViewModelDevtools } from './view-model-devtools';
 
 export class KeyboardHandler extends KeyboardHandlerLib<KeyboardHandlerAction> {
   constructor(devtools: ViewModelDevtools) {
+    const bind = (
+      shortcuts: string[],
+      command: (event: KeyboardEvent) => void,
+    ): KeyboardHandlerAction => ({
+      shortcuts,
+      action: (event) => {
+        if (
+          event.target instanceof Element &&
+          event.target.closest('[data-ignore-global-keys]')
+        )
+          return;
+        command(event);
+      },
+    });
+    const scroll = (distance: number, event: KeyboardEvent) => {
+      if (!devtools.window.isOpened) return;
+      devtools.inspector.viewport?.scrollBy(distance);
+      if (
+        devtools.window.isOpened &&
+        devtools.inspector.search.isSearchInputFocused
+      ) {
+        event.stopPropagation();
+        event.preventDefault();
+      }
+    };
     super({
       actions: [
-        {
-          shortcuts: ['Ctrl+F12', 'Meta+F12'],
-          action: (e) => {
-            if (
-              typeGuard.isElement(e.target) &&
-              e.target.dataset.ignoreGlobalKeys
-            ) {
-              return;
-            }
-            if (devtools.isPopupOpened) {
-              devtools.hidePopup();
-            } else {
-              devtools.showPopup();
-            }
-          },
-        },
-        {
-          shortcuts: ['Escape'],
-          action: (e) => {
-            if (
-              typeGuard.isElement(e.target) &&
-              e.target.dataset.ignoreGlobalKeys
-            ) {
-              return;
-            }
-            devtools.hidePopup();
-          },
-        },
-        {
-          shortcuts: ['Ctrl+ArrowLeft'],
-          action: (e) => {
-            if (
-              typeGuard.isElement(e.target) &&
-              e.target.dataset.ignoreGlobalKeys
-            ) {
-              return;
-            }
-            devtools.collapseAllVms();
-          },
-        },
-        {
-          shortcuts: ['Ctrl+ArrowRight'],
-          action: (e) => {
-            if (
-              typeGuard.isElement(e.target) &&
-              e.target.dataset.ignoreGlobalKeys
-            ) {
-              return;
-            }
-            devtools.expandAllVMs();
-          },
-        },
-        {
-          shortcuts: ['Tab'],
-          action: (e) => {
-            if (
-              typeGuard.isElement(e.target) &&
-              e.target.dataset.ignoreGlobalKeys
-            ) {
-              return;
-            }
-            if (devtools.searchEngine.searchInputRef.meta.focused) {
-              e.preventDefault();
-            }
-          },
-        },
-        {
-          shortcuts: ['Ctrl+ArrowDown', 'PageDown'],
-          action: (e) => {
-            if (
-              typeGuard.isElement(e.target) &&
-              e.target.dataset.ignoreGlobalKeys
-            ) {
-              return;
-            }
-            if (!devtools.scrollListRef.current) return;
-
-            devtools.scrollListRef.current.scrollTo(
-              devtools.scrollListRef.current.scrollOffset + 400,
-            );
-
-            if (devtools.searchEngine.searchInputRef.meta.focused) {
-              e.stopPropagation();
-              e.preventDefault();
-            }
-          },
-        },
-        {
-          shortcuts: ['Ctrl+ArrowUp', 'PageUp'],
-          action: (e) => {
-            if (
-              typeGuard.isElement(e.target) &&
-              e.target.dataset.ignoreGlobalKeys
-            ) {
-              return;
-            }
-            if (!devtools.scrollListRef.current) return;
-
-            devtools.scrollListRef.current.scrollTo(
-              devtools.scrollListRef.current.scrollOffset - 400,
-            );
-
-            if (devtools.searchEngine.searchInputRef.meta.focused) {
-              e.stopPropagation();
-              e.preventDefault();
-            }
-          },
-        },
+        bind(['Ctrl+F12', 'Meta+F12'], devtools.window.toggle),
+        bind(['Escape'], devtools.window.hide),
+        bind(['Ctrl+ArrowLeft'], () => devtools.inspector.collapseAll()),
+        bind(['Ctrl+ArrowRight'], () => devtools.inspector.expandAll()),
+        bind(['Tab'], (event) => {
+          if (
+            devtools.window.isOpened &&
+            devtools.inspector.search.isSearchInputFocused
+          )
+            event.preventDefault();
+        }),
+        bind(['Ctrl+ArrowDown', 'PageDown'], (event) => scroll(400, event)),
+        bind(['Ctrl+ArrowUp', 'PageUp'], (event) => scroll(-400, event)),
       ],
     });
   }

@@ -1,8 +1,8 @@
 import { observer } from 'mobx-react-lite';
 import type { PropertyListItemRenderProps } from '.';
 import { ArrayInlinePreview } from './array-inline-preview';
-import css from './styles.module.css';
 import { PropertyValueEditInput } from './property-value-edit-input';
+import css from './styles.module.css';
 
 export const ArrayPropertyContent = observer(
   ({ item }: PropertyListItemRenderProps) => {

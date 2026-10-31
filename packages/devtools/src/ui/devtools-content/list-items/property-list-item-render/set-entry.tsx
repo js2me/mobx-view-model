@@ -1,15 +1,12 @@
 import { observer } from 'mobx-react-lite';
 import type { PropertyListItemRenderProps } from '.';
-import css from './styles.module.css';
-import {
-  CollectionMeta,
-  CollectionTypedValue,
-} from './collection-typed-value';
+import { CollectionMeta, CollectionTypedValue } from './collection-typed-value';
 import {
   getNestedValueExpandedOpen,
   getNestedValuePreview,
 } from './format-collection-inspector-value';
 import { PropertyValueEditInput } from './property-value-edit-input';
+import css from './styles.module.css';
 
 export const SetEntryPropertyContent = observer(
   ({ item }: PropertyListItemRenderProps) => {
@@ -17,8 +14,7 @@ export const SetEntryPropertyContent = observer(
     const valuePart = item.isExpanded
       ? (expandedOpen ?? item.stringifiedData)
       : getNestedValuePreview(item);
-    const valueIsStructuralOpen =
-      item.isExpanded && expandedOpen != null;
+    const valueIsStructuralOpen = item.isExpanded && expandedOpen != null;
 
     return (
       <>
@@ -32,7 +28,10 @@ export const SetEntryPropertyContent = observer(
         ) : valueIsStructuralOpen ? (
           <CollectionMeta>{valuePart}</CollectionMeta>
         ) : (
-          <CollectionTypedValue value={item.data} displayType={item.nestedValueType}>
+          <CollectionTypedValue
+            value={item.data}
+            displayType={item.nestedValueType}
+          >
             {valuePart}
           </CollectionTypedValue>
         )}

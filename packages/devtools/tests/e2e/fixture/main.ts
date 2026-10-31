@@ -1,19 +1,25 @@
+document.body.dataset.backdrop =
+  new URLSearchParams(location.search).get('backdrop') ?? 'light';
+
 import { ViewModelDevtools } from '../../../dist/index.js';
 
-ViewModelDevtools.define({
+const data = {
+  accountName: 'Ada Lovelace',
+  isAuthenticated: true,
+  preferences: { theme: 'dark', compactMode: false },
+  recentProjects: ['engine', 'dashboard'],
+};
+const config = {
   defaultIsOpened: true,
-  position: 'top-right',
-  display: {
-    theme: 'light',
-    sortPropertiesBy: 'asc',
+  position: 'top-right' as const,
+  display: { sortPropertiesBy: 'asc' as const },
+  extras: data,
+};
+const fixture = {
+  data,
+  devtools: ViewModelDevtools.define(config),
+  recreate() {
+    this.devtools = ViewModelDevtools.define(config);
   },
-  extras: {
-    accountName: 'Ada Lovelace',
-    isAuthenticated: true,
-    preferences: {
-      theme: 'dark',
-      compactMode: false,
-    },
-    recentProjects: ['engine', 'dashboard'],
-  },
-});
+};
+Object.assign(globalThis, { fixture });

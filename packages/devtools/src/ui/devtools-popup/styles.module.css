@@ -1,13 +1,18 @@
 .vmPopup {
   position: fixed !important;
   z-index: 999999;
-  border-radius: 8px;
-  height: calc(100vh - 24px);
-  width: calc(100vw - 34px);
-  max-width: 520px;
-  min-width: 325px;
-  min-height: 250px;
-  box-shadow: 0 3px 6px #0000001f;
+  border-radius: 20px;
+  height: min(720px, calc(100vh - 24px));
+  width: min(520px, calc(100vw - 24px));
+  min-width: min(325px, calc(100vw - 24px));
+  min-height: min(250px, calc(100vh - 24px));
+  background: var(--vmd-glass-bg);
+  border: 1px solid var(--vmd-glass-border);
+  border-top-color: var(--vmd-glass-edge);
+  box-shadow: var(--vmd-glass-shadow);
+  backdrop-filter: blur(28px) saturate(150%);
+  -webkit-backdrop-filter: blur(28px) saturate(150%);
+  overflow: hidden;
   transition: none;
 
   &.dragging,
@@ -132,13 +137,12 @@
   padding: 6px;
   border: 0;
   background: transparent;
-  color: var(--vmd-base-color);
+  color: var(--vmd-control-inactive-color);
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-html:has( .dragging) *,
-html:has( .resizing) * {
-  user-select: none !important;
-}
+.vmPopup.dragging, .vmPopup.resizing { user-select: none; }
+.closePopupButton:hover { background: var(--vmd-content-highlight-bg); color: var(--vmd-base-color); }

@@ -1,30 +1,21 @@
-import { cx } from 'yummies/css';
 import { observer } from 'mobx-react-lite';
 import { useMemo } from 'react';
-import { formatArrayInlineElement } from '@/model/utils/format-array-inline-preview';
+import { cx } from 'yummies/css';
+import { formatArrayInlineElement } from '@/model/inspection/format-array-inline-preview';
 import {
   getVisibleObjectInlineCount,
+  type ObjectInlineEntry,
   prepareObjectInlinePreview,
   resolveObjectInlinePreviewSlice,
-  type ObjectInlineEntry,
-} from '@/model/utils/format-object-inline-preview';
+} from '@/model/inspection/format-object-inline-preview';
 import { CollectionMeta, CollectionTypedValue } from './collection-typed-value';
-import { useInlinePreviewVisibleCount } from './use-inline-preview-visible-count';
 import css from './styles.module.css';
+import { useInlinePreviewVisibleCount } from './use-inline-preview-visible-count';
 
 export const ObjectInlinePreview = observer(
-  ({
-    object,
-    className,
-  }: {
-    object: object;
-    className?: string;
-  }) => {
+  ({ object, className }: { object: object; className?: string }) => {
     const previewClassName = cx(css.inlinePreview, className);
-    const preview = useMemo(
-      () => prepareObjectInlinePreview(object),
-      [object],
-    );
+    const preview = useMemo(() => prepareObjectInlinePreview(object), [object]);
     const { containerRef, visibleCount } = useInlinePreviewVisibleCount(
       preview.formattedElements,
       getVisibleObjectInlineCount,

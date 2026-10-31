@@ -10,16 +10,13 @@ export const ExtraListItemRender = observer(
     return (
       <div
         className={cx(css.treeItem, css.extraTreeItem)}
-        data-fitted={item.devtools.searchEngine.isItemFitted(item)}
+        data-fitted={item.inspector.search.isItemFitted(item)}
         data-depth={item.depthLine}
         style={{ '--level': item.depth } as CSSProperties}
       >
-        <div
-          className={css.treeItemHeader}
-          onClick={() => item.toggleExpand()}
-        >
+        <div className={css.treeItemHeader} onClick={item.toggleExpand}>
           <ExpandButton
-            showIconAnyway={item.devtools.presentationMode === 'tree'}
+            showIconAnyway={item.inspector.settings.presentationMode === 'tree'}
             expandable={item.isExpandable}
             expanded={item.isExpanded}
           />

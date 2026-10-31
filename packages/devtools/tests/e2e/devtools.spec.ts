@@ -36,3 +36,31 @@ test('shows a nested property search result', async ({ page }) => {
     fullPage: true,
   });
 });
+
+test('renders dark glass over a dark host page', async ({ page }) => {
+  await page.goto('/?backdrop=dark');
+  await expect(
+    page.getByRole('dialog', { name: 'ViewModel Devtools', exact: true }),
+  ).toBeVisible();
+  await expect(page.locator('#view-model-devtools')).toHaveAttribute(
+    'data-vmd-theme',
+    'dark',
+  );
+  await expect(page).toHaveScreenshot('devtools-dark-host.png', {
+    fullPage: true,
+  });
+});
+
+test('keeps the light appearance available', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Settings', exact: true }).click();
+  await page.getByRole('button', { name: 'Light theme', exact: true }).click();
+  await page.getByRole('button', { name: 'Settings', exact: true }).click();
+  await expect(page.locator('#view-model-devtools')).toHaveAttribute(
+    'data-vmd-theme',
+    'light',
+  );
+  await expect(page).toHaveScreenshot('devtools-light-glass.png', {
+    fullPage: true,
+  });
+});

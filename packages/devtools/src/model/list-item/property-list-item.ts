@@ -1,35 +1,34 @@
-import { Check, Copy, Eye, EyeSlash, Pencil, Play, ToggleOn, Xmark } from '@gravity-ui/icons';
 import {
-  action,
-  computed,
-  makeObservable,
-  observable,
-  runInAction,
-} from 'mobx';
+  Check,
+  Copy,
+  Eye,
+  EyeSlash,
+  Pencil,
+  Play,
+  ToggleOn,
+  Xmark,
+} from '@gravity-ui/icons';
+import { action, computed, makeObservable } from 'mobx';
+import type { MouseEvent } from 'react';
 import type { Maybe } from 'yummies/types';
+import type { DevtoolsInspector } from '../devtools-inspector';
+import { PropertyEditor } from '../editing/property-editor';
 import {
+  type CollectionKind,
   getCollectionKind,
   getMapEntryAt,
   getSetValueAt,
-  type CollectionKind,
-} from '../utils/collection-like';
-import { createDatePreviewChildren } from '../utils/create-date-preview-children';
-import { formatSearchSegmentKey } from '../utils/format-search-key';
-import { getAllKeys } from '../utils/get-all-keys';
+} from '../inspection/collection-like';
 import {
-  getConstructorName,
-  isInaccessible,
-  INACCESSIBLE,
-} from '../utils/safe-access';
-import { sortPropertyListItems } from '../utils/sort-property-keys';
-import {
-  PropertyWatcher,
-  type PropertyWatchHistoryEntry,
-} from '../utils/property-watcher';
-import type { ViewModelDevtools } from '../view-model-devtools';
+  detectPropertyValueType,
+  getPropertyInstanceClassName,
+} from '../inspection/detect-property-value-type';
+import { INACCESSIBLE } from '../inspection/safe-access';
+import { formatSearchSegmentKey } from '../search/format-search-key';
+import { createPropertyChildren } from './create-property-children';
 import { ListItem, type ListItemOperation } from './list-item';
 import { MetaListItem } from './meta-list-item';
-import { PropertyEditor } from './property-editor';
+import { PropertyWatch } from './property-watch';
 import { PropertyWatchHistoryHeaderListItem } from './property-watch-history-header-item';
 import { PropertyWatchHistoryListItem } from './property-watch-history-item';
 import { VMListItem } from './vm-list-item';
@@ -37,18 +36,20 @@ import { VMListItem } from './vm-list-item';
 export class PropertyListItem extends ListItem<any> {
   editor = new PropertyEditor(this);
 
-  isWatching = false;
-
-  watchHistory: PropertyWatchHistoryEntry[] = [];
-
-  private watcher = new PropertyWatcher();
+  readonly watch = new PropertyWatch(this);
+  get isWatching() {
+    return this.watch.isWatching;
+  }
+  get watchHistory() {
+    return this.watch.history;
+  }
 
   get isExpanded() {
-    return this.devtools.searchEngine.isPropertyItemExpanded(this);
+    return this.inspector.search.isPropertyItemExpanded(this);
   }
 
   get isExpandable() {
-    return this.devtools.searchEngine.isPropertyItemExpandable(this);
+    return this.inspector.search.isPropertyItemExpandable(this);
   }
 
   get data(): any {
@@ -127,241 +128,33 @@ export class PropertyListItem extends ListItem<any> {
 
   get stringifiedDataType() {
     if (this.isInaccessible) {
-      return '[object Inaccessible]'
+      return '[object Inaccessible]';
     }
     return Object.prototype.toString.call(this.data);
   }
 
   get instanceClassName(): string {
-    return this.getInstanceClassName(this.data);
+    return getPropertyInstanceClassName(this.data);
   }
-
-  private getInstanceClassName(data: any): string {
-    if (this.isInaccessible || isInaccessible(data)) {
-      return '<Inaccessible>';
-    }
-
-    const constructorName = getConstructorName(data);
-    if (constructorName) {
-      return constructorName;
-    }
-
-    const match = /^\[object (.+)\]$/.exec(
-      data == null ? '[object Object]' : Object.prototype.toString.call(data),
-    );
-    if (match?.[1] && match[1] !== 'Object') {
-      return match[1];
-    }
-
-    return 'Object';
-  }
-
   get isInaccessibleDisplay() {
     return super.isInaccessible;
   }
-
   get type() {
-    if (this.getPreview) {
-      return 'primitive';
-    }
-
-    if (this.collectionEntryKind === 'map') {
-      return 'map-entry';
-    }
-
-    if (this.collectionEntryKind === 'set') {
-      return 'set-entry';
-    }
-
-    return this.detectValueType(this.data);
+    if (this.getPreview) return 'primitive';
+    if (this.collectionEntryKind)
+      return `${this.collectionEntryKind}-entry` as const;
+    return detectPropertyValueType(this.data);
   }
-
   get nestedValueType() {
-    return this.detectValueType(this.data);
+    return detectPropertyValueType(this.data);
   }
-
-  private detectValueType(data: any) {
-    if (this.isInaccessible) {
-      return 'primitive';
-    }
-
-    if (Array.isArray(data)) {
-      return 'array';
-    }
-
-    if (typeof data === 'function') {
-      return 'function';
-    }
-
-    if (data && typeof data === 'object') {
-      if (this.getInstanceClassName(data) !== 'Object') {
-        return 'instance';
-      }
-
-      return 'object';
-    }
-
-    return 'primitive';
-  }
-
   get children(): PropertyListItem[] {
-    if (this.collectionEntryKind != null) {
-      return sortPropertyListItems(
-        this.getChildrenForNestedValue(this.data),
-        this.devtools.sortPropertiesBy,
-      );
-    }
-
-    let listItems: PropertyListItem[] = [];
-
-    if (this.type === 'array') {
-      listItems = this.getChildrenForNestedValue(this.data);
-    } else if (this.type === 'function') {
-      listItems = Object.keys(this.data).map((property, order) => {
-        return PropertyListItem.create(
-          this.devtools,
-          property,
-          `${this.path}.${property}`,
-          order,
-          this,
-        );
-      });
-    } else if (this.type === 'instance' || this.type === 'object') {
-      const datePreviewItems = createDatePreviewChildren(
-        this.devtools,
-        this,
-        this.path,
-        this.data,
-      );
-      const entryItems = this.getCollectionEntryChildren();
-      const memberItems = sortPropertyListItems(
-        getAllKeys(this.data).map((property, order) => {
-          return PropertyListItem.create(
-            this.devtools,
-            property,
-            `${this.path}.${property}`,
-            order + datePreviewItems.length + entryItems.length,
-            this,
-          );
-        }),
-        this.devtools.sortPropertiesBy,
-      );
-
-      return [...datePreviewItems, ...entryItems, ...memberItems];
-    }
-
-    return sortPropertyListItems(listItems, this.devtools.sortPropertiesBy);
-  }
-
-  private getCollectionEntryChildren(): PropertyListItem[] {
-    const data = this.data;
-    const collectionKind = getCollectionKind(data);
-
-    if (collectionKind === 'map') {
-      const items: PropertyListItem[] = [];
-      let index = 0;
-
-      for (const _ of data.entries()) {
-        items.push(
-          PropertyListItem.create(
-            this.devtools,
-            String(index),
-            `${this.path}[${index}]`,
-            index,
-            this,
-            {
-              collectionEntryKind: 'map',
-              collectionEntryIndex: index,
-            },
-          ),
-        );
-        index++;
-      }
-
-      return items;
-    }
-
-    if (collectionKind === 'set') {
-      const items: PropertyListItem[] = [];
-      let index = 0;
-
-      for (const _ of data.values()) {
-        items.push(
-          PropertyListItem.create(
-            this.devtools,
-            String(index),
-            `${this.path}[${index}]`,
-            index,
-            this,
-            {
-              collectionEntryKind: 'set',
-              collectionEntryIndex: index,
-            },
-          ),
-        );
-        index++;
-      }
-
-      return items;
-    }
-
-    return [];
-  }
-
-  private getChildrenForNestedValue(data: any): PropertyListItem[] {
-    if (this.isInaccessible || isInaccessible(data)) {
-      return [];
-    }
-
-    if (Array.isArray(data)) {
-      const listItems = Object.keys(data).map((property, order) =>
-        PropertyListItem.create(
-          this.devtools,
-          property,
-          `${this.path}.${property}`,
-          order,
-          this,
-        ),
-      );
-
-      listItems.push(
-        PropertyListItem.create(
-          this.devtools,
-          'length',
-          `${this.path}.length`,
-          listItems.length,
-          this,
-        ),
-      );
-
-      return listItems;
-    }
-
-    if (typeof data === 'function') {
-      return Object.keys(data).map((property, order) => {
-        return PropertyListItem.create(
-          this.devtools,
-          property,
-          `${this.path}.${property}`,
-          order,
-          this,
-        );
-      });
-    }
-
-    if (data && typeof data === 'object') {
-      return getAllKeys(data).map((property, order) => {
-        return PropertyListItem.create(
-          this.devtools,
-          property,
-          `${this.path}.${property}`,
-          order,
-          this,
-        );
-      });
-    }
-
-    return [];
+    return createPropertyChildren(
+      this,
+      this.path,
+      this.inspector.settings.sortPropertiesBy,
+      this.nestedValueType,
+    );
   }
 
   get extraContent() {
@@ -391,7 +184,7 @@ export class PropertyListItem extends ListItem<any> {
     switch (this.type) {
       case 'array':
         return new MetaListItem(
-          this.devtools,
+          this.inspector,
           `${this.key}/closing-tag`,
           ']',
           this.depth,
@@ -401,7 +194,7 @@ export class PropertyListItem extends ListItem<any> {
       case 'map-entry':
       case 'set-entry':
         return new MetaListItem(
-          this.devtools,
+          this.inspector,
           `${this.key}/closing-tag`,
           '}',
           this.depth,
@@ -413,37 +206,6 @@ export class PropertyListItem extends ListItem<any> {
 
   get closingItem() {
     return this.propertyClosingTag;
-  }
-
-  get expandedChildren(): ListItem<any>[] {
-    if (!this.isExpanded || !this.isExpandable) {
-      return [];
-    }
-
-    const result: ListItem<any>[] = [];
-
-    let stackIndex = 0;
-    const stack: ListItem<any>[] = this.children;
-
-    while (true) {
-      const child = stack[stackIndex++];
-
-      if (!child) {
-        break;
-      }
-
-      result.push(child, ...child.expandedChildren);
-
-      for (const trailing of child.trailingItems) {
-        result.push(...trailing.expandedChildrenWithSelf);
-      }
-    }
-
-    if (this.closingItem) {
-      result.push(this.closingItem);
-    }
-
-    return result;
   }
 
   get depth() {
@@ -467,10 +229,14 @@ export class PropertyListItem extends ListItem<any> {
     };
   }
 
-  private failedStringify = false;
-
   get isCopiable() {
-    return this.type !== 'instance' && !this.failedStringify;
+    if (this.type === 'instance') return false;
+    try {
+      JSON.stringify(this.data);
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   get stringifiedData() {
@@ -484,9 +250,6 @@ export class PropertyListItem extends ListItem<any> {
         try {
           return JSON.stringify(this.data, null, 2);
         } catch (_) {
-          runInAction(() => {
-            this.failedStringify = true;
-          });
           return super.stringifiedData;
         }
       }
@@ -512,23 +275,17 @@ export class PropertyListItem extends ListItem<any> {
           ? {
               title: 'Call function',
               icon: Play,
-              action: () => {
-                this.editor.callFunction();
-              },
+              action: this.editor.callFunction,
             }
           : {
               title: 'Apply',
               icon: Check,
-              action: () => {
-                this.editor.applyEdit();
-              },
+              action: this.editor.applyEdit,
             },
         {
           title: 'Cancel',
           icon: Xmark,
-          action: () => {
-            this.editor.cancelEdit();
-          },
+          action: this.editor.cancelEdit,
         },
       );
 
@@ -549,9 +306,7 @@ export class PropertyListItem extends ListItem<any> {
         operations.push({
           title: 'Toggle',
           icon: ToggleOn,
-          action: () => {
-            this.editor.toggleBoolean();
-          },
+          action: this.editor.toggleBoolean,
         });
       }
 
@@ -559,14 +314,12 @@ export class PropertyListItem extends ListItem<any> {
         operations.push({
           title: 'Edit',
           icon: Pencil,
-          action: () => {
-            this.editor.startEdit();
-          },
+          action: this.editor.startEdit,
         });
       }
     }
 
-    if (this.type !== 'instance' && !this.failedStringify) {
+    if (this.isCopiable) {
       operations.push({
         title: 'Copy',
         icon: Copy,
@@ -591,21 +344,24 @@ export class PropertyListItem extends ListItem<any> {
     return [...operations, ...super.operations];
   }
 
-  handleWatchClick() {
-    if (this.isWatching) {
-      this.isWatching = false;
-      this.watcher.stop();
-      this.devtools.removeWatchedPropertyKey(this.key);
+  handleClick = (event: MouseEvent<HTMLElement>) => {
+    if (
+      (event.target as HTMLElement).closest(
+        '[data-list-item-operations-wrapper]',
+      )
+    )
       return;
-    }
+    this.toggleExpand();
+  };
 
-    this.isWatching = true;
-    this.watcher.start(this);
-    this.devtools.addWatchedPropertyKey(this.key);
+  destroy() {
+    this.watch.destroy();
   }
-
+  handleWatchClick() {
+    this.watch.toggle();
+  }
   clearWatchHistory() {
-    this.watchHistory.length = 0;
+    this.watch.clear();
   }
 
   get trailingItems(): ListItem<any>[] {
@@ -630,7 +386,7 @@ export class PropertyListItem extends ListItem<any> {
   }
 
   protected constructor(
-    devtools: ViewModelDevtools,
+    inspector: DevtoolsInspector,
     public property: Maybe<string>,
     public path: string,
     public order: number,
@@ -639,7 +395,7 @@ export class PropertyListItem extends ListItem<any> {
     public collectionEntryIndex?: number,
     public getPreview?: () => unknown,
   ) {
-    super(devtools, PropertyListItem.createKey(parent, property), undefined);
+    super(inspector, PropertyListItem.createKey(parent, property), undefined);
 
     computed(this, 'type');
     computed(this, 'searchData');
@@ -651,9 +407,8 @@ export class PropertyListItem extends ListItem<any> {
     computed(this, 'mapEntryKey');
     computed(this, 'isInaccessibleDisplay');
     computed(this, 'extraContent');
-    observable.ref(this, 'failedStringify');
-    observable(this, 'isWatching');
-    observable.shallow(this, 'watchHistory');
+    computed(this, 'isWatching');
+    computed(this, 'watchHistory');
     action(this, 'handleWatchClick');
     action(this, 'clearWatchHistory');
     makeObservable(this);
@@ -664,7 +419,7 @@ export class PropertyListItem extends ListItem<any> {
   }
 
   static create(
-    devtools: ViewModelDevtools,
+    inspector: DevtoolsInspector,
     property: Maybe<string>,
     path: string,
     order: number,
@@ -675,30 +430,28 @@ export class PropertyListItem extends ListItem<any> {
       getPreview?: () => unknown;
     },
   ) {
-    const cache = parent.cache ?? devtools.anyCache;
+    const cache = parent.cache;
     const key = `${PropertyListItem.createKey(parent, property)}/list-item`;
 
-    let item: Maybe<PropertyListItem> = cache.get(key);
-
-    if (!item) {
-      item = new PropertyListItem(
-        devtools,
-        property,
-        path,
-        order,
-        parent,
-        options?.collectionEntryKind,
-        options?.collectionEntryIndex,
-        options?.getPreview,
-      );
-      cache.set(key, item);
-
-      if (devtools.watchedPropertyKeys.includes(item.key)) {
-        const restoreItem = item;
-        setTimeout(() => restoreItem.handleWatchClick(), 0);
-      }
-    }
-
+    const cached = cache.get(key);
+    if (
+      cached instanceof PropertyListItem &&
+      cached.parentListItem.data === parent.data
+    )
+      return cached;
+    if (cached instanceof PropertyListItem) cached.destroy();
+    const item = new PropertyListItem(
+      inspector,
+      property,
+      path,
+      order,
+      parent,
+      options?.collectionEntryKind,
+      options?.collectionEntryIndex,
+      options?.getPreview,
+    );
+    cache.set(key, item);
+    item.watch.restore();
     return item;
   }
 }
