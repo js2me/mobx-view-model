@@ -52,7 +52,8 @@
     "check:stories": "tsc --noEmit --project tsconfig.stories.json",
     "measure:performance": "node scripts/measure-performance.mjs",
     "test:storybook": "playwright test --config playwright.storybook.config.ts",
-    "test:e2e:container": "bash scripts/test-browser-container.sh"
+    "test:e2e:container": "bash scripts/test-browser-container.sh",
+    "capture:docs": "node scripts/capture-docs-screenshots.mjs"
   },
   "dependencies": {
     "@gravity-ui/icons": "^2.18.0",

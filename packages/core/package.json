@@ -35,7 +35,7 @@
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./src/index.ts",
-  "homepage": "https://github.com/js2me/mobx-view-model",
+  "homepage": "https://js2me.github.io/mobx-view-model/",
   "repository": {
     "type": "git",
     "url": "https://github.com/js2me/mobx-view-model"

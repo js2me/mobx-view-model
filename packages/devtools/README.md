@@ -96,3 +96,9 @@ pnpm --filter mobx-view-model-devtools test:e2e:container --workers=2 --update-s
 ```
 
 Update the exact `@playwright/test` version, CI image and container script together. Failed CI runs upload browser screenshots/diffs and traces as `devtools-browser-diagnostics`.
+
+Documentation screenshots use the actual 13-VM docs demo. With the production packages built and the [e2e fixture server](./PERFORMANCE.md#reproduce) running, refresh the images in `docs/public` with:
+
+```sh
+pnpm --filter mobx-view-model-devtools capture:docs
+```
