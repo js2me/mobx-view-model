@@ -10,3 +10,6 @@ export const ViewModelsKey: InjectionKey<ViewModelStore | null> =
 export const ActiveViewModelKey: InjectionKey<
   AnyViewModel | AnyViewModelSimple | null
 > = Symbol('ActiveViewModel');
+
+export const ViewModelsContext = ViewModelsKey;
+export const ActiveViewModelContext = ActiveViewModelKey;

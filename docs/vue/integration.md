@@ -16,6 +16,7 @@ Your [ViewModel](/api/view-models/interface) should be connected to a Vue compon
 To achieve this you can use:
 
 - [`withViewModel()`](/vue/api/with-view-model) — recommended way
+- [`withPropsViewModel()`](/vue/api/with-props-view-model) — all props become the model payload
 - [`useCreateViewModel()`](/vue/api/use-create-view-model) — simplest way, often more performant
 
 ## 2. Render in the Vue tree
@@ -99,8 +100,7 @@ With a store in place, you can use [`useViewModel()`](/vue/api/use-view-model) w
 
 ::: tip [`isMounted`](/api/view-models/interface#ismounted-boolean) state
 
-This state follows [`mount()`](/api/view-models/interface#mount-void-promise-void), which runs when the Vue instance is mounted (`onMounted`), or via the store lifecycle when using `ViewModelStore`.  
-On the first render, `isMounted` is typically `false` until mounting completes.
+As in Solid, [`mount()`](/api/view-models/interface#mount-void-promise-void) starts during setup. Synchronous models are ready on the first render; asynchronous models display the configured fallback until mounting completes.
 
 :::
 
@@ -113,3 +113,16 @@ These are already invoked by the [store base implementation](/api/view-model-sto
 Install `mobx-view-model`, `mobx-view-model-vue`, `mobx`, and `vue` (3.5 or newer).
 
 String lookup arguments are model IDs. For a class lookup, pass the constructor: `useViewModel(YourComponentVM)`.
+
+## Shared API with Solid
+
+The core calls match `mobx-view-model-solid`:
+
+```ts
+withViewModel(VM, render, config);
+withPropsViewModel(VM, render, config);
+useCreateViewModel(VM, () => payload, config, props);
+useViewModel(ConnectedComponent);
+```
+
+Vue uses Vue render functions (`h` or Vue JSX) and slots. `vueHook` corresponds to `solidHook`. The Solid-specific `enableObservableTracking` and `obs` exports come from `mobx-solid`; Vue uses `observer` instead, applied automatically by both HOCs.

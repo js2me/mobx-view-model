@@ -1,5 +1,5 @@
 import type { AnyViewModel, ViewModelSimple } from 'mobx-view-model';
-import type { PropType } from 'vue';
+import type { PropType, VNodeChild } from 'vue';
 import { computed, defineComponent } from 'vue';
 import type { Class, IsPartial } from 'yummies/types';
 import { observer } from './observer.js';
@@ -9,6 +9,7 @@ import { useCreateViewModel } from './use-create-view-model.js';
 
 export type OnlyViewModelProps<TViewModel extends AnyViewModel> = {
   model: Class<TViewModel>;
+  children?: VNodeChild | ((model: TViewModel) => VNodeChild);
 } & (IsPartial<TViewModel['payload']> extends true
   ? {
       payload?: TViewModel['payload'];
@@ -26,6 +27,11 @@ export const OnlyViewModel = observer(
       model: {
         type: Function as unknown as PropType<Class<any>>,
         required: true,
+      },
+      children: {
+        type: null as unknown as PropType<
+          VNodeChild | ((model: any) => VNodeChild)
+        >,
       },
       payload: {
         type: null as unknown as PropType<any>,
@@ -49,7 +55,9 @@ export const OnlyViewModel = observer(
           return null;
         }
 
-        return slots.default?.({ model: vm });
+        return typeof props.children === 'function'
+          ? props.children(vm)
+          : (props.children ?? slots.default?.({ model: vm }));
       };
     },
   }),

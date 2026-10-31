@@ -1,103 +1,45 @@
 # `useCreateViewModel`
 
-Composable that creates (or reuses from the store) a [ViewModel](/api/view-models/overview) tied to the current Vue instance lifecycle. Used inside [`withViewModel()`](/vue/api/with-view-model).
-
-The `payload` argument may be a plain value, `ref`, or `computed`; changes update the model via `setPayload`.
-
-## API signature
+Creates or reuses a model within Vue `setup()`, using the same arguments as `mobx-view-model-solid`:
 
 ```ts
-function useCreateViewModel<TViewModel extends AnyViewModel>(
-  VM: Class<TViewModel>,
-  payload?: MaybeRef<TViewModel['payload']>,
-  config?: UseCreateViewModelConfig<TViewModel>,
-): TViewModel;
+useCreateViewModel(VM, payload?, config?, props?);
 ```
 
-For `ViewModelSimple`, overloads require or omit the `payload` argument depending on whether the simple view model’s payload type is partial; see the published `.d.ts` for exact signatures.
-
-## `UseCreateViewModelConfig`
+The payload can be a plain object or a getter. Vue `ref` and `computed` sources are supported as an additional convenience. The getter is tracked through Vue's reactivity system; changes call `setPayload` on the same model.
 
 ```ts
-interface UseCreateViewModelConfig<TViewModel extends AnyViewModel> {
-  id?: Maybe<string>;
-  generateId?: (ctx: AnyObject) => string;
-  factory?: (config: ViewModelCreateConfig<TViewModel>) => TViewModel;
-  vmConfig?: ViewModelsRawConfig;
-  ctx?: AnyObject;
-  component?: unknown;
-  anchors?: unknown[];
-  props?: AnyObject;
-}
-```
-
-## Usage
-
-### Basic
-
-```ts
+import { ref } from 'vue';
 import { useCreateViewModel } from 'mobx-view-model-vue';
 
-const model = useCreateViewModel(YourVM);
-```
-
-### With payload
-
-```ts
-const model = useCreateViewModel(YourVM, { userId: '1' });
-```
-
-### Reactive payload (`ref` / `computed`)
-
-```ts
-import { computed, ref } from 'vue';
-
 const userId = ref('1');
-const payload = computed(() => ({ userId: userId.value }));
-const model = useCreateViewModel(YourVM, payload);
+const model = useCreateViewModel(UserVM, () => ({ userId: userId.value }));
 ```
 
-### Custom configuration
+Call this inside `setup()`. A synchronous model is mounted before the composable returns. Asynchronous mounting starts immediately; wrappers show the fallback until it completes. Cleanup runs when the owner component unmounts. SSR awaits the mount promise in `ssr` mode.
+
+## Configuration
 
 ```ts
-const model = useCreateViewModel(YourVM, {}, {
-  vmConfig: {},
-  ctx: {},
-  factory: (config) => new config.VM(config),
-  generateId,
-  id: 'singleton-vm',
-  anchors: [],
-});
-```
-
-### Example
-
-```ts
-import { ViewModelBase } from 'mobx-view-model';
-import { observer, useCreateViewModel } from 'mobx-view-model-vue';
-import { defineComponent, h } from 'vue';
-import { action, observable } from 'mobx';
-
-class VM extends ViewModelBase {
-  @observable accessor value = '';
-
-  @action
-  setValue = (value: string) => {
-    this.value = value;
-  };
+interface UseCreateViewModelConfig<VM extends AnyViewModel> {
+  id?: string | null;
+  factory?: ViewModelsConfig<VM>['factory'];
+  vmConfig?: ViewModelCreateConfig<VM>['vmConfig'];
+  ctx?: ViewModelCreateConfig<VM>['ctx'];
+  anchors?: ViewModelCreateConfig<VM>['anchors'];
+  props?: ViewModelCreateConfig<VM>['props'];
 }
-
-export default observer(
-  defineComponent({
-    setup() {
-      const model = useCreateViewModel(VM);
-      return () =>
-        h('input', {
-          value: model.value,
-          onInput: (e: Event) =>
-            model.setValue((e.target as HTMLInputElement).value),
-        });
-    },
-  }),
-);
 ```
+
+The optional fourth argument supplies model props and overrides `config.props`, just as in Solid:
+
+```ts
+const model = useCreateViewModel(UserVM, () => ({ userId: props.userId }), {
+  id: 'user-page',
+  ctx: { source: 'route' },
+}, props);
+```
+
+Models implementing `ViewModelSimple` accept the payload source and an optional creation config as well. Their `setPayload` receives the resolved payload object.
+
+`useCreateViewModel` manages the model lifecycle; `observer(Component)` makes a manually connected Vue view react to MobX state. `withViewModel` and `withPropsViewModel` do both automatically.

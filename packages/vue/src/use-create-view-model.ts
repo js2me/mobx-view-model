@@ -8,7 +8,6 @@ import {
   viewModelsConfig,
 } from 'mobx-view-model';
 import {
-  getCurrentInstance,
   onBeforeUnmount,
   onMounted,
   onServerPrefetch,
@@ -16,31 +15,47 @@ import {
   useId,
   watch,
 } from 'vue';
-import type { Class, IsPartial } from 'yummies/types';
-import type { MaybeRef, UseCreateViewModelConfig } from './types.js';
+import type { AnyObject, Class, IsPartial } from 'yummies/types';
+import type {
+  UseCreateViewModelConfig,
+  ViewModelPayloadSource,
+} from './types.js';
 import { useActiveViewModel } from './use-active-view-model.js';
 import { useViewModelsStore } from './use-view-model-store.js';
+
+const EMPTY_OBJECT = Object.freeze({});
+const resolvePayload = (source: any) =>
+  typeof source === 'function' ? source() : unref(source);
 
 export function useCreateViewModel<TViewModel extends AnyViewModel>(
   VM: Class<TViewModel>,
   ...args: IsPartial<TViewModel['payload']> extends true
     ? [
-        payload?: MaybeRef<TViewModel['payload']>,
+        payload?: ViewModelPayloadSource<TViewModel['payload']>,
         config?: UseCreateViewModelConfig<TViewModel>,
+        _props?: any,
       ]
     : [
-        payload: MaybeRef<TViewModel['payload']>,
+        payload: ViewModelPayloadSource<TViewModel['payload']>,
         config?: UseCreateViewModelConfig<TViewModel>,
+        _props?: any,
       ]
 ): TViewModel;
 
-export function useCreateViewModel<TViewModelSimple extends ViewModelSimple>(
+export function useCreateViewModel<
+  TPayload extends AnyObject,
+  TViewModelSimple extends ViewModelSimple<TPayload>,
+>(
   VM: Class<TViewModelSimple>,
-  ...args: TViewModelSimple extends ViewModelSimple<infer TPayload>
-    ? IsPartial<TPayload> extends true
-      ? [payload?: MaybeRef<TPayload>]
-      : [payload: MaybeRef<TPayload>]
-    : []
+  ...args: IsPartial<TPayload> extends true
+    ? [
+        payload?: ViewModelPayloadSource<TPayload>,
+        config?: ViewModelCreateConfig<TViewModelSimple>,
+      ]
+    : [
+        payload: ViewModelPayloadSource<TPayload>,
+        config?: ViewModelCreateConfig<TViewModelSimple>,
+      ]
 ): TViewModelSimple;
 
 export function useCreateViewModel<TViewModelSimple>(
@@ -50,27 +65,31 @@ export function useCreateViewModel<TViewModelSimple>(
 /** Creates a model owned by the current Vue component. */
 export function useCreateViewModel(
   VM: Class<any>,
-  payload?: MaybeRef<any>,
+  payload: ViewModelPayloadSource<any> = EMPTY_OBJECT,
   rawConfig?: UseCreateViewModelConfig<any>,
+  props?: any,
 ) {
   const store = useViewModelsStore();
   const parentViewModel = useActiveViewModel();
   const id = useId();
   const config: ViewModelCreateConfig<any> = {
     ...rawConfig,
-    id: rawConfig?.id ?? rawConfig?.generateId?.(rawConfig.ctx ?? {}) ?? id,
+    id:
+      rawConfig?.id ??
+      (process.env.NODE_ENV === 'production' ? id : `${id}:${VM.name}`),
     VM,
-    payload: unref(payload) ?? {},
+    payload: resolvePayload(payload),
     parentViewModel,
     viewModels: store ?? undefined,
     ctx: rawConfig?.ctx ?? {},
-    anchors: [getCurrentInstance()?.type, ...(rawConfig?.anchors ?? [])],
+    anchors: rawConfig?.anchors,
+    props: props ?? rawConfig?.props,
   };
   if (store) config.id = store.generateId(config);
   const existing = store?.get(config.id);
-  config.data =
-    (existing as AnyViewModel | null)?.vm?.data ??
-    (store?.resource ?? viewModelsConfig.resource)?.read(config.id);
+  config.data = existing
+    ? (existing as AnyViewModel).vm?.data
+    : (store?.resource ?? viewModelsConfig.resource)?.read(config.id);
   const model: AnyViewModel | AnyViewModelSimple =
     existing ??
     (store
@@ -80,24 +99,25 @@ export function useCreateViewModel(
     if (store) store.connect(model, config);
     else model.init?.({ ...config, viewModels: undefined });
   }
+  // Match Solid: initialize and start mounting during component setup.
+  const mountResult =
+    isViewModel(model) && model.isMounted ? undefined : model.mount?.();
   if (isViewModelSimple(model)) {
     model.parentViewModel = parentViewModel;
-    model.setPayload?.(unref(payload));
+    model.setPayload?.(resolvePayload(payload));
   }
-  const mount = () => {
-    if (!isViewModel(model) || !model.isMounted) return model.mount?.();
-  };
-  onMounted(mount);
-  // Vue awaits this hook before rendering the server-side subtree.
+  // Route asynchronous client failures through Vue lifecycle error handling.
+  onMounted(() => mountResult);
+  // Vue awaits server-prefetch before rendering the subtree.
   onServerPrefetch(async () => {
-    if (viewModelsConfig.mode === 'ssr') await mount();
+    if (viewModelsConfig.mode === 'ssr') await mountResult;
   });
   onBeforeUnmount(() => {
     if (store) void store.unmount(model);
     else void model.unmount?.();
   });
   watch(
-    () => unref(payload),
+    () => resolvePayload(payload),
     (next) => {
       model.setPayload?.(next);
     },

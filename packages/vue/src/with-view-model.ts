@@ -2,19 +2,119 @@ import type {
   AnyViewModel,
   AnyViewModelSimple,
   ViewModel,
+  ViewModelComponentRef,
   ViewModelSimple,
+  ViewModelStore,
 } from 'mobx-view-model';
 import { viewModelsConfig } from 'mobx-view-model';
-import type { Component, PropType } from 'vue';
-import { computed, defineComponent, h, useAttrs } from 'vue';
-import type { AnyObject, Class, EmptyObject, IsPartial } from 'yummies/types';
+import type { Component, PropType, VNodeChild } from 'vue';
+import { defineComponent, getCurrentInstance, h, useAttrs } from 'vue';
+import type {
+  AnyObject,
+  Class,
+  EmptyObject,
+  IsPartial,
+  Maybe,
+} from 'yummies/types';
 import { observer } from './observer.js';
 import { useRenderAllowed } from './render-state.js';
-import type { UseCreateViewModelConfig } from './types.js';
+import type { UseCreateViewModelConfig, VRenderFn } from './types.js';
 import { provideActiveViewModel } from './use-active-view-model.js';
 import { useCreateViewModel } from './use-create-view-model.js';
+import { useViewModelsStore } from './use-view-model-store.js';
 
 export type ViewModelProps<VM> = { model: VM };
+
+export type ViewModelPropsChargedProps<
+  TComponentOriginProps extends AnyObject,
+  TViewModel,
+> = TComponentOriginProps & ViewModelProps<TViewModel>;
+
+type VMInputPayloadPropObj<VM> = VM extends ViewModel<infer TPayload, any>
+  ? TPayload extends EmptyObject
+    ? {}
+    : IsPartial<TPayload> extends true
+      ? {
+          payload?: TPayload;
+        }
+      : {
+          payload: TPayload;
+        }
+  : VM extends ViewModelSimple<infer TPayload>
+    ? TPayload extends EmptyObject
+      ? {}
+      : IsPartial<TPayload> extends true
+        ? {
+            payload?: TPayload;
+          }
+        : {
+            payload: TPayload;
+          }
+    : {};
+
+export type WithViewModelVueHook = (
+  allProps: AnyObject,
+  ctx: AnyObject,
+  viewModels: Maybe<ViewModelStore>,
+) => void;
+
+export interface ViewModelHocConfig<VM extends AnyViewModel>
+  extends Omit<UseCreateViewModelConfig<VM>, 'component' | 'componentProps'> {
+  /**
+   * Component to render while the view model is mounting
+   */
+  fallback?: Component;
+
+  /**
+   * Extra Vue setup in the resulting component
+   */
+  vueHook?: WithViewModelVueHook;
+
+  /**
+   * Function that should return the payload for the VM.
+   * Default: `(props) => props.payload`
+   */
+  getPayload?: (allProps: any) => any;
+
+  /**
+   * Additional component anchors for the same VM instance.
+   * `useViewModel(AnchorComponent)` returns this VM when connected component is mounted.
+   */
+  anchors?: Component<any>[];
+}
+
+export interface ViewModelSimpleHocConfig<_VM> {
+  fallback?: Component;
+  vueHook?: WithViewModelVueHook;
+  getPayload?: (allProps: any) => any;
+  anchors?: Component<any>[];
+}
+
+export type AllViewModelPropsKeys = keyof Required<ViewModelProps<any>>;
+
+export type VMComponentProps<
+  TViewModel,
+  TComponentOriginProps extends AnyObject = AnyObject,
+> = Omit<TComponentOriginProps, AllViewModelPropsKeys> &
+  VMInputPayloadPropObj<TViewModel>;
+
+export interface VMComponent<
+  TViewModel,
+  TComponentOriginProps extends AnyObject = AnyObject,
+> extends ViewModelComponentRef<
+    TViewModel extends AnyViewModel | AnyViewModelSimple
+      ? TViewModel
+      : AnyViewModel | AnyViewModelSimple
+  > {
+  (props: VMComponentProps<TViewModel, TComponentOriginProps>): VNodeChild;
+
+  /**
+   * Registers an anchor component for the same VM instance.
+   */
+  connect(
+    anchor: Component<any>,
+  ): VMComponent<TViewModel, TComponentOriginProps>;
+}
 
 /**
  * Runtime props for a view component that receives `model` from {@link withViewModel}.
@@ -46,221 +146,124 @@ export function viewModelProps<
   };
 }
 
-type VMInputPayloadPropObj<VM> = VM extends ViewModel<infer TPayload, any>
-  ? TPayload extends EmptyObject
-    ? {}
-    : IsPartial<TPayload> extends true
-      ? {
-          payload?: TPayload;
-        }
-      : {
-          payload: TPayload;
-        }
-  : VM extends ViewModelSimple<infer TPayload>
-    ? TPayload extends EmptyObject
-      ? {}
-      : IsPartial<TPayload> extends true
-        ? {
-            payload?: TPayload;
-          }
-        : {
-            payload: TPayload;
-          }
-    : {};
-
-export interface ViewModelHocConfig<VM extends AnyViewModel>
-  extends Omit<UseCreateViewModelConfig<VM>, 'component' | 'anchors'> {
-  fallback?: Component;
-  getPayload?: (allProps: any) => any;
-  anchors?: Component[];
-  component?: Component;
-}
-
-export interface ViewModelSimpleHocConfig<_VM> {
-  fallback?: Component;
-  getPayload?: (allProps: any) => any;
-  anchors?: Component[];
-}
-
-export type VMComponentProps<
-  TViewModel,
-  TComponentOriginProps extends AnyObject,
-> = Omit<TComponentOriginProps, keyof ViewModelProps<any>> &
-  VMInputPayloadPropObj<TViewModel>;
-
-export interface VMComponent<
-  TViewModel,
-  TComponentOriginProps extends AnyObject = AnyObject,
-> {
-  (props: VMComponentProps<TViewModel, TComponentOriginProps>): any;
-  connect(anchor: Component): VMComponent<TViewModel, TComponentOriginProps>;
-}
-
+/** Connects a render function to a model, using the same call shape as Solid. */
 export function withViewModel<
   TViewModel extends AnyViewModel,
   TComponentOriginProps extends AnyObject = AnyObject,
 >(
-  model: Class<TViewModel>,
-  component: Component,
+  VM: Class<TViewModel>,
+  renderFn: VRenderFn<
+    ViewModelPropsChargedProps<TComponentOriginProps, TViewModel>
+  >,
   config?: ViewModelHocConfig<TViewModel>,
 ): VMComponent<TViewModel, TComponentOriginProps>;
-
 export function withViewModel<
-  TViewModel extends AnyViewModel,
+  TViewModel,
   TComponentOriginProps extends AnyObject = ViewModelProps<TViewModel>,
 >(
-  model: Class<TViewModel>,
-  config?: ViewModelHocConfig<TViewModel>,
-): (component: Component) => VMComponent<TViewModel, TComponentOriginProps>;
-
-export function withViewModel<
-  TViewModel extends AnyViewModelSimple,
-  TComponentOriginProps extends AnyObject = AnyObject,
->(
-  model: Class<TViewModel>,
-  component: Component,
+  VM: Class<TViewModel>,
+  renderFn: VRenderFn<
+    ViewModelPropsChargedProps<TComponentOriginProps, TViewModel>
+  >,
   config?: ViewModelSimpleHocConfig<TViewModel>,
 ): VMComponent<TViewModel, TComponentOriginProps>;
-
+/** Also accepts native Vue components and compiled SFCs. */
+export function withViewModel<
+  TViewModel extends AnyViewModel,
+  TComponentOriginProps extends AnyObject = AnyObject,
+>(
+  VM: Class<TViewModel>,
+  component: Component,
+  config?: ViewModelHocConfig<TViewModel>,
+): VMComponent<TViewModel, TComponentOriginProps>;
 export function withViewModel<
   TViewModel,
-  TComponentOriginProps extends AnyObject = ViewModelProps<TViewModel>,
+  TComponentOriginProps extends AnyObject = AnyObject,
 >(
-  model: Class<TViewModel>,
+  VM: Class<TViewModel>,
   component: Component,
   config?: ViewModelSimpleHocConfig<TViewModel>,
 ): VMComponent<TViewModel, TComponentOriginProps>;
 
 export function withViewModel(
   VM: Class<any>,
-  configOrComponent?: any,
-  configOrNothing?: any,
+  rawView: Component = () => null,
+  rawConfig?: ViewModelHocConfig<any> & ViewModelSimpleHocConfig<any>,
 ): any {
-  const isComponent =
-    typeof configOrComponent === 'function' ||
-    (configOrComponent &&
-      ['setup', 'render', 'template', '__vccOpts'].some(
-        (key) => key in configOrComponent,
-      ));
-  if (!isComponent) {
-    const config = configOrComponent ?? {};
-    const finalConfig = {
-      ...config,
-      ctx: {
-        VM,
-        generateId: config.generateId,
-        ...config.ctx,
-      },
-    };
-    return (Component: Component) =>
-      withViewModelWrapper(VM, finalConfig, Component);
-  }
-
-  const config = configOrNothing ?? {};
-  return withViewModelWrapper(
+  // Each wrapper owns its anchors; connect() never mutates caller configuration.
+  const config = { ...rawConfig, anchors: [...(rawConfig?.anchors ?? [])] };
+  const getPayload = config.getPayload ?? viewModelsConfig.getPayload;
+  const Fallback =
+    config.fallback ??
+    config.vmConfig?.fallbackComponent ??
+    viewModelsConfig.fallbackComponent;
+  const processRender =
+    config.vmConfig?.processRender ?? viewModelsConfig.processRender;
+  const SourceView = observer(rawView);
+  const renderFn =
+    typeof rawView === 'function'
+      ? rawView
+      : (props: AnyObject) => h(SourceView, props);
+  const processed = processRender?.(
+    renderFn as VRenderFn<AnyObject>,
     VM,
-    {
-      ...config,
-      ctx: {
-        VM,
-        generateId: config.generateId,
-        ...config.ctx,
-      },
-    },
-    configOrComponent,
+    config,
   );
-}
-
-const withViewModelWrapper = (
-  VM: Class<any>,
-  config: ViewModelHocConfig<any>,
-  OriginalComponent?: Component,
-) => {
-  config = { ...config, anchors: [...(config.anchors ?? [])] };
-  const wrapViewsInObserver = config.vmConfig?.wrapViewsInObserver ?? true;
-
-  let Component = OriginalComponent;
-  if (wrapViewsInObserver && Component) {
-    Component = observer(Component);
-  }
-
-  const FallbackComponent =
-    config.fallback ?? viewModelsConfig.fallbackComponent;
-  const getPayload = config.getPayload ?? ((props: any) => props.payload);
+  const View = processed ? observer(processed as Component) : SourceView;
 
   const RawComponent = defineComponent({
-    name: `ConnectedViewModel(${VM.name}->Component)`,
+    name: `ConnectedViewModel(${VM.name})`,
+    inheritAttrs: false,
     props: {
-      payload: {
-        type: null as unknown as PropType<any>,
-        required: false,
-      },
+      payload: { type: null as unknown as PropType<any>, required: false },
     },
     setup(props, ctx) {
       const attrs = useAttrs();
-      const allProps = computed(() => ({
-        ...(attrs as any),
-        ...(props as any),
-      }));
-      const payloadRef = computed(() => getPayload(allProps.value));
-      const componentProps = computed(() => {
-        const { payload: _payload, ...rest } = allProps.value as any;
-        return rest;
+      const instance = getCurrentInstance()!;
+      const hasKey = (key: PropertyKey) =>
+        key === 'payload'
+          ? Object.hasOwn(instance.vnode.props ?? {}, key)
+          : key in attrs;
+      // Solid receives a live props object. Preserve the same behavior in Vue,
+      // including payload in vm.props and in the integration hook.
+      const allProps = new Proxy({} as AnyObject, {
+        get: (_, key) =>
+          key in props ? (props as any)[key] : attrs[key as string],
+        has: (_, key) => hasKey(key),
+        ownKeys: () => [
+          ...Reflect.ownKeys(instance.proxy!.$attrs),
+          ...(hasKey('payload') ? ['payload'] : []),
+        ],
+        getOwnPropertyDescriptor: (_, key) =>
+          hasKey(key) ? { enumerable: true, configurable: true } : undefined,
       });
-
-      const model = useCreateViewModel(VM, payloadRef, {
-        ...config,
-        component: ConnectedViewModel as any,
-        anchors: [ConnectedViewModel, ...(config.anchors ?? [])],
-        // Keep props current; config props describe creation and are not a payload.
-        props: new Proxy(
-          {},
-          {
-            get: (_, key) => componentProps.value[key],
-            ownKeys: () => Reflect.ownKeys(componentProps.value),
-            getOwnPropertyDescriptor: () => ({
-              enumerable: true,
-              configurable: true,
-            }),
-          },
-        ),
-      }) as unknown as AnyViewModel | AnyViewModelSimple;
-
+      const model = useCreateViewModel(
+        VM,
+        () => getPayload(allProps),
+        config,
+        allProps,
+      ) as AnyViewModel | AnyViewModelSimple;
       provideActiveViewModel(model);
-
+      const store = useViewModelsStore();
+      (config.vueHook ?? viewModelsConfig.reactHook)?.(
+        allProps,
+        config.ctx ?? {},
+        store,
+      );
       const isRenderAllowed = useRenderAllowed(model);
       return () => {
-        if (isRenderAllowed()) {
-          return Component
-            ? h(Component as any, { ...componentProps.value, model }, ctx.slots)
-            : ctx.slots.default?.({ model });
-        }
-
-        return FallbackComponent
-          ? h(FallbackComponent as any, {
-              ...allProps.value,
-              payload: payloadRef.value,
-            })
-          : null;
+        if (!isRenderAllowed())
+          return Fallback ? h(Fallback as Component) : null;
+        const { payload: _payload, ...rest } = allProps;
+        return h(View, { ...rest, model }, ctx.slots);
       };
     },
   });
-
-  const ConnectedViewModel = observer(RawComponent);
-
-  config.component = ConnectedViewModel as any;
-
-  const ConnectedWithConnect =
-    ConnectedViewModel as typeof ConnectedViewModel & {
-      connect: (anchor: Component) => typeof ConnectedWithConnect;
-    };
-
-  ConnectedWithConnect.connect = (anchor: Component) => {
-    if (!config.anchors!.includes(anchor)) {
-      config.anchors = [...config.anchors!, anchor];
-    }
-    return ConnectedWithConnect;
+  const Connected = observer(RawComponent) as unknown as VMComponent<any>;
+  config.anchors.push(Connected as Component);
+  Connected.connect = (anchor: Component) => {
+    if (!config.anchors.includes(anchor)) config.anchors.push(anchor);
+    return Connected;
   };
-
-  return ConnectedWithConnect;
-};
+  return Connected;
+}

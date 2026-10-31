@@ -91,13 +91,11 @@ describe('review regressions', () => {
     }
   });
 
-  it('accepts render options, template options, and omitted config in curried form', async () => {
+  it('accepts render options, template options, and a render function', async () => {
     class VM extends ViewModelBase {}
     const Render = withViewModel(VM, { render: () => h('div', 'render') });
     const Template = withViewModel(VM, { template: '<div>template</div>' });
-    const Curried = withViewModel(VM)(
-      defineComponent({ setup: () => () => h('div', 'curried') }),
-    );
+    const Curried = withViewModel(VM, () => h('div', 'function'));
     const result = mount(
       defineComponent({
         setup: () => () => h('section', [h(Render), h(Template), h(Curried)]),
@@ -105,7 +103,7 @@ describe('review regressions', () => {
     );
     try {
       await flush();
-      expect(result.el.textContent).toBe('rendertemplatecurried');
+      expect(result.el.textContent).toBe('rendertemplatefunction');
     } finally {
       result.unmount();
     }
@@ -117,8 +115,10 @@ describe('review regressions', () => {
     const initial = defineComponent({ render: () => null });
     const anchors = [initial];
     const store = new ViewModelStoreBase();
-    const Connected = withViewModel(VM, { anchors })(
+    const Connected = withViewModel(
+      VM,
       defineComponent({ render: () => h('div') }),
+      { anchors },
     );
     Connected.connect(anchor);
     expect(anchors).toEqual([initial]);

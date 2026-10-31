@@ -1,20 +1,21 @@
 import type {
   AnyViewModel,
   ViewModelCreateConfig,
-  ViewModelsRawConfig,
+  ViewModelsConfig,
 } from 'mobx-view-model';
-import type { ComputedRef, Ref } from 'vue';
-import type { AnyObject, Maybe } from 'yummies/types';
+import type { ComputedRef, Ref, VNodeChild } from 'vue';
+import type { Maybe } from 'yummies/types';
 
 export type MaybeRef<T> = T | Ref<T> | ComputedRef<T>;
+export type ViewModelPayloadSource<T> = MaybeRef<T> | (() => T);
+export type VRenderFn<P = {}> = (props: P) => VNodeChild;
+export type VComponent<P = {}> = VRenderFn<P>;
 
-export interface UseCreateViewModelConfig<TViewModel extends AnyViewModel> {
+export interface UseCreateViewModelConfig<TViewModel extends AnyViewModel>
+  extends Pick<
+    ViewModelCreateConfig<TViewModel>,
+    'vmConfig' | 'ctx' | 'anchors' | 'props'
+  > {
   id?: Maybe<string>;
-  generateId?: (ctx: AnyObject) => string;
-  factory?: (config: ViewModelCreateConfig<TViewModel>) => TViewModel;
-  vmConfig?: ViewModelsRawConfig & { wrapViewsInObserver?: boolean };
-  ctx?: AnyObject;
-  component?: unknown;
-  anchors?: unknown[];
-  props?: AnyObject;
+  factory?: ViewModelsConfig<TViewModel>['factory'];
 }

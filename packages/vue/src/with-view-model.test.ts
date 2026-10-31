@@ -16,8 +16,12 @@ const flush = async () => {
 };
 
 describe('vue withViewModel', () => {
-  it('renders fallback before mount and view after', async () => {
-    class VM extends ViewModelBase<{ label: string }> {}
+  it('renders fallback during async mount and view after', async () => {
+    class VM extends ViewModelBase<{ label: string }> {
+      protected async willMount() {
+        await Promise.resolve();
+      }
+    }
 
     const View = defineComponent({
       props: { model: { type: Object, required: true } },
@@ -327,7 +331,7 @@ describe('vue withViewModel', () => {
     unmount();
   });
 
-  it('SSR renders fallback without store', async () => {
+  it('SSR renders synchronous models without a store', async () => {
     class VM extends ViewModelBase<{ label: string }> {}
 
     const View = defineComponent({
@@ -350,7 +354,7 @@ describe('vue withViewModel', () => {
     );
 
     const html = await renderToString(app);
-    expect(html).toContain('fallback');
+    expect(html).toContain('view:ssr');
   });
 
   it('SSR renders view with preattached store instance', async () => {

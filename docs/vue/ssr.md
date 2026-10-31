@@ -1,6 +1,6 @@
 # Server-Side Rendering (Vue)
 
-Set `viewModelsConfig.mode = 'ssr'` at application startup to let Vue await model mounting through `onServerPrefetch`. This works with synchronous and asynchronous `mount()` implementations, with or without a store. In the default `csr-only` mode, unmounted models render the fallback on the server.
+Set `viewModelsConfig.mode = 'ssr'` at application startup to let Vue await model mounting through `onServerPrefetch`. This works with synchronous and asynchronous `mount()` implementations, with or without a store. As in Solid, model mounting starts during setup. In the default `csr-only` mode, synchronous models can render immediately, while models still mounting render the fallback.
 
 Create a separate store for each request. Use stable IDs and identical payloads on server and client when hydrating.
 

@@ -30,4 +30,4 @@ export default observer(
 - If the component uses **`setup` returning a function**, that function is tracked.
 - If the component uses the **`render` option**, `render` is tracked.
 
-`withViewModel` applies `observer` to the inner view when `config.vmConfig.wrapViewsInObserver` is enabled.
+`withViewModel` and `withPropsViewModel` automatically observe both the wrapper and the view.

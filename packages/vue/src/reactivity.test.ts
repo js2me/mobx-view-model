@@ -14,7 +14,7 @@ import { observer } from './observer.js';
 import { useViewModel } from './use-view-model.js';
 import { withViewModel } from './with-view-model.js';
 
-const createIdGenerator = (prefix?: string) =>
+const _createIdGenerator = (prefix?: string) =>
   createCounter((counter) => `${prefix ?? ''}${counter}`);
 
 // Settle Vue updates, async model hooks, and the Vue updates they trigger.
@@ -102,9 +102,7 @@ describe('vue MobX reactivity', () => {
       },
     });
 
-    const Connected = withViewModel(VM, View, {
-      generateId: createIdGenerator('r-'),
-    });
+    const Connected = withViewModel(VM, View, {});
 
     const Root = defineComponent({
       setup() {
@@ -181,9 +179,7 @@ describe('vue MobX reactivity', () => {
       },
     });
 
-    const Connected = withViewModel(VM, View, {
-      generateId: createIdGenerator('r-obs-comp-'),
-    });
+    const Connected = withViewModel(VM, View, {});
 
     const Root = defineComponent({
       setup() {
@@ -228,7 +224,7 @@ describe('vue MobX reactivity', () => {
     unmount();
   });
 
-  it('withViewModel: without observer, view ignores setPayload when Vue parent does not re-render', async () => {
+  it('withViewModel: view observes setPayload when Vue parent does not re-render', async () => {
     class StalePayloadVm extends ViewModelBaseMock<{ counter: number }> {}
 
     let staleVmRef: StalePayloadVm | null = null;
@@ -246,10 +242,7 @@ describe('vue MobX reactivity', () => {
       },
     });
 
-    const Connected = withViewModel(StalePayloadVm, View, {
-      generateId: createIdGenerator('r2-'),
-      vmConfig: { wrapViewsInObserver: false },
-    });
+    const Connected = withViewModel(StalePayloadVm, View, {});
 
     const payload = ref({ counter: 0 });
 
@@ -286,7 +279,7 @@ describe('vue MobX reactivity', () => {
       (staleVmRef as ViewModelBaseMock<{ counter: number }> | null)?.payload
         .counter,
     ).toBe(1);
-    expect(el.querySelector('.vm-counter')?.textContent).toBe('0');
+    expect(el.querySelector('.vm-counter')?.textContent).toBe('1');
 
     unmount();
   });
@@ -320,9 +313,7 @@ describe('vue MobX reactivity', () => {
       },
     });
 
-    const Connected = withViewModel(VM, View, {
-      generateId: createIdGenerator('r3-'),
-    });
+    const Connected = withViewModel(VM, View, {});
 
     const Root = defineComponent({
       setup() {
@@ -362,9 +353,7 @@ describe('vue MobX reactivity', () => {
       },
     });
 
-    const Connected = withViewModel(VM, View, {
-      generateId: createIdGenerator('r4-'),
-    });
+    const Connected = withViewModel(VM, View, {});
 
     const Root = defineComponent({
       setup() {
