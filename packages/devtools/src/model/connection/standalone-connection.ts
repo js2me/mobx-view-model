@@ -1,4 +1,4 @@
-import type { ViewModelStoreBase, viewModelsConfig } from 'mobx-view-model';
+import type { viewModelsConfig } from 'mobx-view-model';
 import { ViewModelStoreImpl } from '../lib/view-model-store.impl';
 import type { ViewModelDevtools } from '../view-model-devtools';
 
@@ -23,8 +23,6 @@ export function captureProjectStores() {
 export class StandaloneConnection {
   private readonly hooks = new Map<StoreHook, () => void>();
   private readonly disposers: Array<() => void>;
-  private previousVms: unknown[] = [];
-  private previousParents: unknown[] = [];
   private timer?: ReturnType<typeof setInterval>;
 
   constructor(
@@ -43,37 +41,25 @@ export class StandaloneConnection {
     if (devtools.isPopupOpened) this.start();
   }
   private connect = (store: Parameters<StoreHook>[0]) => {
-    if (store.constructor === ViewModelStoreImpl) return;
-    this.devtools.setStore(store as ViewModelStoreBase);
+    if (
+      store.constructor === ViewModelStoreImpl ||
+      typeof Reflect.get(store, 'viewModels')?.values !== 'function'
+    )
+      return;
+    this.devtools.setStore(store);
   };
   private discover() {
-    // Core 9/10 and 11 must keep their own factories and defaults.
+    // Core 8–10 and 11 must keep their own factories and defaults.
     for (const hook of getHooks()) {
       if (this.hooks.has(hook)) continue;
       this.hooks.set(hook, hook.sub(this.connect));
       if (hook.lastPub?.[0]) this.connect(hook.lastPub[0]);
     }
   }
-  private check = () => {
-    this.discover();
-    const vms = this.devtools.inspector.readViewModels();
-    if (
-      vms.length !== this.previousVms.length ||
-      vms.some(
-        (vm, index) =>
-          vm !== this.previousVms[index] ||
-          vm.parentViewModel !== this.previousParents[index],
-      )
-    ) {
-      this.previousVms = vms;
-      this.previousParents = vms.map((vm) => vm.parentViewModel);
-      this.devtools.notifyVmChange();
-    }
-  };
   private start = () => {
     if (this.timer !== undefined) return;
-    this.check();
-    this.timer = setInterval(this.check, 500);
+    this.discover();
+    this.timer = setInterval(() => this.discover(), 500);
   };
   private stop = () => {
     clearInterval(this.timer);

@@ -32,6 +32,9 @@ test('recreates connected sessions on args and story changes without React warni
   await expect(
     frame.getByRole('dialog', { name: 'ViewModel Devtools', exact: true }),
   ).toBeVisible();
+  const baseIntervals = await frame
+    .locator('body')
+    .evaluate(() => (globalThis as any).demoIntervals.size);
   await page.locator('#control-count').fill('1000');
   await page.locator('#control-count').press('Tab');
   await expect(frame.locator('main')).toContainText('1,000 ViewModels');
@@ -71,7 +74,7 @@ test('recreates connected sessions on args and story changes without React warni
         .locator('body')
         .evaluate(() => (globalThis as any).demoIntervals.size),
     )
-    .toBe(1);
+    .toBe(baseIntervals + 1);
   await page.getByRole('link', { name: 'Default', exact: true }).click();
   await expect(frame.locator('main')).toContainText('100 ViewModels');
   await expect(frame.locator('#view-model-devtools')).toHaveCount(1);
@@ -81,6 +84,6 @@ test('recreates connected sessions on args and story changes without React warni
         .locator('body')
         .evaluate(() => (globalThis as any).demoIntervals.size),
     )
-    .toBe(0);
+    .toBe(baseIntervals);
   expect(errors).toEqual([]);
 });

@@ -52,12 +52,12 @@
   overflow: hidden;
 }
 
-.vmPopupContent:global([data-simplebar]) :global(.simplebar-track.simplebar-vertical) {
+.vmPopupContent :global(.simplebar-track.simplebar-vertical) {
   right: 6px;
   z-index: 4;
 }
 
-.vmPopupContent:global([data-simplebar]) :global(.simplebar-scrollbar) {
+.vmPopupContent :global(.simplebar-scrollbar) {
   z-index: 4;
 }
 

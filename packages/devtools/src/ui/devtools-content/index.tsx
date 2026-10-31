@@ -1,4 +1,4 @@
-import 'simplebar/dist/simplebar.css';
+import 'simplebar-core/dist/simplebar.css';
 import { type ViewModelProps, withViewModel } from 'mobx-view-model-react';
 import type { CSSProperties, ReactNode } from 'react';
 import { cx } from 'yummies/css';
@@ -11,6 +11,7 @@ import { ListItemRender } from './list-items/list-item-render';
 import { VmListItemRender } from './list-items/vm-list-item-render';
 import { DevtoolsContentVM } from './model';
 import { Notifications } from './notifications';
+import { ScrollbarLayout } from './scrollbar-layout';
 import { SearchField } from './search-field';
 import { SettingsButton } from './settings-button';
 import css from './styles.module.css';
@@ -33,80 +34,84 @@ export const VmDevtoolsContent = withViewModel(
         className={cx(css.vmContent, className)}
         data-sticky-vm-active={model.stickyVmItem ? '' : undefined}
       >
-        <div className={css.vmContentHeader}>
-          <Notifications model={devtools.notifications} />
-          <div className={css.vmContentHeaderTitle} data-content-header>
-            <img
-              className={css.vmContentHeaderLogo}
-              src={devtools.logoUrl}
-              alt=""
-            />
-            <span className={css.vmContentHeaderTitleText}>
-              ViewModels{' '}
-              <span className={css.connectionBadge}>
-                {inspector.allVms.length} live
+        <ScrollbarLayout>
+          <div className={css.vmContentHeader}>
+            <Notifications model={devtools.notifications} />
+            <div className={css.vmContentHeaderTitle} data-content-header>
+              <img
+                className={css.vmContentHeaderLogo}
+                src={devtools.logoUrl}
+                alt=""
+              />
+              <span className={css.vmContentHeaderTitleText}>
+                ViewModels{' '}
+                <span className={css.connectionBadge}>
+                  {inspector.allVms.length} live
+                </span>
               </span>
-            </span>
-            <SettingsButton payload={{ settings }} />
-            {headerContent}
+              <SettingsButton payload={{ settings }} />
+              {headerContent}
+            </div>
+            <div
+              className={cx(
+                css.vmContentControlPanel,
+                inspector.search.isActive && css.searchIsActive,
+              )}
+            >
+              <InspectorToolbar settings={settings} />
+              <SearchField search={inspector.search} />
+            </div>
           </div>
           <div
-            className={cx(
-              css.vmContentControlPanel,
-              inspector.search.isActive && css.searchIsActive,
-            )}
+            className={css.stickyVmHeader}
+            style={{ display: model.stickyVmItem ? undefined : 'none' }}
           >
-            <InspectorToolbar settings={settings} />
-            <SearchField search={inspector.search} />
+            {model.stickyVmItem instanceof VMListItem ? (
+              <VmListItemRender item={model.stickyVmItem} compact />
+            ) : model.stickyVmItem instanceof ExtraListItem ? (
+              <ExtraListItemRender item={model.stickyVmItem} />
+            ) : null}
           </div>
-        </div>
-        <div
-          className={css.stickyVmHeader}
-          style={{ display: model.stickyVmItem ? undefined : 'none' }}
-        >
-          {model.stickyVmItem instanceof VMListItem ? (
-            <VmListItemRender item={model.stickyVmItem} compact />
-          ) : model.stickyVmItem instanceof ExtraListItem ? (
-            <ExtraListItemRender item={model.stickyVmItem} />
-          ) : null}
-        </div>
-        {model.listItems.length === 0 && (
-          <div className={css.emptyState}>
-            {inspector.search.isActive
-              ? 'No matching ViewModels or properties'
-              : 'Connect a ViewModel store to start inspecting.'}
+          {model.listItems.length === 0 && (
+            <div className={css.emptyState}>
+              {inspector.search.isActive
+                ? 'No matching ViewModels or properties'
+                : 'Connect a ViewModel store to start inspecting.'}
+            </div>
+          )}
+          <div
+            className={css.vmContentVirtualScroll}
+            style={{ height: model.virtualHeight }}
+          >
+            <div className={css.vmContentVirtualizedContent}>
+              {model.topOffset > 0 && (
+                <div style={{ height: model.topOffset }} />
+              )}
+              {model.visibleItems.map((item, index) => {
+                const isStickySource =
+                  index + model.startIndex === model.stickyVmItemIndex;
+                return (
+                  <div
+                    key={item.key}
+                    className={
+                      isStickySource ? css.listItemStickySource : undefined
+                    }
+                    style={
+                      isStickySource
+                        ? { height: LIST_ITEM_HEIGHT }
+                        : { display: 'contents' }
+                    }
+                  >
+                    <ListItemRender item={item} />
+                  </div>
+                );
+              })}
+              {model.bottomOffset > 0 && (
+                <div style={{ height: model.bottomOffset }} />
+              )}
+            </div>
           </div>
-        )}
-        <div
-          className={css.vmContentVirtualScroll}
-          style={{ height: model.virtualHeight }}
-        >
-          <div className={css.vmContentVirtualizedContent}>
-            {model.topOffset > 0 && <div style={{ height: model.topOffset }} />}
-            {model.visibleItems.map((item, index) => {
-              const isStickySource =
-                index + model.startIndex === model.stickyVmItemIndex;
-              return (
-                <div
-                  key={item.key}
-                  className={
-                    isStickySource ? css.listItemStickySource : undefined
-                  }
-                  style={
-                    isStickySource
-                      ? { height: LIST_ITEM_HEIGHT }
-                      : { display: 'contents' }
-                  }
-                >
-                  <ListItemRender item={item} />
-                </div>
-              );
-            })}
-            {model.bottomOffset > 0 && (
-              <div style={{ height: model.bottomOffset }} />
-            )}
-          </div>
-        </div>
+        </ScrollbarLayout>
       </div>
     );
   },

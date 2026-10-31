@@ -10,13 +10,22 @@ async function loadDevtools() {
   if (params.get('popup') === 'persisted-open') {
     localStorage.setItem('mobx-view-model-devtools/isPopupOpened', 'true');
   }
-  await new Promise<void>((resolve, reject) => {
-    const script = document.createElement('script');
-    script.src = new URL('../../../dist/auto.global.js', import.meta.url).href;
-    script.onload = () => resolve();
-    script.onerror = reject;
-    document.head.appendChild(script);
-  });
+  if (params.get('entry') === 'module') {
+    const { ViewModelDevtools } = await import('../../../dist/index.js');
+    Object.assign(globalThis, { ViewModelDevtools });
+    ViewModelDevtools.define();
+  } else {
+    await new Promise<void>((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = new URL(
+        '../../../dist/auto.global.js',
+        import.meta.url,
+      ).href;
+      script.onload = () => resolve();
+      script.onerror = reject;
+      document.head.appendChild(script);
+    });
+  }
   if (params.get('popup') !== 'persisted-open') {
     (globalThis as any).ViewModelDevtools.define().showPopup();
   }
@@ -25,14 +34,21 @@ async function loadDevtools() {
 if (params.get('order') === 'devtools-first') await loadDevtools();
 
 const core =
-  params.get('core') === '9'
-    ? await import('mobx-view-model-v9')
-    : params.get('core') === '10'
-      ? await import('mobx-view-model-v10')
-      : await import('mobx-view-model');
+  params.get('core') === '8.0'
+    ? await import('mobx-view-model-v8-initial')
+    : params.get('core') === '8'
+      ? await import('mobx-view-model-v8')
+      : params.get('core') === '9'
+        ? await import('mobx-view-model-v9')
+        : params.get('core') === '10'
+          ? await import('mobx-view-model-v10')
+          : await import('mobx-view-model');
 
 let store = new core.ViewModelStoreBase();
-class CompatibilityVM extends core.ViewModelBase {}
+const manual = params.get('core') === '8.0' || params.get('entry') === 'module';
+class CompatibilityVM extends core.ViewModelBase {
+  legacyLabel = 'ready';
+}
 async function register(VM: any, id: string) {
   const config = { VM, id, payload: {}, viewModels: store };
   if ('define' in store) return (store as any).define(config);
@@ -43,6 +59,7 @@ async function register(VM: any, id: string) {
 await register(CompatibilityVM, 'compatibility');
 
 if (params.get('order') !== 'devtools-first') await loadDevtools();
+if (manual) (globalThis as any).ViewModelDevtools.connect(store);
 
 Object.assign(globalThis, {
   compatibility: {
@@ -61,6 +78,7 @@ Object.assign(globalThis, {
     },
     async newStore() {
       store = new core.ViewModelStoreBase();
+      if (manual) (globalThis as any).ViewModelDevtools.connect(store);
       class NewStoreVM extends core.ViewModelBase {}
       await register(NewStoreVM, 'new-store');
     },

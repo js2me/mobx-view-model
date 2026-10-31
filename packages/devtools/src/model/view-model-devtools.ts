@@ -1,7 +1,7 @@
-import type { ViewModelStoreBase } from 'mobx-view-model';
 import type { AnyObject } from 'yummies/types';
 import { DevtoolsRenderer } from '../ui/devtools-renderer';
 import { devtoolsLogo } from '../ui/logo';
+import { ViewModelStoreObserver } from './connection/view-model-store-observer';
 import type { ViewModelDevtoolsConfig } from './devtools-config';
 import { DevtoolsInspector } from './devtools-inspector';
 import { DevtoolsSettings } from './devtools-settings';
@@ -26,6 +26,7 @@ export class ViewModelDevtools {
   readonly notifications = new DevtoolsNotifications();
   readonly vmStore = new ViewModelStoreImpl();
   readonly keyboardHandler: KeyboardHandler;
+  private readonly storeObserver: ViewModelStoreObserver;
   private readonly renderer: DevtoolsRenderer;
   readonly logoUrl = devtoolsLogo;
 
@@ -35,6 +36,7 @@ export class ViewModelDevtools {
     this.inspector = new DevtoolsInspector(this.settings, this.notifications);
     this.inspector.setStore(config.viewModels);
     this.inspector.setExtras(config.extras);
+    this.storeObserver = new ViewModelStoreObserver(this);
     this.keyboardHandler = new KeyboardHandler(this);
     this.renderer = new DevtoolsRenderer(this);
     this.render();
@@ -71,7 +73,7 @@ export class ViewModelDevtools {
   set position(position: typeof this.settings.position) {
     this.settings.setPosition(position);
   }
-  setStore = (store: ViewModelStoreBase | undefined) =>
+  setStore = (store: ViewModelDevtoolsConfig['viewModels']) =>
     this.inspector.setStore(store);
   setExtras = (extras: AnyObject | null | undefined) =>
     this.inspector.setExtras(extras);
@@ -85,6 +87,7 @@ export class ViewModelDevtools {
   }
   destroy() {
     this.lifetime.abort();
+    this.storeObserver.destroy();
     this.window.destroy();
     this.renderer.destroy();
     this.keyboardHandler.destroy();

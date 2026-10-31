@@ -1,5 +1,5 @@
 import { action, computed, makeObservable, observable, reaction } from 'mobx';
-import SimpleBar from 'simplebar';
+import SimpleBar from 'simplebar-core';
 import { createRef } from 'yummies/mobx';
 import type { InspectorViewport } from '@/model/devtools-inspector';
 import { isStickyTreeItem, LIST_ITEM_HEIGHT } from '@/model/inspector-scroll';
@@ -108,8 +108,10 @@ export class DevtoolsContentVM
     );
   }
   private detach() {
-    if (this.devtools.inspector.viewport === this)
+    if (this.devtools.inspector.viewport === this) {
       this.devtools.inspector.viewport = undefined;
+      this.devtools.inspector.search.handleSearchInputBlur();
+    }
     this.scrollElement?.removeEventListener('scroll', this.measure);
     this.resizeObserver?.disconnect();
     this.disposeListReaction?.();
@@ -117,7 +119,6 @@ export class DevtoolsContentVM
     this.scrollbar?.unMount();
     this.scrollbar = undefined;
     this.scrollElement = undefined;
-    this.devtools.inspector.search.handleSearchInputBlur();
   }
   willUnmount() {
     this.detach();

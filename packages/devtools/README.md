@@ -102,3 +102,17 @@ Documentation screenshots use the actual 13-VM docs demo. With the production pa
 ```sh
 pnpm --filter mobx-view-model-devtools capture:docs
 ```
+
+## Core compatibility
+
+The standalone bundle is tested with core 8.10.1, 9.3.16, 10.2.2 and 11.x in both script load orders, including isolated MobX runtimes. It discovers their store-creation hooks without replacing the host configuration.
+
+Early core 8.0.0 has no global store-creation hook. Connect its store explicitly instead of relying on auto-discovery:
+
+```ts
+import { ViewModelDevtools } from 'mobx-view-model-devtools';
+
+ViewModelDevtools.connect(viewModelStore);
+```
+
+The module entry is tested against both 8.0.0 and 8.10.1. The public store type uses their shared lookup API, so TypeScript consumers do not need casts to the current core version. A popup-scoped observer detects VM additions, replacements, removals and parent changes even when the host uses an isolated MobX runtime. Closing the popup stops observation; reopening refreshes immediately.
