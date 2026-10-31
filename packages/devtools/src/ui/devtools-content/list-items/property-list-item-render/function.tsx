@@ -5,9 +5,9 @@ import css from './styles.module.css';
 
 export const FunctionPropertyContent = observer(
   ({ item }: PropertyListItemRenderProps) => {
-    const argLabels = item.isInaccessible ? [] : [...Array(item.data.length)].map(
-      (_, i) => `arg${i + 1}`,
-    );
+    const argLabels = item.isInaccessible
+      ? []
+      : [...Array(item.data.length)].map((_, i) => `arg${i + 1}`);
 
     return (
       <>

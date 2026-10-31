@@ -1,8 +1,8 @@
 import { computed, makeObservable, untracked } from 'mobx';
 import type { AnyObject } from 'yummies/types';
+import type { DevtoolsInspector } from '../devtools-inspector';
+import { sortPropertyKeys } from '../inspection/sort-property-keys';
 import type { AnyVM } from '../types';
-import type { ViewModelDevtools } from '../view-model-devtools';
-import { sortPropertyKeys } from '../utils/sort-property-keys';
 import { ListItem, type ListItemOperation } from './list-item';
 import { PropertyListItem } from './property-list-item';
 
@@ -12,11 +12,11 @@ export class ExtraListItem extends ListItem<AnyVM> {
 
     let keys = Object.keys(this.data || {});
 
-    keys = sortPropertyKeys(keys, this.devtools.sortPropertiesBy);
+    keys = sortPropertyKeys(keys, this.inspector.settings.sortPropertiesBy);
 
     return keys.map((property, order) => {
       return PropertyListItem.create(
-        this.devtools,
+        this.inspector,
         property,
         property,
         order,
@@ -41,11 +41,11 @@ export class ExtraListItem extends ListItem<AnyVM> {
 
   displayName;
 
-  constructor(devtools: ViewModelDevtools, extras: AnyObject) {
+  constructor(inspector: DevtoolsInspector, extras: AnyObject) {
     const displayName = 'Extras';
     const key = `extra$$$-${displayName}-`;
 
-    super(devtools, key, extras);
+    super(inspector, key, extras);
 
     this.displayName = displayName;
     this.searchData = {
@@ -56,7 +56,7 @@ export class ExtraListItem extends ListItem<AnyVM> {
     makeObservable(this);
 
     untracked(() => {
-      if (!this.cache.has(this.expandKey)) {
+      if (!this.inspector.expansion.has(this.key)) {
         this.expand();
       }
     });

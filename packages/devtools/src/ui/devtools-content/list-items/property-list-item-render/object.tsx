@@ -1,8 +1,8 @@
 import { observer } from 'mobx-react-lite';
 import type { PropertyListItemRenderProps } from '.';
 import { ObjectInlinePreview } from './object-inline-preview';
-import css from './styles.module.css';
 import { PropertyValueEditInput } from './property-value-edit-input';
+import css from './styles.module.css';
 
 export const ObjectPropertyContent = observer(
   ({ item }: PropertyListItemRenderProps) => {

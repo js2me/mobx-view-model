@@ -9,8 +9,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 20px;
-  height: 20px;
+  width: 28px;
+  height: 28px;
   padding: 0;
   border: none;
   background: transparent;
@@ -37,16 +37,16 @@
   position: absolute;
   z-index: 1;
   top: calc(100% + 4px);
-  left: 0;
+  right: 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  min-width: 200px;
-  padding: 8px;
+  gap: 14px;
+  min-width: 238px;
+  padding: 14px;
   border: 1px solid var(--vmd-control-border);
-  border-radius: 6px;
+  border-radius: 12px;
   background: var(--vmd-bg);
-  box-shadow: 0 6px 18px #00000059;
+  box-shadow: var(--vmd-glass-shadow);
   backdrop-filter: blur(8px);
 }
 
@@ -66,7 +66,8 @@
 }
 
 .settingLabel {
-  font-size: 13px;
+  font-size: 12px;
+  font-family: system-ui, sans-serif;
   color: var(--vmd-base-color);
   white-space: nowrap;
 }

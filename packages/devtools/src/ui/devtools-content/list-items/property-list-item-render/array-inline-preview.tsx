@@ -6,19 +6,13 @@ import {
   getVisibleArrayInlineCount,
   prepareArrayInlinePreview,
   resolveArrayInlinePreviewSlice,
-} from '@/model/utils/format-array-inline-preview';
+} from '@/model/inspection/format-array-inline-preview';
 import { CollectionMeta, CollectionTypedValue } from './collection-typed-value';
-import { useInlinePreviewVisibleCount } from './use-inline-preview-visible-count';
 import css from './styles.module.css';
+import { useInlinePreviewVisibleCount } from './use-inline-preview-visible-count';
 
 export const ArrayInlinePreview = observer(
-  ({
-    array,
-    className,
-  }: {
-    array: readonly unknown[];
-    className?: string;
-  }) => {
+  ({ array, className }: { array: readonly unknown[]; className?: string }) => {
     const preview = useMemo(() => prepareArrayInlinePreview(array), [array]);
     const previewClassName = cx(css.inlinePreview, className);
     const { containerRef, visibleCount } = useInlinePreviewVisibleCount(

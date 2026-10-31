@@ -1,11 +1,11 @@
 import { observer } from 'mobx-react-lite';
+import { INACCESSIBLE_DISPLAY_LABEL } from '@/model/inspection/safe-access';
 import type { PropertyListItemRenderProps } from '.';
 import {
   InstanceCollapsedValue,
   shouldShowInstanceCollapsedValue,
 } from './instance-collapsed-value';
 import css from './styles.module.css';
-import { INACCESSIBLE_DISPLAY_LABEL } from '@/model/utils/safe-access';
 
 export const InstancePropertyContent = observer(
   ({ item }: PropertyListItemRenderProps) => {

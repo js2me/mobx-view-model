@@ -2,96 +2,34 @@
 .vmButton {
   position: fixed;
   z-index: 999999;
-  width: 36px;
-  height: 36px;
-  cursor: pointer;
-  border-radius: 8px;
-  transition: all 150ms ease-in-out;
-  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  height: 44px;
+  min-width: 148px;
+  padding: 8px 12px !important;
+  border-radius: 14px;
+  color: var(--vmd-base-color);
+  background: var(--vmd-glass-bg) !important;
+  border: 1px solid var(--vmd-glass-border) !important;
+  border-top-color: var(--vmd-glass-edge) !important;
+  box-shadow: var(--vmd-glass-shadow);
+  backdrop-filter: blur(28px) saturate(150%);
+  -webkit-backdrop-filter: blur(28px) saturate(150%);
   user-select: none;
-
-  &.dragging {
-    transition: none;
-    cursor: grabbing;
-    opacity: 0.8;
-  }
-
-  &.opened {
-    opacity: 0 !important;
-    pointer-events: none;
-  }
-
-  &[data-position="top-right"] {
-    top: 12px;
-    right: 12px;
-  }
-
-  &[data-position="top-left"] {
-    top: 12px;
-    left: 12px;
-  }
-
-  &[data-position="bottom-left"] {
-    bottom: 12px;
-    left: 12px;
-  }
-
-  &[data-position="bottom-right"] {
-    bottom: 12px;
-    right: 12px;
-  }
-
-  > img {
-    pointer-events: none;
-    position: absolute;
-    inset: 0;
-    border-radius: 8px;
-  }
-
-  > div {
-    transition: all 150ms ease-in-out;
-    position: absolute;
-    inset: 0;
-    border-radius: 8px;
-    border: 2px solid #00000057;
-  }
-
-  &:not(.isConnected) {
-    filter: grayscale(1);
-  }
-
-  > .vmsCount {
-    left: -4px;
-    top: -4px;
-    pointer-events: none;
-    position: absolute;
-    display: flex;
-    border-radius: 8px;
-    background: #005c26cf;
-    padding: 2px;
-    font-weight: 600;
-    font-size: 12px;
-    line-height: 12px;
-    color: #2aff0a;
-  }
-
-  > .keyboardHint {
-    position: absolute;
-    bottom: -3px;
-    left: -2px;
-    z-index: 99999;
-    font-family: monospace;
-    font-weight: 700 !important;
-    font-size: 10px;
-    line-height: 10px;
-    background: #1b3b00bf;
-    color: #73ff00d4;
-    letter-spacing: -1px;
-    border-radius: 2px;
-  }
+  transition: box-shadow 150ms, border-color 150ms, opacity 150ms;
 }
-
-
-html:has( .dragging) *{
-  user-select: none !important;
-}
+.vmButton:hover { border-color: #f5ac7260 !important; box-shadow: var(--vmd-glass-shadow), 0 0 20px #e591480c; }
+.vmButton:focus-visible { outline: 2px solid var(--vmd-accent); outline-offset: 3px; }
+.vmButton.dragging { cursor: grabbing; opacity: 0.85; transition: none; }
+.vmButton.opened { opacity: 0; pointer-events: none; }
+.vmButton[data-position='top-right'] { top: 12px; right: 12px; }
+.vmButton[data-position='top-left'] { top: 12px; left: 12px; }
+.vmButton[data-position='bottom-right'] { bottom: 12px; right: 12px; }
+.vmButton[data-position='bottom-left'] { bottom: 12px; left: 12px; }
+.vmButton > img { width: 25px; height: 25px; border-radius: 7px; pointer-events: none; }
+.buttonText { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+.buttonLabel { font-family: system-ui, sans-serif; font-size: 11px; font-weight: 600; letter-spacing: 0.01em; }
+.keyboardHint { color: var(--vmd-control-inactive-color); font-size: 9px; opacity: 0.8; }
+.vmsCount { margin-left: auto; padding: 4px 6px; min-width: 22px; border-radius: 6px; font-size: 11px; color: var(--vmd-primary-color); background: var(--vmd-primary-bg); font-variant-numeric: tabular-nums; }
+.vmButton:not(.isConnected) .vmsCount { color: var(--vmd-control-inactive-color); background: var(--vmd-code-bg); }

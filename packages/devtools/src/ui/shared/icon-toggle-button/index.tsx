@@ -1,54 +1,38 @@
-import type { ComponentType, CSSProperties, ReactNode } from 'react';
+import type { ComponentType } from 'react';
 import { cx } from 'yummies/css';
 import css from './styles.module.css';
 
-export const IconToggleButton = ({
+export interface ToggleOption<T extends string> {
+  value: T;
+  label?: string;
+  icon: ComponentType;
+}
+export function IconToggleButton<T extends string>({
   value,
   options,
   className,
   onUpdate,
 }: {
-  value: any;
-  options: { value: any; icon: ComponentType }[];
+  value: T;
+  options: ToggleOption<T>[];
   className?: string;
-  onUpdate: (value: any) => void;
-}) => {
-  const optionNodes: ReactNode[] = [];
-  let activeIndex: undefined | number;
-
-  options.forEach((option, i) => {
-    const { icon: Icon, value: optionValue } = option;
-
-    const isActive = value === optionValue;
-
-    if (isActive) {
-      activeIndex = i;
-    }
-
-    optionNodes.push(
-      <div
-        className={cx(css.option, {
-          [css.active]: isActive,
-        })}
-        key={i}
-        onClick={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          onUpdate(options[i].value);
-        }}
-      >
-        <Icon />
-      </div>,
-    );
-  });
-
+  onUpdate: (value: T) => void;
+}) {
   return (
-    <button className={cx(css.iconToggleButton, className)}>
-      <div
-        className={css.activePosition}
-        style={{ '--index': activeIndex } as CSSProperties}
-      />
-      {optionNodes}
-    </button>
+    <div className={cx(css.iconToggleButton, className)} role="group">
+      {options.map(({ value: optionValue, icon: Icon, label }) => (
+        <button
+          key={optionValue}
+          type="button"
+          className={cx(css.option, { [css.active]: value === optionValue })}
+          aria-label={label ?? optionValue}
+          title={label ?? optionValue}
+          aria-pressed={value === optionValue}
+          onClick={() => onUpdate(optionValue)}
+        >
+          <Icon />
+        </button>
+      ))}
+    </div>
   );
-};
+}

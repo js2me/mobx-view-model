@@ -2,8 +2,8 @@ import { ArrowsRotateRight, FileArrowRightOut } from '@gravity-ui/icons';
 import { action, computed, createAtom, makeObservable } from 'mobx';
 import type { ComponentType } from 'react';
 import type { AnyObject } from 'yummies/types';
-import type { ViewModelDevtools } from '../view-model-devtools';
-import { isInaccessible } from '../utils/safe-access';
+import type { DevtoolsInspector } from '../devtools-inspector';
+import { isInaccessible } from '../inspection/safe-access';
 
 export type ListItemViewProps<T extends ListItem<any>> = { item: T };
 
@@ -22,14 +22,14 @@ export abstract class ListItem<T> {
 
   metaData: AnyObject = {};
 
-  cache: Map<string, any>;
+  readonly cache: Map<string, ListItem<any>>;
 
   protected tempVarName: string = '';
 
   protected dataWatchAtom = createAtom('');
 
   get isExpanded() {
-    return this.cache.get(this.expandKey) === true;
+    return this.inspector.expansion.get(this.key) === true;
   }
 
   get children() {
@@ -42,12 +42,12 @@ export abstract class ListItem<T> {
 
   expand() {
     if (this.isExpandable) {
-      this.cache.set(this.expandKey, true);
+      this.inspector.expansion.set(this.key, true);
     }
   }
 
   collapse() {
-    this.cache.set(this.expandKey, false);
+    this.inspector.expansion.set(this.key, false);
   }
 
   toggleExpand() {
@@ -59,47 +59,12 @@ export abstract class ListItem<T> {
   }
 
   get expandedChildren(): ListItem<any>[] {
-    // При активном поиске не обрабатываем все элементы здесь,
-    // это будет сделано в ленивом поиске ViewModelDevtools
-    // Здесь возвращаем только развернутые элементы для обычного режима
-    if (!this.isExpanded) {
-      return [];
-    }
-
-    // Защита от рекурсивных структур - используем Set для отслеживания посещенных элементов
-    const visited = new Set<ListItem<any>>();
-    const result: ListItem<any>[] = [];
-    
-    // Используем рекурсивный обход в глубину для сохранения правильного порядка
-    const traverse = (item: ListItem<any>) => {
-      if (visited.has(item)) {
-        return;
-      }
-      
-      visited.add(item);
-      result.push(item);
-      
-      // Рекурсивно обрабатываем дочерние элементы, если они развернуты
-      if (item.isExpanded) {
-        for (const child of item.children) {
-          traverse(child);
-        }
-        if (item.closingItem) {
-          result.push(item.closingItem);
-        }
-      }
-
-      for (const trailing of item.trailingItems) {
-        result.push(...trailing.expandedChildrenWithSelf);
-      }
-    };
-    
-    // Обрабатываем детей в порядке их появления
-    for (const child of this.children) {
-      traverse(child);
-    }
-
-    return result;
+    if (!this.isExpanded) return [];
+    const children = this.children.flatMap(
+      (child) => child.expandedChildrenWithSelf,
+    );
+    if (this.closingItem) children.push(this.closingItem);
+    return children;
   }
 
   get trailingItems(): ListItem<any>[] {
@@ -156,7 +121,7 @@ export abstract class ListItem<T> {
             [this.tempVarName]: this.data,
           });
 
-          this.devtools.notifications.push({
+          this.inspector.notifications.push({
             title: this.getSavedTempVarNotification(this.tempVarName),
           });
         },
@@ -177,20 +142,14 @@ export abstract class ListItem<T> {
     return `Saved into ${tempVarName}`;
   }
 
-  expandKey;
-
   constructor(
-    public devtools: ViewModelDevtools,
+    public inspector: DevtoolsInspector,
     public key: string,
     private _data: T,
     private getChildren?: (item: ListItem<T>) => ListItem<any>[],
-    cache?: Map<string, any>,
   ) {
-    // @ts-ignore ObservableMap is missing getOrInsert/getOrInsertComputed added in TS 6.0
-    this.cache = cache ?? devtools.anyCache;
-    this.expandKey = `${key}/expand-key`;
+    this.cache = inspector.items;
     computed(this, 'isExpanded');
-    computed(this, 'totalChildCount');
     computed(this, 'depthLine');
     computed(this, 'depth');
     computed(this, 'isInaccessible');
@@ -202,6 +161,7 @@ export abstract class ListItem<T> {
     computed.struct(this, 'expandedChildrenWithSelf');
     computed(this, 'data');
     computed(this, 'isExpandable');
+    action.bound(this, 'toggleExpand');
     action(this, 'expand');
     action(this, 'collapse');
     makeObservable(this);

@@ -54,6 +54,12 @@ if (import.meta.env.DEV) {
 }
 ```
 
+## Architecture
+
+The public `ViewModelDevtools` entry point composes the inspector, settings, window, and notifications. See [ARCHITECTURE.md](./ARCHITECTURE.md) for ownership, lifecycle, and test commands.
+
+The panel uses dark glass by default. The appearance menu also supports light and system themes; saved choices take precedence over defaults. `ViewModelDevtools.define().destroy()` removes the panel and releases its subscriptions and timers.
+
 ## Contribution Guide    
 
 Want to contribute ? [Follow this guide](https://github.com/js2me/mobx-view-model/blob/master/CONTRIBUTING.md)  

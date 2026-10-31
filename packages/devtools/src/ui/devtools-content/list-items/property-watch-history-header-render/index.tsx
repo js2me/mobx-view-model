@@ -13,7 +13,7 @@ export const PropertyWatchHistoryHeaderRender = observer(
       <div
         className={cx(css.property, css.primitive, css.watchHistoryHeaderRow)}
         style={{ '--level': item.depth } as CSSProperties}
-        data-fitted={item.devtools.searchEngine.isItemFitted(item)}
+        data-fitted={item.inspector.search.isItemFitted(item)}
         data-depth={item.depthLine}
       >
         <span className={css.watchHistoryHeader}>{item.label}</span>
@@ -30,8 +30,7 @@ export const PropertyWatchHistoryHeaderRender = observer(
             parent.clearWatchHistory();
           }}
         >
-          <BroomMotion />
-          {' '}clear
+          <BroomMotion /> clear
         </button>
       </div>
     );

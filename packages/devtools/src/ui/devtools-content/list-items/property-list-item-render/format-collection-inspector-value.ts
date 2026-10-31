@@ -1,6 +1,6 @@
+import { formatArrayInlinePreview } from '@/model/inspection/format-array-inline-preview';
+import { formatObjectInlinePreview } from '@/model/inspection/format-object-inline-preview';
 import type { PropertyListItem } from '@/model/list-item/property-list-item';
-import { formatArrayInlinePreview } from '@/model/utils/format-array-inline-preview';
-import { formatObjectInlinePreview } from '@/model/utils/format-object-inline-preview';
 
 export function getNestedValuePreview(item: PropertyListItem): string {
   switch (item.nestedValueType) {
@@ -25,7 +25,9 @@ export function getNestedValuePreview(item: PropertyListItem): string {
   }
 }
 
-export function getNestedValueExpandedOpen(item: PropertyListItem): string | null {
+export function getNestedValueExpandedOpen(
+  item: PropertyListItem,
+): string | null {
   switch (item.nestedValueType) {
     case 'array':
       return '[';

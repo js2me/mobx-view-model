@@ -12,18 +12,15 @@ export const VmListItemRender = observer(
     return (
       <div
         className={cx(css.treeItem, css.vmTreeItem)}
-        data-fitted={item.devtools.searchEngine.isItemFitted(item)}
+        data-fitted={item.inspector.search.isItemFitted(item)}
         data-depth={item.depthLine}
         data-compact={compact || undefined}
         style={{ '--level': item.depth } as CSSProperties}
       >
-        <div
-          className={css.treeItemHeader}
-          onClick={() => item.devtools.handleVmItemHeaderClick(item)}
-        >
+        <div className={css.treeItemHeader} onClick={item.toggleExpand}>
           <ExpandButton
-            showIconAnyway={item.devtools.presentationMode === 'tree'}
-            expandable={item.devtools.isExpandable(item)}
+            showIconAnyway={item.inspector.settings.presentationMode === 'tree'}
+            expandable={item.inspector.isExpandable(item)}
             expanded={item.isExpanded}
           />
           <span className={css.treeItemLabel} title={item.displayName}>

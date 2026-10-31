@@ -1,7 +1,7 @@
 import { vi } from 'vitest';
+import type { DevtoolsInspector } from '../../devtools-inspector';
+import type { PropertyEditorHost } from '../../editing/property-editor';
 import { PropertyListItem } from '../../list-item/property-list-item';
-import type { PropertyEditorHost } from '../../list-item/property-editor';
-import type { ViewModelDevtools } from '../../view-model-devtools';
 
 export type MockPropertyListItem = {
   property?: string;
@@ -89,7 +89,7 @@ export function createPropertyEditorHost(options: {
     mapEntryKey: undefined,
     stringifiedData: String(readItem.data),
     parentListItem: readItem.parentListItem,
-    devtools: devtools as unknown as ViewModelDevtools,
+    inspector: devtools as unknown as DevtoolsInspector,
     reportDataChanged() {},
   };
 }

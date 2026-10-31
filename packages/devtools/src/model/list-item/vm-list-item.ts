@@ -1,12 +1,12 @@
 import { ArrowsRotateRight } from '@gravity-ui/icons';
 import { computed, makeObservable, untracked } from 'mobx';
-import { isViewModel, type ViewModelParams } from 'mobx-view-model';
+import { isViewModel } from 'mobx-view-model';
+import type { DevtoolsInspector } from '../devtools-inspector';
+import { forceUpdateViewModel } from '../editing/force-update-view-model';
+import { getAllKeys } from '../inspection/get-all-keys';
+import { getViewModelBaseKeys } from '../inspection/get-view-model-base-keys';
+import { sortPropertyKeys } from '../inspection/sort-property-keys';
 import type { AnyVM } from '../types';
-import { forceUpdateViewModel } from '../utils/force-update-view-model';
-import { getAllKeys } from '../utils/get-all-keys';
-import { getViewModelBaseKeys } from '../utils/get-view-model-base-keys';
-import { sortPropertyKeys } from '../utils/sort-property-keys';
-import type { ViewModelDevtools } from '../view-model-devtools';
 import { ListItem, type ListItemOperation } from './list-item';
 import { PropertyListItem } from './property-list-item';
 
@@ -16,10 +16,9 @@ export class VMListItem extends ListItem<AnyVM> {
 
     return this.allVms
       .filter((maybeChildVm) => {
-        const params = this.getVmParams(maybeChildVm);
-        return params?.parentViewModel && params.parentViewModel === this.data;
+        return maybeChildVm.parentViewModel === this.data;
       })
-      .map((it) => new VMListItem(this.devtools, it, this.allVms, this));
+      .map((it) => new VMListItem(this.inspector, it, this.allVms, this));
   }
 
   private get propertyListItems(): PropertyListItem[] {
@@ -27,16 +26,16 @@ export class VMListItem extends ListItem<AnyVM> {
 
     let keys = getAllKeys(this.data);
 
-    if (this.devtools.hideViewModelBaseMembers) {
+    if (this.inspector.settings.hideViewModelBaseMembers) {
       const baseKeys = getViewModelBaseKeys();
       keys = keys.filter((key) => !baseKeys.has(key));
     }
 
-    keys = sortPropertyKeys(keys, this.devtools.sortPropertiesBy);
+    keys = sortPropertyKeys(keys, this.inspector.settings.sortPropertiesBy);
 
     return keys.map((property, order) => {
       return PropertyListItem.create(
-        this.devtools,
+        this.inspector,
         property,
         property,
         order,
@@ -47,14 +46,6 @@ export class VMListItem extends ListItem<AnyVM> {
 
   get children(): ListItem<any>[] {
     return [...this.propertyListItems, ...this.childVMListItems];
-  }
-
-  private getVmParams(vm: AnyVM): null | ViewModelParams {
-    if ('vmParams' in vm) {
-      return vm.vmParams as ViewModelParams;
-    }
-
-    return null;
   }
 
   getSavedTempVarNotification(tempVarName: string) {
@@ -72,12 +63,12 @@ export class VMListItem extends ListItem<AnyVM> {
           const result = forceUpdateViewModel(this.data);
 
           if (!result.ok) {
-            this.devtools.notifications.push({ title: result.error });
+            this.inspector.notifications.push({ title: result.error });
             return;
           }
 
           this.reportDataChanged();
-          this.devtools.notifications.push({
+          this.inspector.notifications.push({
             title: `Bound view for ${this.displayName} (${this.data.id}) was force-updated`,
           });
         },
@@ -92,7 +83,7 @@ export class VMListItem extends ListItem<AnyVM> {
   }
 
   get depth(): number {
-    if (this.parent && this.devtools.presentationMode === 'tree') {
+    if (this.parent && this.inspector.settings.presentationMode === 'tree') {
       return this.parent.depth + 1;
     }
 
@@ -108,7 +99,7 @@ export class VMListItem extends ListItem<AnyVM> {
   displayName;
 
   constructor(
-    devtools: ViewModelDevtools,
+    inspector: DevtoolsInspector,
     vm: AnyVM,
     private allVms: AnyVM[],
     private parent?: VMListItem,
@@ -116,7 +107,7 @@ export class VMListItem extends ListItem<AnyVM> {
     const displayName = vm.constructor.name;
     const key = `${displayName}-${vm.id}`;
 
-    super(devtools, key, vm);
+    super(inspector, key, vm);
 
     this.displayName = displayName;
     this.searchData = {
@@ -129,7 +120,7 @@ export class VMListItem extends ListItem<AnyVM> {
     makeObservable(this);
 
     untracked(() => {
-      if (!this.cache.has(this.expandKey)) {
+      if (!this.inspector.expansion.has(this.key)) {
         this.expand();
       }
     });

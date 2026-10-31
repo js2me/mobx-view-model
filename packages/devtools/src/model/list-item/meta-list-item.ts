@@ -1,4 +1,4 @@
-import type { ViewModelDevtools } from '../view-model-devtools';
+import type { DevtoolsInspector } from '../devtools-inspector';
 import { ListItem } from './list-item';
 
 export class MetaListItem extends ListItem<any> {
@@ -7,11 +7,11 @@ export class MetaListItem extends ListItem<any> {
   }
 
   constructor(
-    devtools: ViewModelDevtools,
+    inspector: DevtoolsInspector,
     key: string,
     public content: string,
     private _depth: number,
   ) {
-    super(devtools, key, undefined);
+    super(inspector, key, undefined);
   }
 }

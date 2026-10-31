@@ -12,8 +12,7 @@ export const DevtoolsClient = withViewModel(DevtoolsClientVM, ({ model }) => {
     <ViewModelsProvider value={model.devtools.vmStore}>
       <ActiveViewModelProvider value={model}>
         <VmDevtoolsButton />
-        {model.devtools.isPopupOpened &&
-          model.devtools.displayType === 'popup' && <VmDevtoolsPopup />}
+        {model.devtools.window.isOpened && <VmDevtoolsPopup />}
       </ActiveViewModelProvider>
     </ViewModelsProvider>
   );

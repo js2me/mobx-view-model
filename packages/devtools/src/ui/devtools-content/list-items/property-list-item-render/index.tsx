@@ -6,12 +6,12 @@ import { ListItemOperations } from '../../list-item-operations';
 import { ArrayPropertyContent } from './array';
 import { FunctionPropertyContent } from './function';
 import { InstancePropertyContent } from './instance';
-import { ObjectPropertyContent } from './object';
 import { MapEntryPropertyContent } from './map-entry';
+import { ObjectPropertyContent } from './object';
 import { PrimitivePropertyContent } from './primitive';
 import { SetEntryPropertyContent } from './set-entry';
-import { usePropertyUpdateHighlight } from './use-property-update-highlight';
 import css from './styles.module.css';
+import { usePropertyUpdateHighlight } from './use-property-update-highlight';
 
 export interface PropertyListItemRenderProps {
   item: PropertyListItem;
@@ -68,13 +68,10 @@ export const PropertyListItemRender = observer(
         style={
           { '--level': item.depth, '--order': item.order } as CSSProperties
         }
-        data-fitted={item.devtools.searchEngine.isItemFitted(item)}
+        data-fitted={item.inspector.search.isItemFitted(item)}
         data-depth={item.depthLine}
       >
-        <span
-          className={css.propertyContent}
-          onClick={(e) => item.devtools.handlePropertyClick(item, e)}
-        >
+        <span className={css.propertyContent} onClick={item.handleClick}>
           {content}
           {item.extraContent ? (
             <span className={css.propertySuffix}>{item.extraContent}</span>

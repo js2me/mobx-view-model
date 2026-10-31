@@ -1,7 +1,7 @@
 import { observer } from 'mobx-react-lite';
 import { cx } from 'yummies/css';
-import { getInspectorValueType } from '@/model/utils/get-inspector-value-type';
-import { getInstanceToStringValue } from '@/model/utils/instance-to-string';
+import { getInspectorValueType } from '@/model/inspection/get-inspector-value-type';
+import { getInstanceToStringValue } from '@/model/inspection/instance-to-string';
 import { CollectionMeta, CollectionTypedValue } from './collection-typed-value';
 import css from './styles.module.css';
 
@@ -35,4 +35,4 @@ export const InstanceCollapsedValue = observer(
   },
 );
 
-export { shouldShowInstanceCollapsedValue } from '@/model/utils/instance-to-string';
+export { shouldShowInstanceCollapsedValue } from '@/model/inspection/instance-to-string';

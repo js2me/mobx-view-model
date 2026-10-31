@@ -12,7 +12,7 @@ export const hasPersistedDevtoolsSetting = (key: string): boolean =>
 
 export const devtoolsThemeKey = settingsStorage.key<DevtoolsTheme>(
   'theme',
-  'auto',
+  'dark',
 );
 
 export const devtoolsHideViewModelBaseKey = settingsStorage.key<boolean>(

@@ -57,7 +57,7 @@ export const PropertyWatchHistoryItemRender = observer(
         style={
           { '--level': item.depth, '--order': item.order } as CSSProperties
         }
-        data-fitted={item.devtools.searchEngine.isItemFitted(item)}
+        data-fitted={item.inspector.search.isItemFitted(item)}
         data-depth={item.depthLine}
       >
         <span
