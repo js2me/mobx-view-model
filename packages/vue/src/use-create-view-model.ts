@@ -1,22 +1,14 @@
 import {
   type AnyViewModel,
   type AnyViewModelSimple,
-  isViewModel,
   isViewModelSimple,
   type ViewModelCreateConfig,
   type ViewModelSimple,
   viewModelsConfig,
 } from 'mobx-view-model';
-import {
-  onBeforeUnmount,
-  onMounted,
-  onServerPrefetch,
-  unref,
-  useId,
-  watch,
-} from 'vue';
+import { unref, useId, watch } from 'vue';
 import type { AnyObject, Class, IsPartial } from 'yummies/types';
-import { retainModel } from './model-ownership.js';
+import { useModelLifecycle } from './model-lifecycle.js';
 import { registerModelRevision } from './model-revision.js';
 import type {
   UseCreateViewModelConfig,
@@ -112,25 +104,7 @@ export function useCreateViewModel(
   const revision = isViewModelSimple(model)
     ? registerModelRevision(model)
     : null;
-  const retained = store ? retainModel(store, model) : null;
-  // Payload and parent must be available to simple-model mount hooks.
-  const mountResult =
-    retained && retained.ownership.count > 1
-      ? retained.ownership.mountResult
-      : isViewModel(model) && model.isMounted
-        ? undefined
-        : model.mount?.();
-  if (retained) retained.ownership.mountResult = mountResult;
-  // Route asynchronous client failures through Vue lifecycle error handling.
-  onMounted(() => mountResult);
-  // Vue awaits server-prefetch before rendering the subtree.
-  onServerPrefetch(async () => {
-    if (viewModelsConfig.mode === 'ssr') await mountResult;
-  });
-  onBeforeUnmount(() => {
-    if (retained) retained.release();
-    else void model.unmount?.();
-  });
+  useModelLifecycle(model, store);
   watch(
     () => resolvePayload(payload),
     (next) => {

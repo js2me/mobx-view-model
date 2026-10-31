@@ -1,11 +1,9 @@
-import type { ComponentInternalInstance, InjectionKey, Ref } from 'vue';
-import { getCurrentInstance, shallowRef } from 'vue';
+import type { Ref } from 'vue';
+import { shallowRef } from 'vue';
+import { useRenderDependency } from './render-dependencies.js';
 
+// Plain simple models need a Vue signal when setPayload changes their fields.
 const revisions = new WeakMap<object, Ref<number>>();
-const owners = new WeakMap<ComponentInternalInstance, Set<Ref<number>>>();
-export const ModelRevisionKey: InjectionKey<Ref<number>> =
-  Symbol('ModelRevision');
-
 export const getModelRevision = (model: object) => {
   let revision = revisions.get(model);
   if (!revision) {
@@ -17,21 +15,6 @@ export const getModelRevision = (model: object) => {
 
 export const registerModelRevision = (model: object) => {
   const revision = getModelRevision(model);
-  const instance = getCurrentInstance();
-  if (instance) {
-    let refs = owners.get(instance);
-    if (!refs) {
-      refs = new Set();
-      owners.set(instance, refs);
-    }
-    refs.add(revision);
-  }
+  useRenderDependency(() => revision.value);
   return revision;
-};
-
-export const trackModelRevisions = (
-  instance: ComponentInternalInstance | null,
-) => {
-  if (instance)
-    for (const revision of owners.get(instance) ?? []) void revision.value;
 };

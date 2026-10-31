@@ -1,6 +1,6 @@
-import type { AnyViewModel, ViewModelSimple } from 'mobx-view-model';
+import type { AnyViewModel } from 'mobx-view-model';
 import type { PropType, SetupContext, VNodeChild } from 'vue';
-import { computed, defineComponent, h } from 'vue';
+import { defineComponent, h } from 'vue';
 import type { Class, IsPartial } from 'yummies/types';
 import { observer } from './observer.js';
 import { useRenderAllowed } from './render-state.js';
@@ -44,10 +44,10 @@ const OnlyViewModelImpl = observer(
     },
     setup(props, { slots }) {
       const vm = useCreateViewModel(
-        props.model as unknown as Class<AnyViewModel | ViewModelSimple>,
-        computed(() => props.payload),
+        props.model,
+        () => props.payload,
         props.config,
-      ) as AnyViewModel | ViewModelSimple;
+      );
 
       const isRenderAllowed = useRenderAllowed(vm);
       return () => {

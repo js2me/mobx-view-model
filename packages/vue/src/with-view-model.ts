@@ -8,7 +8,7 @@ import type {
 } from 'mobx-view-model';
 import { viewModelsConfig } from 'mobx-view-model';
 import type { Component, PropType, VNodeChild } from 'vue';
-import { defineComponent, getCurrentInstance, h, provide, useAttrs } from 'vue';
+import { defineComponent, getCurrentInstance, h } from 'vue';
 import type {
   AnyObject,
   Class,
@@ -16,8 +16,10 @@ import type {
   IsPartial,
   Maybe,
 } from 'yummies/types';
-import { getModelRevision, ModelRevisionKey } from './model-revision.js';
+import { useComponentProps } from './component-adapter.js';
+import { getModelRevision } from './model-revision.js';
 import { observer } from './observer.js';
+import { provideRenderDependency } from './render-dependencies.js';
 import { useRenderAllowed } from './render-state.js';
 import type { UseCreateViewModelConfig, VRenderFn } from './types.js';
 import { provideActiveViewModel } from './use-active-view-model.js';
@@ -219,25 +221,7 @@ export function withViewModel(
       payload: { type: null as unknown as PropType<any>, required: false },
     },
     setup(props, ctx) {
-      const attrs = useAttrs();
-      const instance = getCurrentInstance()!;
-      const hasKey = (key: PropertyKey) =>
-        key === 'payload'
-          ? Object.hasOwn(instance.vnode.props ?? {}, key)
-          : key in attrs;
-      // Solid receives a live props object. Preserve the same behavior in Vue,
-      // including payload in vm.props and in the integration hook.
-      const allProps = new Proxy({} as AnyObject, {
-        get: (_, key) =>
-          key in props ? (props as any)[key] : attrs[key as string],
-        has: (_, key) => hasKey(key),
-        ownKeys: () => [
-          ...Reflect.ownKeys(instance.proxy!.$attrs),
-          ...(hasKey('payload') ? ['payload'] : []),
-        ],
-        getOwnPropertyDescriptor: (_, key) =>
-          hasKey(key) ? { enumerable: true, configurable: true } : undefined,
-      });
+      const allProps = useComponentProps(props);
       const model = useCreateViewModel(
         VM,
         () => getPayload(allProps),
@@ -245,7 +229,8 @@ export function withViewModel(
         allProps,
       ) as AnyViewModel | AnyViewModelSimple;
       provideActiveViewModel(model);
-      provide(ModelRevisionKey, getModelRevision(model));
+      const revision = getModelRevision(model);
+      provideRenderDependency(() => revision.value);
       const store = useViewModelsStore();
       (config.vueHook ?? viewModelsConfig.reactHook)?.(
         allProps,
