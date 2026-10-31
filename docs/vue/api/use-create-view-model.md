@@ -50,9 +50,11 @@ const model = useCreateViewModel(YourVM, { userId: '1' });
 ### Reactive payload (`ref` / `computed`)
 
 ```ts
+import { computed, ref } from 'vue';
+
 const userId = ref('1');
-const model = useCreateViewModel(YourVM, () => ({ userId: userId.value }));
-// or pass a computed ref depending on your payload shape
+const payload = computed(() => ({ userId: userId.value }));
+const model = useCreateViewModel(YourVM, payload);
 ```
 
 ### Custom configuration

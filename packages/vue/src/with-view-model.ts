@@ -9,6 +9,7 @@ import type { Component, PropType } from 'vue';
 import { computed, defineComponent, h, useAttrs } from 'vue';
 import type { AnyObject, Class, EmptyObject, IsPartial } from 'yummies/types';
 import { observer } from './observer.js';
+import { useRenderAllowed } from './render-state.js';
 import type { UseCreateViewModelConfig } from './types.js';
 import { provideActiveViewModel } from './use-active-view-model.js';
 import { useCreateViewModel } from './use-create-view-model.js';
@@ -227,10 +228,9 @@ const withViewModelWrapper = (
 
       provideActiveViewModel(model);
 
+      const isRenderAllowed = useRenderAllowed(model);
       return () => {
-        const isRenderAllowed = (model as AnyViewModel).isMounted !== false;
-
-        if (isRenderAllowed) {
+        if (isRenderAllowed()) {
           return Component
             ? h(Component as any, { ...componentProps.value, model }, ctx.slots)
             : ctx.slots.default?.({ model });

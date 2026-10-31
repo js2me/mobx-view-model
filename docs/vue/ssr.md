@@ -29,7 +29,7 @@ export async function renderPage(count: number) {
     ));
   } finally {
     // Vue does not run unmount hooks during SSR. Dispose request-owned models.
-    for (const model of store.getAll(null)) await store.unmount(model);
+    for (const model of store.getAll(PageVM)) await store.unmount(model);
     store.clean();
   }
 }
@@ -38,3 +38,5 @@ export async function renderPage(count: number) {
 If you pre-create a model, use `store.define(config)` and `await model.mount()`. The wrapper reuses a registered model with the same ID.
 
 Vue 3.5 or newer is required for `useId()`, which supplies per-application IDs compatible with hydration. Use the same app `idPrefix` on server and client.
+
+For request stores containing multiple model classes, track every created model and unmount each before clearing the store indexes. `getAll` requires a class, ID, or anchor lookup; `getAll(null)` returns an empty array.

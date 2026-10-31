@@ -3,6 +3,7 @@ import type { PropType } from 'vue';
 import { computed, defineComponent } from 'vue';
 import type { Class, IsPartial } from 'yummies/types';
 import { observer } from './observer.js';
+import { useRenderAllowed } from './render-state.js';
 import type { UseCreateViewModelConfig } from './types.js';
 import { useCreateViewModel } from './use-create-view-model.js';
 
@@ -42,8 +43,9 @@ export const OnlyViewModel = observer(
         props.config,
       ) as AnyViewModel | ViewModelSimple;
 
+      const isRenderAllowed = useRenderAllowed(vm);
       return () => {
-        if ((vm as AnyViewModel).isMounted === false) {
+        if (!isRenderAllowed()) {
           return null;
         }
 

@@ -173,7 +173,11 @@ describe('review regressions', () => {
   it('SSR awaits async mount and does not cross request stores', async () => {
     const previousMode = viewModelsConfig.mode;
     viewModelsConfig.mode = 'ssr';
+    const unmounted: string[] = [];
     class VM extends ViewModelBase<{ label: string }> {
+      protected willUnmount() {
+        unmounted.push(this.payload.label);
+      }
       async mount() {
         await Promise.resolve();
         await super.mount();
@@ -198,7 +202,7 @@ describe('review regressions', () => {
           ),
         );
       } finally {
-        for (const model of store.getAll(null)) await store.unmount(model);
+        for (const model of store.getAll(VM)) await store.unmount(model);
         store.clean();
       }
     };
@@ -206,6 +210,7 @@ describe('review regressions', () => {
       const [one, two] = await Promise.all([render('one'), render('two')]);
       expect(one).toContain('<div>one</div>');
       expect(two).toContain('<div>two</div>');
+      expect(unmounted.sort()).toEqual(['one', 'two']);
     } finally {
       viewModelsConfig.mode = previousMode;
     }

@@ -95,7 +95,7 @@ const vmStore = new ViewModelStoreBase();
 </template>
 ```
 
-With a store in place, you can use [`useViewModel()`](/vue/api/use-view-model) with a lookup argument (id, class name, or anchor component).
+With a store in place, you can use [`useViewModel()`](/vue/api/use-view-model) with a lookup argument (ID, class constructor, or anchor component).
 
 ::: tip [`isMounted`](/api/view-models/interface#ismounted-boolean) state
 
@@ -111,3 +111,5 @@ These are already invoked by the [store base implementation](/api/view-model-sto
 :::
 
 Install `mobx-view-model`, `mobx-view-model-vue`, `mobx`, and `vue` (3.5 or newer).
+
+String lookup arguments are model IDs. For a class lookup, pass the constructor: `useViewModel(YourComponentVM)`.
