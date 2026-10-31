@@ -1,5 +1,12 @@
 # mobx-view-model-solid
 
+## 0.0.3
+
+### Patch Changes
+
+- Updated dependencies [56bbaab]
+  - mobx-view-model@11.0.1
+
 ## 0.0.2
 
 ### Patch Changes

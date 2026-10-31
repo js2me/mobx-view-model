@@ -1,5 +1,11 @@
 # mobx-view-model
 
+## 11.0.1
+
+### Patch Changes
+
+- 56bbaab: Point the npm package homepage to the GitHub Pages documentation site.
+
 ## 11.0.0
 
 ### Major Changes
