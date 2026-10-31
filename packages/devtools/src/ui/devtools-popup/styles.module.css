@@ -10,8 +10,8 @@
   border: 1px solid var(--vmd-glass-border);
   border-top-color: var(--vmd-glass-edge);
   box-shadow: var(--vmd-glass-shadow);
-  backdrop-filter: blur(28px) saturate(150%);
   -webkit-backdrop-filter: blur(28px) saturate(150%);
+  backdrop-filter: blur(28px) saturate(150%);
   overflow: hidden;
   transition: none;
 
