@@ -1,4 +1,7 @@
 # `useCreateViewModel` hook  
+
+<ReactImportDeprecationWarning />
+
 A hook that connects a [ViewModel](/api/view-models/overview) (or `ViewModelSimple`) to the React render tree, providing seamless MobX integration.  
 It is used inside the [`withViewModel()`](/react/api/with-view-model) HOC.  
 
@@ -11,40 +14,64 @@ function useCreateViewModel<VM extends AnyViewModel>(
 ): VM;
 ```
 
+## Configuration
+
+| Option | Description |
+| --- | --- |
+| `id` | Stable instance id. Defaults to React [`useId()`](https://react.dev/reference/react/useId). |
+| `factory` | Custom factory (same idea as [`viewModelsConfig.factory`](/api/view-models/view-models-config#factory)). |
+| `vmConfig` | Per-instance [`ViewModelsConfig`](/api/view-models/view-models-config) overrides. |
+| `ctx` | Extra context object passed into create config. |
+| `anchors` | Extra lookup anchors for [`useViewModel`](/react/api/use-view-model). |
+| `props` | Original component props forwarded into create config. |
+
+When a [`ViewModelStore`](/api/view-model-store/interface) is present (via [`ViewModelsProvider`](/react/api/view-models-provider)), the hook creates the VM in React's render-phase registry on the client and registers it with the store's `connect()` method only when the component's commit effect runs. React hooks and VM instances created by the hook can read this registry during render; direct reads from the core store see only committed VM instances. A render pass discarded by React (for example, a duplicate fiber under `Suspense` in React 19) therefore never mutates the store or leaves an orphaned VM behind. Otherwise the hook creates the instance via `factory` / global config and calls `init` / `mount` locally. Cleanup uses [`unmount`](/api/view-model-store/interface#unmount-instance) (with store) or `unmount()` (without).
+
+Keep [`ViewModelsProvider.value`](/react/api/view-models-provider) stable while the component is mounted. To switch stores, remount the provider subtree.
+
+::: tip SSR  
+With [`viewModelsConfig.mode = 'ssr'`](/api/view-models/view-models-config#mode) on **React 19+**, if `mount()` / `willMount()` returns a Promise, the hook waits for it with React [`use()`](https://react.dev/reference/react/use) during SSR and the first client hydration. Wrap the tree in [`Suspense`](https://react.dev/reference/react/Suspense) for a loading UI — the hook suspends before a parent HOC [`fallback`](/react/api/with-view-model#fallback) can render.
+
+On **React 18**, `use()` is unavailable, so the hook does not wait: the component can render while `isMounted` is still `false`. Use [`withViewModel`](/react/api/with-view-model)'s [`fallback`](/react/api/with-view-model#fallback), or gate on `model.isMounted` when calling this hook directly.
+:::
+
 ##  Usage  
 
 ### 1. Basic Usage (Default Configuration)  
 ```tsx
+import { useCreateViewModel } from "mobx-view-model-react";
 import { observer } from "mobx-react-lite";
 
 export const YourComponent = observer(() => {
   const model = useCreateViewModel(YourVM);
-})
+  return null;
+});
 ```
 
 ### 2. Usage with payload
 ```tsx
+import { useCreateViewModel } from "mobx-view-model-react";
 import { observer } from "mobx-react-lite";
 
 export const YourComponent = observer(() => {
   const model = useCreateViewModel(YourVM, { userId: '1' });
-})
+  return null;
+});
 ```
 
 ### 3. Custom Configuration
 ```tsx
+import { useCreateViewModel } from "mobx-view-model-react";
 import { observer } from "mobx-react-lite";
 
 export const YourComponent = observer(() => {
   const model = useCreateViewModel(YourVM, {}, {
-    vmConfig: {}, // vmConfig
-    ctx: {}, // internal object used as cache key source inside this hook
-    factory: (config) => new config.VM(config), // factory method for creating VM instances
-    generateId, // custom fn for generating ids for VM instances
-    id, // unique id if you need to create 1 instance of your VM
+    ctx: {}, // extra create-config context
+    id: 'your-component', // explicit id for one shared VM instance
     anchors: [], // additional components for useViewModel lookup
   });
-})
+  return null;
+});
 ```
 
 
@@ -52,6 +79,7 @@ export const YourComponent = observer(() => {
 
 ```tsx
 import { ViewModelBase } from "mobx-view-model";
+import { useCreateViewModel } from "mobx-view-model-react";
 import { observer } from "mobx-react-lite";
 import { observable, action } from "mobx";
 

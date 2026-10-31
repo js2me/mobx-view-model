@@ -1,0 +1,229 @@
+@import './theme.css';
+
+.root {
+  display: contents;
+  box-sizing: border-box;
+  color: var(--vmd-base-color);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
+    'Courier New', monospace;
+  font-size: 14px;
+  font-weight: 400;
+  font-style: normal;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  text-decoration: none;
+  font-synthesis: none;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  border: 0;
+  outline: 0;
+}
+
+.root :global(*) {
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  font-style: inherit;
+  line-height: 1;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  text-decoration: inherit;
+  box-sizing: border-box;
+  border: 0;
+  outline: 0;
+}
+
+.root svg {
+  display: inline-block;
+  flex-shrink: 0;
+  vertical-align: middle;
+}
+
+.root input,
+.root textarea,
+.root select {
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  line-height: 1;
+  color: inherit;
+  margin: 0;
+}
+
+.root a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.root code,
+.root kbd,
+.root samp,
+.root pre {
+  font-family: inherit;
+}
+
+.root button {
+  outline: none;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  margin: 0;
+  padding-block: 0;
+  padding-inline: 0;
+  color: var(--vmd-base-color);
+}
+
+.root label {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  line-height: 1;
+  color: inherit;
+}
+
+.root button[data-list-item-operation][data-active],
+.root button[data-list-item-operation][data-active] svg {
+  color: var(--vmd-watch-active-color);
+}
+
+.root code {
+  background: var(--vmd-code-bg);
+  letter-spacing: 0.1px;
+  padding: 0 1px;
+  border-radius: 1px;
+}
+
+.hierarchyButton {
+  width: 18px;
+  height: 18px;
+  padding: 2px;
+  border-radius: 6px;
+
+  &.active {
+    background: #f0f0f01f;
+  }
+}
+
+.treeItemHeader {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: auto 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  line-height: 1;
+  cursor: pointer;
+  z-index: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding-right: 8px;
+  border-radius: 6px;
+}
+
+.treeItemLabel {
+  display: inline-flex;
+  align-items: center;
+  margin: 0;
+  padding: 0 4px;
+  border: 0;
+  border-radius: 4px;
+  line-height: 1;
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  color: var(--vmd-property-bg-content-color);
+  white-space: nowrap;
+  flex: none;
+  cursor: inherit;
+  user-select: none;
+}
+
+.treeItemMetaText {
+  font-size: 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.treeItemNestingBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  flex: none;
+  margin-right: 1px;
+  padding: 1px 3px;
+  border-radius: 4px;
+  line-height: 1;
+}
+
+.treeItemNestingBadge svg {
+  width: 10px;
+  height: 10px;
+  opacity: 0.8;
+}
+
+.treeItemNestingBadgeLevel {
+  font-size: 10px;
+  font-weight: 600;
+  min-width: 7px;
+  text-align: center;
+}
+
+.treeItem {
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: pre;
+  height: 22px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding-left: calc(8px + var(--level, 0) * 20px);
+  background: transparent;
+  transition: all 150ms ease;
+}
+
+.treeItem:hover {
+  background: var(--vmd-content-highlight-bg);
+}
+
+.treeItem:not([data-fitted='true']) > .treeItemHeader {
+  opacity: 0.6;
+}
+
+.vmTreeItem {
+  .treeItemLabel {
+    background: var(--vmd-primary-bg);
+  }
+
+  .treeItemNestingBadge {
+    background: var(--vmd-badge-bg);
+    color: var(--vmd-badge-color);
+  }
+
+  .treeItemMetaText {
+    color: var(--vmd-primary-color);
+  }
+}
+
+.extraTreeItem {
+  .treeItemLabel {
+    background: var(--vmd-secondary-bg);
+  }
+
+  .treeItemNestingBadge {
+    background: var(--vmd-badge-bg);
+    color: var(--vmd-badge-color);
+  }
+}

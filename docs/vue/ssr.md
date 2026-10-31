@@ -1,83 +1,40 @@
----
-id: vue-ssr
-title: Vue server-side rendering
-sidebar_label: SSR
-sidebar_position: 2
-slug: /vue/ssr
----
-
 # Server-Side Rendering (Vue)
 
-SSR works with **ViewModelStore** and predictable hydration on the client. Keep the first server HTML aligned with what the client will render (same `payload`, same store wiring).
+Set `viewModelsConfig.mode = 'ssr'` at application startup to let Vue await model mounting through `onServerPrefetch`. This works with synchronous and asynchronous `mount()` implementations, with or without a store. In the default `csr-only` mode, unmounted models render the fallback on the server.
 
-Vue differs from the client-only case: during `renderToString`, **`onMounted` does not run**, so `withViewModel` without a store usually shows the **fallback** until the client mounts. To SSR the real view, **pre-create and attach** the view model in the store and use a **fixed `id`** so the wrapper resolves the same instance.
-
-## Basic pattern: shared store + stable id
+Create a separate store for each request. Use stable IDs and identical payloads on server and client when hydrating.
 
 ```ts
 import { createSSRApp, h } from 'vue';
 import { renderToString } from '@vue/server-renderer';
-import {
-  ViewModelBase,
-  ViewModelStoreBase,
-} from 'mobx-view-model';
-import {
-  ViewModelsProvider,
-  withViewModel,
-} from 'mobx-view-model/vue';
+import { ViewModelBase, ViewModelStoreBase, viewModelsConfig } from 'mobx-view-model';
+import { ViewModelsProvider, withViewModel } from 'mobx-view-model-vue';
 
+viewModelsConfig.mode = 'ssr';
 class PageVM extends ViewModelBase<{ count: number }> {}
-
-const PageView = {
+const Page = withViewModel(PageVM, {
   props: { model: { type: Object, required: true } },
   setup(props: any) {
     return () => h('div', `count ${props.model.payload.count}`);
   },
-};
-
-const Page = withViewModel(PageVM, PageView, { id: 'page-vm' });
+}, { id: 'page-vm' });
 
 export async function renderPage(count: number) {
-  const vmStore = new ViewModelStoreBase();
-  const instance = vmStore.createViewModel({
-    VM: PageVM,
-    id: 'page-vm',
-    payload: { count },
-    viewModels: vmStore,
-    ctx: {},
-  });
-  vmStore.markToBeAttached(instance);
-  await vmStore.attach(instance);
-
-  const app = createSSRApp(() =>
-    h(ViewModelsProvider, { value: vmStore }, () =>
-      h(Page, { payload: { count } }),
-    ),
-  );
-
-  return renderToString(app);
-}
-```
-
-## Fallback without store (expected)
-
-If you SSR `withViewModel` **without** `ViewModelsProvider` / pre-attached instance, the initial string render typically matches the **fallback** branch (because the model is not yet mounted). Use that for loading placeholders, or adopt the store pattern above for full content on the server.
-
-## Async `mount()`
-
-If `mount()` is async, the initial render can show **fallback** on both server and client until mounting completes, which helps avoid hydration mismatches.
-
-```ts
-class PageVM extends ViewModelBase {
-  async mount() {
-    await sleep(100);
-    super.mount();
+  const store = new ViewModelStoreBase();
+  try {
+    return await renderToString(createSSRApp(() =>
+      h(ViewModelsProvider, { value: store }, () =>
+        h(Page, { payload: { count } }),
+      ),
+    ));
+  } finally {
+    // Vue does not run unmount hooks during SSR. Dispose request-owned models.
+    for (const model of store.getAll(null)) await store.unmount(model);
+    store.clean();
   }
 }
 ```
 
-::: tip Keep SSR and CSR identical
+If you pre-create a model, use `store.define(config)` and `await model.mount()`. The wrapper reuses a registered model with the same ID.
 
-Use the same `payload` and `ViewModelStore` setup on server and client. Avoid relying on side effects inside `mount()` for the first paint of critical HTML.
-
-:::
+Vue 3.5 or newer is required for `useId()`, which supplies per-application IDs compatible with hydration. Use the same app `idPrefix` on server and client.

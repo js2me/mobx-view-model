@@ -1,0 +1,61 @@
+{
+  "name": "mobx-view-model-react",
+  "version": "11.0.0",
+  "scripts": {
+    "clean": "rimraf dist",
+    "ts:check": "tsc --noEmit --project tsconfig.check.json && tsc --noEmit --project tsconfig.test.json",
+    "ts-test-types:check": "tsc --noEmit --project tsconfig.test.json",
+    "check": "pnpm run ts:check",
+    "prebuild": "pnpm run clean",
+    "build:watch": "pnpm build && nodemon --watch src --ext ts,tsx --exec \"pnpm build\"",
+    "build": "vite build && node ./scripts/normalize-dist-dts-imports.mjs && node ./scripts/validate-dist-dts-imports.mjs && node ./scripts/patch-dist-package-json.mjs",
+    "test": "vitest run --config vitest.config.ts",
+    "test:watch": "vitest watch --config vitest.config.ts",
+    "test:coverage": "vitest run --config vitest.config.ts --coverage"
+  },
+  "keywords": [
+    "mobx",
+    "react",
+    "view-model",
+    "mvvm"
+  ],
+  "author": "js2me",
+  "license": "MIT",
+  "description": "React bindings for mobx-view-model",
+  "bugs": {
+    "url": "https://github.com/js2me/mobx-view-model/issues"
+  },
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./src/index.ts",
+  "homepage": "https://github.com/js2me/mobx-view-model",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/js2me/mobx-view-model"
+  },
+  "publishConfig": {
+    "directory": "dist"
+  },
+  "dependencies": {
+    "mobx-view-model": "workspace:*"
+  },
+  "peerDependencies": {
+    "mobx": "^6.12.4",
+    "mobx-react-lite": "^4.0.7",
+    "react": "^18.0.0 || ^19.0.0",
+    "react-dom": "^18.0.0 || ^19.0.0"
+  },
+  "devDependencies": {
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/react": "^16.3.2",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "jsdom": "^26.1.0",
+    "mobx": "^6.12.4",
+    "mobx-react-lite": "^4.0.7",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "yummies": "^7.20.1"
+  }
+}

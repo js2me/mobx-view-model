@@ -1,0 +1,264 @@
+# mobx-view-model
+
+## 11.0.0
+
+### Major Changes
+
+- 3266f80: Remove the `disableWrapping` observable configuration option. Base implementations now always apply MobX annotations unless a custom annotation function is provided.
+- 3266f80: **Breaking:** `mobx-view-model` is now framework-agnostic. React bindings must
+  be imported from `mobx-view-model-react`; the `mobx-view-model/react` export
+  has been removed.
+
+  **Breaking:** replace the ViewModelStore attachment lifecycle APIs with
+  `define()`, `create()`, `connect()`, `unmount()`, and `generateId()`. Automatic
+  and global core view-model ID generation have been removed; store callers must
+  provide an ID, while framework integrations own any render-time ID generation
+  or custom `generateId()` behavior.
+
+  **Breaking:** ViewModel lifecycle and metadata APIs have changed. The
+  `ViewModel` interface now requires `vm` metadata, with lifecycle state available
+  as `vm.state` instead of `isUnmounting`. Resource data is available as
+  `vm.data`.
+  `ViewModelBase.vmConfig` and `ViewModelBase.isPayloadEqual` are no longer
+  exposed; configure payload comparison with `comparePayload`. Also replace
+  `ViewModelSimple.attachViewModelStore` with `init()`, and
+  `processViewComponent` with framework-agnostic `processRender`.
+
+  Improve view-model creation and lifecycle handling for React 18 and React 19
+  Strict Mode, Suspense, lazy-loaded components, and SSR.
+
+  ### Removed
+
+  - `ViewModelStore.markToBeAttached()`
+  - `ViewModelStore.attach()` and `ViewModelStore.detach()`
+  - `ViewModelStore.isAbleToRenderView()`
+  - `ViewModelStore.createViewModel()`
+  - `ViewModelStore.processCreateConfig()`
+  - `ViewModelStore.generateViewModelId()`
+  - `ViewModelStoreBase.getOrCreateVmId()` and its attachment/mounting state
+  - `ViewModel.isUnmounting` and `ViewModel.payloadChanged` from the `ViewModel`
+    interface; lifecycle state is available through the new `ViewModel.vm.state`.
+  - `ViewModelBase.vmConfig` and `ViewModelBase.isPayloadEqual`.
+  - `ViewModelParams.parentViewModelId`
+  - `ViewModelSimple.attachViewModelStore()`
+  - `ViewModelStore.mountedViewsCount`
+  - `GenerateViewModelIdFn` and `generateVmId`
+  - the `mobx-view-model/react` export and React dependencies from the core package
+  - configuration options `generateId`, `flushPendingReactions`, `useReactIds`,
+    `suspendUntil`, `wrapViewsInObserver`, and `processViewComponent`
+  - the misspelled `isViewModeSimpleClass` export
+
+  ### Changed
+
+  - `ViewModelStore.generateId()` now receives a required `id` and returns it by
+    default; custom stores can override it for application-specific IDs.
+  - `ViewModelBase.setPayload()` now returns whether the payload was unchanged.
+  - `ViewModelBase.willMount()` may be asynchronous, and concurrent `mount()`
+    calls are deduplicated.
+  - `ViewModelBase.unmount()` is synchronous; lifecycle state is exposed through
+    `vm.state` instead of `isUnmounting`.
+  - View-model resource data is exposed through `vm.data`.
+  - Parent view models must be passed through `parentViewModel`; the store no
+    longer resolves them from `parentViewModelId`.
+  - `ViewModelsConfig.processViewComponent` was renamed to `processRender` and
+    now works with framework-agnostic render functions.
+  - `ViewModelsConfig` now requires `mode` and `getPayload`; `reactHook` also
+    uses a framework-agnostic signature.
+  - Runtime detection of full and simple view models is now explicit and no
+    longer depends on the presence of `payloadChanged`.
+
+  ### Added
+
+  - `ViewModelStore.define()` to create, connect, register, and reuse a
+    view-model instance by ID.
+  - `ViewModelStore.create()` for creating an instance without registering it.
+  - `ViewModelStore.connect()` for registering an existing instance after
+    creation or render commit.
+  - `ViewModelStore.unmount()` for synchronous unmount and removal from the
+    store.
+  - `ViewModelStore.resource` and `ViewModelResource` for request-scoped SSR
+    resources.
+  - Solid now resolves synchronous store or global resource data into `vm.data`
+    when creating a view model.
+  - `ViewModelSimple.init()` as the initialization hook for simple view models.
+  - Required `ViewModel.vm` metadata containing lifecycle `state` and resource
+    `data`.
+  - `ViewModelsConfig.processRender()` as the framework-agnostic render hook.
+  - More reliable `isViewModel()`, `isViewModelClass()`, `isViewModelSimple()`,
+    and `isViewModelSimpleClass()` classification for custom view-model classes.
+  - React staging and cleanup for abandoned renders, Suspense retries, lazy
+    components, Strict Mode, and SSR.
+
+### Patch Changes
+
+- 3266f80: Namespace React and Solid view-model contexts to prevent cross-framework collisions.
+
+## 10.2.4
+
+### Patch Changes
+
+- 87bb630: fixed bug with infinite loops in lazy VM charged components caused by unstable 19 React
+- Updated dependencies [87bb630]
+  - mobx-view-model-react@10.3.1
+
+## 10.2.3
+
+### Patch Changes
+
+- 3bd28fa: [internal] update pnpm to latest for internal builds
+- 3bd28fa: update yummies to latest (better tree shaking)
+- Updated dependencies [3bd28fa]
+- Updated dependencies [3bd28fa]
+- Updated dependencies [3bd28fa]
+  - mobx-view-model-react@10.3.0
+
+## 10.2.2
+
+### Patch Changes
+
+- 8641eb3: migration npm publish to trusted gh actions
+- Updated dependencies [8641eb3]
+  - mobx-view-model-react@10.2.2
+
+## 10.2.1
+
+### Patch Changes
+
+- [`4544908`](https://github.com/js2me/mobx-view-model/commit/45449084cc4c94302cd4a24ae85f156b19c6f0f4) Thanks [@js2me](https://github.com/js2me)! - better display names for React components wrapped in `withViewModel` HOC
+
+- Updated dependencies [[`4544908`](https://github.com/js2me/mobx-view-model/commit/45449084cc4c94302cd4a24ae85f156b19c6f0f4)]:
+  - mobx-view-model-react@10.2.1
+
+## 10.2.0
+
+### Minor Changes
+
+- [`f9f9096`](https://github.com/js2me/mobx-view-model/commit/f9f9096c1a01925826c4d4fe79fffb370279328c) Thanks [@js2me](https://github.com/js2me)! - added `suspendUntil` feature for `viewModelsConfig`
+
+### Patch Changes
+
+- Updated dependencies [[`f9f9096`](https://github.com/js2me/mobx-view-model/commit/f9f9096c1a01925826c4d4fe79fffb370279328c)]:
+  - mobx-view-model-react@10.2.0
+
+## 10.1.2
+
+### Patch Changes
+
+- [`3a9658a`](https://github.com/js2me/mobx-view-model/commit/3a9658a9a2d845dba3cd2ffb50e4a3e33dd1851b) Thanks [@js2me](https://github.com/js2me)! - fixed `useReactIds`
+
+- Updated dependencies [[`3a9658a`](https://github.com/js2me/mobx-view-model/commit/3a9658a9a2d845dba3cd2ffb50e4a3e33dd1851b)]:
+  - mobx-view-model-react@10.1.2
+
+## 10.1.1
+
+### Patch Changes
+
+- [`43181f7`](https://github.com/js2me/mobx-view-model/commit/43181f760c85a5ed3714db033af8cd8d730063db) Thanks [@js2me](https://github.com/js2me)! - fixed `useReactIds`
+
+- Updated dependencies [[`43181f7`](https://github.com/js2me/mobx-view-model/commit/43181f760c85a5ed3714db033af8cd8d730063db)]:
+  - mobx-view-model-react@10.1.1
+
+## 10.1.0
+
+### Minor Changes
+
+- [`e984775`](https://github.com/js2me/mobx-view-model/commit/e984775812f5276c87620fbf492bf39546f9d19e) Thanks [@js2me](https://github.com/js2me)! - added `useReactIds` option to `viewModelsConfig`
+
+### Patch Changes
+
+- [`706d6fa`](https://github.com/js2me/mobx-view-model/commit/706d6fabd2b33e3b1813d232a55381c9d54295e3) Thanks [@js2me](https://github.com/js2me)! - add reactHook to `viewModelsConfig`
+
+- Updated dependencies [[`706d6fa`](https://github.com/js2me/mobx-view-model/commit/706d6fabd2b33e3b1813d232a55381c9d54295e3), [`e984775`](https://github.com/js2me/mobx-view-model/commit/e984775812f5276c87620fbf492bf39546f9d19e)]:
+  - mobx-view-model-react@10.1.0
+
+## 10.0.5
+
+### Patch Changes
+
+- [`e79697a`](https://github.com/js2me/mobx-view-model/commit/e79697a1b50fa1c65e96ed3336156a309ab15257) Thanks [@js2me](https://github.com/js2me)! - [internal] updated ci/cd to improve gh workflows
+
+- Updated dependencies [[`e79697a`](https://github.com/js2me/mobx-view-model/commit/e79697a1b50fa1c65e96ed3336156a309ab15257)]:
+  - mobx-view-model-react@10.0.5
+
+## 10.0.4
+
+### Patch Changes
+
+- [`2cae23d`](https://github.com/js2me/mobx-view-model/commit/2cae23d1163fd70e3636ae85354ce7285cbf162f) Thanks [@js2me](https://github.com/js2me)! - fixed async promise behabiour for vm base mount
+
+- Updated dependencies []:
+  - mobx-view-model-react@10.0.4
+
+## 10.0.3
+
+### Patch Changes
+
+- [`8b35ea4`](https://github.com/js2me/mobx-view-model/commit/8b35ea432994803d9f0824769f54c9f1e16d1f2e) Thanks [@js2me](https://github.com/js2me)! - remove warning [#2](https://github.com/js2me/mobx-view-model/issues/2) about async mount (reason: there is no problem to use async mount)
+
+- Updated dependencies [[`58de2dd`](https://github.com/js2me/mobx-view-model/commit/58de2dd0071e762a968c39796316ae91ebe50f39)]:
+  - mobx-view-model-react@10.0.3
+
+## 10.0.2
+
+### Patch Changes
+
+- [`fa0b390`](https://github.com/js2me/mobx-view-model/commit/fa0b3901a63da250ed16a476bb33a8ac18cee4bd) Thanks [@js2me](https://github.com/js2me)! - fixed typings after major update
+
+- Updated dependencies [[`6a326a8`](https://github.com/js2me/mobx-view-model/commit/6a326a8ff3ad099fcc8d5eab24d9f378e81099cd)]:
+  - mobx-view-model-react@10.0.2
+
+## 10.0.1
+
+### Patch Changes
+
+- [`378e48b`](https://github.com/js2me/mobx-view-model/commit/378e48b6d9ae696dd069429b3320d03263e7c560) Thanks [@js2me](https://github.com/js2me)! - fix missing package build files
+
+- Updated dependencies [[`378e48b`](https://github.com/js2me/mobx-view-model/commit/378e48b6d9ae696dd069429b3320d03263e7c560)]:
+  - mobx-view-model-react@10.0.0
+
+## 10.0.0
+
+### Major Changes
+
+- [#59](https://github.com/js2me/mobx-view-model/pull/59) [`4473e12`](https://github.com/js2me/mobx-view-model/commit/4473e1218da9486c630fcb358768e1d32cfaffee) Thanks [@js2me](https://github.com/js2me)! - `useCreateViewModel`: `attach` / `mount` now run in the hook body during the same render pass (after instance creation and `setPayload`), instead of only inside `useLayoutEffect`. `useLayoutEffect` is still used for teardown (`detach` / `unmount`). This changes timing relative to effects and child rendering compared to the previous release.
+
+- [#59](https://github.com/js2me/mobx-view-model/pull/59) [`3ea47e5`](https://github.com/js2me/mobx-view-model/commit/3ea47e5711cee13db568cb6d0c0aeba86bb51cc1) Thanks [@js2me](https://github.com/js2me)! - Modified `ViewModelBase`/`ViewModelSimple` MobX reactions execution flow
+
+  Call `flushPendingReactions()` after creating a view model in `useCreateViewModel` so MobX reactions scheduled during construction run before `attach`/`mount` in the same render pass. Previously reactions could flush later (e.g. after `mount()` when used under `mobx-react` `observer`), which changed effective execution order.
+
+- [#65](https://github.com/js2me/mobx-view-model/pull/65) [`ac889c1`](https://github.com/js2me/mobx-view-model/commit/ac889c1ebab6fc1b36014a6a90b8e6f546fec3dc) Thanks [@js2me](https://github.com/js2me)! - Remove the deprecated `ViewModelBase#getParentViewModel` method.
+
+  Use the `parentViewModel` getter directly; parent resolution now lives entirely in the base implementation.
+
+### Minor Changes
+
+- [#59](https://github.com/js2me/mobx-view-model/pull/59) [`f0d3729`](https://github.com/js2me/mobx-view-model/commit/f0d37296aae690f13b6f39f41dddd5eba969f460) Thanks [@js2me](https://github.com/js2me)! - add `flushPendingReactions` option to `viewModelsConfig`
+
+- [#59](https://github.com/js2me/mobx-view-model/pull/59) [`2831cf2`](https://github.com/js2me/mobx-view-model/commit/2831cf29cd7fcec3a80e5675944b7d2e178ff565) Thanks [@js2me](https://github.com/js2me)! - improved SSR with Next.JS (hydration)
+
+### Patch Changes
+
+- [#59](https://github.com/js2me/mobx-view-model/pull/59) [`2a44bca`](https://github.com/js2me/mobx-view-model/commit/2a44bca92ee90b6aa314eb1014133545afee3259) Thanks [@js2me](https://github.com/js2me)! - added ssr example with NextJS (examples/ssr-nextjs)
+
+- Updated dependencies [[`9ce86ce`](https://github.com/js2me/mobx-view-model/commit/9ce86cedf5912faae239c86fa673c9d7f34fe1fc)]:
+  - mobx-view-model-react@9.3.2
+
+## 9.3.1
+
+### Patch Changes
+
+- [`51a3fcc`](https://github.com/js2me/mobx-view-model/commit/51a3fcc3cfae2ad3177dbf2a2e72c8d588f1a52b) Thanks [@js2me](https://github.com/js2me)! - fixed typings for React dependent params (using React global namespace)
+
+- Updated dependencies [[`51a3fcc`](https://github.com/js2me/mobx-view-model/commit/51a3fcc3cfae2ad3177dbf2a2e72c8d588f1a52b)]:
+  - mobx-view-model-react@9.3.1
+
+## 9.3.0
+
+### Minor Changes
+
+- [`c429474`](https://github.com/js2me/mobx-view-model/commit/c4294744ff79c3132341844aaf174807b158b6ff) Thanks [@js2me](https://github.com/js2me)! - move all React.js components hooks and etc to own package `mobx-view-model-react`
+
+### Patch Changes
+
+- Updated dependencies [[`c429474`](https://github.com/js2me/mobx-view-model/commit/c4294744ff79c3132341844aaf174807b158b6ff)]:
+  - mobx-view-model-react@9.3.0

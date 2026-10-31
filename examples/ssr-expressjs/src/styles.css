@@ -1,0 +1,20 @@
+@import 'tailwindcss';
+
+@theme {
+  --color-demo-bg: #0f1419;
+  --color-demo-fg: #e7e9ea;
+  --color-demo-muted: #8b98a5;
+  --color-demo-accent: #1d9bf0;
+  --color-demo-card: #16181c;
+  --color-demo-border: #38444d;
+}
+
+@layer base {
+  html,
+  body {
+    margin: 0;
+    min-height: 100%;
+    background-color: var(--color-demo-bg);
+    color: var(--color-demo-fg);
+  }
+}

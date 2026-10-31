@@ -24,19 +24,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout tree
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Set-up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           check-latest: true
           node-version-file: .nvmrc
 
       - run: corepack enable
 
-      - run: pnpm docs:install
+      - name: Install deps
+        run: pnpm i
 
-      - run: pnpm docs:build
+      - name: Building Docs!
+        run: pnpm docs:build
 
       - run: touch docs/.vitepress/dist/.nojekyll
 

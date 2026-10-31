@@ -1,0 +1,8 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "paths": {
+      "mobx-view-model-solid": ["./src/index.ts"]
+    }
+  }
+}

@@ -17,7 +17,7 @@ const ViewModelsProvider: DefineComponent<{
 ```vue
 <script setup lang="ts">
 import { ViewModelStoreBase } from 'mobx-view-model';
-import { ViewModelsProvider } from 'mobx-view-model/vue';
+import { ViewModelsProvider } from 'mobx-view-model-vue';
 
 const vmStore = new ViewModelStoreBase();
 </script>
@@ -50,3 +50,5 @@ const ActiveViewModelProvider: DefineComponent<{
   </ActiveViewModelProvider>
 </template>
 ```
+
+Provider values are stable for the lifetime of their subtree. To switch the store or active model, change the provider's Vue `key` so descendants are recreated with the new context. Existing model lifecycle hooks remain tied to the store that created them.

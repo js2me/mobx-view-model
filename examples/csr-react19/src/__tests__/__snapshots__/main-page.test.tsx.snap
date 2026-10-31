@@ -1,0 +1,3 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Main page > should match snapshot 1`] = `"<header class="nav"><div class="nav-inner"><strong>Test App</strong><span class="chip">CSR</span><span class="chip">React 19</span><span class="chip">mobx-view-model</span><span class="chip">development</span></div></header><main class="container"><h1>CSR + React 19.2.5</h1><p>This example mounts entirely on the client via <code>ReactDOM.createRoot()</code>.</p><section class="card"><h2>Counter state is stored in a MobX ViewModel</h2><p>Current clicks: <strong>0</strong></p><button class="btn" type="button">+1 on ViewModel</button></section></main>"`;

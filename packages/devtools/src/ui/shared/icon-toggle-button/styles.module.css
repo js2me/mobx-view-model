@@ -1,0 +1,45 @@
+.iconToggleButton {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  position: relative;
+  height: 20px;
+  outline: none;
+  border-radius: 4px;
+  backdrop-filter: blur(var(--vmd-control-blur));
+}
+
+.activePosition {
+  position: absolute;
+  height: 16px;
+  width: 16px;
+  padding: 1px;
+  box-sizing: content-box !important;
+  background: var(--vmd-control-active-bg);
+  backdrop-filter: blur(var(--vmd-base-blur));
+  border-radius: 4px;
+  transition: all 149ms ease;
+  transform: translateX(calc(20px * var(--index)));
+}
+
+.option {
+  padding: 1px;
+  z-index: 1;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 149ms ease;
+  color: var(--vmd-control-inactive-color);
+
+  &.active {
+    color: var(--vmd-control-active-color);
+  }
+}
+
+.option > svg {
+  width: 14px;
+  height: 14px;
+  color: inherit;
+}

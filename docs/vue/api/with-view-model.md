@@ -4,7 +4,7 @@ Higher-order helper that connects a Vue component to a [ViewModel](/api/view-mod
 
 ## Observer wrapper
 
-When [`wrapViewsInObserver`](/api/view-models/view-models-config#wrapviewsinobserver) is enabled (default), the **inner** view component is wrapped with [`observer()`](/vue/api/observer) from `mobx-view-model/vue` so MobX observables trigger Vue updates. The outer wrapper is also observed.
+When `config.vmConfig.wrapViewsInObserver` is enabled (default), the **inner** view component is wrapped with [`observer()`](/vue/api/observer) from `mobx-view-model-vue` so MobX observables trigger Vue updates. The outer wrapper is also observed.
 
 ## API signature
 
@@ -41,7 +41,7 @@ const Connected = withViewModel(VM, View, {
 
 ### `fallback`
 
-Vue **component** (not a render function) shown while the view model is not allowed to render yet (for example before mount or when the store blocks render).
+Vue **component** (not a render function) shown while the view model is not allowed to render yet (for example before mount during asynchronous mounting).
 
 ### `factory`
 
@@ -91,7 +91,7 @@ export const YourComponent = withViewModel(VMClass, { /* config */ })(ViewCompon
 Use **`viewModelProps<YourVM>()`** so `setup(props)` gets `props.model` typed as `YourVM` (via Vue `PropType`):
 
 ```ts
-import { viewModelProps, withViewModel } from 'mobx-view-model/vue';
+import { viewModelProps, withViewModel } from 'mobx-view-model-vue';
 import { defineComponent, h } from 'vue';
 
 defineComponent({
@@ -102,23 +102,11 @@ defineComponent({
 });
 ```
 
-### Default slot (no inner component)
-
-If you only pass the VM and config, you can use the **default** scoped slot `{ model }`:
-
-```vue
-<template>
-  <Connected :payload="{ n: 1 }" v-slot="{ model }">
-    <span>{{ model.id }}</span>
-  </Connected>
-</template>
-```
-
 ### Full example
 
 ```ts
 import { ViewModelBase } from 'mobx-view-model';
-import { viewModelProps, withViewModel } from 'mobx-view-model/vue';
+import { viewModelProps, withViewModel } from 'mobx-view-model-vue';
 import { defineComponent, h } from 'vue';
 import { action, observable } from 'mobx';
 

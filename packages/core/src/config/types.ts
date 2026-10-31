@@ -1,0 +1,117 @@
+import type { PubSub } from 'yummies/complex';
+import type { ObservableAnnotationsArray } from 'yummies/mobx';
+import type { AnyObject, Class, DeepPartial, Maybe, PartialKeys } from 'yummies/types';
+import type {
+  AnyViewModel,
+  AnyViewModelSimple,
+  PayloadCompareFn,
+  ViewModelCreateConfig,
+  ViewModelStore,
+} from '../view-model/index.js';
+
+export interface ViewModelObservableConfig {
+  /**
+   * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config.html#usedecorators)
+   */
+  useDecorators: boolean;
+  /**
+   * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config.html#custom-context-annotationsarray)
+   */
+  custom?: (
+    context: AnyObject,
+    annotationsArray: ObservableAnnotationsArray,
+  ) => void;
+}
+
+export type CreateViewModelFactoryFn<
+  TViewModel extends AnyViewModel | AnyViewModelSimple = AnyViewModel | AnyViewModelSimple,
+> = (config: ViewModelCreateConfig<TViewModel>) => TViewModel;
+
+/**
+ * Request/application-owned data source used while creating view models.
+ * Solid expects `read` to return synchronously; React also supports throwing
+ * a Promise/Error following its Suspense resource convention.
+ */
+export interface ViewModelResource<TData = unknown> {
+  read(id: string): TData;
+}
+
+export type PayloadComparator = PayloadCompareFn | 'strict' | 'shallow' | false
+
+/**
+ * Configuration options for view models.
+ * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config)
+ */
+export interface ViewModelsConfig<
+  TViewModel extends AnyViewModel = AnyViewModel,
+> {
+  /**
+   * Default resource used when a store does not provide one.
+   * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#resource)
+   */
+  resource?: ViewModelResource;
+  getPayload: (allProps: any) => any;
+  mode: 'csr-only' | 'ssr';
+  /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#startviewtransitions) */
+  startViewTransitions: {
+    mount: boolean;
+    unmount: boolean;
+    payloadChange: boolean;
+  };
+  /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#comparepayload) */
+  comparePayload?: PayloadComparator;
+  /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#payloadobservable) */
+  payloadObservable: 'ref' | 'deep' | 'shallow' | 'struct' | false;
+  /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#payloadcomputed) */
+  payloadComputed: 'struct' | boolean | ((a: any, b: any) => boolean);
+  /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#factory) */
+  factory: CreateViewModelFactoryFn<AnyViewModel | AnyViewModelSimple>;
+  /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#fallbackcomponent) */
+  fallbackComponent?: unknown;
+  /** [**Documentation**](https://js2me.github.io/mobx-view-model/react/api/with-view-model.html#reacthook) */
+  reactHook?: (
+    allProps: AnyObject,
+    ctx: AnyObject,
+    viewModels: Maybe<ViewModelStore>,
+    ref?: any,
+  ) => void;
+  /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#onmount) */
+  onMount?: (viewModel: TViewModel) => void;
+  /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#onunmount) */
+  onUnmount?: (viewModel: TViewModel) => void;
+  /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#hooks) */
+  readonly hooks: {
+    /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#hooks) */
+    readonly storeCreate: PubSub<
+      [viewModelStore: ViewModelStore<AnyViewModel>]
+    >;
+  };
+  /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#processviewcomponent) */
+  processRender?: (
+    renderFn: ((props: AnyObject) => unknown) | undefined,
+    VM: Class<TViewModel>,
+    /** Полный тип HOC — `ViewModelHocConfig` в `mobx-view-model-react`. */
+    config: AnyObject,
+  ) => Maybe<(props: any) => unknown>;
+  /** [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config#observable) */
+  observable: {
+    viewModels: ViewModelObservableConfig;
+    viewModelStores: ViewModelObservableConfig;
+  };
+}
+
+/**
+ * [**Documentation**](https://js2me.github.io/mobx-view-model/api/view-models/view-models-config)
+ */
+export type ViewModelsRawConfig<
+  TViewModel extends AnyViewModel = AnyViewModel,
+> = PartialKeys<Omit<
+ViewModelsConfig<TViewModel>,
+'startViewTransitions' | 'observable' | 'factory' | 'hooks' | 'mode' | 'getPayload'
+>, 'payloadObservable' | 'payloadComputed' | 'fallbackComponent'> & {
+  startViewTransitions?:
+    | DeepPartial<ViewModelsConfig['startViewTransitions']>
+    | boolean;
+  observable?: DeepPartial<ViewModelsConfig['observable']>;
+  factory?: ViewModelsConfig['factory'];
+};

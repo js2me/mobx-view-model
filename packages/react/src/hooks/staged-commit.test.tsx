@@ -1,0 +1,447 @@
+/**
+ * @vitest-environment jsdom
+ */
+import { makeObservable, observable, action } from 'mobx';
+import { observer } from 'mobx-react-lite';
+import {
+  ViewModelBase,
+  ViewModelStoreBase,
+  isViewModel,
+  type AnyViewModel,
+  type AnyViewModelSimple,
+  type ViewModelSimple,
+  type ViewModelParams,
+} from 'mobx-view-model';
+import {
+  ActiveViewModelProvider,
+  ViewModelsProvider,
+  useCreateViewModel,
+  useViewModel,
+  withViewModel,
+} from 'mobx-view-model-react';
+import { act, cleanup, render, screen } from '@testing-library/react';
+import { afterEach, describe, expect, test, vi } from 'vitest';
+import { Suspense, lazy, startTransition, useState, type ComponentType } from 'react';
+
+class ViewModelBaseMock<
+  Payload extends Record<string, unknown> = Record<string, never>,
+  ParentViewModel extends AnyViewModel | AnyViewModelSimple | null = null,
+> extends ViewModelBase<Payload, ParentViewModel> {
+  constructor(params?: Partial<ViewModelParams<Payload, ParentViewModel>>) {
+    super({
+      ...params,
+      id: params?.id ?? '1',
+      payload: params?.payload as Payload,
+    });
+    makeObservable(this);
+  }
+}
+
+class ViewModelStoreBaseMock extends ViewModelStoreBase {
+  constructor() {
+    super({});
+  }
+
+  get _viewModels() {
+    return this.viewModels;
+  }
+}
+
+class RouteStore {
+  currentRoute: string | null = null;
+
+  constructor() {
+    makeObservable(this, {
+      currentRoute: observable.ref,
+      navigate: action,
+    });
+  }
+
+  navigate(route: string) {
+    this.currentRoute = route;
+  }
+}
+
+afterEach(() => {
+  cleanup();
+});
+
+describe('render-phase VM staging', () => {
+  test('a speculative second consumer cannot mutate a committed simple VM', async () => {
+    const store = new ViewModelStoreBaseMock();
+    class PlainVM implements ViewModelSimple<{ value: string }> {
+      id = 'shared';
+      private current = '';
+      setPayload(payload: { value: string }) { this.current = payload.value; }
+      get value() { return this.current; }
+    }
+
+    const never = new Promise<{ default: ComponentType }>(() => {});
+    const Pending = lazy(() => never);
+    const Consumer = ({ value, suspend = false }: { value: string; suspend?: boolean }) => {
+      const vm = useCreateViewModel(PlainVM, { value }, {
+        id: 'shared', VM: PlainVM, payload: { value },
+      });
+      return suspend ? <Pending /> : <span data-testid="first">{vm.value}</span>;
+    };
+    const App = ({ showPending }: { showPending: boolean }) => (
+      <ViewModelsProvider value={store}>
+        <Consumer value="initial" />
+        {showPending && <Suspense fallback="Loading"><Consumer value="next" suspend /></Suspense>}
+      </ViewModelsProvider>
+    );
+
+    const view = render(<App showPending={false} />);
+    const vm = store.get<PlainVM>('shared');
+    expect(vm?.value).toBe('initial');
+    await act(async () => view.rerender(<App showPending />));
+    expect(store.get('shared')).toBe(vm);
+    expect(vm?.value).toBe('initial');
+    expect(screen.getByTestId('first').textContent).toBe('initial');
+  });
+
+  test('a suspended transition leaves the committed VM payload unchanged until commit', async () => {
+    const vmStore = new ViewModelStoreBaseMock();
+    class PageVM extends ViewModelBaseMock<{ value: string }> {}
+
+    let resolveChild!: (module: { default: ComponentType }) => void;
+    const LazyChild = lazy(
+      () => new Promise<{ default: ComponentType }>((resolve) => {
+        resolveChild = resolve;
+      }),
+    );
+    const Page = ({ value }: { value: string }) => {
+      useCreateViewModel(PageVM, { value }, { id: 'page' });
+      return (
+        <>
+          <span data-testid="page">{value}</span>
+          {value === 'next' && <LazyChild />}
+        </>
+      );
+    };
+
+    let navigate!: () => void;
+    const App = () => {
+      const [value, setValue] = useState('initial');
+      navigate = () => startTransition(() => setValue('next'));
+      return (
+        <ViewModelsProvider value={vmStore}>
+          <Suspense fallback={<span data-testid="loading">Loading</span>}>
+            <Page value={value} />
+          </Suspense>
+        </ViewModelsProvider>
+      );
+    };
+
+    await act(async () => {
+      render(<App />);
+    });
+    const vm = vmStore.get<PageVM>('page');
+    expect(vm?.payload.value).toBe('initial');
+    expect(screen.getByTestId('page').textContent).toBe('initial');
+
+    await act(async () => {
+      navigate();
+    });
+
+    // The suspended render must not mutate the committed VM.
+    expect(screen.getByTestId('page').textContent).toBe('initial');
+    expect(screen.queryByTestId('loading')).toBeNull();
+    expect(vmStore.get('page')).toBe(vm);
+    expect(vm?.payload.value).toBe('initial');
+
+    await act(async () => {
+      resolveChild({ default: () => <span>child</span> });
+    });
+    expect(screen.getByTestId('page').textContent).toBe('next');
+    expect(vm?.payload.value).toBe('next');
+  });
+
+  test('VM is registered only after its fiber commits', async () => {
+    const vmStore = new ViewModelStoreBaseMock();
+
+    class FooVM extends ViewModelBaseMock {}
+
+    const probes: {
+      hasDuringRender?: boolean;
+      mountedCountDuringRender?: number;
+    } = {};
+
+    const Component = () => {
+      const vm = useCreateViewModel(FooVM, undefined, { id: 'foo' });
+
+      // Direct core-store lookups do not see React's render-phase registry.
+      probes.hasDuringRender = vmStore.has(FooVM);
+      probes.mountedCountDuringRender = [...vmStore._viewModels.values()].filter(
+        (viewModel) => !isViewModel(viewModel) || viewModel.isMounted,
+      ).length;
+
+      return <span data-testid="foo">{vm.id}</span>;
+    };
+
+    await act(async () =>
+      render(
+        <ViewModelsProvider value={vmStore}>
+          <Component />
+        </ViewModelsProvider>,
+      ),
+    );
+
+    expect(probes.hasDuringRender).toBe(false);
+    // ...but the VM was not counted as a committed store member in render
+    expect(probes.mountedCountDuringRender).toBe(0);
+
+    // after the commit effect: promoted + mounted
+    expect(vmStore.get(FooVM)).toBeDefined();
+    expect(vmStore.getIds(FooVM)).toEqual(['foo']);
+    expect(
+      [...vmStore._viewModels.values()].filter(
+        (viewModel) => !isViewModel(viewModel) || viewModel.isMounted,
+      ),
+    ).toHaveLength(1);
+  });
+
+  test('prefers a newly staged VM over an older committed instance during render', async () => {
+    const vmStore = new ViewModelStoreBaseMock();
+
+    class FooVM extends ViewModelBaseMock {}
+
+    vmStore.define({ VM: FooVM, id: 'old', payload: {} });
+    let modelDuringRender: FooVM | undefined;
+
+    const Consumer = () => {
+      modelDuringRender = useViewModel(FooVM);
+      return <span>{modelDuringRender.id}</span>;
+    };
+    const Creator = () => {
+      useCreateViewModel(FooVM, undefined, { id: 'new' });
+      return <Consumer />;
+    };
+
+    await act(async () =>
+      render(
+        <ViewModelsProvider value={vmStore}>
+          <Creator />
+        </ViewModelsProvider>,
+      ),
+    );
+
+    expect(modelDuringRender?.id).toBe('new');
+    expect(vmStore.get(FooVM)?.id).toBe('new');
+  });
+
+  test('commits a staged VM with the ID generated during staging', async () => {
+    class AllocatingStore extends ViewModelStoreBaseMock {
+      generatedIds = 0;
+
+      override generateId() {
+        this.generatedIds += 1;
+        return `generated-${this.generatedIds}`;
+      }
+    }
+    const vmStore = new AllocatingStore();
+
+    class FooVM extends ViewModelBaseMock {}
+
+    let model: FooVM | undefined;
+    const Component = () => {
+      model = useCreateViewModel(FooVM, undefined, { id: 'requested' });
+      return <span>{model.id}</span>;
+    };
+
+    const view = await act(async () =>
+      render(
+        <ViewModelsProvider value={vmStore}>
+          <Component />
+        </ViewModelsProvider>,
+      ),
+    );
+
+    expect(vmStore.generatedIds).toBe(1);
+    expect(model?.id).toBe('generated-1');
+    expect(vmStore.get('generated-1')).toBe(model);
+    expect(vmStore.get(FooVM)).toBe(model);
+
+    await act(async () => view.unmount());
+
+    expect(vmStore.get('generated-1')).toBeNull();
+  });
+
+  test('discarded fiber never leaves a committed mounting VM behind', async () => {
+    const vmStore = new ViewModelStoreBaseMock();
+    const routeStore = new RouteStore();
+    const mountLog: string[] = [];
+
+    class LayoutVM extends ViewModelBaseMock {}
+    class PageVM extends ViewModelBaseMock {
+      mount() {
+        mountLog.push(`PageVM:${this.id}`);
+        return super.mount();
+      }
+    }
+
+    let pageRenderCount = 0;
+
+    let resolveChild!: (module: { default: ComponentType }) => void;
+    const LazyChild = lazy(
+      () =>
+        new Promise<{ default: ComponentType }>((resolve) => {
+          resolveChild = resolve;
+        }),
+    );
+
+    // Page with a lazy child WITHOUT its own Suspense — the child's suspend
+    // propagates to the Routing Suspense and React 19 discards one of the
+    // two page fibers created in the same render pass.
+    const PageView = ({ model }: { model: InstanceType<typeof PageVM> }) => {
+      pageRenderCount += 1;
+      if (pageRenderCount > 100) {
+        throw new Error(
+          'Suspense retry loop detected: PageView rendered more than 100 times',
+        );
+      }
+
+      return (
+        <div data-testid="page">
+          <span>{model.id}</span>
+          <LazyChild />
+        </div>
+      );
+    };
+    const PageComponent = withViewModel(PageVM, PageView);
+
+    let resolvePage!: (module: { default: ComponentType }) => void;
+    const LazyPage = lazy(
+      () =>
+        new Promise<{ default: ComponentType }>((resolve) => {
+          resolvePage = resolve;
+        }),
+    );
+
+    const LayoutView = ({
+      children,
+      model,
+    }: {
+      children: React.ReactNode;
+      model: InstanceType<typeof LayoutVM>;
+    }) => (
+      <ActiveViewModelProvider value={model}>
+        <div data-testid="layout">
+          <Suspense fallback={<span data-testid="loading">Loading</span>}>
+            {children}
+          </Suspense>
+        </div>
+      </ActiveViewModelProvider>
+    );
+    const LayoutComponent = withViewModel(LayoutVM, LayoutView);
+
+    const RouteView = observer(() => {
+      if (routeStore.currentRoute !== 'page') return null;
+      return <LazyPage />;
+    });
+
+    const Routing = observer(() => (
+      <Suspense fallback={null}>
+        <RouteView />
+      </Suspense>
+    ));
+
+    await act(async () =>
+      render(
+        <ViewModelsProvider value={vmStore}>
+          <LayoutComponent>
+            <Routing />
+          </LayoutComponent>
+        </ViewModelsProvider>,
+      ),
+    );
+
+    await act(async () => {
+      routeStore.navigate('page');
+    });
+
+    await act(async () => {
+      resolvePage({ default: PageComponent });
+    });
+
+    await act(async () => {});
+
+    await act(async () => {
+      resolveChild({ default: () => <span data-testid="child">child</span> });
+    });
+
+    // Before flushing any timers: the discarded fiber's VM never entered the
+    // committed store, so no committed VM sits in the "mounting" state.
+    // (With the previous eager registration the orphaned VM stayed committed
+    // and unmounted until the orphan-cleanup timer fired.)
+    expect(
+      [...vmStore._viewModels.values()].some(
+        (viewModel) => isViewModel(viewModel) && !viewModel.isMounted,
+      ),
+    ).toBe(false);
+
+    // Flush the staged-entries sweep
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 10));
+    });
+
+    // The sweep dropped the discarded fiber's staged entry; exactly one
+    // PageVM remains, and it is mounted.
+    expect(vmStore.getIds(PageVM)).toHaveLength(1);
+    expect(vmStore.getIds(LayoutVM)).toHaveLength(1);
+    expect(
+      [...vmStore._viewModels.values()].filter(
+        (viewModel) => !isViewModel(viewModel) || viewModel.isMounted,
+      ),
+    ).toHaveLength(2);
+    expect(screen.getByTestId('page')).toBeDefined();
+
+    const pageMounts = mountLog.filter((l) => l.startsWith('PageVM'));
+    expect(pageMounts.length).toBeGreaterThanOrEqual(1);
+  });
+
+  test('does not revive a detached VM from a render that suspends', async () => {
+    const vmStore = new ViewModelStoreBaseMock();
+    const mountSpy = vi.fn();
+    let suspend = false;
+    const never = new Promise<void>(() => {});
+
+    class FooVM extends ViewModelBaseMock {
+      mount() {
+        mountSpy();
+        return super.mount();
+      }
+    }
+
+    const Component = () => {
+      const vm = useCreateViewModel(FooVM, undefined, { id: 'foo' });
+      if (suspend) throw never;
+      return <span>{vm.id}</span>;
+    };
+
+    const App = () => (
+      <ViewModelsProvider value={vmStore}>
+        <Suspense fallback={<span data-testid="loading">Loading</span>}>
+          <Component />
+        </Suspense>
+      </ViewModelsProvider>
+    );
+
+    const view = await act(async () => render(<App />));
+    const vm = vmStore.get<FooVM>('foo')!;
+    // Simulate the cleanup React performed when this persisted fiber was
+    // hidden before it started a new render.
+    vmStore.unmount(vm);
+    const define = vi.spyOn(vmStore, 'define');
+    mountSpy.mockClear();
+
+    suspend = true;
+    await act(async () => {
+      view.rerender(<App />);
+    });
+
+    expect(define).not.toHaveBeenCalled();
+    expect(mountSpy).not.toHaveBeenCalled();
+    expect(vmStore.get('foo')).toBeNull();
+  });
+});

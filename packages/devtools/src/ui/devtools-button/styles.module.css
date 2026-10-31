@@ -1,0 +1,97 @@
+
+.vmButton {
+  position: fixed;
+  z-index: 999999;
+  width: 36px;
+  height: 36px;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: all 150ms ease-in-out;
+  cursor: pointer;
+  user-select: none;
+
+  &.dragging {
+    transition: none;
+    cursor: grabbing;
+    opacity: 0.8;
+  }
+
+  &.opened {
+    opacity: 0 !important;
+    pointer-events: none;
+  }
+
+  &[data-position="top-right"] {
+    top: 12px;
+    right: 12px;
+  }
+
+  &[data-position="top-left"] {
+    top: 12px;
+    left: 12px;
+  }
+
+  &[data-position="bottom-left"] {
+    bottom: 12px;
+    left: 12px;
+  }
+
+  &[data-position="bottom-right"] {
+    bottom: 12px;
+    right: 12px;
+  }
+
+  > img {
+    pointer-events: none;
+    position: absolute;
+    inset: 0;
+    border-radius: 8px;
+  }
+
+  > div {
+    transition: all 150ms ease-in-out;
+    position: absolute;
+    inset: 0;
+    border-radius: 8px;
+    border: 2px solid #00000057;
+  }
+
+  &:not(.isConnected) {
+    filter: grayscale(1);
+  }
+
+  > .vmsCount {
+    left: -4px;
+    top: -4px;
+    pointer-events: none;
+    position: absolute;
+    display: flex;
+    border-radius: 8px;
+    background: #005c26cf;
+    padding: 2px;
+    font-weight: 600;
+    font-size: 12px;
+    line-height: 12px;
+    color: #2aff0a;
+  }
+
+  > .keyboardHint {
+    position: absolute;
+    bottom: -3px;
+    left: -2px;
+    z-index: 99999;
+    font-family: monospace;
+    font-weight: 700 !important;
+    font-size: 10px;
+    line-height: 10px;
+    background: #1b3b00bf;
+    color: #73ff00d4;
+    letter-spacing: -1px;
+    border-radius: 2px;
+  }
+}
+
+
+html:has( .dragging) *{
+  user-select: none !important;
+}

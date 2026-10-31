@@ -1,0 +1,24 @@
+packages:
+  - 'packages/*'
+  - 'examples/*'
+  - 'tests/react-regressions/*'
+  - 'docs'
+autoInstallPeers: false
+linkWorkspacePackages: true
+preferWorkspacePackages: true
+shamefullyHoist: true
+frozenLockfile: false
+allowBuilds:
+  '@parcel/watcher': true
+  '@swc/core': true
+  esbuild: true
+  lefthook: true
+  sharp: false
+minimumReleaseAgeExclude:
+  - mobx-view-model-react@10.2.2
+  - mobx-view-model@10.2.2
+  - docusite@0.1.0 || 0.1.1 || 0.1.2
+  - mobx-solid@0.0.1
+overrides:
+  '@types/react': 19.2.14
+  '@types/react-dom': 19.2.3

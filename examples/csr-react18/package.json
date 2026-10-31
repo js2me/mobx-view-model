@@ -1,0 +1,29 @@
+{
+  "name": "mobx-view-model-example-csr-react18",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "esbuild src/main.tsx --bundle --alias:react=./node_modules/react --alias:react-dom=./node_modules/react-dom --format=esm --platform=browser --outfile=public/app.js --servedir=public --serve=3012",
+    "build": "esbuild src/main.tsx --bundle --alias:react=./node_modules/react --alias:react-dom=./node_modules/react-dom --format=esm --platform=browser --outfile=public/app.js",
+    "check": "tsc --noEmit --project tsconfig.check.json",
+    "start": "pnpm build && esbuild src/main.tsx --bundle --alias:react=./node_modules/react --alias:react-dom=./node_modules/react-dom --format=esm --platform=browser --outfile=public/app.js --servedir=public --serve=3012",
+    "test": "vitest run --config vitest.config.ts"
+  },
+  "dependencies": {
+    "mobx": "^6.13.7",
+    "mobx-react-lite": "^4.1.1",
+    "mobx-view-model": "workspace:*",
+    "mobx-view-model-react": "workspace:*",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/react": "^16.3.2",
+    "@types/react": "^18.3.28",
+    "@types/react-dom": "^18.3.7",
+    "esbuild": "^0.25.10",
+    "jsdom": "^26.1.0"
+  }
+}

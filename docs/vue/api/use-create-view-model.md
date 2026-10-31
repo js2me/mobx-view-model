@@ -2,7 +2,7 @@
 
 Composable that creates (or reuses from the store) a [ViewModel](/api/view-models/overview) tied to the current Vue instance lifecycle. Used inside [`withViewModel()`](/vue/api/with-view-model).
 
-`payload` may be a plain value, `ref`, or `computed`; changes update the model via `setPayload`.
+The `payload` argument may be a plain value, `ref`, or `computed`; changes update the model via `setPayload`.
 
 ## API signature
 
@@ -22,7 +22,7 @@ For `ViewModelSimple`, overloads require or omit the `payload` argument dependin
 interface UseCreateViewModelConfig<TViewModel extends AnyViewModel> {
   id?: Maybe<string>;
   generateId?: (ctx: AnyObject) => string;
-  factory?: (config: any) => TViewModel;
+  factory?: (config: ViewModelCreateConfig<TViewModel>) => TViewModel;
   vmConfig?: ViewModelsRawConfig;
   ctx?: AnyObject;
   component?: unknown;
@@ -36,7 +36,7 @@ interface UseCreateViewModelConfig<TViewModel extends AnyViewModel> {
 ### Basic
 
 ```ts
-import { useCreateViewModel } from 'mobx-view-model/vue';
+import { useCreateViewModel } from 'mobx-view-model-vue';
 
 const model = useCreateViewModel(YourVM);
 ```
@@ -72,7 +72,7 @@ const model = useCreateViewModel(YourVM, {}, {
 
 ```ts
 import { ViewModelBase } from 'mobx-view-model';
-import { observer, useCreateViewModel } from 'mobx-view-model/vue';
+import { observer, useCreateViewModel } from 'mobx-view-model-vue';
 import { defineComponent, h } from 'vue';
 import { action, observable } from 'mobx';
 

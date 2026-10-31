@@ -11,8 +11,11 @@ function observer<T extends Component>(component: T): T;
 ## Usage
 
 ```ts
-import { observer } from 'mobx-view-model/vue';
-import { defineComponent } from 'vue';
+import { observer } from 'mobx-view-model-vue';
+import { defineComponent, h } from 'vue';
+import { observable } from 'mobx';
+
+const store = observable({ count: 0 });
 
 export default observer(
   defineComponent({
@@ -27,4 +30,4 @@ export default observer(
 - If the component uses **`setup` returning a function**, that function is tracked.
 - If the component uses the **`render` option**, `render` is tracked.
 
-`withViewModel` applies `observer` to the inner view when [`wrapViewsInObserver`](/api/view-models/view-models-config#wrapviewsinobserver) is enabled.
+`withViewModel` applies `observer` to the inner view when `config.vmConfig.wrapViewsInObserver` is enabled.

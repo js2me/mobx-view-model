@@ -1,0 +1,30 @@
+.notifications {
+  position: absolute;
+  z-index: 1000;
+  padding: 4px;
+  border-radius: 4px;
+  background: var(--vmd-control-border);
+  backdrop-filter: blur(var(--vmd-base-blur));
+  right: 8px;
+  left: 4px;
+  top: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+@keyframes notification-fade-out {
+  0% {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.notification {
+  animation: notification-fade-out 250ms ease forwards;
+}

@@ -23,7 +23,7 @@ function useViewModel<T extends AnyViewModel | AnyViewModelSimple>(
 Requires an active model from [`withViewModel()`](/vue/api/with-view-model) (which provides it) or from [`ActiveViewModelProvider`](/vue/api/view-models-provider#activeviewmodelprovider).
 
 ```ts
-import { useViewModel } from 'mobx-view-model/vue';
+import { useViewModel } from 'mobx-view-model-vue';
 
 const yourVM = useViewModel<YourVM>();
 ```

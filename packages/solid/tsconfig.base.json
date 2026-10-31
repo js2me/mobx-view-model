@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "outDir": "dist",
+    "declaration": true,
+    "declarationMap": true,
+    "useDefineForClassFields": true,
+    "lib": ["ESNext", "DOM"],
+    "allowJs": false,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "module": "NodeNext",
+    "moduleResolution": "nodenext",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "typeRoots": ["./node_modules/@types/", "./types", "../../node_modules/@types"],
+    "noEmit": false,
+    "jsx": "preserve",
+    "jsxImportSource": "solid-js",
+    "paths": {
+      "mobx-view-model-solid": ["./src/index.ts"]
+    }
+  }
+}

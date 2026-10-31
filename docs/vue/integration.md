@@ -27,7 +27,7 @@ Render the component returned from `withViewModel`. Pass `payload` as a prop whe
 ```vue
 <script setup lang="ts">
 import { ViewModelBase } from 'mobx-view-model';
-import { viewModelProps, withViewModel } from 'mobx-view-model/vue';
+import { viewModelProps, withViewModel } from 'mobx-view-model-vue';
 import { defineComponent, h } from 'vue';
 
 class YourComponentVM extends ViewModelBase {}
@@ -52,12 +52,12 @@ You can also pass a separate view component as the second argument; the wrapper 
 
 ### Using [`useCreateViewModel()`](/vue/api/use-create-view-model)
 
-Call the composable inside `setup` (or `<script setup>`) and use the returned model in your template or render function. Wrap the view in [`observer()`](/vue/api/with-view-model#observer-wrapper) from `mobx-view-model/vue` when you read MobX observables, or rely on `withViewModel`, which applies `observer` to the inner view by default.
+Call the composable inside `setup` (or `<script setup>`) and use the returned model in your template or render function. Wrap the view in [`observer()`](/vue/api/with-view-model#observer-wrapper) from `mobx-view-model-vue` when you read MobX observables, or rely on `withViewModel`, which applies `observer` to the inner view by default.
 
 ```vue
 <script setup lang="ts">
 import { ViewModelBase } from 'mobx-view-model';
-import { observer, useCreateViewModel } from 'mobx-view-model/vue';
+import { observer, useCreateViewModel } from 'mobx-view-model-vue';
 
 class YourComponentVM extends ViewModelBase {}
 
@@ -83,7 +83,7 @@ For render-function components, use `observer(defineComponent({ ... }))` so MobX
 ```vue
 <script setup lang="ts">
 import { ViewModelStoreBase } from 'mobx-view-model';
-import { ViewModelsProvider } from 'mobx-view-model/vue';
+import { ViewModelsProvider } from 'mobx-view-model-vue';
 
 const vmStore = new ViewModelStoreBase();
 </script>
@@ -109,3 +109,5 @@ On the first render, `isMounted` is typically `false` until mounting completes.
 These are already invoked by the [store base implementation](/api/view-model-store/base-implementation) or by [`useCreateViewModel()`](/vue/api/use-create-view-model).
 
 :::
+
+Install `mobx-view-model`, `mobx-view-model-vue`, `mobx`, and `vue` (3.5 or newer).

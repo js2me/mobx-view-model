@@ -2,7 +2,7 @@
 
 Component that creates an instance of the given [`ViewModel`](/api/view-models/interface) class and renders nothing, or renders the default **scoped slot** with `{ model }`.
 
-`ViewModelSimple` is routed through the same entrypoint but does not use the full create config path; prefer full `ViewModelBase` for predictable store integration.
+`ViewModelSimple` uses the same store creation and cleanup path as `ViewModelBase`.
 
 ## Props
 
@@ -15,7 +15,7 @@ Component that creates an instance of the given [`ViewModel`](/api/view-models/i
 ```vue
 <script setup lang="ts">
 import { ViewModelBase } from 'mobx-view-model';
-import { OnlyViewModel } from 'mobx-view-model/vue';
+import { OnlyViewModel } from 'mobx-view-model-vue';
 
 class TestVM extends ViewModelBase {
   foo = 100;

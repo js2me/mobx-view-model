@@ -1,0 +1,55 @@
+{
+  "name": "mobx-view-model",
+  "version": "11.0.0",
+  "scripts": {
+    "clean": "rimraf dist",
+    "ts:check": "tsc --noEmit --project tsconfig.check.json",
+    "ts-test-types:check": "tsc --noEmit --project tsconfig.test.json",
+    "check": "pnpm run ts:check && pnpm ts-test-types:check",
+    "prebuild": "pnpm run clean",
+    "build:watch": "pnpm build && nodemon --watch src --ext ts,tsx --exec \"pnpm build\"",
+    "build": "vite build",
+    "test": "vitest run --config vitest.config.ts",
+    "test:watch": "vitest watch --config vitest.config.ts",
+    "test:coverage": "vitest run --config vitest.config.ts --coverage"
+  },
+  "keywords": [
+    "mobx",
+    "view-model",
+    "view",
+    "model",
+    "vm",
+    "mvvm",
+    "mvc",
+    "mvp",
+    "ViewModel",
+    "ModelViewModel"
+  ],
+  "author": "js2me",
+  "license": "MIT",
+  "description": "MobX view models core (framework-agnostic)",
+  "bugs": {
+    "url": "https://github.com/js2me/mobx-view-model/issues"
+  },
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./src/index.ts",
+  "homepage": "https://github.com/js2me/mobx-view-model",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/js2me/mobx-view-model"
+  },
+  "publishConfig": {
+    "directory": "dist"
+  },
+  "dependencies": {
+    "yummies": "^7.20.1"
+  },
+  "peerDependencies": {
+    "mobx": "^6.12.4"
+  },
+  "devDependencies": {
+    "jsdom": "^26.1.0"
+  }
+}

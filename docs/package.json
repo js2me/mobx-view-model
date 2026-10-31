@@ -1,15 +1,22 @@
 {
+  "name": "mobx-view-model-docs",
   "private": true,
   "type": "module",
+  "dependencies": {
+    "mobx": "^6.13.0",
+    "mobx-react-lite": "^4.0.7",
+    "mobx-view-model": "workspace:*",
+    "mobx-view-model-devtools": "workspace:*",
+    "mobx-view-model-react": "workspace:*",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4"
+  },
   "devDependencies": {
-    "@iconify-json/logos": "^1.2.9",
-    "sborshik": "^1.8.0",
-    "vitepress": "^1.6.4"
+    "docusite": "0.2.0"
   },
   "scripts": {
-    "dev": "vitepress dev",
-    "build": "vitepress build",
-    "preview": "vitepress preview"
+    "dev": "docusite dev",
+    "build": "docusite build",
+    "preview": "docusite preview"
   }
 }
-

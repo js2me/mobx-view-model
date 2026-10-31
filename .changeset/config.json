@@ -1,14 +1,19 @@
 {
   "$schema": "https://unpkg.com/@changesets/config@3.1.1/schema.json",
-  "changelog": [
-    "@changesets/changelog-github",
-    { "repo": "js2me/mobx-view-model" }
-  ],
+  "changelog": "@changesets/changelog-git",
   "commit": false,
   "fixed": [],
   "linked": [],
-  "access": "restricted",
+  "access": "public",
   "baseBranch": "master",
   "updateInternalDependencies": "patch",
-  "ignore": []
+  "___experimentalUnsafeOptions_WILL_CHANGE_IN_PATCH": {
+    "onlyUpdatePeerDependentsWhenOutOfRange": true
+  },
+  "ignore": [
+    "mobx-view-model-example-ssr-expressjs",
+    "mobx-view-model-example-csr-react18",
+    "mobx-view-model-example-csr-react19",
+    "mobx-view-model-example-ssr-nextjs"
+  ]
 }

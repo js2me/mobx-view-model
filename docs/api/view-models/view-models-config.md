@@ -1,24 +1,19 @@
 # `ViewModelsConfig` configuration object   
-This configuration contains all options for the behavior of [`ViewModel`](/api/view-models/overview) instances.  
+This configuration defines the behavior of [`ViewModel`](/api/view-models/overview) instances and the framework integrations.
 
-The package provides a **global object** with this configuration, but you can also change it for each [`ViewModel`](/api/view-models/overview) and [`ViewModelStore`](/api/view-model-store/overview) separately using the `vmConfig` field.
+The package provides a **global object** with this configuration. You can override supported options for a [`ViewModel`](/api/view-models/overview) or [`ViewModelStore`](/api/view-model-store/overview) with the `vmConfig` field.
 
 ```ts
-import {
-  viewModelsConfig,
-  withViewModel,
-  ViewModelStoreBase
-} from "mobx-view-model";
+import { viewModelsConfig, ViewModelStoreBase } from "mobx-view-model";
+import { withViewModel } from "mobx-view-model-react";
 
 viewModelsConfig.comparePayload = false;
 
-import { withViewModel } from "mobx-view-model";
-
-withViewModel(VM, {
+withViewModel(VM, View, {
   vmConfig: {
     comparePayload: false
   }
-})()
+})
 
 new ViewModelStoreBase({
   vmConfig: {
@@ -27,7 +22,7 @@ new ViewModelStoreBase({
 })
 ```
 
-[Reference to source code](/src/config/global-config.ts#L9)  
+[Reference to source code](https://github.com/js2me/mobx-view-model/blob/master/packages/core/src/config/types.ts)
 
 ## Recommendations  
 
@@ -35,7 +30,7 @@ These are the recommended settings for the global configuration `viewModelsConfi
 which contain the most optimal values.
 
 ```ts
-import { viewModelsConfig, ViewModelStoreBase } from 'mobx-view-model';
+import { viewModelsConfig } from 'mobx-view-model';
 
 viewModelsConfig.comparePayload = false;
 viewModelsConfig.payloadComputed = 'struct';
@@ -44,6 +39,62 @@ viewModelsConfig.payloadObservable = 'ref';
 viewModelsConfig.observable.viewModels.useDecorators = true; //false
 viewModelsConfig.observable.viewModelStores.useDecorators = true; // false
 ```
+
+## `mode`  
+Runtime mode for the library integration:
+
+- `'csr-only'` — _**(default)**_ client-side only
+- `'ssr'` — enable SSR-oriented behavior in the React / Solid integration
+
+`mode` is global-only. Set it on `viewModelsConfig` before creating stores or view models.
+
+## `resource`
+
+An optional default data source for the React and Solid integrations. Its
+`read(id)` method is called with the view model ID while the integration creates
+the view model. The returned value is available as `vm.data` on the view model
+(`ViewModelBase` initializes it from `ViewModelParams.data`).
+
+`read` must return synchronously when used by Solid. React resources may also
+throw a `Promise` while loading or an `Error`, following the React Suspense
+resource convention. The resource is read on both the client and server when
+the view model is created. A store-level `resource` overrides this global default; see
+[`ViewModelStore.resource`](/api/view-model-store/interface#resource) for a
+request-scoped example.
+
+```ts
+import { viewModelsConfig } from 'mobx-view-model';
+
+viewModelsConfig.resource = {
+  read(id) {
+    return cache.get(id);
+  },
+};
+```
+
+Use a store-level resource when the data must not be shared between requests:
+
+```ts
+import { ViewModelStoreBase } from 'mobx-view-model';
+
+const store = new ViewModelStoreBase({
+  resource: {
+    read(id) {
+      return requestCache.get(id);
+    },
+  },
+});
+```
+
+Do not create a mutable request-specific resource once at module scope in an
+SSR application. Construct it together with the store for each request.
+
+## `getPayload`  
+Extracts the ViewModel payload from component props.  
+
+Default: Returns `allProps.payload` or a shared frozen empty object when no payload is provided.
+
+Used by [`withViewModel`](/react/api/with-view-model). Override globally or per HOC when you want a different payload shape (see also [`withPropsViewModel`](/react/api/with-props-view-model)).
 
 ## `startViewTransitions`  
 Controls view transitions for view model lifecycle moments.  
@@ -85,28 +136,15 @@ Indicates type of observable for `ViewModel` payload.
 - `'shallow'` - [MobX shallow observable](https://mobx.js.org/api.html#observableshallow)  
 - `false` - no observable wrapping  
 
-## `generateId()`  
-Generates a unique identifier for a [`ViewModel`](/api/view-models/interface).   
-
-::: tip This property has default implementation [here](/src/utils/generate-vm-id.ts#L16)
-:::
-
-#### Example 
-
-_Using `crypto.randomUUID()` to generate view model ids_
-```ts{3}
-import { viewModelsConfig } from "mobx-view-model";
-
-viewModelsConfig.generateId = () => crypto.randomUUID();
-```
-
 ## `factory()`  
-Factory function for creating [`ViewModel`](/api/view-models/interface) instances.  
+Factory function for creating [`ViewModel`](/api/view-models/interface) / [`ViewModelSimple`](/api/view-models/view-model-simple) instances.  
 
 Can be helpful if you want to add some constructor arguments for your own [`ViewModel`](/api/view-models/interface) implementation  
 
 
-::: tip This property has default implementation [here](/src/config/global-config.ts#L25) 
+::: tip Default implementation  
+Creates `ViewModelSimple` with `new VM()`, and full `ViewModel` with `new VM({ ...config, vmConfig: mergeVMConfigs(config.vmConfig) })`. Store-level factories receive merged configuration; per-creation factories receive the raw creation config and must merge it themselves if needed.
+See [global-config.ts](https://github.com/js2me/mobx-view-model/blob/master/packages/core/src/config/global-config.ts).
 :::
 
 #### Example  
@@ -122,7 +160,7 @@ viewModelsConfig.factory = (config) => {
 }
 ```
 
-## `fallbackComponent`  
+## <ReactMark /> `fallbackComponent`  
 A component that will be rendered while the view model is in a loading or processing state.  
 This is useful for showing loading spinners, skeletons, or placeholder content.
 
@@ -134,6 +172,9 @@ viewModelsConfig.fallbackComponent = () => (
   </div>
 );
 ```
+
+## <ReactMark /> `reactHook` {#reacthook}  
+Optional default for the [`reactHook`](/react/api/with-view-model.html#reacthook) option on [`withViewModel`](/react/api/with-view-model): used when the HOC config does not set `reactHook` (resolved as `config.reactHook ?? viewModelsConfig.reactHook`).  
 
 ## `onMount`  
 A lifecycle hook that is called when a view model is mounted.  
@@ -167,8 +208,8 @@ Internal event hooks for view model stores.
 Called when a `ViewModelStore` instance is created.  
 Useful for wiring external listeners or diagnostics.
 
-## `processViewComponent`  
-A higher-order function that processes and transforms the view component before it is rendered.   
+## `processRender`
+A higher-order function that processes and transforms the view render function before it is wrapped by [`withViewModel`](/react/api/with-view-model) / Solid equivalent.   
 This function enables component composition and modification at the ViewModel level, allowing for:
 - Wrapping components with additional functionality (error boundaries, providers, etc.)
 - Injecting props or context
@@ -177,44 +218,29 @@ This function enables component composition and modification at the ViewModel le
 
 #### Example  
 ```tsx
-viewModelsConfig.processViewComponent = (Component) => {
+import { observer } from "mobx-react-lite";
+
+viewModelsConfig.processRender = (Component) => {
+  // `withViewModel` wraps the *result* in `observer`; wrap the inner view
+  // so `model` reads stay tracked when you add outer providers / boundaries.
+  const Observed = observer(Component);
   return (props) => {
     return (
       <ErrorBoundary>
-        <Component {...props} />
+        <Observed {...props} />
       </ErrorBoundary>
     )
   }
 }
 ```
-::: warning It works only for [`withViewModel` HOCs](/react/api/with-view-model)  
-:::
-
-## `wrapViewsInObserver`  
-
-Wrap View components in [`observer()` MobX HOC](https://mobx.js.org/api.html#observer)  
-This property is enabled by default.   
-
-
-You can turn off this behavior by setting `wrapViewsInObserver` to `false`.   
-Example:    
-```tsx
-import { viewModelsConfig } from "mobx-view-model";
-
-viewModelsConfig.wrapViewsInObserver = false;
-```
-
-::: warning It works only for [`withViewModel` HOCs](/react/api/with-view-model)  
-:::
+This option is used by `withViewModel` in both React and SolidJS. The example above uses React's `observer()`; use the tracking mechanism for your framework when wrapping the render function. The callback also receives the ViewModel class and HOC configuration.
 
 ## `observable`  
 
 This is a large configuration object for all base implementations in `mobx-view-model`, like `ViewModelBase` or `ViewModelStoreBase`.   
-You can modify the default behavior of wrapping in [`makeObservable()` MobX functions](https://mobx.js.org/observable-state.html#makeobservable).   
+Base implementations automatically apply MobX annotations using [`makeObservable()`](https://mobx.js.org/observable-state.html#makeobservable). Use `useDecorators` to choose the annotation style, or `custom` to provide your own annotation application function.
 
 Properties of the nested observable configs:  
-### - `disableWrapping`  
-This removes `makeObservable(this, annotations)`/`makeObservable(this)` calls  
 ### - `useDecorators`  
 This changes the style of marking `MobX` annotations from "decorators style" to "non-decorators style".   
 Very helpful if you want to write code with "non decorators style".   
@@ -224,7 +250,7 @@ Very helpful if you want to write code with "non decorators style".
 
 Example:   
 ```ts
-import { observable, action } from "mobx";
+import { observable, action, makeObservable } from "mobx";
 import {
   viewModelsConfig,
   ViewModelBase,
@@ -257,7 +283,6 @@ import { observable, action } from "mobx";
 import {
   viewModelsConfig,
   ViewModelBase,
-  ViewModelParams
 } from "mobx-view-model";
 
 viewModelsConfig.observable.viewModels.useDecorators = true;
@@ -305,18 +330,17 @@ viewModelsConfig.startViewTransitions = {
 };
 
 // Optional configurations (uncomment to use)
-// viewModelsConfig.generateId = () => crypto.randomUUID();
 // viewModelsConfig.factory = (config) => new config.VM(rootStore, config);
 // viewModelsConfig.fallbackComponent = () => <LoadingSpinner />;
 // viewModelsConfig.onMount = (vm) => console.log('Mounted:', vm.id);
 // viewModelsConfig.onUnmount = (vm) => console.log('Unmounted:', vm.id);
 ```
 
-## Possible causes of infinite re-renders due to payload access  
+## <ReactMark /> Possible causes of infinite re-renders due to payload access  
 
 The flexible configuration of the payload reactivity and update behavior can lead to infinite re-renders inside the View component.  
 This happens when the payload is changing every time the component is re-rendered.  
 
 The following ViewModel configurations can cause this problem:  
 
-{circularVmPayloadDependencyTestCases}
+@{circularVmPayloadDependencyTestCases}
