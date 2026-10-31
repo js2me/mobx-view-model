@@ -1,5 +1,11 @@
 # mobx-view-model-devtools
 
+## 0.3.1
+
+### Patch Changes
+
+- 50829c1: Restore wheel, scrollbar-thumb and touch scrolling in the popup. Let SimpleBar detect overflowing content while keeping clipping on the outer rounded popup.
+
 ## 0.3.0
 
 ### Minor Changes
