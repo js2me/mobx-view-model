@@ -1,7 +1,9 @@
 // @vitest-environment jsdom
+
 import { observable, runInAction } from 'mobx';
 import { ViewModelBase, ViewModelStoreBase } from 'mobx-view-model';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { createDemoStore } from '../../stories/fixtures/create-demo-store';
 import { DevtoolsInspector } from './devtools-inspector';
 import { DevtoolsSettings } from './devtools-settings';
 import { PropertyListItem } from './list-item/property-list-item';
@@ -159,4 +161,110 @@ it('stops watchers for disconnected data and restores them against the new sourc
     current.count = 3;
   });
   expect(currentItem.watch.history.map((entry) => entry.value)).toEqual([2, 3]);
+});
+
+it('keeps fully expanded large stores lazy, reuses visible models and prunes removed VMs', () => {
+  const demo = createDemoStore(1000);
+  inspector.setStore(demo.store);
+  inspector.expandAll();
+  expect(inspector.rows.length).toBeGreaterThan(10000);
+  expect(inspector.items.size).toBe(0);
+  const first = inspector.rows.slice(0, 40);
+  expect(inspector.items.size).toBeLessThan(40);
+  expect(inspector.rows.slice(0, 40)).toEqual(first);
+  const vm = demo.instances[0];
+  const count = inspector.items.size;
+  expect(count).toBeGreaterThan(0);
+  demo.store.unmount(vm);
+  expect(inspector.items.size).toBeLessThan(count);
+  expect(inspector.rows.at(0)?.data).not.toBe(vm);
+  demo.store.clean();
+});
+
+it('searches far and broad without materializing properties outside the viewport', () => {
+  const demo = createDemoStore(1000);
+  inspector.setStore(demo.store);
+  runInAction(() => {
+    inspector.search.searchTextToSearch = 'project-00999';
+  });
+  expect(inspector.rows.at(0)?.data).toBe(demo.instances[999]);
+  expect(inspector.items.size).toBe(0);
+  runInAction(() => {
+    inspector.search.searchTextToSearch = 'projectviewmodel';
+  });
+  expect(inspector.rows.length).toBeGreaterThan(10000);
+  expect(inspector.items.size).toBe(0);
+  inspector.rows.slice(0, 40);
+  expect(inspector.items.size).toBeLessThan(40);
+  demo.store.clean();
+});
+
+for (const query of [
+  'project-00003',
+  'projectviewmodel',
+  'requests',
+  'environment.region',
+  'project-00003.environment.',
+  'metrics.latency',
+  'tags.0',
+  'project-00003.requests',
+]) {
+  it(`preserves the existing path-search row order for ${query}`, () => {
+    const demo = createDemoStore(4);
+    inspector.setStore(demo.store);
+    runInAction(() => {
+      inspector.search.searchTextToSearch = query;
+    });
+    const expected = inspector.search
+      .getListItems(inspector.rootItems)
+      .map((item) => item.key);
+    expect(inspector.rows.slice().map((item) => item.key)).toEqual(expected);
+    demo.store.clean();
+  });
+}
+
+it('prunes watch history nodes as well as live properties after a VM is removed', () => {
+  const demo = createDemoStore(2);
+  inspector.setStore(demo.store);
+  const item = property('requests');
+  item.watch.toggle();
+  inspector.rows.slice();
+  expect(inspector.items.size).toBeGreaterThan(0);
+  demo.store.unmount(demo.instances[0]);
+  expect(
+    [...inspector.items.values()].some((cached) =>
+      cached.key.startsWith(item.key),
+    ),
+  ).toBe(false);
+  demo.store.clean();
+});
+
+it('refreshes cached parent/depth when an isolated host reports a reparenting', () => {
+  const first = { id: 'first', parentViewModel: null };
+  const second = { id: 'second', parentViewModel: null as unknown };
+  const store = {
+    viewModels: new Map([
+      ['first', first],
+      ['second', second],
+    ]),
+  };
+  inspector.setStore(store as unknown as ViewModelStoreBase);
+  const item = inspector.getVmItem(second);
+  expect(item.depth).toBe(0);
+  second.parentViewModel = first;
+  inspector.notifyVmChange();
+  expect(inspector.getVmItem(second)).toBe(item);
+  expect(item.parent?.data).toBe(first);
+  expect(item.depth).toBe(1);
+  expect(inspector.tree.roots).toEqual([first]);
+});
+
+it('drops expansion state for removed VMs that were never materialized', () => {
+  const demo = createDemoStore(1000);
+  inspector.setStore(demo.store);
+  inspector.expandAll();
+  expect(inspector.expansion.size).toBe(1000);
+  demo.store.unmount(demo.instances[999]);
+  expect(inspector.expansion.size).toBe(999);
+  demo.store.clean();
 });

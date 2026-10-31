@@ -63,3 +63,18 @@ The panel uses dark glass by default. The appearance menu also supports light an
 ## Contribution Guide    
 
 Want to contribute ? [Follow this guide](https://github.com/js2me/mobx-view-model/blob/master/CONTRIBUTING.md)  
+
+## Storybook and large stores
+
+```sh
+pnpm --filter mobx-view-model-devtools storybook
+```
+
+Open http://localhost:6006. The connected-store playground includes 100, 1,000 and 10,000 real ViewModels, flat and hierarchical stores, a fully expanded stress case, live updates and light/dark backgrounds. Controls recreate the session; buttons add/remove VM, update observable values and find the final VM. Sessions own and dispose their store, devtools, timers and animation frames.
+
+```sh
+pnpm --filter mobx-view-model-devtools build:storybook
+pnpm --filter mobx-view-model-devtools test:storybook
+```
+
+Large stores default to collapsed VM nodes above 100 VM. Expand all keeps property models lazy, and reopening reuses cached models. See [PERFORMANCE.md](./PERFORMANCE.md) for measurements, reproduction commands and limits.

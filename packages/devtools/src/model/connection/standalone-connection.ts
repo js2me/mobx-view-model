@@ -24,6 +24,7 @@ export class StandaloneConnection {
   private readonly hooks = new Map<StoreHook, () => void>();
   private readonly disposers: Array<() => void>;
   private previousVms: unknown[] = [];
+  private previousParents: unknown[] = [];
   private timer?: ReturnType<typeof setInterval>;
 
   constructor(
@@ -55,12 +56,17 @@ export class StandaloneConnection {
   }
   private check = () => {
     this.discover();
-    const vms = this.devtools.inspector.allVms;
+    const vms = this.devtools.inspector.readViewModels();
     if (
       vms.length !== this.previousVms.length ||
-      vms.some((vm, index) => vm !== this.previousVms[index])
+      vms.some(
+        (vm, index) =>
+          vm !== this.previousVms[index] ||
+          vm.parentViewModel !== this.previousParents[index],
+      )
     ) {
       this.previousVms = vms;
+      this.previousParents = vms.map((vm) => vm.parentViewModel);
       this.devtools.notifyVmChange();
     }
   };

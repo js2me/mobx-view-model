@@ -2,11 +2,7 @@ import { action, computed, makeObservable, observable, reaction } from 'mobx';
 import SimpleBar from 'simplebar';
 import { createRef } from 'yummies/mobx';
 import type { InspectorViewport } from '@/model/devtools-inspector';
-import {
-  findStickyTreeItemIndex,
-  isStickyTreeItem,
-  LIST_ITEM_HEIGHT,
-} from '@/model/inspector-scroll';
+import { isStickyTreeItem, LIST_ITEM_HEIGHT } from '@/model/inspector-scroll';
 import { ViewModelImpl } from '@/model/lib/view-model.impl';
 import type { ViewModelDevtools } from '@/model/view-model-devtools';
 
@@ -30,7 +26,7 @@ export class DevtoolsContentVM
   });
 
   get listItems() {
-    return this.devtools.inspector.listItems;
+    return this.devtools.inspector.rows;
   }
   get startIndex() {
     return Math.max(
@@ -60,13 +56,12 @@ export class DevtoolsContentVM
     return this.listItems.length * LIST_ITEM_HEIGHT;
   }
   get stickyVmItemIndex() {
-    return findStickyTreeItemIndex(
-      this.listItems,
+    return this.listItems.findStickyIndex(
       Math.floor(this.scrollOffset / LIST_ITEM_HEIGHT),
     );
   }
   get stickyVmItem() {
-    const item = this.listItems[this.stickyVmItemIndex];
+    const item = this.listItems.at(this.stickyVmItemIndex);
     return isStickyTreeItem(item) ? item : null;
   }
 

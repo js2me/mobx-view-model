@@ -1,5 +1,6 @@
 import {
   action,
+  comparer,
   computed,
   createAtom,
   makeObservable,
@@ -9,15 +10,18 @@ import {
 import { Storage } from 'mobx-swiss-knife';
 import type { AnyViewModel, ViewModelStoreBase } from 'mobx-view-model';
 import type { AnyObject, Maybe } from 'yummies/types';
+import { createInspectorRows } from './create-inspector-rows';
 import type { DevtoolsSettings } from './devtools-settings';
 import { ViewModelImpl } from './lib/view-model.impl';
 import { ExtraListItem } from './list-item/extra-list-item';
+import { getOwnerVm } from './list-item/get-owner-vm';
 import type { ListItem } from './list-item/list-item';
 import { PropertyListItem } from './list-item/property-list-item';
-import { VMListItem } from './list-item/vm-list-item';
+import { getViewModelItemKey, VMListItem } from './list-item/vm-list-item';
 import type { NotificationSink } from './notifications';
 import { InspectorSearch } from './search/search-model';
 import type { AnyVM } from './types';
+import { ViewModelTree } from './view-model-tree';
 
 export interface InspectorViewport {
   scrollTo(offset: number): void;
@@ -27,6 +31,8 @@ export interface InspectorViewport {
 export class DevtoolsInspector {
   private readonly lifetime = new AbortController();
   private readonly changed = createAtom('inspected view models');
+  private readonly layoutChanged = createAtom('inspector row layout');
+  private readonly vmItems = new Map<AnyVM, VMListItem>();
   readonly expansion = observable.map<string, boolean>();
   readonly items = new Map<string, ListItem<any>>();
   readonly search: InspectorSearch;
@@ -48,6 +54,7 @@ export class DevtoolsInspector {
       session.get({ key: 'watchedPropertyKeys' }) ?? [];
     this.search = new InspectorSearch({
       getRootItems: () => this.rootItems,
+      getRows: () => this.rows,
       getPresentationMode: () => settings.presentationMode,
       scrollToOffset: (offset) => this.viewport?.scrollTo(offset),
       initialSearchText: settings.savedSearchText,
@@ -56,8 +63,10 @@ export class DevtoolsInspector {
       store: observable.ref,
       extras: observable.ref,
       watchedPropertyKeys: observable.ref,
-      rootItems: computed.struct,
-      listItems: computed.struct,
+      allVms: computed({ equals: comparer.shallow }),
+      tree: computed,
+      rootItems: computed,
+      rows: computed,
       isActive: computed,
       setStore: action.bound,
       setExtras: action.bound,
@@ -66,6 +75,29 @@ export class DevtoolsInspector {
       expandAll: action.bound,
       collapseAll: action.bound,
     });
+    reaction(
+      () => this.tree,
+      (tree, previous) => {
+        const live = new Set(tree.viewModels);
+        const removed = new Set<AnyVM>();
+        for (const vm of previous.viewModels) {
+          if (live.has(vm)) continue;
+          removed.add(vm);
+          this.vmItems.delete(vm);
+          this.expansion.delete(getViewModelItemKey(vm));
+        }
+        if (!removed.size) return;
+        for (const [key, item] of this.items) {
+          const owner = getOwnerVm(item);
+          if (owner && removed.has(owner)) {
+            if (item instanceof PropertyListItem) item.destroy();
+            this.expansion.delete(item.key);
+            this.items.delete(key);
+          }
+        }
+      },
+      { signal: this.lifetime.signal },
+    );
     session.syncProperty(this, 'watchedPropertyKeys');
     settings.persistSearch(this.search);
     reaction(
@@ -77,6 +109,9 @@ export class DevtoolsInspector {
 
   get allVms(): AnyVM[] {
     this.changed.reportObserved();
+    return this.readViewModels();
+  }
+  readViewModels(): AnyVM[] {
     const map = (
       this.store as unknown as { viewModels?: Map<string, AnyVM> } | undefined
     )?.viewModels;
@@ -85,16 +120,37 @@ export class DevtoolsInspector {
         !Object.prototype.isPrototypeOf.call(ViewModelImpl, vm.constructor),
     );
   }
+  get tree() {
+    this.changed.reportObserved();
+    return new ViewModelTree(this.allVms);
+  }
+  get autoExpandViewModels() {
+    return this.allVms.length <= 100;
+  }
+  getVmItem(vm: AnyVM): VMListItem {
+    const cached = this.vmItems.get(vm);
+    if (cached) return cached;
+    const item = new VMListItem(this, vm);
+    this.vmItems.set(vm, item);
+    return item;
+  }
+
   get rootItems(): ListItem<any>[] {
-    const vms = this.allVms;
-    const roots: ListItem<any>[] = vms
-      .filter((vm) => vm.parentViewModel == null)
-      .map((vm) => new VMListItem(this, vm, vms));
+    const roots: ListItem<any>[] = this.tree.roots.map((vm) =>
+      this.getVmItem(vm),
+    );
     if (this.extras) roots.push(new ExtraListItem(this, this.extras));
     return roots;
   }
+  get rows() {
+    this.layoutChanged.reportObserved();
+    return createInspectorRows(this);
+  }
   get listItems() {
-    return this.search.getListItems(this.rootItems);
+    return this.rows.slice();
+  }
+  notifyLayoutChange() {
+    this.layoutChanged.reportChanged();
   }
   get isActive() {
     return !!this.store || Object.keys(this.extras ?? {}).length > 0;
@@ -123,23 +179,26 @@ export class DevtoolsInspector {
   }
   isExpandable(item: VMListItem) {
     return this.settings.presentationMode === 'list'
-      ? item.children.some((child) => !(child instanceof VMListItem))
+      ? item.propertyKeys.length > 0
       : item.isExpandable;
   }
   private clearExpansion() {
     this.expansion.clear();
   }
   expandAll() {
-    for (const item of this.rootItems) item.expand();
+    for (const vm of this.allVms)
+      this.expansion.set(`${vm.constructor.name}-${vm.id}`, true);
   }
   collapseAll() {
-    for (const item of this.rootItems) item.collapse();
+    for (const vm of this.allVms)
+      this.expansion.set(`${vm.constructor.name}-${vm.id}`, false);
   }
   private clearItems() {
     for (const item of this.items.values()) {
       if (item instanceof PropertyListItem) item.destroy();
     }
     this.items.clear();
+    this.vmItems.clear();
   }
   destroy() {
     this.lifetime.abort();

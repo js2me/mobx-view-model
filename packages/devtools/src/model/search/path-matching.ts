@@ -155,16 +155,14 @@ function getOwnerMatchedPathCandidates(
 
 export function collectAllVMs(rootItems: ListItem<any>[]): VMListItem[] {
   const result: VMListItem[] = [];
-  const traverse = (item: ListItem<any>) => {
-    if (item instanceof VMListItem) {
-      result.push(item);
-      for (const child of item.children) {
-        traverse(child);
-      }
-    }
-  };
-  for (const item of rootItems) {
-    traverse(item);
+  const stack = [...rootItems].reverse();
+  while (stack.length) {
+    const item = stack.pop()!;
+    if (!(item instanceof VMListItem)) continue;
+    result.push(item);
+    const children = item.childVMListItems;
+    for (let index = children.length - 1; index >= 0; index--)
+      stack.push(children[index]);
   }
   return result;
 }
@@ -191,6 +189,14 @@ export function getCandidatePropsAtDepth(
   for (const vm of allVMs) {
     if (!isOwnerAllowedForFirstPathSegment(ctx, vm, firstSeg)) continue;
 
+    const nameMatches =
+      vm.searchData.name.includes(firstSeg) ||
+      vm.searchData.id.includes(firstSeg);
+    if (
+      !nameMatches &&
+      !vm.propertyKeys.some((key) => key.toLowerCase() === firstSeg)
+    )
+      continue;
     const directProps = getDirectPropertyChildren(vm);
     const firstSegmentIsExactProperty = directProps.some((prop) =>
       propertyMatchesSegmentExact(prop, firstSeg),

@@ -36,6 +36,7 @@ export class PropertyWatch {
   }
   toggle() {
     this.isWatching = !this.isWatching;
+    this.item.inspector.notifyLayoutChange();
     if (this.isWatching) {
       this.item.inspector.addWatchedPropertyKey(this.item.key);
       this.record();
@@ -51,9 +52,11 @@ export class PropertyWatch {
   }
   clear() {
     this.history.length = 0;
+    this.item.inspector.notifyLayoutChange();
   }
   private record() {
     const value = capturePropertyWatchValue(this.item.data);
+    this.item.inspector.notifyLayoutChange();
     this.history.push({
       id: ++entryId,
       timestamp: Date.now(),

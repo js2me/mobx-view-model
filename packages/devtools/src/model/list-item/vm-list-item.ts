@@ -1,5 +1,5 @@
 import { ArrowsRotateRight } from '@gravity-ui/icons';
-import { computed, makeObservable, untracked } from 'mobx';
+import { computed, makeObservable } from 'mobx';
 import { isViewModel } from 'mobx-view-model';
 import type { DevtoolsInspector } from '../devtools-inspector';
 import { forceUpdateViewModel } from '../editing/force-update-view-model';
@@ -11,29 +11,36 @@ import { ListItem, type ListItemOperation } from './list-item';
 import { PropertyListItem } from './property-list-item';
 
 export class VMListItem extends ListItem<AnyVM> {
-  private get childVMListItems(): VMListItem[] {
-    this.dataWatchAtom.reportObserved();
-
-    return this.allVms
-      .filter((maybeChildVm) => {
-        return maybeChildVm.parentViewModel === this.data;
-      })
-      .map((it) => new VMListItem(this.inspector, it, this.allVms, this));
+  get isExpanded() {
+    return (
+      this.inspector.expansion.get(this.key) ??
+      this.inspector.autoExpandViewModels
+    );
+  }
+  get isExpandable() {
+    return (
+      this.propertyKeys.length > 0 ||
+      (this.inspector.tree.children.get(this.data)?.length ?? 0) > 0
+    );
+  }
+  get childVMListItems(): VMListItem[] {
+    return (this.inspector.tree.children.get(this.data) ?? []).map((vm) =>
+      this.inspector.getVmItem(vm),
+    );
+  }
+  get propertyKeys() {
+    let keys = getAllKeys(this.data);
+    if (this.inspector.settings.hideViewModelBaseMembers) {
+      const baseKeys = getViewModelBaseKeys();
+      keys = keys.filter((key) => !baseKeys.has(key));
+    }
+    return sortPropertyKeys(keys, this.inspector.settings.sortPropertiesBy);
   }
 
   private get propertyListItems(): PropertyListItem[] {
     this.dataWatchAtom.reportObserved();
 
-    let keys = getAllKeys(this.data);
-
-    if (this.inspector.settings.hideViewModelBaseMembers) {
-      const baseKeys = getViewModelBaseKeys();
-      keys = keys.filter((key) => !baseKeys.has(key));
-    }
-
-    keys = sortPropertyKeys(keys, this.inspector.settings.sortPropertiesBy);
-
-    return keys.map((property, order) => {
+    return this.propertyKeys.map((property, order) => {
       return PropertyListItem.create(
         this.inspector,
         property,
@@ -83,11 +90,19 @@ export class VMListItem extends ListItem<AnyVM> {
   }
 
   get depth(): number {
-    if (this.parent && this.inspector.settings.presentationMode === 'tree') {
-      return this.parent.depth + 1;
+    if (this.inspector.settings.presentationMode !== 'tree') return 0;
+    let depth = 0;
+    let vm = this.inspector.tree.parents.get(this.data);
+    while (vm) {
+      depth++;
+      vm = this.inspector.tree.parents.get(vm);
     }
+    return depth;
+  }
 
-    return 0;
+  get parent(): VMListItem | undefined {
+    const vm = this.inspector.tree.parents.get(this.data);
+    return vm ? this.inspector.getVmItem(vm) : undefined;
   }
 
   get parentLabel(): string | null {
@@ -98,14 +113,9 @@ export class VMListItem extends ListItem<AnyVM> {
 
   displayName;
 
-  constructor(
-    inspector: DevtoolsInspector,
-    vm: AnyVM,
-    private allVms: AnyVM[],
-    private parent?: VMListItem,
-  ) {
+  constructor(inspector: DevtoolsInspector, vm: AnyVM) {
     const displayName = vm.constructor.name;
-    const key = `${displayName}-${vm.id}`;
+    const key = getViewModelItemKey(vm);
 
     super(inspector, key, vm);
 
@@ -115,14 +125,12 @@ export class VMListItem extends ListItem<AnyVM> {
       id: (vm.id || '').toLowerCase().trim(),
     };
 
+    computed(this, 'propertyKeys');
     computed.struct(this, 'childVMListItems');
     computed.struct(this, 'propertyListItems');
     makeObservable(this);
-
-    untracked(() => {
-      if (!this.inspector.expansion.has(this.key)) {
-        this.expand();
-      }
-    });
   }
 }
+
+export const getViewModelItemKey = (vm: AnyVM) =>
+  `${vm.constructor.name}-${vm.id}`;

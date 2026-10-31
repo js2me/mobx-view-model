@@ -11,7 +11,10 @@
       "tests/**/*.ts",
       "scripts/**/*.ts",
       "scripts/**/*.mjs",
-      "*.ts"
+      "*.ts",
+      "stories/**/*.ts",
+      "stories/**/*.tsx",
+      ".storybook/**/*.ts"
     ]
   }
 }

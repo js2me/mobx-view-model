@@ -1,4 +1,6 @@
 import type { ListItem } from '../list-item/list-item';
+import { PropertyListItem } from '../list-item/property-list-item';
+import { VMListItem } from '../list-item/vm-list-item';
 import { getSearchPathParts } from './parse-search-path';
 import {
   getOwnerInfo as filterGetOwnerInfo,
@@ -35,7 +37,10 @@ export function buildSearchSuggestions(
     return [];
   }
 
-  const candidates = getCandidatePropsAtDepth(ctx, rootItems, pathSegments);
+  const candidates =
+    pathSegments.length === 0
+      ? topLevelCandidates(rootItems, completingSegment)
+      : getCandidatePropsAtDepth(ctx, rootItems, pathSegments);
   const suggestionsByVM = new Map<string, SearchSuggestion[]>();
   const seen = new Set<string>();
 
@@ -84,4 +89,33 @@ export function buildSearchSuggestions(
   }
 
   return result;
+}
+
+function* topLevelCandidates(
+  roots: ListItem<any>[],
+  prefix: string,
+): Generator<PropertyListItem> {
+  const stack = [...roots].reverse();
+  const counts = new Map<string, number>();
+  while (stack.length) {
+    const owner = stack.pop()!;
+    if (!(owner instanceof VMListItem)) {
+      yield* owner.children.filter(
+        (item): item is PropertyListItem => item instanceof PropertyListItem,
+      );
+      continue;
+    }
+    const count = counts.get(owner.displayName) ?? 0;
+    if (count < 10) {
+      for (const [order, key] of owner.propertyKeys.entries()) {
+        if (!key.toLowerCase().includes(prefix)) continue;
+        yield PropertyListItem.create(owner.inspector, key, key, order, owner);
+        counts.set(owner.displayName, (counts.get(owner.displayName) ?? 0) + 1);
+        if (counts.get(owner.displayName)! >= 10) break;
+      }
+    }
+    const children = owner.childVMListItems;
+    for (let index = children.length - 1; index >= 0; index--)
+      stack.push(children[index]);
+  }
 }

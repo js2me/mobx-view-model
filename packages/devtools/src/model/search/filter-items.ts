@@ -103,7 +103,7 @@ function getVMSearchItems(
   const firstSeg = ctx.segments[0] ?? '';
 
   if (isPathOwnerLockedToAnotherOwner(ctx, vmItem, firstSeg)) {
-    for (const child of vmItem.children) {
+    for (const child of vmItem.childVMListItems) {
       if (child instanceof VMListItem) {
         result.push(...getVMSearchItems(ctx, child));
       }
@@ -112,7 +112,7 @@ function getVMSearchItems(
   }
 
   if (!vmMatchesSearch(ctx, vmItem)) {
-    for (const child of vmItem.children) {
+    for (const child of vmItem.childVMListItems) {
       if (child instanceof VMListItem) {
         result.push(...getVMSearchItems(ctx, child));
       }
@@ -166,10 +166,8 @@ export function vmMatchesSearch(ctx: SearchContext, item: VMListItem): boolean {
     return true;
   }
 
-  return item.children.some(
-    (child) =>
-      child instanceof PropertyListItem &&
-      propertyMatchesSegmentPartial(child, firstSegment),
+  return item.propertyKeys.some((key) =>
+    key.toLowerCase().includes(firstSegment),
   );
 }
 
@@ -246,7 +244,7 @@ export function isPropertySearchAutoExpanded(
   return remainingAtLevel.length > 1 || ctx.endsWithDot;
 }
 
-function getPropertySearchItems(
+export function getPropertySearchItems(
   ctx: SearchContext,
   properties: PropertyListItem[],
   propSegments: string[],

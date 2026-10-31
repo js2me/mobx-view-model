@@ -34,6 +34,7 @@ export type { SearchSuggestion } from './suggestions';
 interface InspectorSearchConfig {
   scrollToOffset: (offset: number) => void;
   getRootItems: () => ListItem<any>[];
+  getRows?: () => import('../inspector-rows').InspectorRows;
   getPresentationMode: () => 'tree' | 'list';
   initialSearchText?: string;
 }
@@ -58,7 +59,7 @@ export class InspectorSearch {
 
   private static readonly searchDebounceMs = 150;
 
-  private get searchContext(): SearchContext {
+  get searchContext(): SearchContext {
     return {
       segments: this.segments,
       endsWithDot: this.endsWithDot,
@@ -118,6 +119,7 @@ export class InspectorSearch {
   }
 
   private buildSuggestionItemsForText(text: string) {
+    if (!text.trim()) return [];
     return buildSearchSuggestions(
       text,
       this.searchContext,
@@ -365,6 +367,21 @@ export class InspectorSearch {
   private scrollToFirstSearchMatch() {
     if (!this.isActive) return;
 
+    const rows = this.config.getRows?.();
+    if (rows) {
+      for (let index = 0; index < rows.length; index++) {
+        const item = rows.at(index);
+        if (item && filterIsSearchTargetMatched(this.searchContext, item)) {
+          const padding =
+            rows.findStickyIndex(index) >= 0 ? LIST_ITEM_HEIGHT : 0;
+          this.config.scrollToOffset(
+            Math.max(0, index * LIST_ITEM_HEIGHT - padding),
+          );
+          return;
+        }
+      }
+      return;
+    }
     const ctx = this.searchContext;
     const listItems = this.getListItems(this.config.getRootItems());
     const index = listItems.findIndex((item) =>
