@@ -450,6 +450,29 @@ importers:
         version: link:../devtools/dist
     publishDirectory: dist
 
+  packages/vue:
+    dependencies:
+      mobx-view-model:
+        specifier: workspace:*
+        version: link:../core/dist
+      yummies:
+        specifier: ^7.20.1
+        version: 7.20.1(mobx@6.15.0)(react@19.2.5)
+    devDependencies:
+      '@vue/server-renderer':
+        specifier: ^3.5.0
+        version: 3.5.32(vue@3.5.32(typescript@6.0.3))
+      jsdom:
+        specifier: ^26.1.0
+        version: 26.1.0(supports-color@5.5.0)
+      mobx:
+        specifier: ^6.12.4
+        version: 6.15.0
+      vue:
+        specifier: ^3.5.0
+        version: 3.5.32(typescript@6.0.3)
+    publishDirectory: dist
+
   tests/react-regressions/react18:
     dependencies:
       mobx:

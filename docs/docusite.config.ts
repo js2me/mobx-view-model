@@ -276,6 +276,21 @@ export default defineConfig({
         ],
       },
       {
+        text: 'Vue',
+        link: '/vue/integration',
+        items: [
+          { text: 'Integration', link: '/vue/integration' },
+          { text: 'SSR', link: '/vue/ssr' },
+          { text: 'observer', link: '/vue/api/observer' },
+          { text: 'withViewModel', link: '/vue/api/with-view-model' },
+          { text: 'withPropsViewModel', link: '/vue/api/with-props-view-model' },
+          { text: 'ViewModelsProvider', link: '/vue/api/view-models-provider' },
+          { text: 'useViewModel', link: '/vue/api/use-view-model' },
+          { text: 'useCreateViewModel', link: '/vue/api/use-create-view-model' },
+          { text: 'OnlyViewModel', link: '/vue/api/only-view-model' },
+        ],
+      },
+      {
         text: 'SolidJS <SolidMark />',
         link: '/solid/integration',
         items: [
