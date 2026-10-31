@@ -12,7 +12,6 @@ export default defineConfig({
     hookTimeout: 10000,
     teardownTimeout: 10000,
     include: ['src/**/*.test.ts', 'src/**/*.test.tsx'],
-    exclude: ['src/**/*.ssr.test.ts', 'src/**/*.ssr.test.tsx'],
     coverage: {
       provider: 'istanbul',
       include: ['src/**/*.{ts,tsx}'],

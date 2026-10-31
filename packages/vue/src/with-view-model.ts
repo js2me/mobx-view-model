@@ -8,7 +8,7 @@ import type {
 } from 'mobx-view-model';
 import { viewModelsConfig } from 'mobx-view-model';
 import type { Component, PropType, VNodeChild } from 'vue';
-import { defineComponent, getCurrentInstance, h, useAttrs } from 'vue';
+import { defineComponent, getCurrentInstance, h, provide, useAttrs } from 'vue';
 import type {
   AnyObject,
   Class,
@@ -16,6 +16,7 @@ import type {
   IsPartial,
   Maybe,
 } from 'yummies/types';
+import { getModelRevision, ModelRevisionKey } from './model-revision.js';
 import { observer } from './observer.js';
 import { useRenderAllowed } from './render-state.js';
 import type { UseCreateViewModelConfig, VRenderFn } from './types.js';
@@ -200,10 +201,10 @@ export function withViewModel(
   const processRender =
     config.vmConfig?.processRender ?? viewModelsConfig.processRender;
   const SourceView = observer(rawView);
-  const renderFn =
-    typeof rawView === 'function'
-      ? rawView
-      : (props: AnyObject) => h(SourceView, props);
+  // processRender calls this inside the processed view's render context.
+  // That context carries Vue slots, including scoped slots.
+  const renderFn = (props: AnyObject) =>
+    h(SourceView, props, getCurrentInstance()?.slots);
   const processed = processRender?.(
     renderFn as VRenderFn<AnyObject>,
     VM,
@@ -244,6 +245,7 @@ export function withViewModel(
         allProps,
       ) as AnyViewModel | AnyViewModelSimple;
       provideActiveViewModel(model);
+      provide(ModelRevisionKey, getModelRevision(model));
       const store = useViewModelsStore();
       (config.vueHook ?? viewModelsConfig.reactHook)?.(
         allProps,

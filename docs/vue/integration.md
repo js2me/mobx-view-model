@@ -100,13 +100,15 @@ With a store in place, you can use [`useViewModel()`](/vue/api/use-view-model) w
 
 ::: tip [`isMounted`](/api/view-models/interface#ismounted-boolean) state
 
-As in Solid, [`mount()`](/api/view-models/interface#mount-void-promise-void) starts during setup. Synchronous models are ready on the first render; asynchronous models display the configured fallback until mounting completes.
+As in Solid, [`mount()`](/api/view-models/interface#mount-void-promise-void) starts during setup. Synchronous full models are ready on the first render. `withViewModel` and `withPropsViewModel` show a fallback while a full model mounts asynchronously; `OnlyViewModel` hides its content. The `useCreateViewModel` composable itself returns immediately and does not gate rendering. Simple models render immediately.
 
 :::
 
 ::: warning Do not call [`mount()`](/api/view-models/interface#mount-void-promise-void) or [`unmount()`](/api/view-models/interface#unmount-void-promise-void) manually
 
-These are already invoked by the [store base implementation](/api/view-model-store/base-implementation) or by [`useCreateViewModel()`](/vue/api/use-create-view-model).
+For component-owned models, these methods are managed by [`useCreateViewModel()`](/vue/api/use-create-view-model) and the HOCs that use it.
+
+Models created manually with `store.define()` or `store.create()` need explicit lifecycle handling: `await model.mount()`, followed by `store.unmount(model)` when their owner is disposed. The store does not automatically mount a manually created model.
 
 :::
 

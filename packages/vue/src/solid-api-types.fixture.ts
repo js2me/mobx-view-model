@@ -1,6 +1,7 @@
 import { ViewModelBase } from 'mobx-view-model';
 import { h } from 'vue';
 import {
+  OnlyViewModel,
   type PropsVMComponentProps,
   useViewModel,
   type ViewModelPropsChargedProps,
@@ -54,4 +55,19 @@ export function checkTypes() {
     model: found,
   };
   return { foundProps, vmProps, charged };
+}
+
+export function checkOnlyViewModelTypes() {
+  OnlyViewModel({ model: VM, payload: { label: 'one', count: 1 } });
+  OnlyViewModel({
+    model: VM,
+    payload: { label: 'one', count: 1 },
+    children: (model) => h('div', model.specific ? model.payload.label : ''),
+  });
+  // @ts-expect-error a non-partial payload is required
+  OnlyViewModel({ model: VM });
+  // @ts-expect-error payload must match the selected model
+  OnlyViewModel({ model: VM, payload: { label: 'one', count: 'invalid' } });
+  class OptionalVM extends ViewModelBase<{ label?: string }> {}
+  OnlyViewModel({ model: OptionalVM });
 }

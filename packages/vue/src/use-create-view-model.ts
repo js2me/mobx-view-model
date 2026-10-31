@@ -16,6 +16,8 @@ import {
   watch,
 } from 'vue';
 import type { AnyObject, Class, IsPartial } from 'yummies/types';
+import { retainModel } from './model-ownership.js';
+import { registerModelRevision } from './model-revision.js';
 import type {
   UseCreateViewModelConfig,
   ViewModelPayloadSource,
@@ -72,13 +74,14 @@ export function useCreateViewModel(
   const store = useViewModelsStore();
   const parentViewModel = useActiveViewModel();
   const id = useId();
+  const initialPayload = resolvePayload(payload);
   const config: ViewModelCreateConfig<any> = {
     ...rawConfig,
     id:
       rawConfig?.id ??
       (process.env.NODE_ENV === 'production' ? id : `${id}:${VM.name}`),
     VM,
-    payload: resolvePayload(payload),
+    payload: initialPayload,
     parentViewModel,
     viewModels: store ?? undefined,
     ctx: rawConfig?.ctx ?? {},
@@ -99,13 +102,22 @@ export function useCreateViewModel(
     if (store) store.connect(model, config);
     else model.init?.({ ...config, viewModels: undefined });
   }
-  // Match Solid: initialize and start mounting during component setup.
-  const mountResult =
-    isViewModel(model) && model.isMounted ? undefined : model.mount?.();
   if (isViewModelSimple(model)) {
     model.parentViewModel = parentViewModel;
-    model.setPayload?.(resolvePayload(payload));
+    model.setPayload?.(initialPayload);
   }
+  const revision = isViewModelSimple(model)
+    ? registerModelRevision(model)
+    : null;
+  const retained = store ? retainModel(store, model) : null;
+  // Payload and parent must be available to simple-model mount hooks.
+  const mountResult =
+    retained && retained.ownership.count > 1
+      ? retained.ownership.mountResult
+      : isViewModel(model) && model.isMounted
+        ? undefined
+        : model.mount?.();
+  if (retained) retained.ownership.mountResult = mountResult;
   // Route asynchronous client failures through Vue lifecycle error handling.
   onMounted(() => mountResult);
   // Vue awaits server-prefetch before rendering the subtree.
@@ -113,13 +125,14 @@ export function useCreateViewModel(
     if (viewModelsConfig.mode === 'ssr') await mountResult;
   });
   onBeforeUnmount(() => {
-    if (store) void store.unmount(model);
+    if (retained) retained.release();
     else void model.unmount?.();
   });
   watch(
     () => resolvePayload(payload),
     (next) => {
       model.setPayload?.(next);
+      if (revision) revision.value++;
     },
   );
   return model;

@@ -44,6 +44,15 @@ const ActiveViewModelProvider: DefineComponent<{
 ### Usage
 
 ```vue
+<script setup lang="ts">
+import { ViewModelBase } from 'mobx-view-model';
+import { ActiveViewModelProvider, useCreateViewModel } from 'mobx-view-model-vue';
+import ChildThatCallsUseViewModelWithoutArgs from './ChildThatCallsUseViewModelWithoutArgs.vue';
+
+class PageVM extends ViewModelBase {}
+const model = useCreateViewModel(PageVM);
+</script>
+
 <template>
   <ActiveViewModelProvider :value="model">
     <ChildThatCallsUseViewModelWithoutArgs />

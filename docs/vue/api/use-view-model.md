@@ -1,49 +1,68 @@
 # `useViewModel`
 
-Composable that returns an **already created** [ViewModel](/api/view-models/overview) instance.
+Returns an already created model. Call it inside Vue `setup()` or `<script setup>`. To create a model, use `useCreateViewModel`, `withViewModel`, or `withPropsViewModel`.
 
-::: tip To **create** a view model
+## Active model
 
-Use [`useCreateViewModel()`](/vue/api/use-create-view-model) or [`withViewModel()`](/vue/api/with-view-model).
-
-:::
-
-## API signature
+The nearest `withViewModel` / `withPropsViewModel` wrapper or `ActiveViewModelProvider` provides the active model.
 
 ```ts
-function useViewModel<T extends AnyViewModel | AnyViewModelSimple>(
-  vmLookup?: ViewModelLookup<T>,
-): T;
-```
-
-## Usage
-
-### 1. Active view model (no argument)
-
-Requires an active model from [`withViewModel()`](/vue/api/with-view-model) (which provides it) or from [`ActiveViewModelProvider`](/vue/api/view-models-provider#activeviewmodelprovider).
-
-```ts
+import { defineComponent, h } from 'vue';
+import { ViewModelBase } from 'mobx-view-model';
 import { useViewModel } from 'mobx-view-model-vue';
 
-const yourVM = useViewModel<YourVM>();
+class PageVM extends ViewModelBase {}
+
+export const Child = defineComponent({
+  setup() {
+    const model = useViewModel<PageVM>();
+    return () => h('span', model.id);
+  },
+});
 ```
 
-### 2. Lookup with [ViewModelLookup](/api/other/view-model-lookup)
+## Lookup by ID or class
 
-Requires [`ViewModelsProvider`](/vue/api/view-models-provider) with a connected store.
+Provide a store using `ViewModelsProvider`. Strings are IDs; class lookups use the constructor.
 
 ```ts
-const yourVM = useViewModel<YourVM>('view-model-id');
+import { defineComponent, h } from 'vue';
+import { ViewModelBase } from 'mobx-view-model';
+import { useViewModel } from 'mobx-view-model-vue';
+
+class PageVM extends ViewModelBase {}
+
+export const Child = defineComponent({
+  setup() {
+    const byId = useViewModel<PageVM>('page-id');
+    const byClass = useViewModel(PageVM);
+    return () => h('span', `${byId.id}:${byClass.id}`);
+  },
+});
 ```
 
-### 3. Lookup by anchor component
-
-Same as React: register anchors in [`withViewModel` config](/vue/api/with-view-model#anchors) or via [`connect()`](/vue/api/with-view-model#connectanchor).
+## Lookup by connected component or anchor
 
 ```ts
-const Anchor = defineComponent({ name: 'Anchor', setup: () => () => null });
-const MainView = withViewModel(VM, View, { anchors: [Anchor] });
+import { defineComponent, h } from 'vue';
+import { ViewModelBase } from 'mobx-view-model';
+import { useViewModel, withViewModel } from 'mobx-view-model-vue';
 
-// In a child:
-const model = useViewModel<VM>(Anchor);
+class PageVM extends ViewModelBase {}
+const Anchor = defineComponent({ render: () => null });
+
+const Child = defineComponent({
+  setup() {
+    const byAnchor = useViewModel<PageVM>(Anchor);
+    const byComponent = useViewModel(Page);
+    return () => h('span', `${byAnchor.id}:${byComponent.id}`);
+  },
+});
+
+export const Page = withViewModel(PageVM, () => h(Child), {
+  id: 'page-id',
+  anchors: [Anchor],
+});
 ```
+
+Render `Page` under `ViewModelsProvider`. `.connect(Anchor)` can also register an anchor. The connected component lookup infers its model type.

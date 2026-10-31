@@ -1,6 +1,6 @@
 # Server-Side Rendering (Vue)
 
-Set `viewModelsConfig.mode = 'ssr'` at application startup to let Vue await model mounting through `onServerPrefetch`. This works with synchronous and asynchronous `mount()` implementations, with or without a store. As in Solid, model mounting starts during setup. In the default `csr-only` mode, synchronous models can render immediately, while models still mounting render the fallback.
+Set `viewModelsConfig.mode = 'ssr'` at application startup to let Vue await model mounting through `onServerPrefetch`. For SSR models with mount-time resources, provide a separate request-scoped store and dispose its models in a `finally` block after rendering. Vue does not run component unmount hooks on the server; the store makes all request-owned models available for explicit cleanup. As in Solid, model mounting starts during setup. In the default `csr-only` mode, synchronous models can render immediately, while full models still mounting render the fallback. Simple models render immediately.
 
 Create a separate store for each request. Use stable IDs and identical payloads on server and client when hydrating.
 
@@ -40,3 +40,5 @@ If you pre-create a model, use `store.define(config)` and `await model.mount()`.
 Vue 3.5 or newer is required for `useId()`, which supplies per-application IDs compatible with hydration. Use the same app `idPrefix` on server and client.
 
 For request stores containing multiple model classes, track every created model and unmount each before clearing the store indexes. `getAll` requires a class, ID, or anchor lookup; `getAll(null)` returns an empty array.
+
+Do not rely on Vue component unmount hooks for no-store SSR models. Use the request-store pattern above for automatic component creation with explicit request cleanup.

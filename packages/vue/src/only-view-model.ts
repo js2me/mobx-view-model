@@ -20,7 +20,7 @@ export type OnlyViewModelProps<TViewModel extends AnyViewModel> = {
       config?: UseCreateViewModelConfig<TViewModel>;
     });
 
-export const OnlyViewModel = observer(
+const OnlyViewModelImpl = observer(
   defineComponent({
     name: 'OnlyViewModel',
     props: {
@@ -62,3 +62,9 @@ export const OnlyViewModel = observer(
     },
   }),
 );
+
+export const OnlyViewModel = OnlyViewModelImpl as unknown as <
+  TViewModel extends AnyViewModel,
+>(
+  props: OnlyViewModelProps<TViewModel>,
+) => VNodeChild;

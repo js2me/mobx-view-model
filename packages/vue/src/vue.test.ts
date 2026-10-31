@@ -50,10 +50,10 @@ describe('vue integration', () => {
     }
 
     const payload = ref({ count: 1 });
-
+    let model!: BaseVm;
     const Root = defineComponent({
       setup() {
-        useCreateViewModel(BaseVm, payload);
+        model = useCreateViewModel(BaseVm, payload);
         return () => h('div');
       },
     });
@@ -61,6 +61,7 @@ describe('vue integration', () => {
     const { unmount } = mount(Root);
     await nextTick();
 
+    expect(model.payload).toEqual({ count: 1 });
     expect(payloadChanges).toEqual([]);
 
     payload.value = { count: 2 };

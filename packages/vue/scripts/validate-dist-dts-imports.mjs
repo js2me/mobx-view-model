@@ -4,7 +4,7 @@ import { resolve } from 'node:path';
 const distDir = resolve(process.cwd(), 'dist');
 const dtsFiles = readdirSync(distDir).filter((name) => name.endsWith('.d.ts'));
 const absoluteImportPattern =
-  /(from\s+['"](?:\/|[A-Za-z]:\\)|import\(\s*['"](?:\/|[A-Za-z]:\\)|export\s+\*\s+from\s+['"](?:\/|[A-Za-z]:\\))/;
+  /(from\s+['"](?:\/|[A-Za-z]:[\\/])|import\(\s*['"](?:\/|[A-Za-z]:[\\/])|export\s+\*\s+from\s+['"](?:\/|[A-Za-z]:[\\/]))/;
 
 const violations = [];
 

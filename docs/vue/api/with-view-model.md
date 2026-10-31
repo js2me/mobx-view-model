@@ -44,13 +44,25 @@ Fallback precedence is `config.fallback`, `config.vmConfig.fallbackComponent`, t
 Returns the connected component and registers another anchor for the same model:
 
 ```ts
-const Page = withViewModel(UserVM, ({ model }) => h('div', model.id));
-Page.connect(AnchorComponent);
+import { defineComponent, h } from 'vue';
+import { ViewModelBase } from 'mobx-view-model';
+import { useViewModel, withViewModel } from 'mobx-view-model-vue';
 
-// In a descendant, with ViewModelsProvider:
-const model = useViewModel<UserVM>(AnchorComponent);
-// The connected component itself is also a typed lookup:
-const sameModel = useViewModel(Page);
+class PageVM extends ViewModelBase {}
+const Anchor = defineComponent({ render: () => null });
+const Child = defineComponent({
+  setup() {
+    const byAnchor = useViewModel<PageVM>(Anchor);
+    const byComponent = useViewModel(Page);
+    return () => h('span', `${byAnchor.id}:${byComponent.id}`);
+  },
+});
+
+export const Page = withViewModel(PageVM, () => h(Child));
+Page.connect(Anchor);
 ```
+
+Render `Page` under `ViewModelsProvider`. The connected component lookup infers the model type.
+
 
 There is no curried `withViewModel(VM)(View)` overload, matching the Solid API. Use `withViewModel(VM, View, config)`.

@@ -184,10 +184,16 @@ describe('Solid API parity', () => {
   });
 
   it('does not apply the full-model mount gate to simple models', () => {
-    class VM { readonly isMounted = false; }
+    class VM {
+      readonly isMounted = false;
+    }
     const Page = withViewModel(VM, () => h('span', 'simple'));
     const result = mount(defineComponent({ setup: () => () => h(Page) }));
-    try { expect(result.el.textContent).toBe('simple'); } finally { result.unmount(); }
+    try {
+      expect(result.el.textContent).toBe('simple');
+    } finally {
+      result.unmount();
+    }
   });
 
   it('tracks props added to or removed from an initially empty payload', async () => {
@@ -353,7 +359,7 @@ describe('Solid API parity', () => {
     const result = mount(
       defineComponent({
         setup: () => () =>
-          h(OnlyViewModel, {
+          h(OnlyViewModel<VM>, {
             model: VM,
             payload: { count: count.value },
             children: (model: VM) => h('span', String(model.payload.count)),
