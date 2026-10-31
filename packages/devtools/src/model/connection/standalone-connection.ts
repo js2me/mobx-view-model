@@ -25,6 +25,7 @@ export class StandaloneConnection {
   private readonly hooks = new Map<StoreHook, () => void>();
   private readonly disposers: Array<() => void>;
   private timer?: ReturnType<typeof setInterval>;
+  private hasReportedUnsupportedStore = false;
 
   constructor(
     private readonly devtools: ViewModelDevtools,
@@ -47,6 +48,12 @@ export class StandaloneConnection {
     try {
       getStoreViewModels(store);
     } catch {
+      if (!this.hasReportedUnsupportedStore) {
+        this.hasReportedUnsupportedStore = true;
+        console.warn(
+          '[mobx-view-model-devtools] Skipped an unsupported store: viewModels.values() must return an iterable.',
+        );
+      }
       return;
     }
     this.devtools.setStore(store);

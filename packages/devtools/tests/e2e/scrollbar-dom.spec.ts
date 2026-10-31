@@ -158,6 +158,14 @@ test('ignores unsupported store announcements without replacing the connected ho
   page,
 }) => {
   const errors: string[] = [];
+  const warnings: string[] = [];
+  page.on('console', (message) => {
+    if (
+      message.type() === 'warning' &&
+      message.text().startsWith('[mobx-view-model-devtools] Skipped')
+    )
+      warnings.push(message.text());
+  });
   page.on('pageerror', (error) => errors.push(error.message));
   await page.goto('/compatibility.html?core=8&order=host-first');
   await expect(
@@ -165,16 +173,20 @@ test('ignores unsupported store announcements without replacing the connected ho
   ).toBeVisible();
   await page.evaluate(() => {
     const config = (globalThis as any)[Symbol.for('VIEW_MODELS_CONFIG')];
-    config.hooks.storeCreate({
+    const unsupported = {
       getIds: () => [],
       get: () => undefined,
       viewModels: { values: () => null },
-    });
+    };
+    config.hooks.storeCreate(unsupported);
+    config.hooks.storeCreate(unsupported);
   });
   await expect(
     page.getByText('CompatibilityVM', { exact: true }),
   ).toBeVisible();
   await page.evaluate(() => (globalThis as any).compatibility.add());
   await expect(page.getByText('AddedVM', { exact: true })).toBeVisible();
+  expect(warnings).toHaveLength(1);
+  expect(warnings[0]).toContain('viewModels.values()');
   expect(errors).toEqual([]);
 });
