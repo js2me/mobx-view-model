@@ -22,7 +22,7 @@ export default defineConfig({
   },
   webServer: {
     command:
-      'pnpm exec vite --config tests/e2e/vite.config.ts --host 127.0.0.1 --port 4178 --strictPort',
+      'node ../../node_modules/vite/bin/vite.js --config tests/e2e/vite.config.ts --host 127.0.0.1 --port 4178 --strictPort',
     url: 'http://127.0.0.1:4178',
     reuseExistingServer: !process.env.CI,
     timeout: 30_000,

@@ -321,7 +321,7 @@ importers:
         version: 7.20.1(mobx@6.15.0)(react@18.3.1)
     devDependencies:
       '@playwright/test':
-        specifier: ^1.63.0
+        specifier: 1.63.0
         version: 1.63.0
       '@storybook/react-vite':
         specifier: 10.6.5
