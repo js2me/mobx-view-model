@@ -1,5 +1,77 @@
 import { expect, test } from '@playwright/test';
 
+test('scrolls the docs inspector with the wheel and scrollbar thumb', async ({
+  page,
+}) => {
+  await page.goto('/docs-demo.html');
+  await page
+    .getByRole('button', { name: 'Toggle ViewModel Devtools', exact: true })
+    .click();
+  const dialog = page.getByRole('dialog', {
+    name: 'ViewModel Devtools',
+    exact: true,
+  });
+  const viewport = dialog.locator('.simplebar-content-wrapper');
+  const thumb = dialog.locator('.simplebar-vertical .simplebar-scrollbar');
+  await expect(thumb).toBeVisible();
+  await dialog.hover();
+  await page.mouse.wheel(0, 500);
+  await expect
+    .poll(() => viewport.evaluate((el) => el.scrollTop))
+    .toBeGreaterThan(0);
+  const scrollBeforeDrag = await viewport.evaluate((el) => el.scrollTop);
+  const thumbBox = (await thumb.boundingBox())!;
+  const x = thumbBox.x + thumbBox.width / 2;
+  const y = thumbBox.y + thumbBox.height / 2;
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  await page.mouse.move(x, y + 160, { steps: 12 });
+  await page.mouse.up();
+  await expect
+    .poll(() => viewport.evaluate((el) => el.scrollTop))
+    .toBeGreaterThan(scrollBeforeDrag + 500);
+  await expect(dialog.getByText('13 live', { exact: true })).toBeVisible();
+});
+
+test.describe('mobile docs inspector', () => {
+  test.use({
+    viewport: { width: 390, height: 844 },
+    isMobile: true,
+    hasTouch: true,
+  });
+
+  test('scrolls with a touch swipe', async ({ page }) => {
+    await page.goto('/docs-demo.html');
+    await page
+      .getByRole('button', { name: 'Toggle ViewModel Devtools', exact: true })
+      .tap();
+    const viewport = page.locator('.simplebar-content-wrapper');
+    await expect(viewport).toBeVisible();
+    const box = (await viewport.boundingBox())!;
+    const x = box.x + box.width / 2;
+    const y = box.y + box.height * 0.8;
+    const session = await page.context().newCDPSession(page);
+    await session.send('Input.dispatchTouchEvent', {
+      type: 'touchStart',
+      touchPoints: [{ x, y }],
+    });
+    for (let step = 1; step <= 10; step++) {
+      await session.send('Input.dispatchTouchEvent', {
+        type: 'touchMove',
+        touchPoints: [{ x, y: y - step * 30 }],
+      });
+    }
+    await session.send('Input.dispatchTouchEvent', {
+      type: 'touchEnd',
+      touchPoints: [],
+    });
+    await expect
+      .poll(() => viewport.evaluate((el) => el.scrollTop))
+      .toBeGreaterThan(100);
+    await session.detach();
+  });
+});
+
 test('loads the actual docs demo with core 11, real VM hierarchy and editable state', async ({
   page,
 }) => {
