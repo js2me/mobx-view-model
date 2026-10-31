@@ -8,10 +8,11 @@ import {
   reaction,
 } from 'mobx';
 import { Storage } from 'mobx-swiss-knife';
-import type { AnyViewModel, ViewModelStoreBase } from 'mobx-view-model';
 import type { AnyObject, Maybe } from 'yummies/types';
 import { createInspectorRows } from './create-inspector-rows';
+import type { ViewModelStoreSource } from './devtools-config';
 import type { DevtoolsSettings } from './devtools-settings';
+import { getStoreViewModels } from './inspection/get-store-view-models';
 import { ViewModelImpl } from './lib/view-model.impl';
 import { ExtraListItem } from './list-item/extra-list-item';
 import { getOwnerVm } from './list-item/get-owner-vm';
@@ -37,7 +38,7 @@ export class DevtoolsInspector {
   readonly items = new Map<string, ListItem<any>>();
   readonly search: InspectorSearch;
   viewport?: InspectorViewport;
-  store?: Maybe<ViewModelStoreBase<AnyViewModel>>;
+  store?: Maybe<ViewModelStoreSource>;
   extras?: Maybe<AnyObject>;
   watchedPropertyKeys: string[];
 
@@ -112,10 +113,8 @@ export class DevtoolsInspector {
     return this.readViewModels();
   }
   readViewModels(): AnyVM[] {
-    const map = (
-      this.store as unknown as { viewModels?: Map<string, AnyVM> } | undefined
-    )?.viewModels;
-    return [...(map?.values() ?? [])].filter(
+    const values = this.store ? getStoreViewModels(this.store) : [];
+    return [...values].filter(
       (vm) =>
         !Object.prototype.isPrototypeOf.call(ViewModelImpl, vm.constructor),
     );
@@ -155,7 +154,8 @@ export class DevtoolsInspector {
   get isActive() {
     return !!this.store || Object.keys(this.extras ?? {}).length > 0;
   }
-  setStore(store: ViewModelStoreBase<AnyViewModel> | undefined) {
+  setStore(store: ViewModelStoreSource | undefined) {
+    if (store !== undefined) getStoreViewModels(store);
     if (this.store === store) return;
     this.clearItems();
     this.store = store;

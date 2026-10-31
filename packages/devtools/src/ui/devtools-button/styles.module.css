@@ -14,8 +14,8 @@
   border: 1px solid var(--vmd-glass-border) !important;
   border-top-color: var(--vmd-glass-edge) !important;
   box-shadow: var(--vmd-glass-shadow);
-  backdrop-filter: blur(28px) saturate(150%);
   -webkit-backdrop-filter: blur(28px) saturate(150%);
+  backdrop-filter: blur(28px) saturate(150%);
   user-select: none;
   transition: box-shadow 150ms, border-color 150ms, opacity 150ms;
 }

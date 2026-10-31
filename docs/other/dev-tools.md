@@ -24,6 +24,12 @@ Source: [mobx-view-model/packages/devtools](https://github.com/js2me/mobx-view-m
 
 ---
 
+## Core compatibility
+
+The standalone script auto-discovers stores from the tested core versions **8.10.1, 9.3.16, 10.2.2 and 11.x**, in either script load order. It also supports an isolated MobX runtime in the application.
+
+For early **8.0.0**, which has no global store-creation hook, explicitly call `ViewModelDevtools.connect(viewModelStore)` as shown in [Option 3](#option-3-package-dependency). Both the oldest and latest core 8 releases are covered by browser and TypeScript compatibility checks.
+
 ## Installation
 
 The easiest way to inject the devtools is via a `<script>` tag — no npm install required.
@@ -53,7 +59,7 @@ Use this approach when you need finer control over when the script is loaded (e.
 </script>
 ```
 
-### Option 3 — package dependency
+### Option 3 — package dependency {#option-3-package-dependency}
 
 Install the devtools package with your package manager:
 

@@ -51,6 +51,35 @@ test('renders dark glass over a dark host page', async ({ page }) => {
   });
 });
 
+test('blurs host content behind the mobile popup and launcher', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/?backdrop=dark');
+  await page.evaluate(() => {
+    const backdrop = document.createElement('div');
+    backdrop.style.cssText =
+      'position:fixed;inset:0;color:white;font:700 48px/1.5 sans-serif;overflow:hidden;pointer-events:none';
+    backdrop.textContent = 'Host page content '.repeat(80);
+    document.body.prepend(backdrop);
+  });
+  const dialog = page.getByRole('dialog', {
+    name: 'ViewModel Devtools',
+    exact: true,
+  });
+  await expect(dialog).toHaveCSS('backdrop-filter', 'blur(28px) saturate(1.5)');
+  await expect(page).toHaveScreenshot('devtools-mobile-backdrop-blur.png');
+  await page
+    .getByRole('button', { name: 'Close devtools', exact: true })
+    .click();
+  await expect(
+    page.getByRole('button', {
+      name: 'Toggle ViewModel Devtools',
+      exact: true,
+    }),
+  ).toHaveCSS('backdrop-filter', 'blur(28px) saturate(1.5)');
+});
+
 test('keeps the light appearance available', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: 'Settings', exact: true }).click();

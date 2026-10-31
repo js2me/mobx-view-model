@@ -1,4 +1,5 @@
-import type { ViewModelStoreBase, viewModelsConfig } from 'mobx-view-model';
+import type { viewModelsConfig } from 'mobx-view-model';
+import { getStoreViewModels } from '../inspection/get-store-view-models';
 import { ViewModelStoreImpl } from '../lib/view-model-store.impl';
 import type { ViewModelDevtools } from '../view-model-devtools';
 
@@ -23,9 +24,8 @@ export function captureProjectStores() {
 export class StandaloneConnection {
   private readonly hooks = new Map<StoreHook, () => void>();
   private readonly disposers: Array<() => void>;
-  private previousVms: unknown[] = [];
-  private previousParents: unknown[] = [];
   private timer?: ReturnType<typeof setInterval>;
+  private hasReportedUnsupportedStore = false;
 
   constructor(
     private readonly devtools: ViewModelDevtools,
@@ -44,36 +44,32 @@ export class StandaloneConnection {
   }
   private connect = (store: Parameters<StoreHook>[0]) => {
     if (store.constructor === ViewModelStoreImpl) return;
-    this.devtools.setStore(store as ViewModelStoreBase);
+    // Unsupported store announcements must not interrupt the host constructor.
+    try {
+      getStoreViewModels(store);
+    } catch {
+      if (!this.hasReportedUnsupportedStore) {
+        this.hasReportedUnsupportedStore = true;
+        console.warn(
+          '[mobx-view-model-devtools] Skipped an unsupported store: viewModels.values() must return an iterable.',
+        );
+      }
+      return;
+    }
+    this.devtools.setStore(store);
   };
   private discover() {
-    // Core 9/10 and 11 must keep their own factories and defaults.
+    // Core 8–10 and 11 must keep their own factories and defaults.
     for (const hook of getHooks()) {
       if (this.hooks.has(hook)) continue;
       this.hooks.set(hook, hook.sub(this.connect));
       if (hook.lastPub?.[0]) this.connect(hook.lastPub[0]);
     }
   }
-  private check = () => {
-    this.discover();
-    const vms = this.devtools.inspector.readViewModels();
-    if (
-      vms.length !== this.previousVms.length ||
-      vms.some(
-        (vm, index) =>
-          vm !== this.previousVms[index] ||
-          vm.parentViewModel !== this.previousParents[index],
-      )
-    ) {
-      this.previousVms = vms;
-      this.previousParents = vms.map((vm) => vm.parentViewModel);
-      this.devtools.notifyVmChange();
-    }
-  };
   private start = () => {
     if (this.timer !== undefined) return;
-    this.check();
-    this.timer = setInterval(this.check, 500);
+    this.discover();
+    this.timer = setInterval(() => this.discover(), 500);
   };
   private stop = () => {
     clearInterval(this.timer);
