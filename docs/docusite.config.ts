@@ -105,7 +105,9 @@ export default defineConfig({
   },
   docsDir: '.',
   runtimeScript: () => {
-    import('./.internal/scripts/load-devtools').then(m => m.loadDevtools());
+    import('./.internal/scripts/load-devtools')
+      .then(m => m.loadDevtools())
+      .catch(error => console.error('Unable to load the docs devtools demo', error));
   },
   versions: {
     latest: '11.x',

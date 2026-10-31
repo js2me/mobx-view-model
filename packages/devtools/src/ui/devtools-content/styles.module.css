@@ -16,7 +16,7 @@
   display: flex;
   flex-direction: column;
   height: var(--vmd-header-height);
-  padding: 14px 16px 12px;
+  padding: 8px 12px 6px;
   background: linear-gradient(180deg, var(--vmd-bg), var(--vmd-bg-transparent));
   backdrop-filter: blur(18px);
   border-bottom: 1px solid var(--vmd-border-color);
@@ -25,7 +25,7 @@
 .vmContentHeaderLogo { width: 28px; height: 28px; border-radius: 8px; margin-right: 10px; }
 .vmContentHeaderTitleText { display: inline-flex; align-items: center; gap: 8px; margin-right: auto; font-family: system-ui, sans-serif; font-size: 14px; letter-spacing: -0.02em; }
 .connectionBadge { padding: 4px 7px; border-radius: 6px; color: var(--vmd-primary-color); background: var(--vmd-primary-bg); font-size: 10px; font-family: ui-monospace, monospace; }
-.vmContentControlPanel { position: relative; z-index: 2; display: flex; align-items: center; gap: 8px; width: 100%; margin-top: 14px; }
+.vmContentControlPanel { position: relative; z-index: 2; display: flex; align-items: center; gap: 8px; width: 100%; margin-top: 6px; }
 .vmContentControlPanelActions { display: flex; flex-shrink: 0; align-items: center; gap: 6px; }
 .vmContentControlPanel.searchIsActive > .vmContentControlPanelActions { display: none; }
 .searchField { position: relative; flex: 1; min-width: 0; }

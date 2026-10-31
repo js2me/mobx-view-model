@@ -1,8 +1,13 @@
-import type { ViewModelSimple } from 'mobx-view-model';
+import type {
+  AnyViewModel,
+  AnyViewModelSimple,
+  ViewModelCreateConfig,
+  ViewModelSimple,
+} from 'mobx-view-model';
 
 export async function loadDevtools() {
   const [
-    { ViewModelStoreBase, ViewModelBase, viewModelsConfig },
+    { ViewModelStoreBase, ViewModelBase },
     { ViewModelDevtools },
     { action, computed, makeAutoObservable, makeObservable, observable },
   ] = await Promise.all([
@@ -11,7 +16,14 @@ export async function loadDevtools() {
     import('mobx'),
   ]);
 
-  viewModelsConfig.observable.viewModels.useDecorators = false;
+  const store = new ViewModelStoreBase({
+    vmConfig: {
+      observable: {
+        viewModels: { useDecorators: false },
+        viewModelStores: { useDecorators: false },
+      },
+    },
+  });
 
   class DocsDemoHomeVM implements ViewModelSimple {
     id = 'docs-demo-home';
@@ -68,6 +80,8 @@ export async function loadDevtools() {
 
     constructor() {
       super({
+        viewModels: store,
+        vmConfig: store.vmConfig,
         id: 'docs-demo-nav',
         payload: {
           sections: [
@@ -123,6 +137,8 @@ export async function loadDevtools() {
 
     constructor() {
       super({
+        viewModels: store,
+        vmConfig: store.vmConfig,
         id: 'docs-demo-search',
         payload: {
           query: 'ViewModelStore',
@@ -176,6 +192,8 @@ export async function loadDevtools() {
 
     constructor() {
       super({
+        viewModels: store,
+        vmConfig: store.vmConfig,
         id: 'docs-demo-recipe',
         payload: {
           recipeId: 'integration-with-root-store',
@@ -208,8 +226,6 @@ export async function loadDevtools() {
     }
   }
 
-  const store = new ViewModelStoreBase();
-
   class DocsDemoNavBreadcrumbVM extends ViewModelBase<
     { label: string; href: string; depth: number },
     DocsDemoNavVM
@@ -218,13 +234,14 @@ export async function loadDevtools() {
 
     constructor(parent: DocsDemoNavVM) {
       super({
+        viewModels: store,
+        vmConfig: store.vmConfig,
         id: 'docs-demo-nav-breadcrumb',
         payload: {
           label: 'Introduction',
           href: '/introduction/overview',
           depth: 1,
         },
-        viewModels: store,
         parentViewModel: parent,
         ctx: { separator: '/' },
       });
@@ -241,13 +258,14 @@ export async function loadDevtools() {
 
     constructor(parent: DocsDemoNavVM) {
       super({
+        viewModels: store,
+        vmConfig: store.vmConfig,
         id: 'docs-demo-api-section',
         payload: {
           topic: 'view-models',
           pageCount: 6,
           lastUpdated: '2026-05-20',
         },
-        viewModels: store,
         parentViewModel: parent,
         ctx: { sidebarGroup: 'Core API' },
         props: { defaultOpen: true },
@@ -283,6 +301,8 @@ export async function loadDevtools() {
 
     constructor(parent: DocsDemoApiSectionVM) {
       super({
+        viewModels: store,
+        vmConfig: store.vmConfig,
         id: 'docs-demo-api-topic-detail',
         payload: {
           detail: 'interface',
@@ -293,7 +313,6 @@ export async function loadDevtools() {
             '/api/view-models/view-model-simple',
           ],
         },
-        viewModels: store,
         parentViewModel: parent,
         ctx: { language: 'typescript' },
         props: { showTableOfContents: true },
@@ -320,13 +339,14 @@ export async function loadDevtools() {
   > {
     constructor(parent: DocsDemoSearchVM) {
       super({
+        viewModels: store,
+        vmConfig: store.vmConfig,
         id: 'docs-demo-search-filter',
         payload: {
           filter: 'api',
           matchCount: 8,
           onlyExact: false,
         },
-        viewModels: store,
         parentViewModel: parent,
         ctx: { facet: 'category' },
         props: { multiSelect: true },
@@ -381,6 +401,8 @@ export async function loadDevtools() {
       const step = steps[stepIndex - 1] ?? steps[0];
 
       super({
+        viewModels: store,
+        vmConfig: store.vmConfig,
         id: `docs-demo-recipe-step-${stepIndex}`,
         payload: {
           stepIndex,
@@ -388,7 +410,6 @@ export async function loadDevtools() {
           completed: stepIndex <= parent.stepsDone,
           checklist: [...step.checklist],
         },
-        viewModels: store,
         parentViewModel: parent,
         ctx: { stepIndex },
       });
@@ -410,31 +431,55 @@ export async function loadDevtools() {
     }
   }
 
-  try {
+  // Keep demo class names readable in the minified documentation bundle.
+  for (const [name, VM] of Object.entries({
+    DocsDemoHomeVM,
+    DocsDemoCounterVM,
+    DocsDemoNavVM,
+    DocsDemoSearchVM,
+    DocsDemoRecipeVM,
+    DocsDemoNavBreadcrumbVM,
+    DocsDemoApiSectionVM,
+    DocsDemoApiTopicDetailVM,
+    DocsDemoSearchFilterVM,
+    DocsDemoRecipeStepVM,
+  })) {
+    Object.defineProperty(VM, 'name', { value: name });
+  }
+
+  // Core 11 registers existing instances through connect(instance, config).
+  const register = <T extends AnyViewModel | AnyViewModelSimple>(instance: T) => {
+    store.connect(instance, {
+      VM: instance.constructor as ViewModelCreateConfig<T>['VM'],
+      id: instance.id!,
+      payload: instance instanceof ViewModelBase ? instance.payload : {},
+    });
+    return instance;
+  };
 
   const navVM = new DocsDemoNavVM();
-  store.attach(navVM);
-  store.attach(new DocsDemoNavBreadcrumbVM(navVM));
+  register(navVM);
+  register(new DocsDemoNavBreadcrumbVM(navVM));
 
   const apiSectionVM = new DocsDemoApiSectionVM(navVM);
-  store.attach(apiSectionVM);
-  store.attach(new DocsDemoApiTopicDetailVM(apiSectionVM));
+  register(apiSectionVM);
+  register(new DocsDemoApiTopicDetailVM(apiSectionVM));
 
   const searchVM = new DocsDemoSearchVM();
-  store.attach(searchVM);
-  store.attach(new DocsDemoSearchFilterVM(searchVM));
+  register(searchVM);
+  register(new DocsDemoSearchFilterVM(searchVM));
 
   const recipeVM = new DocsDemoRecipeVM();
-  store.attach(recipeVM);
-  store.attach(new DocsDemoRecipeStepVM(recipeVM, 1));
-  store.attach(new DocsDemoRecipeStepVM(recipeVM, 2));
-  store.attach(new DocsDemoRecipeStepVM(recipeVM, 3));
-  store.attach(new DocsDemoRecipeStepVM(recipeVM, 4));
+  register(recipeVM);
+  register(new DocsDemoRecipeStepVM(recipeVM, 1));
+  register(new DocsDemoRecipeStepVM(recipeVM, 2));
+  register(new DocsDemoRecipeStepVM(recipeVM, 3));
+  register(new DocsDemoRecipeStepVM(recipeVM, 4));
 
-  store.attach(new DocsDemoHomeVM());
-  store.attach(new DocsDemoCounterVM());
+  register(new DocsDemoHomeVM());
+  register(new DocsDemoCounterVM());
 
-  ViewModelDevtools.connect(store as never);
+  const devtools = ViewModelDevtools.connect(store);
   ViewModelDevtools.connectExtras({
     source: 'mobx-view-model-docs',
     environment: 'docs',
@@ -447,5 +492,10 @@ export async function loadDevtools() {
       simple: ['home', 'counter'],
     },
   });
-  } catch(_) {}
+  if (import.meta.hot) {
+    import.meta.hot.dispose(() => {
+      devtools.destroy();
+      store.clean();
+    });
+  }
 }

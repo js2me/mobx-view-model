@@ -7,10 +7,10 @@ Opening starts in the Open devtools handler and ends after two animation frames.
 | Scenario | Cold median | Warm median | Maximum cached inspector items | DOM rows |
 | --- | ---: | ---: | ---: | ---: |
 | 100/default | 97 ms | 64 ms | 234 | 43 |
-| 1000/collapsed | 80 ms | 48 ms | 0 | 43 |
-| 10000/collapsed | 95 ms | 63 ms | 0 | 43 |
-| 10000/flat | 84 ms | 64 ms | 0 | 43 |
-| 10000/expanded | 235 ms | 181 ms | 234 | 43 |
+| 1000/collapsed | 64 ms | 48 ms | 0 | 43 |
+| 10000/collapsed | 67 ms | 48 ms | 0 | 43 |
+| 10000/flat | 70 ms | 48 ms | 0 | 43 |
+| 10000/expanded | 205 ms | 164 ms | 234 | 43 |
 
 Before this change, individual measurements of the previous production bundle were 179 ms / 1,295 cached property items at 100 VM, and 981 ms / 11,195 items at 1,000 VM. At 10,000 VM the click exceeded Playwright's 30-second timeout; that is a failed interaction, not a precise 30-second opening measurement. The before values were single samples and the default expansion policy differed for large stores. The fully expanded 10,000-VM scenario above verifies that the improvement also holds with every VM explicitly expanded.
 
