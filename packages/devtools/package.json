@@ -70,6 +70,8 @@
     "cross-env": "^10.1.0",
     "http-server": "^14.1.1",
     "lodash-es": "^4.17.21",
+    "mobx-view-model-v10": "npm:mobx-view-model@10.2.2",
+    "mobx-view-model-v9": "npm:mobx-view-model@9.3.16",
     "postcss": "^8.5.6",
     "postcss-nested": "^7.0.2",
     "postcss-selector-parser": "^7.1.1",

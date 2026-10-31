@@ -1,12 +1,24 @@
-import { viewModelsConfig } from 'mobx-view-model';
+import type { viewModelsConfig } from 'mobx-view-model';
 import { ViewModelDevtools } from './model';
 import { ViewModelStoreImpl } from './model/lib/view-model-store.impl';
+
+type StoreCreateHook = typeof viewModelsConfig.hooks.storeCreate;
+
+// Core 9/10 and core 11 keep separate configurations. Never alias them:
+// their factories and defaults implement different lifecycle contracts.
+const configKeys = [
+  Symbol.for('VIEW_MODELS_CONFIG'),
+  Symbol.for('@view-model@'),
+];
+const getStoreCreateHook = (key: symbol): StoreCreateHook | undefined =>
+  Reflect.get(globalThis, key)?.hooks?.storeCreate;
+const lastCreatedStores = configKeys.map(
+  (key) => getStoreCreateHook(key)?.lastPub?.[0],
+);
 
 Object.assign(globalThis, {
   ViewModelDevtools,
 });
-
-const lastCreatedStore = viewModelsConfig.hooks.storeCreate.lastPub?.[0];
 
 ViewModelDevtools.define({
   position: 'top-right',
@@ -19,47 +31,55 @@ ViewModelDevtools.connectExtras({
 
 const devtools = ViewModelDevtools.define();
 
-function watchStoreVmChanges(store: any) {
-  // The devtools bundles its own MobX, so it can't observe the host's
-  // ObservableMap. In the vite-plugin we bridge via the host's autorun;
-  // here (UMD) we don't have it, so we poll — but only while the
-  // popup is open to avoid wasted work.
-  let prevSize = -1;
-  let timer: ReturnType<typeof setInterval> | undefined;
-
-  const check = () => {
-    const size = (store as any).viewModels?.size ?? 0;
-    if (size !== prevSize) {
-      prevSize = size;
-      devtools.notifyVmChange();
-    }
-  };
-
-  const start = () => {
-    if (timer) return;
-    check();
-    timer = setInterval(check, 500);
-  };
-
-  const stop = () => {
-    clearInterval(timer);
-    timer = undefined;
-  };
-
-  devtools.onPopupOpen(start);
-  devtools.onPopupClose(stop);
-}
-
 const connectStore = (store: any) => {
   if (ViewModelStoreImpl === store.constructor) {
     return;
   }
 
   ViewModelDevtools.connectViewModels(store as any);
-  watchStoreVmChanges(store);
 };
 
-if (lastCreatedStore) {
-  connectStore(lastCreatedStore);
+const subscribedHooks = new Set<StoreCreateHook>();
+const discoverStores = () => {
+  for (const key of configKeys) {
+    const hook = getStoreCreateHook(key);
+    if (!hook || subscribedHooks.has(hook)) continue;
+    subscribedHooks.add(hook);
+    hook.sub(connectStore);
+    if (hook.lastPub?.[0]) connectStore(hook.lastPub[0]);
+  }
+};
+
+discoverStores();
+for (const store of lastCreatedStores) {
+  if (store) connectStore(store);
 }
-viewModelsConfig.hooks.storeCreate.sub(connectStore);
+
+// The UMD bundle has its own MobX. Poll identities, not just size, so
+// replacing a VM between ticks also invalidates the inspector.
+let previousVms: unknown[] = [];
+let timer: ReturnType<typeof setInterval> | undefined;
+const check = () => {
+  // A host loaded after the devtools may only now have created its config.
+  discoverStores();
+  const store = devtools.projectVmStore as any;
+  const vms: unknown[] = [...(store?.viewModels?.values() ?? [])];
+  if (
+    vms.length !== previousVms.length ||
+    vms.some((vm, index) => vm !== previousVms[index])
+  ) {
+    previousVms = vms;
+    devtools.notifyVmChange();
+  }
+};
+const start = () => {
+  if (timer !== undefined) return;
+  check();
+  timer = setInterval(check, 500);
+};
+devtools.onPopupOpen(start);
+devtools.onPopupClose(() => {
+  clearInterval(timer);
+  timer = undefined;
+});
+if (devtools.isPopupOpened) start();

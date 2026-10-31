@@ -34,6 +34,11 @@ jobs:
       - name: Build
         run: pnpm build
 
+      - name: DevTools compatibility (core 9-11)
+        run: |
+          pnpm --filter mobx-view-model-devtools exec playwright install --with-deps chromium
+          pnpm --filter mobx-view-model-devtools exec playwright test compatibility.spec.ts
+
       - name: Type regression (React 18-19)
         run: pnpm test:type-regression
 
