@@ -7,3 +7,5 @@ Fix React insertBefore/removeChild crashes when searches become empty or inspect
 Standalone auto-discovery is verified with core 8.10.1 and core 9–11. Core 8.0.0 has no creation hook and requires `ViewModelDevtools.connect(store)`. Explicit module connections to both 8.0.0 and 8.10.1 use a version-neutral store type and popup-scoped observation, including isolated host MobX runtimes.
 
 Preserve backdrop blur on the popup and launcher in minified builds so host page content stays softly blurred behind the glass surface.
+
+Restore wheel and scrollbar-thumb scrolling in the popup by letting SimpleBar detect overflowing content; the outer popup still clips content to its rounded corners.
