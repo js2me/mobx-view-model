@@ -121,3 +121,60 @@ test('leaves host data-simplebar elements and their DOM ownership untouched', as
   );
   expect(errors).toEqual([]);
 });
+
+test('preserves focused search suggestions when the viewport reattaches', async ({
+  page,
+}) => {
+  const errors: string[] = [];
+  page.on('pageerror', (error) => errors.push(error.message));
+  await page.goto('/');
+  const search = page.getByRole('textbox', {
+    name: 'Search ViewModels and properties',
+  });
+  await search.fill('preferences.th');
+  const suggestions = page.getByRole('listbox', { name: 'Search suggestions' });
+  await expect(suggestions).toBeVisible();
+  await page.evaluate(() => {
+    const viewport = (globalThis as any).fixture.devtools.inspector.viewport;
+    viewport.attach(viewport.contentRef.current);
+  });
+  await expect(search).toBeFocused();
+  await expect(suggestions).toBeVisible();
+  await search.press('Tab');
+  await expect(search).toHaveValue('preferences.theme');
+  await page
+    .getByRole('button', { name: 'Close devtools', exact: true })
+    .click();
+  expect(
+    await page.evaluate(
+      () =>
+        (globalThis as any).fixture.devtools.searchEngine.isSearchInputFocused,
+    ),
+  ).toBe(false);
+  expect(errors).toEqual([]);
+});
+
+test('ignores unsupported store announcements without replacing the connected host store', async ({
+  page,
+}) => {
+  const errors: string[] = [];
+  page.on('pageerror', (error) => errors.push(error.message));
+  await page.goto('/compatibility.html?core=8&order=host-first');
+  await expect(
+    page.getByText('CompatibilityVM', { exact: true }),
+  ).toBeVisible();
+  await page.evaluate(() => {
+    const config = (globalThis as any)[Symbol.for('VIEW_MODELS_CONFIG')];
+    config.hooks.storeCreate({
+      getIds: () => [],
+      get: () => undefined,
+      viewModels: { values: () => null },
+    });
+  });
+  await expect(
+    page.getByText('CompatibilityVM', { exact: true }),
+  ).toBeVisible();
+  await page.evaluate(() => (globalThis as any).compatibility.add());
+  await expect(page.getByText('AddedVM', { exact: true })).toBeVisible();
+  expect(errors).toEqual([]);
+});

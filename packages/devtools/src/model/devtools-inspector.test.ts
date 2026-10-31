@@ -268,3 +268,31 @@ it('drops expansion state for removed VMs that were never materialized', () => {
   expect(inspector.expansion.size).toBe(999);
   demo.store.clean();
 });
+
+it('rejects lookup-only stores before replacing the current source or disposing its watchers', () => {
+  const demo = createDemoStore(1);
+  inspector.setStore(demo.store);
+  const watched = property('requests');
+  watched.watch.toggle();
+  const cachedItems = inspector.items.size;
+  const lookupOnly = { getIds: () => [], get: () => undefined };
+  expect(() => inspector.setStore(lookupOnly)).toThrow(/viewModels/);
+  expect(inspector.store).toBe(demo.store);
+  expect(inspector.items.size).toBe(cachedItems);
+  runInAction(() => demo.instances[0].increment());
+  expect(watched.watch.history.map((entry) => entry.value)).toEqual([0, 1]);
+  demo.store.clean();
+});
+
+it('rejects invalid runtime enumeration shapes instead of treating them as an empty store', () => {
+  for (const viewModels of [
+    {},
+    { values: 42 },
+    { values: () => null },
+    { values: () => ({}) },
+  ]) {
+    const store = { getIds: () => [], get: () => undefined, viewModels };
+    expect(() => inspector.setStore(store)).toThrow(/viewModels/);
+    expect(inspector.store).toBeUndefined();
+  }
+});

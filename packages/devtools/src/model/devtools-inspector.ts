@@ -12,6 +12,7 @@ import type { AnyObject, Maybe } from 'yummies/types';
 import { createInspectorRows } from './create-inspector-rows';
 import type { ViewModelStoreSource } from './devtools-config';
 import type { DevtoolsSettings } from './devtools-settings';
+import { getStoreViewModels } from './inspection/get-store-view-models';
 import { ViewModelImpl } from './lib/view-model.impl';
 import { ExtraListItem } from './list-item/extra-list-item';
 import { getOwnerVm } from './list-item/get-owner-vm';
@@ -112,10 +113,8 @@ export class DevtoolsInspector {
     return this.readViewModels();
   }
   readViewModels(): AnyVM[] {
-    const map = (
-      this.store as unknown as { viewModels?: Map<string, AnyVM> } | undefined
-    )?.viewModels;
-    return [...(map?.values() ?? [])].filter(
+    const values = this.store ? getStoreViewModels(this.store) : [];
+    return [...values].filter(
       (vm) =>
         !Object.prototype.isPrototypeOf.call(ViewModelImpl, vm.constructor),
     );
@@ -156,6 +155,7 @@ export class DevtoolsInspector {
     return !!this.store || Object.keys(this.extras ?? {}).length > 0;
   }
   setStore(store: ViewModelStoreSource | undefined) {
+    if (store !== undefined) getStoreViewModels(store);
     if (this.store === store) return;
     this.clearItems();
     this.store = store;

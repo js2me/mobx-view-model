@@ -91,7 +91,7 @@ export class DevtoolsContentVM
     this.viewportHeight = this.scrollElement?.clientHeight ?? 0;
   }
   private attach(node: HTMLDivElement) {
-    this.detach();
+    this.releaseViewportResources();
     this.scrollbar = new SimpleBar(node);
     this.scrollElement = this.scrollbar.getScrollElement() ?? undefined;
     this.devtools.inspector.viewport = this;
@@ -108,10 +108,14 @@ export class DevtoolsContentVM
     );
   }
   private detach() {
-    if (this.devtools.inspector.viewport === this) {
+    const ownsViewport = this.devtools.inspector.viewport === this;
+    this.releaseViewportResources();
+    if (ownsViewport) this.devtools.inspector.search.handleSearchInputBlur();
+  }
+  /** Reinitializing the scrollbar must preserve the focused search state. */
+  private releaseViewportResources() {
+    if (this.devtools.inspector.viewport === this)
       this.devtools.inspector.viewport = undefined;
-      this.devtools.inspector.search.handleSearchInputBlur();
-    }
     this.scrollElement?.removeEventListener('scroll', this.measure);
     this.resizeObserver?.disconnect();
     this.disposeListReaction?.();

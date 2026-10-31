@@ -1,4 +1,5 @@
 import type { viewModelsConfig } from 'mobx-view-model';
+import { getStoreViewModels } from '../inspection/get-store-view-models';
 import { ViewModelStoreImpl } from '../lib/view-model-store.impl';
 import type { ViewModelDevtools } from '../view-model-devtools';
 
@@ -41,11 +42,13 @@ export class StandaloneConnection {
     if (devtools.isPopupOpened) this.start();
   }
   private connect = (store: Parameters<StoreHook>[0]) => {
-    if (
-      store.constructor === ViewModelStoreImpl ||
-      typeof Reflect.get(store, 'viewModels')?.values !== 'function'
-    )
+    if (store.constructor === ViewModelStoreImpl) return;
+    // Unsupported store announcements must not interrupt the host constructor.
+    try {
+      getStoreViewModels(store);
+    } catch {
       return;
+    }
     this.devtools.setStore(store);
   };
   private discover() {

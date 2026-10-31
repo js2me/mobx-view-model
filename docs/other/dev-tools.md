@@ -59,7 +59,7 @@ Use this approach when you need finer control over when the script is loaded (e.
 </script>
 ```
 
-### Option 3 — package dependency
+### Option 3 — package dependency {#option-3-package-dependency}
 
 Install the devtools package with your package manager:
 

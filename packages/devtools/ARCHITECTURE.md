@@ -11,7 +11,7 @@
 | `model/editing/` | Editor state, mutation targets, propagation into the host's MobX runtime |
 | `model/inspection/` | Safe reads, collection adapters, value types and previews |
 | `model/devtools-window.ts` and `model/window/` | Popup state, retained layout, geometry and mouse gestures |
-| `model/connection/` | Standalone discovery and observation of core 8–11 stores |
+| `model/connection/` | Store observation for core 8–11; standalone discovery for 8.10.1 and 9–11; core 8.0.0 uses explicit `connect` |
 | `ui/` | Views, their ViewModels, DOM measurement, scrollbars and the React renderer |
 
 Views choose and render React components. ViewModels expose state and commands; the content ViewModel exposes the visible rows and offsets without constructing React elements. Layout calculations are independent of the DOM. Popup and trigger ViewModels compose a shared mouse gesture model instead of duplicating document listeners.
@@ -50,4 +50,4 @@ CI additionally builds Storybook and checks args changes, story switches, add/re
 
 The initial viewport attachment does not clear an already-focused search input. Actual viewport disposal clears focus, listeners, timers and observers. Regression coverage includes no-result searches, source replacement, a scrolled large store and host-owned scrollbar DOM.
 
-`ViewModelStoreSource` describes the version-neutral public lookup surface. Enumeration remains an internal read of the runtime map because core declares that member protected. Both core 8.0.0 and 8.10.1 are accepted without TypeScript casts. Old stores without creation hooks use explicit `connect`; their changes are detected by `ViewModelStoreObserver`, including an empty store when reopening.
+`ViewModelStoreSource` describes the version-neutral public lookup surface. Enumeration remains an internal read of the runtime map because core declares that member protected. Connections validate `viewModels.values()` before replacing the source or disposing any watchers; lookup-only objects and non-iterable collections fail with an explicit TypeError. Both core 8.0.0 and 8.10.1 are accepted without TypeScript casts. Old stores without creation hooks use explicit `connect`; their changes are detected by `ViewModelStoreObserver`, including an empty store when reopening.
