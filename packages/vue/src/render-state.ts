@@ -1,6 +1,7 @@
 import {
   type AnyViewModel,
   type AnyViewModelSimple,
+  isViewModel,
   viewModelsConfig,
 } from 'mobx-view-model';
 import { getCurrentInstance } from 'vue';
@@ -11,7 +12,7 @@ export const useRenderAllowed = (model: AnyViewModel | AnyViewModelSimple) => {
   let preservingHydration =
     viewModelsConfig.mode === 'ssr' && getCurrentInstance()?.vnode.el != null;
   return () => {
-    const mounted = (model as AnyViewModel).isMounted !== false;
+    const mounted = !isViewModel(model) || model.isMounted;
     if (mounted) preservingHydration = false;
     return mounted || preservingHydration;
   };
