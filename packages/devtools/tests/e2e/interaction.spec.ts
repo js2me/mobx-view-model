@@ -264,6 +264,19 @@ test('groups VM base properties and excludes them from search', async ({
   await group.click();
   await expect(group).toHaveAttribute('aria-expanded', 'true');
   await expect(page.getByText('payload', { exact: true })).toBeVisible();
+  const groupRow = page.locator('[data-depth]').filter({ has: group });
+  const rowBounds = (await groupRow.boundingBox())!;
+  await groupRow.click({
+    position: { x: rowBounds.width - 8, y: rowBounds.height / 2 },
+  });
+  await expect(group).toHaveAttribute('aria-expanded', 'false');
+  await group.focus();
+  await group.press('Enter');
+  await expect(group).toHaveAttribute('aria-expanded', 'true');
+  await group.press('Space');
+  await expect(group).toHaveAttribute('aria-expanded', 'false');
+  await group.click();
+  await expect(group).toHaveAttribute('aria-expanded', 'true');
   const search = page.getByPlaceholder(
     'search by property path or ViewModel name',
   );

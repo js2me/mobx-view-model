@@ -10,12 +10,12 @@ export const VMPropertiesListItemRender = observer(
       className={`${css.property} ${css.expandable}`}
       data-depth={item.depthLine}
       style={{ '--level': item.depth } as CSSProperties}
+      onClick={item.toggleExpand}
     >
       <button
         type="button"
         className={css.vmPropertiesToggle}
         aria-expanded={item.isExpanded}
-        onClick={item.toggleExpand}
       >
         <ExpandButton
           expandable={item.isExpandable}

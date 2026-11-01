@@ -314,7 +314,7 @@ describe('grouped ViewModelBase properties', () => {
     inspector.setStore(store);
     settings.setGroupViewModelBaseMembers(true);
     inspector.expandAll();
-    return { store, vm };
+    return { store, vm, VM: GroupedVM };
   }
 
   it('keeps base members lazy in one collapsed group, even with internals hidden', () => {
@@ -405,6 +405,36 @@ describe('grouped ViewModelBase properties', () => {
     inspector.search.resetSearch();
     expect(inspector.rows.at(3)).toBe(inspector.getVmItem(vm).vmPropertiesItem);
     expect(inspector.rows.at(3)?.isExpanded).toBe(false);
+    store.clean();
+  });
+
+  it('prunes removed VM groups and resets expansion before reusing the same key', () => {
+    const { store, vm, VM } = setup();
+    const group = inspector.getVmItem(vm).vmPropertiesItem;
+    const ownerKey = inspector.getVmItem(vm).key;
+    group.expand();
+    property('payload', group).expand();
+    inspector.rows.slice();
+    expect(inspector.items.get(group.key)).toBe(group);
+    expect(inspector.expansion.get(group.key)).toBe(true);
+    runInAction(() => store.unmount(vm));
+    expect(inspector.items.has(group.key)).toBe(false);
+    expect(inspector.expansion.has(group.key)).toBe(false);
+    expect(
+      [...inspector.items.values()].some((item) =>
+        item.key.startsWith(ownerKey),
+      ),
+    ).toBe(false);
+    const replacement = store.define({
+      VM,
+      id: vm.id,
+      payload: { value: 3 },
+    });
+    const replacementGroup = inspector.getVmItem(replacement).vmPropertiesItem;
+    expect(replacementGroup.key).toBe(group.key);
+    expect(replacementGroup).not.toBe(group);
+    expect(replacementGroup.isExpanded).toBe(false);
+    expect(property('payload', replacementGroup).data).toEqual({ value: 3 });
     store.clean();
   });
 

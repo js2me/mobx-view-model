@@ -4,6 +4,10 @@ import type { VMListItem } from './vm-list-item';
 
 /** A visual group: properties keep their original owner, paths and watch keys. */
 export class VMPropertiesListItem extends ListItem<undefined> {
+  get parentListItem() {
+    return this.owner;
+  }
+
   get depth() {
     return this.owner.depth + 1;
   }
