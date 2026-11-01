@@ -1,5 +1,12 @@
 # mobx-view-model-vite-plugin
 
+## 2.0.4
+
+### Patch Changes
+
+- Updated dependencies [fff3a20]
+  - mobx-view-model-devtools@0.4.0
+
 ## 2.0.3
 
 ### Patch Changes
