@@ -9,6 +9,7 @@ import { sortPropertyKeys } from '../inspection/sort-property-keys';
 import type { AnyVM } from '../types';
 import { ListItem, type ListItemOperation } from './list-item';
 import { PropertyListItem } from './property-list-item';
+import { VMPropertiesListItem } from './vm-properties-list-item';
 
 export class VMListItem extends ListItem<AnyVM> {
   get isExpanded() {
@@ -30,17 +31,40 @@ export class VMListItem extends ListItem<AnyVM> {
   }
   get propertyKeys() {
     let keys = getAllKeys(this.data);
-    if (this.inspector.settings.hideViewModelBaseMembers) {
+    if (
+      this.inspector.settings.shouldHideBaseProperties(
+        this.inspector.search.isActive,
+      )
+    ) {
       const baseKeys = getViewModelBaseKeys();
       keys = keys.filter((key) => !baseKeys.has(key));
     }
     return sortPropertyKeys(keys, this.inspector.settings.sortPropertiesBy);
   }
 
-  private get propertyListItems(): PropertyListItem[] {
+  get groupsBaseProperties() {
+    return (
+      this.inspector.settings.groupViewModelBaseMembers &&
+      !this.inspector.search.isActive
+    );
+  }
+
+  get basePropertyKeys() {
+    const baseKeys = getViewModelBaseKeys();
+    return this.propertyKeys.filter((key) => baseKeys.has(key));
+  }
+
+  get vmPropertiesItem() {
+    return VMPropertiesListItem.create(this);
+  }
+
+  private get propertyListItems(): ListItem<any>[] {
     this.dataWatchAtom.reportObserved();
 
-    return this.propertyKeys.map((property, order) => {
+    const keys = this.groupsBaseProperties
+      ? this.propertyKeys.filter((key) => !getViewModelBaseKeys().has(key))
+      : this.propertyKeys;
+    const items: ListItem<any>[] = keys.map((property, order) => {
       return PropertyListItem.create(
         this.inspector,
         property,
@@ -49,6 +73,9 @@ export class VMListItem extends ListItem<AnyVM> {
         this,
       );
     });
+    if (this.groupsBaseProperties && this.basePropertyKeys.length)
+      items.push(this.vmPropertiesItem);
+    return items;
   }
 
   get children(): ListItem<any>[] {

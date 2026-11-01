@@ -23,6 +23,7 @@ import {
   detectPropertyValueType,
   getPropertyInstanceClassName,
 } from '../inspection/detect-property-value-type';
+import { getViewModelBaseKeys } from '../inspection/get-view-model-base-keys';
 import { INACCESSIBLE } from '../inspection/safe-access';
 import { formatSearchSegmentKey } from '../search/format-search-key';
 import { createPropertyChildren } from './create-property-children';
@@ -209,7 +210,12 @@ export class PropertyListItem extends ListItem<any> {
   }
 
   get depth() {
-    return this.parent.depth + 1;
+    const grouped =
+      this.parent instanceof VMListItem &&
+      this.parent.groupsBaseProperties &&
+      this.property != null &&
+      getViewModelBaseKeys().has(this.property);
+    return this.parent.depth + (grouped ? 2 : 1);
   }
 
   get searchData() {

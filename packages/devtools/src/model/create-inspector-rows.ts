@@ -7,6 +7,7 @@ import { isStickyTreeItem } from './inspector-scroll';
 import { ExtraListItem } from './list-item/extra-list-item';
 import { PropertyListItem } from './list-item/property-list-item';
 import { getViewModelItemKey } from './list-item/vm-list-item';
+import { VMPropertiesListItem } from './list-item/vm-properties-list-item';
 import { getPropertySearchItems } from './search/filter-items';
 import type { SearchContext } from './search/path-matching';
 import type { AnyVM } from './types';
@@ -56,14 +57,17 @@ function appendProperties(
 ) {
   const key = getViewModelItemKey(vm);
   const { settings } = inspector;
-  const hiddenKeys = settings.hideViewModelBaseMembers
+  const hiddenKeys = settings.shouldHideBaseProperties(Boolean(search))
     ? getViewModelBaseKeys()
     : null;
   const appendItem = (item: import('./list-item/list-item').ListItem<any>) =>
     rows.append(() => item, isStickyTreeItem(item));
 
+  const grouped = settings.groupViewModelBaseMembers && !search;
+  const baseKeys = getViewModelBaseKeys();
+  const visibleKeys = getAllKeys(vm).filter((key) => !hiddenKeys?.has(key));
   const keys = sortPropertyKeys(
-    getAllKeys(vm).filter((key) => !hiddenKeys?.has(key)),
+    visibleKeys.filter((key) => !grouped || !baseKeys.has(key)),
     settings.sortPropertiesBy,
   );
   for (const [order, property] of keys.entries()) {
@@ -99,6 +103,13 @@ function appendProperties(
         appendItem(item);
     }
   }
+  if (grouped && visibleKeys.some((key) => baseKeys.has(key))) {
+    const create = () => inspector.getVmItem(vm).vmPropertiesItem;
+    rows.append(create);
+    if (expansion.get(VMPropertiesListItem.createKey(key))) {
+      for (const item of create().expandedChildren) appendItem(item);
+    }
+  }
 }
 
 /** Match metadata without constructing every owner's properties. */
@@ -111,7 +122,7 @@ function appendSearchRows(inspector: DevtoolsInspector, rows: InspectorRows) {
     const nameMatch =
       vm.constructor.name.toLowerCase().includes(segment) ||
       (vm.id ?? '').toLowerCase().includes(segment);
-    const hidden = inspector.settings.hideViewModelBaseMembers
+    const hidden = inspector.settings.shouldHideBaseProperties(true)
       ? getViewModelBaseKeys()
       : null;
     const propertyMatch = getAllKeys(vm).some(

@@ -27,6 +27,7 @@ export class DevtoolsSettings {
   presentationMode: ViewModelDevtoolsPresentationMode;
   sortPropertiesBy: ViewModelDevtoolsSortPropertiesBy;
   position: DevtoolsPosition;
+  groupViewModelBaseMembers: boolean;
 
   constructor(config: ViewModelDevtoolsConfig) {
     this.presentationMode =
@@ -37,6 +38,10 @@ export class DevtoolsSettings {
       this.storage.get({ key: 'sortPropertiesBy' }) ??
       config.display?.sortPropertiesBy ??
       'none';
+    this.groupViewModelBaseMembers =
+      this.storage.get({ key: 'groupViewModelBaseMembers' }) ??
+      config.display?.groupViewModelBaseMembers ??
+      false;
     this.position =
       this.storage.get({ key: 'position' }) ?? config.position ?? 'top-right';
     const display = config.display;
@@ -56,6 +61,7 @@ export class DevtoolsSettings {
       presentationMode: observable.ref,
       sortPropertiesBy: observable.ref,
       position: observable.ref,
+      groupViewModelBaseMembers: observable.ref,
       theme: computed,
       resolvedTheme: computed,
       hideViewModelBaseMembers: computed,
@@ -64,12 +70,14 @@ export class DevtoolsSettings {
       setSortPropertiesBy: action.bound,
       setTheme: action.bound,
       setShowInternals: action.bound,
+      setGroupViewModelBaseMembers: action.bound,
       setHighlightUpdates: action.bound,
       setPosition: action.bound,
     });
     this.storage.syncProperty(this, 'presentationMode');
     this.storage.syncProperty(this, 'sortPropertiesBy');
     this.storage.syncProperty(this, 'position');
+    this.storage.syncProperty(this, 'groupViewModelBaseMembers');
   }
 
   get theme(): DevtoolsTheme {
@@ -84,6 +92,11 @@ export class DevtoolsSettings {
   }
   get hideViewModelBaseMembers() {
     return devtoolsHideViewModelBaseKey.value;
+  }
+  shouldHideBaseProperties(isSearching: boolean) {
+    return this.groupViewModelBaseMembers
+      ? isSearching
+      : this.hideViewModelBaseMembers;
   }
   get highlightUpdates() {
     return devtoolsHighlightUpdatesKey.value;
@@ -107,6 +120,9 @@ export class DevtoolsSettings {
   }
   setShowInternals(show: boolean) {
     devtoolsHideViewModelBaseKey.value = !show;
+  }
+  setGroupViewModelBaseMembers(group: boolean) {
+    this.groupViewModelBaseMembers = group;
   }
   setHighlightUpdates(highlight: boolean) {
     devtoolsHighlightUpdatesKey.value = highlight;

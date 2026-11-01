@@ -14,6 +14,7 @@ export interface ViewModelDevtoolsDisplayConfig {
   sortPropertiesBy?: ViewModelDevtoolsSortPropertiesBy;
   theme?: DevtoolsTheme;
   showInternals?: boolean;
+  groupViewModelBaseMembers?: boolean;
   highlightUpdates?: boolean;
 }
 
