@@ -80,6 +80,8 @@
     "http-server": "^14.1.1",
     "jsdom": "^26.1.0",
     "lodash-es": "^4.17.21",
+    "mobx-solid": "^0.3.1",
+    "mobx-view-model-solid": "workspace:*",
     "mobx-view-model-v10": "npm:mobx-view-model@10.2.2",
     "mobx-view-model-v8": "npm:mobx-view-model@8.10.1",
     "mobx-view-model-v8-initial": "npm:mobx-view-model@8.0.0",
@@ -89,9 +91,11 @@
     "postcss-selector-parser": "^7.1.1",
     "rollup": "^4.52.5",
     "rollup-plugin-dts": "^6.2.3",
+    "solid-js": "^1.9.14",
     "storybook": "10.6.5",
     "terser": "^5.44.0",
     "tsx": "^4.20.6",
-    "vite-plugin-css-injected-by-js": "^3.5.2"
+    "vite-plugin-css-injected-by-js": "^3.5.2",
+    "vite-plugin-solid": "^2.11.13"
   }
 }

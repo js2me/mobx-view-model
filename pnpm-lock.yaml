@@ -350,6 +350,12 @@ importers:
       lodash-es:
         specifier: ^4.17.21
         version: 4.18.1
+      mobx-solid:
+        specifier: ^0.3.1
+        version: 0.3.1(mobx@6.15.0)(solid-js@1.9.14)
+      mobx-view-model-solid:
+        specifier: workspace:*
+        version: link:../solid/dist
       mobx-view-model-v10:
         specifier: npm:mobx-view-model@10.2.2
         version: mobx-view-model@10.2.2(mobx-react-lite@4.1.1(mobx@6.15.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(mobx@6.15.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -377,6 +383,9 @@ importers:
       rollup-plugin-dts:
         specifier: ^6.2.3
         version: 6.4.1(rollup@4.60.1)(typescript@6.0.3)
+      solid-js:
+        specifier: ^1.9.14
+        version: 1.9.14
       storybook:
         specifier: 10.6.5
         version: 10.6.5(@types/react@19.2.14)(prettier@2.8.8)(react@18.3.1)
@@ -389,6 +398,9 @@ importers:
       vite-plugin-css-injected-by-js:
         specifier: ^3.5.2
         version: 3.5.2(vite@8.0.16(@types/node@25.9.2)(esbuild@0.27.7)(jiti@2.7.0)(terser@5.46.1)(tsx@4.21.0))
+      vite-plugin-solid:
+        specifier: ^2.11.13
+        version: 2.11.13(@testing-library/jest-dom@6.9.1)(solid-js@1.9.14)(vite@8.0.16(@types/node@25.9.2)(esbuild@0.27.7)(jiti@2.7.0)(terser@5.46.1)(tsx@4.21.0))
     publishDirectory: dist
 
   packages/react:

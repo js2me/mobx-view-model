@@ -103,6 +103,21 @@ Documentation screenshots use the actual 13-VM docs demo. With the production pa
 pnpm --filter mobx-view-model-devtools capture:docs
 ```
 
+## Solid integration tests
+
+The browser suite includes a real Solid app using `mobx-view-model-solid`,
+`ViewModelsProvider`, `withViewModel`, `useCreateViewModel`, and MobX tracking.
+It checks the VM hierarchy, observable/computed updates in both directions,
+unmount/remount cleanup, and changes while the inspector is closed. Both the
+module entry (explicit connection) and standalone script (automatic discovery)
+run with the host loaded before and after devtools.
+
+Run only these tests, including a fresh package build:
+
+```sh
+pnpm --filter mobx-view-model-devtools test:e2e solid.spec.ts --workers=2
+```
+
 ## Core compatibility
 
 The standalone bundle is tested with core 8.10.1, 9.3.16, 10.2.2 and 11.x in both script load orders, including isolated MobX runtimes. It discovers their store-creation hooks without replacing the host configuration.
