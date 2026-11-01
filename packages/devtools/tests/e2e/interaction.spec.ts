@@ -246,3 +246,60 @@ test('releases search focus and keyboard handling when closed', async ({
 test.afterEach(async ({ page }) => {
   expect(pageErrors.get(page)).toEqual([]);
 });
+
+test('groups VM base properties and excludes them from search', async ({
+  page,
+}) => {
+  await page.goto('/compatibility.html?entry=module');
+  await page.getByRole('button', { name: 'Settings', exact: true }).click();
+  const settings = page.getByRole('dialog', { name: 'Settings', exact: true });
+  await expect(
+    settings.getByRole('checkbox', { name: 'Group VM properties' }),
+  ).toBeChecked();
+  await page.getByRole('button', { name: 'Settings', exact: true }).click();
+  const group = page.getByRole('button', { name: 'vm properties' });
+  await expect(group).toBeVisible();
+  await expect(group).toHaveAttribute('aria-expanded', 'false');
+  await expect(group.locator('i')).toHaveText('vm properties');
+  await expect(page.getByText('payload', { exact: true })).toHaveCount(0);
+  await expect(page.getByText('legacyLabel', { exact: true })).toBeVisible();
+  await group.click();
+  await expect(group).toHaveAttribute('aria-expanded', 'true');
+  await expect(page.getByText('payload', { exact: true })).toBeVisible();
+  const groupRow = page.locator('[data-depth]').filter({ has: group });
+  const rowBounds = (await groupRow.boundingBox())!;
+  await groupRow.click({
+    position: { x: rowBounds.width - 8, y: rowBounds.height / 2 },
+  });
+  await expect(group).toHaveAttribute('aria-expanded', 'false');
+  await group.focus();
+  await group.press('Enter');
+  await expect(group).toHaveAttribute('aria-expanded', 'true');
+  await group.press('Space');
+  await expect(group).toHaveAttribute('aria-expanded', 'false');
+  await group.click();
+  await expect(group).toHaveAttribute('aria-expanded', 'true');
+  const search = page.getByPlaceholder(
+    'search by property path or ViewModel name',
+  );
+  await search.fill('payload');
+  await expect(group).toHaveCount(0);
+  await expect(page.getByText('payload', { exact: true })).toHaveCount(0);
+  await search.fill('legacyLabel');
+  await expect(
+    page.getByText('legacyLabel', { exact: true }).first(),
+  ).toBeVisible();
+  await search.fill('');
+  await expect(group).toBeVisible();
+  await expect(group).toHaveAttribute('aria-expanded', 'true');
+  await expect
+    .poll(() =>
+      page.evaluate(() =>
+        localStorage.getItem(
+          'mobx-view-model-devtools/groupViewModelBaseMembers',
+        ),
+      ),
+    )
+    .toBe('true');
+  expect(pageErrors.get(page)).toEqual([]);
+});

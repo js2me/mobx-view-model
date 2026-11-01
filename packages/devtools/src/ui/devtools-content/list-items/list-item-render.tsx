@@ -5,14 +5,18 @@ import { PropertyListItem } from '@/model/list-item/property-list-item';
 import { PropertyWatchHistoryHeaderListItem } from '@/model/list-item/property-watch-history-header-item';
 import { PropertyWatchHistoryListItem } from '@/model/list-item/property-watch-history-item';
 import { VMListItem } from '@/model/list-item/vm-list-item';
+import { VMPropertiesListItem } from '@/model/list-item/vm-properties-list-item';
 import { ExtraListItemRender } from './extra-list-item-render';
 import { MetaListItemRender } from './meta-list-item-render';
 import { PropertyListItemRender } from './property-list-item-render';
 import { PropertyWatchHistoryHeaderRender } from './property-watch-history-header-render';
 import { PropertyWatchHistoryItemRender } from './property-watch-history-item-render';
 import { VmListItemRender } from './vm-list-item-render';
+import { VMPropertiesListItemRender } from './vm-properties-list-item-render';
 
 export function ListItemRender({ item }: { item: ListItem<any> }) {
+  if (item instanceof VMPropertiesListItem)
+    return <VMPropertiesListItemRender item={item} />;
   if (item instanceof VMListItem) return <VmListItemRender item={item} />;
   if (item instanceof ExtraListItem) return <ExtraListItemRender item={item} />;
   if (item instanceof PropertyListItem)

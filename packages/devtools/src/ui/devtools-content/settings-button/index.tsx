@@ -45,6 +45,15 @@ export const SettingsButton = withViewModel(SettingsButtonVM, ({ model }) => (
           />
         </label>
         <label className={css.settingRow}>
+          <span className={css.settingLabel}>Group VM properties</span>
+          <input
+            type="checkbox"
+            className={css.settingCheckbox}
+            checked={model.settings.groupViewModelBaseMembers}
+            onChange={model.handleGroupViewModelBaseMembers}
+          />
+        </label>
+        <label className={css.settingRow}>
           <span className={css.settingLabel}>Highlight updates</span>
           <input
             type="checkbox"

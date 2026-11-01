@@ -6,7 +6,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createDemoStore } from '../../stories/fixtures/create-demo-store';
 import { DevtoolsInspector } from './devtools-inspector';
 import { DevtoolsSettings } from './devtools-settings';
+import { getViewModelBaseKeys } from './inspection/get-view-model-base-keys';
 import { PropertyListItem } from './list-item/property-list-item';
+import { VMPropertiesListItem } from './list-item/vm-properties-list-item';
 
 let inspector: DevtoolsInspector;
 let settings: DevtoolsSettings;
@@ -16,7 +18,9 @@ beforeEach(() => {
   localStorage.clear();
   sessionStorage.clear();
   notifications.push.mockClear();
-  settings = new DevtoolsSettings({ display: { showInternals: false } });
+  settings = new DevtoolsSettings({
+    display: { showInternals: false, groupViewModelBaseMembers: false },
+  });
   inspector = new DevtoolsInspector(settings, notifications);
 });
 afterEach(() => {
@@ -295,4 +299,174 @@ it('rejects invalid runtime enumeration shapes instead of treating them as an em
     expect(() => inspector.setStore(store)).toThrow(/viewModels/);
     expect(inspector.store).toBeUndefined();
   }
+});
+
+describe('grouped ViewModelBase properties', () => {
+  function setup() {
+    class GroupedVM extends ViewModelBase {
+      count = 1;
+      account = { name: 'Ada' };
+    }
+    const store = new ViewModelStoreBase();
+    const vm = store.define({
+      VM: GroupedVM,
+      id: 'grouped',
+      payload: { value: 1 },
+    });
+    inspector.setStore(store);
+    settings.setGroupViewModelBaseMembers(true);
+    inspector.expandAll();
+    return { store, vm, VM: GroupedVM };
+  }
+
+  it('keeps base members lazy in one collapsed group, even with internals hidden', () => {
+    const { store, vm } = setup();
+    expect(inspector.rows.length).toBe(4);
+    expect(inspector.items.size).toBe(0);
+    const rows = inspector.rows.slice();
+    const group = rows[3];
+    expect(group).toBeInstanceOf(VMPropertiesListItem);
+    expect(group.isExpanded).toBe(false);
+    expect(property('count').data).toBe(1);
+    expect(inspector.rootItems[0].children).toEqual([rows[1], rows[2], group]);
+    group.expand();
+    expect(group.children.map((item) => item.property)).toEqual(
+      inspector
+        .getVmItem(vm)
+        .propertyKeys.filter((key) => getViewModelBaseKeys().has(key)),
+    );
+    expect(inspector.rows.slice().map((item) => item.key)).toEqual(
+      inspector.rootItems
+        .flatMap((item) => item.expandedChildrenWithSelf)
+        .map((item) => item.key),
+    );
+    const payload = property('payload', group);
+    expect(payload.depth).toBe(group.depth + 1);
+    expect(payload.parentListItem).toBe(inspector.rootItems[0]);
+    store.clean();
+  });
+
+  it('preserves paths, cached property models and edits when toggling grouping', () => {
+    const { store, vm } = setup();
+    const group = inspector.getVmItem(vm).vmPropertiesItem;
+    const payload = property('payload', group);
+    const value = property('value', payload);
+    value.editor.startEdit();
+    value.editor.editContent = '2';
+    value.editor.applyEdit();
+    expect(vm.payload.value).toBe(2);
+    settings.setShowInternals(true);
+    settings.setGroupViewModelBaseMembers(false);
+    expect(property('payload')).toBe(payload);
+    expect(payload.depth).toBe(1);
+    expect(property('value', payload)).toBe(value);
+    store.clean();
+  });
+
+  it('excludes base properties from search and suggestions, including nested paths', () => {
+    const { store, vm } = setup();
+    for (const query of [
+      'payload',
+      'payload.value',
+      'grouped.payload.',
+      'viewModels',
+    ]) {
+      runInAction(() => {
+        inspector.search.searchText = query;
+        inspector.search.searchTextToSearch = query;
+      });
+      const rows = inspector.rows.slice();
+      expect(
+        rows.some(
+          (item) =>
+            item instanceof PropertyListItem &&
+            getViewModelBaseKeys().has(item.property ?? ''),
+        ),
+      ).toBe(false);
+      expect(rows.some((item) => item instanceof VMPropertiesListItem)).toBe(
+        false,
+      );
+      expect(inspector.search.suggestionItems).toEqual([]);
+    }
+    for (const query of [
+      'count',
+      'account.name',
+      'grouped.account.',
+      'grouped',
+    ]) {
+      runInAction(() => {
+        inspector.search.searchTextToSearch = query;
+      });
+      expect(inspector.rows.slice().map((item) => item.key)).toEqual(
+        inspector.search
+          .getListItems(inspector.rootItems)
+          .map((item) => item.key),
+      );
+      expect(inspector.rows.length).toBeGreaterThan(1);
+    }
+    inspector.search.resetSearch();
+    expect(inspector.rows.at(3)).toBe(inspector.getVmItem(vm).vmPropertiesItem);
+    expect(inspector.rows.at(3)?.isExpanded).toBe(false);
+    store.clean();
+  });
+
+  it('prunes removed VM groups and resets expansion before reusing the same key', () => {
+    const { store, vm, VM } = setup();
+    const group = inspector.getVmItem(vm).vmPropertiesItem;
+    const ownerKey = inspector.getVmItem(vm).key;
+    group.expand();
+    property('payload', group).expand();
+    inspector.rows.slice();
+    expect(inspector.items.get(group.key)).toBe(group);
+    expect(inspector.expansion.get(group.key)).toBe(true);
+    runInAction(() => store.unmount(vm));
+    expect(inspector.items.has(group.key)).toBe(false);
+    expect(inspector.expansion.has(group.key)).toBe(false);
+    expect(
+      [...inspector.items.values()].some((item) =>
+        item.key.startsWith(ownerKey),
+      ),
+    ).toBe(false);
+    const replacement = store.define({
+      VM,
+      id: vm.id,
+      payload: { value: 3 },
+    });
+    const replacementGroup = inspector.getVmItem(replacement).vmPropertiesItem;
+    expect(replacementGroup.key).toBe(group.key);
+    expect(replacementGroup).not.toBe(group);
+    expect(replacementGroup.isExpanded).toBe(false);
+    expect(property('payload', replacementGroup).data).toEqual({ value: 3 });
+    store.clean();
+  });
+
+  it('enables grouping by default and allows configuration to disable it', () => {
+    settings.destroy();
+    localStorage.clear();
+    const defaults = new DevtoolsSettings({});
+    expect(defaults.groupViewModelBaseMembers).toBe(true);
+    defaults.destroy();
+    localStorage.clear();
+    const configured = new DevtoolsSettings({
+      display: { groupViewModelBaseMembers: false },
+    });
+    expect(configured.groupViewModelBaseMembers).toBe(false);
+    configured.destroy();
+  });
+
+  it('persists grouping preferences over configuration defaults', () => {
+    settings.destroy();
+    localStorage.clear();
+    const initial = new DevtoolsSettings({
+      display: { groupViewModelBaseMembers: true },
+    });
+    expect(initial.groupViewModelBaseMembers).toBe(true);
+    initial.setGroupViewModelBaseMembers(false);
+    initial.destroy();
+    const restored = new DevtoolsSettings({
+      display: { groupViewModelBaseMembers: true },
+    });
+    expect(restored.groupViewModelBaseMembers).toBe(false);
+    restored.destroy();
+  });
 });

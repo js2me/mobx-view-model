@@ -40,6 +40,9 @@ export class SettingsButtonVM extends ViewModelImpl<{
   stopPropagation = (event: React.MouseEvent) => event.stopPropagation();
   handleShowInternals = (event: React.ChangeEvent<HTMLInputElement>) =>
     this.settings.setShowInternals(event.target.checked);
+  handleGroupViewModelBaseMembers = (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => this.settings.setGroupViewModelBaseMembers(event.target.checked);
   handleHighlightUpdates = (event: React.ChangeEvent<HTMLInputElement>) =>
     this.settings.setHighlightUpdates(event.target.checked);
 }

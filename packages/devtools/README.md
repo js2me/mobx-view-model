@@ -60,6 +60,16 @@ The public `ViewModelDevtools` entry point composes the inspector, settings, win
 
 The panel uses dark glass by default. The appearance menu also supports light and system themes; saved choices take precedence over defaults. `ViewModelDevtools.define().destroy()` removes the panel and releases its subscriptions and timers.
 
+**Group VM properties** is enabled by default and collects all `ViewModelBase` members in a collapsed **⚙️ _vm properties_** row. These members are excluded from search and suggestions while grouping is enabled. The preference is saved locally; `display.groupViewModelBaseMembers` sets its initial default.
+
+Grouping takes precedence over **Show internals** (`display.showInternals`): base members remain available inside the group even when internals are hidden. To keep them completely hidden after upgrading, disable **Group VM properties** and **Show internals**, or configure both defaults:
+
+```ts
+display: { groupViewModelBaseMembers: false, showInternals: false }
+```
+
+Saved preferences take precedence over these configuration defaults.
+
 ## Contribution Guide    
 
 Want to contribute ? [Follow this guide](https://github.com/js2me/mobx-view-model/blob/master/CONTRIBUTING.md)  
