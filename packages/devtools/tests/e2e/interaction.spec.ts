@@ -253,7 +253,9 @@ test('groups VM base properties and excludes them from search', async ({
   await page.goto('/compatibility.html?entry=module');
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
   const settings = page.getByRole('dialog', { name: 'Settings', exact: true });
-  await settings.getByRole('checkbox', { name: 'Group VM properties' }).check();
+  await expect(
+    settings.getByRole('checkbox', { name: 'Group VM properties' }),
+  ).toBeChecked();
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
   const group = page.getByRole('button', { name: 'vm properties' });
   await expect(group).toBeVisible();

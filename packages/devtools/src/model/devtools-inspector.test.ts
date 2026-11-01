@@ -18,7 +18,9 @@ beforeEach(() => {
   localStorage.clear();
   sessionStorage.clear();
   notifications.push.mockClear();
-  settings = new DevtoolsSettings({ display: { showInternals: false } });
+  settings = new DevtoolsSettings({
+    display: { showInternals: false, groupViewModelBaseMembers: false },
+  });
   inspector = new DevtoolsInspector(settings, notifications);
 });
 afterEach(() => {
@@ -436,6 +438,20 @@ describe('grouped ViewModelBase properties', () => {
     expect(replacementGroup.isExpanded).toBe(false);
     expect(property('payload', replacementGroup).data).toEqual({ value: 3 });
     store.clean();
+  });
+
+  it('enables grouping by default and allows configuration to disable it', () => {
+    settings.destroy();
+    localStorage.clear();
+    const defaults = new DevtoolsSettings({});
+    expect(defaults.groupViewModelBaseMembers).toBe(true);
+    defaults.destroy();
+    localStorage.clear();
+    const configured = new DevtoolsSettings({
+      display: { groupViewModelBaseMembers: false },
+    });
+    expect(configured.groupViewModelBaseMembers).toBe(false);
+    configured.destroy();
   });
 
   it('persists grouping preferences over configuration defaults', () => {

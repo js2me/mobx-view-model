@@ -41,7 +41,7 @@ export class DevtoolsSettings {
     this.groupViewModelBaseMembers =
       this.storage.get({ key: 'groupViewModelBaseMembers' }) ??
       config.display?.groupViewModelBaseMembers ??
-      false;
+      true;
     this.position =
       this.storage.get({ key: 'position' }) ?? config.position ?? 'top-right';
     const display = config.display;

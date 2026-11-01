@@ -60,7 +60,7 @@ The public `ViewModelDevtools` entry point composes the inspector, settings, win
 
 The panel uses dark glass by default. The appearance menu also supports light and system themes; saved choices take precedence over defaults. `ViewModelDevtools.define().destroy()` removes the panel and releases its subscriptions and timers.
 
-Enable **Group VM properties** in Settings to collect all `ViewModelBase` members in a collapsed **⚙️ _vm properties_** row. These members are excluded from search and suggestions while grouping is enabled. The preference is saved locally; `display.groupViewModelBaseMembers` sets its initial default.
+**Group VM properties** is enabled by default and collects all `ViewModelBase` members in a collapsed **⚙️ _vm properties_** row. These members are excluded from search and suggestions while grouping is enabled. The preference is saved locally; `display.groupViewModelBaseMembers` sets its initial default.
 
 ## Contribution Guide    
 
