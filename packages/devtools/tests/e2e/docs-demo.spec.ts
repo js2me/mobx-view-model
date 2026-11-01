@@ -19,7 +19,13 @@ test('scrolls the docs inspector with the wheel and scrollbar thumb', async ({
   await expect
     .poll(() => viewport.evaluate((el) => el.scrollTop))
     .toBeGreaterThan(0);
-  const scrollBeforeDrag = await viewport.evaluate((el) => el.scrollTop);
+  const { scrollBeforeDrag, remainingScroll } = await viewport.evaluate(
+    (el) => ({
+      scrollBeforeDrag: el.scrollTop,
+      remainingScroll: el.scrollHeight - el.clientHeight - el.scrollTop,
+    }),
+  );
+  expect(remainingScroll).toBeGreaterThan(0);
   const thumbBox = (await thumb.boundingBox())!;
   const x = thumbBox.x + thumbBox.width / 2;
   const y = thumbBox.y + thumbBox.height / 2;
@@ -29,7 +35,7 @@ test('scrolls the docs inspector with the wheel and scrollbar thumb', async ({
   await page.mouse.up();
   await expect
     .poll(() => viewport.evaluate((el) => el.scrollTop))
-    .toBeGreaterThan(scrollBeforeDrag + 500);
+    .toBeGreaterThan(scrollBeforeDrag + Math.min(500, remainingScroll / 2));
   await expect(dialog.getByText('13 live', { exact: true })).toBeVisible();
 });
 
