@@ -17,7 +17,6 @@ import type { SetEntryIdentity } from '../editing/set-entry-identity';
 import {
   type CollectionKind,
   getCollectionKind,
-  getMapEntryAt,
   getSetValueAt,
 } from '../inspection/collection-like';
 import {
@@ -25,9 +24,16 @@ import {
   getPropertyInstanceClassName,
 } from '../inspection/detect-property-value-type';
 import { getViewModelBaseKeys } from '../inspection/get-view-model-base-keys';
+import {
+  getIndexedMapEntryAt,
+  getMapEntryKeys,
+} from '../inspection/map-entry-index';
 import { INACCESSIBLE } from '../inspection/safe-access';
 import { formatSearchSegmentKey } from '../search/format-search-key';
-import { createPropertyChildren } from './create-property-children';
+import {
+  createPropertyChildren,
+  hasPropertyChildren,
+} from './create-property-children';
 import { ListItem, type ListItemOperation } from './list-item';
 import { MetaListItem } from './meta-list-item';
 import { PropertyWatch } from './property-watch';
@@ -51,7 +57,7 @@ export class PropertyListItem extends ListItem<any> {
   }
 
   get isExpandable() {
-    return this.inspector.search.isPropertyItemExpandable(this);
+    return hasPropertyChildren(this.data, this.nestedValueType);
   }
 
   get data(): any {
@@ -68,7 +74,10 @@ export class PropertyListItem extends ListItem<any> {
         this.collectionEntryKind === 'map' &&
         getCollectionKind(parentData) === 'map'
       ) {
-        return getMapEntryAt(parentData, this.collectionEntryIndex)?.[1];
+        return getIndexedMapEntryAt(
+          this.parent,
+          this.collectionEntryIndex,
+        )?.[1];
       }
 
       if (
@@ -108,7 +117,7 @@ export class PropertyListItem extends ListItem<any> {
       return undefined;
     }
 
-    return getMapEntryAt(parentData, this.collectionEntryIndex)?.[0];
+    return getMapEntryKeys(this.parent)[this.collectionEntryIndex];
   }
 
   get collectionEntryIndex(): number | undefined {
@@ -265,12 +274,20 @@ export class PropertyListItem extends ListItem<any> {
   }
 
   get isCopiable() {
-    if (this.type === 'instance') return false;
+    return this.type !== 'instance' && !this.isInaccessible;
+  }
+
+  private async copyValue() {
     try {
-      JSON.stringify(this.data);
-      return true;
-    } catch {
-      return false;
+      const value =
+        this.nestedValueType === 'object' || this.nestedValueType === 'array'
+          ? JSON.stringify(this.data, null, 2)
+          : this.stringifiedData;
+      await navigator.clipboard.writeText(value);
+    } catch (error) {
+      this.inspector.notifications.push({
+        title: `Failed to copy "${this.property}": ${error instanceof Error ? error.message : String(error)}`,
+      });
     }
   }
 
@@ -355,7 +372,7 @@ export class PropertyListItem extends ListItem<any> {
       operations.push({
         title: 'Copy',
         icon: Copy,
-        action: () => navigator.clipboard.writeText(this.stringifiedData),
+        action: () => this.copyValue(),
       });
     }
 

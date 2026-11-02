@@ -1,7 +1,9 @@
 import { getSetEntryIdentities } from '../editing/set-entry-identity';
 import { getCollectionKind } from '../inspection/collection-like';
 import { createDatePreviewChildren } from '../inspection/create-date-preview-children';
+import { isDateLike } from '../inspection/date-like';
 import { getAllKeys } from '../inspection/get-all-keys';
+import { getMapEntryKeys } from '../inspection/map-entry-index';
 import { isInaccessible } from '../inspection/safe-access';
 import {
   type SortPropertiesBy,
@@ -9,6 +11,18 @@ import {
 } from '../inspection/sort-property-keys';
 import type { ListItem } from './list-item';
 import { PropertyListItem } from './property-list-item';
+
+/** Expansion affordances do not need to allocate a child model for every key. */
+export function hasPropertyChildren(data: unknown, type: string): boolean {
+  if (data == null || isInaccessible(data)) return false;
+  if (type === 'array') return true; // Even an empty array exposes length.
+  if (type === 'function') return Object.keys(data).length > 0;
+  if (type !== 'object' && type !== 'instance') return false;
+  if (isDateLike(data)) return true;
+  if (getCollectionKind(data) && (data as { readonly size: number }).size > 0)
+    return true;
+  return getAllKeys(data).length > 0;
+}
 
 export function createPropertyChildren(
   parent: ListItem<any>,
@@ -57,8 +71,7 @@ export function createPropertyChildren(
       );
     }
   } else if (kind === 'map') {
-    let index = 0;
-    for (const _ of data.values()) {
+    for (const index of getMapEntryKeys(parent).keys()) {
       entries.push(
         PropertyListItem.create(
           inspector,
@@ -72,7 +85,6 @@ export function createPropertyChildren(
           },
         ),
       );
-      index++;
     }
   }
   const offset = previews.length + entries.length;

@@ -1,5 +1,7 @@
 export type MapLike = {
   entries(): IterableIterator<[unknown, unknown]>;
+  keys(): IterableIterator<unknown>;
+  get(key: unknown): unknown;
 };
 
 export type SetLike = {

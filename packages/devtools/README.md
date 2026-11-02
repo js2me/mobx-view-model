@@ -200,3 +200,10 @@ Computed-output boundaries are exercised through the real editor UI:
 intact during in-place edits, while
 [native Map snapshots](tests/ui/computed-dependencies.test.tsx) receive a pinned
 copy and update dependent computeds without changing the original snapshot.
+
+Map rows share a key index while observed. Value-only changes read their entry
+directly without rebuilding that index. Collapsed rows check for children without
+creating their models, and object previews read at most 256 values. Copy performs
+full serialization only when requested; serialization or clipboard failures show
+a notification. These bounds are checked in
+[performance regressions](tests/ui/performance-regressions.test.tsx).

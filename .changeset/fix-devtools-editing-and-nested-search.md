@@ -11,3 +11,5 @@ Keep Set rows attached to their values across replacement and index changes with
 Reject stale Map drafts without forbidding undefined keys, preserve explicit refreshes of same-reference data, avoid getter evaluation during metadata checks, and share Set index lookups. Determine base fields from each VM's actual core base, preserving core 11 application properties with legacy names.
 
 Validate Map ancestors for nested drafts and preserve function-call targets while editing. Report call errors without losing the draft, retain class identity and private state in computed outputs, and round-trip Symbol editor content correctly.
+
+Share an observed Map key index instead of rescanning entries for each row. Bound object-preview value reads to 256 fields, check expandability without allocating descendants, and serialize Copy values only on request with visible error notifications.
