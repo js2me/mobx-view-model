@@ -2,18 +2,17 @@
 
 # mobx-view-model-react
 
-[![NPM version][npm-image]][npm-url] [![test status][github-test-actions-image]][github-actions-url] [![build status][github-build-actions-image]][github-actions-url] [![npm download][download-image]][download-url] [![bundle size][bundlephobia-image]][bundlephobia-url]
+[![NPM version][npm-image]][npm-url] [![Build and tests][github-actions-image]][github-actions-url] [![npm download][download-image]][download-url] [![bundle size][bundle-size-image]][bundle-size-url]
 
 
-[npm-image]: http://img.shields.io/npm/v/mobx-view-model-react.svg
-[npm-url]: http://npmjs.org/package/mobx-view-model-react
-[github-test-actions-image]: https://github.com/js2me/mobx-view-model/workflows/Test/badge.svg
-[github-build-actions-image]: https://github.com/js2me/mobx-view-model/workflows/Build/badge.svg
-[github-actions-url]: https://github.com/js2me/mobx-view-model/actions
+[npm-image]: https://img.shields.io/npm/v/mobx-view-model-react.svg
+[npm-url]: https://www.npmjs.com/package/mobx-view-model-react
+[github-actions-image]: https://github.com/js2me/mobx-view-model/actions/workflows/main.yml/badge.svg?branch=master
+[github-actions-url]: https://github.com/js2me/mobx-view-model/actions/workflows/main.yml
 [download-image]: https://img.shields.io/npm/dm/mobx-view-model-react.svg
-[download-url]: https://npmjs.org/package/mobx-view-model-react
-[bundlephobia-url]: https://bundlephobia.com/result?p=mobx-view-model-react
-[bundlephobia-image]: https://badgen.net/bundlephobia/minzip/mobx-view-model-react
+[download-url]: https://www.npmjs.com/package/mobx-view-model-react
+[bundle-size-url]: https://bundlejs.com/?q=mobx-view-model-react
+[bundle-size-image]: https://deno.bundlejs.com/badge?q=mobx-view-model-react
 
 
 ⚡ React bindings for [mobx-view-model](https://www.npmjs.com/package/mobx-view-model) | HOCs, hooks & providers ⚡

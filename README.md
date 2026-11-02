@@ -2,18 +2,17 @@
 
 # mobx-view-model  
 
-[![NPM version][npm-image]][npm-url] [![test status][github-test-actions-image]][github-actions-url] [![build status][github-build-actions-image]][github-actions-url] [![npm download][download-image]][download-url] [![bundle size][bundlephobia-image]][bundlephobia-url]
+[![NPM version][npm-image]][npm-url] [![Build and tests][github-actions-image]][github-actions-url] [![npm download][download-image]][download-url] [![bundle size][bundle-size-image]][bundle-size-url]
 
 
-[npm-image]: http://img.shields.io/npm/v/mobx-view-model.svg
-[npm-url]: http://npmjs.org/package/mobx-view-model
-[github-test-actions-image]: https://github.com/js2me/mobx-view-model/workflows/Test/badge.svg
-[github-build-actions-image]: https://github.com/js2me/mobx-view-model/workflows/Build/badge.svg
-[github-actions-url]: https://github.com/js2me/mobx-view-model/actions
+[npm-image]: https://img.shields.io/npm/v/mobx-view-model.svg
+[npm-url]: https://www.npmjs.com/package/mobx-view-model
+[github-actions-image]: https://github.com/js2me/mobx-view-model/actions/workflows/main.yml/badge.svg?branch=master
+[github-actions-url]: https://github.com/js2me/mobx-view-model/actions/workflows/main.yml
 [download-image]: https://img.shields.io/npm/dm/mobx-view-model.svg
-[download-url]: https://npmjs.org/package/mobx-view-model
-[bundlephobia-url]: https://bundlephobia.com/result?p=mobx-view-model
-[bundlephobia-image]: https://badgen.net/bundlephobia/minzip/mobx-view-model
+[download-url]: https://www.npmjs.com/package/mobx-view-model
+[bundle-size-url]: https://bundlejs.com/?q=mobx-view-model
+[bundle-size-image]: https://deno.bundlejs.com/badge?q=mobx-view-model
 
 
 ⚡ Clean MVVM for React + MobX | Powerful ViewModels made simple ⚡  
