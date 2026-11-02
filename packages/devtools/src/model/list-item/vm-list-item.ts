@@ -61,10 +61,11 @@ export class VMListItem extends ListItem<AnyVM> {
   private get propertyListItems(): ListItem<any>[] {
     this.dataWatchAtom.reportObserved();
 
-    const keys = this.groupsBaseProperties
-      ? this.propertyKeys.filter(
-          (key) => !getViewModelBaseKeys(this.data).has(key),
-        )
+    const baseKeys = this.groupsBaseProperties
+      ? getViewModelBaseKeys(this.data)
+      : null;
+    const keys = baseKeys
+      ? this.propertyKeys.filter((key) => !baseKeys.has(key))
       : this.propertyKeys;
     const items: ListItem<any>[] = keys.map((property, order) => {
       return PropertyListItem.create(

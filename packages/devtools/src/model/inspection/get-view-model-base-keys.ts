@@ -25,7 +25,9 @@ const legacyInstanceKeys = [
 ];
 let currentKeys: ReadonlySet<string> | undefined;
 let currentInstanceKeys: string[];
+const baseMarkers = ['mount', 'unmount', 'payload', 'parentViewModel'];
 const keysByBase = new WeakMap<object, ReadonlySet<string>>();
+const keysByPrototype = new WeakMap<object, ReadonlySet<string>>();
 
 /** Use the inspected base prototype, never a union of names from all versions.
  * Public lifecycle descriptors survive bundling; no user getter is evaluated. */
@@ -36,18 +38,21 @@ export function getViewModelBaseKeys(vm?: object): ReadonlySet<string> {
     currentInstanceKeys = Object.getOwnPropertyNames(probe);
   }
   if (!vm) return currentKeys;
-  let proto = Object.getPrototypeOf(vm);
+  const prototype = Object.getPrototypeOf(vm);
+  if (!prototype) return currentKeys;
+  const cached = keysByPrototype.get(prototype);
+  if (cached) return cached;
+
+  let proto = prototype;
   let base: object | undefined;
   while (proto && proto !== Object.prototype) {
-    if (
-      ['mount', 'unmount', 'payload', 'parentViewModel'].every((key) =>
-        Object.hasOwn(proto, key),
-      )
-    )
-      base = proto;
+    if (baseMarkers.every((key) => Object.hasOwn(proto, key))) base = proto;
     proto = Object.getPrototypeOf(proto);
   }
-  if (!base) return currentKeys;
+  if (!base) {
+    keysByPrototype.set(prototype, currentKeys);
+    return currentKeys;
+  }
   let keys = keysByBase.get(base);
   if (!keys) {
     const fields = Object.hasOwn(base, 'isUnmounting')
@@ -61,5 +66,6 @@ export function getViewModelBaseKeys(vm?: object): ReadonlySet<string> {
     ]);
     keysByBase.set(base, keys);
   }
+  keysByPrototype.set(prototype, keys);
   return keys;
 }
