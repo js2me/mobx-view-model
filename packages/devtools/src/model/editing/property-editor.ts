@@ -4,6 +4,8 @@ import type { Maybe } from 'yummies/types';
 import type { DevtoolsInspector } from '../devtools-inspector';
 import {
   type CollectionKind,
+  getCollectionKind,
+  getMapEntryAt,
   isMobxObservableMap,
   isMobxObservableSet,
 } from '../inspection/collection-like';
@@ -44,14 +46,17 @@ function formatEditError(error: unknown) {
 
 export class PropertyEditor {
   private readonly propagation: PropertyEditPropagation;
+  private mapEditTarget?: { collection: object; key: unknown };
   editContent = '';
   isEditMode = false;
+  isFunctionCall = false;
 
   constructor(private readonly host: PropertyEditorHost) {
     this.propagation = new PropertyEditPropagation(host);
     makeObservable(this, {
       editContent: observable.ref,
       isEditMode: observable,
+      isFunctionCall: observable,
       isEditable: computed,
       editableContent: computed,
       handleChangeEditContent: action,
@@ -146,7 +151,7 @@ export class PropertyEditor {
   };
 
   confirmEdit() {
-    if (this.host.dataType === 'function') {
+    if (this.isFunctionCall) {
       this.callFunction();
       return;
     }
@@ -155,6 +160,8 @@ export class PropertyEditor {
   }
 
   startFunctionCall = () => {
+    this.isFunctionCall = true;
+    this.mapEditTarget = undefined;
     this.editContent = '';
     this.isEditMode = true;
   };
@@ -167,11 +174,24 @@ export class PropertyEditor {
   }
 
   startEdit() {
+    this.isFunctionCall = false;
+    const h = this.host;
+    const entry =
+      h.collectionEntryKind === 'map' &&
+      h.collectionEntryIndex != null &&
+      getCollectionKind(h.parentListItem.data) === 'map'
+        ? getMapEntryAt(h.parentListItem.data, h.collectionEntryIndex)
+        : undefined;
+    this.mapEditTarget = entry
+      ? { collection: h.parentListItem.data, key: entry[0] }
+      : undefined;
     this.editContent = this.editableContent;
     this.isEditMode = true;
   }
 
   cancelEdit() {
+    this.isFunctionCall = false;
+    this.mapEditTarget = undefined;
     this.editContent = '';
     this.isEditMode = false;
   }
@@ -247,6 +267,27 @@ export class PropertyEditor {
     notifies?: boolean;
   } {
     const h = this.host;
+
+    if (
+      h.collectionEntryKind === 'map' &&
+      (getCollectionKind(h.parentListItem.data) !== 'map' ||
+        h.collectionEntryIndex == null ||
+        !getMapEntryAt(h.parentListItem.data, h.collectionEntryIndex))
+    )
+      return { ok: false, error: 'Map entry was not found' };
+
+    if (h.collectionEntryKind === 'map' && this.mapEditTarget) {
+      const { collection, key } = this.mapEditTarget;
+      if (
+        h.parentListItem.data !== collection ||
+        !(Object.is(h.mapEntryKey, key) || h.mapEntryKey === key)
+      ) {
+        return {
+          ok: false,
+          error: 'Map entry changed while editing; reopen the editor',
+        };
+      }
+    }
 
     const producerTarget = resolveComputedProducerForEdit(
       h as PropertyListItem,

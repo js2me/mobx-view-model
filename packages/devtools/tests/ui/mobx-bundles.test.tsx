@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { runInThisContext } from 'node:vm';
 import { act } from '@testing-library/react';
+import { observable, runInAction } from 'mobx';
 import { describe, expect, it } from 'vitest';
 import { inspect } from './inspect';
 
@@ -56,4 +57,55 @@ describe('application and devtools MobX bundles', () => {
     expect(model.values).toBe(values);
     ui.expectApp([7, 3]);
   });
+});
+
+it.each(['key', undefined, {}])(
+  'notifies foreign shallow Map values for key %s',
+  async (key) => {
+    const entries = appMobx.observable.map([[key, { value: 1 }]], {
+      deep: false,
+    });
+    const model = appMobx.observable({
+      entries,
+      get total() {
+        return this.entries.get(key)!.value * 10;
+      },
+    });
+    const ui = inspect(model, ['entries', '0', 'value'], () => model.total);
+    await ui.edit('7');
+    ui.expectApp(70);
+  },
+);
+
+it('updates repeated computed overrides when the host MobX runtime is isolated', async () => {
+  const isolatedExports = {};
+  runInThisContext(`(function(exports) {${source}\n})`)(isolatedExports);
+  const host = isolatedExports as typeof import('mobx');
+  host.configure({ isolateGlobalState: true, enforceActions: 'never' });
+  const model = host.observable({
+    source: 1,
+    get value() {
+      return this.source * 2;
+    },
+  });
+  const result = host.observable({
+    get value() {
+      return model.value * 10;
+    },
+  });
+  const output = observable.box(0);
+  const stop = host.autorun(() => {
+    runInAction(() => {
+      output.set(result.value);
+    });
+  });
+  try {
+    const ui = inspect(model, ['value'], () => output.get());
+    await ui.edit('7');
+    ui.expectApp(70);
+    await ui.edit('8');
+    ui.expectApp(80);
+  } finally {
+    stop();
+  }
 });

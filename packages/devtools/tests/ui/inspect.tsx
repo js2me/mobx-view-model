@@ -91,6 +91,8 @@ export function inspect<T extends object>(
   const user = userEvent.setup();
   return {
     user,
+    root,
+    item,
     row,
     notifications,
     rowFor: (path: string[]) =>

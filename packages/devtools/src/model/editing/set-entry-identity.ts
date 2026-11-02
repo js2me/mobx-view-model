@@ -1,44 +1,63 @@
-import { action, makeObservable, observable } from 'mobx';
-import type { SetLike } from '../inspection/mobx-collection';
+import { action, computed, makeObservable, observable } from 'mobx';
+import { getCollectionKind } from '../inspection/collection-like';
 
 let nextEntryId = 0;
-const registries = new WeakMap<object, Map<unknown, SetEntryIdentity>>();
+const registries = new WeakMap<object, SetEntryRegistry>();
+type SetOwner = { readonly data: unknown };
+
+/** One reactive snapshot is shared by every row; it suspends with the UI. */
+class SetEntryRegistry {
+  readonly entries = new Map<unknown, SetEntryIdentity>();
+  readonly snapshot = computed(() => {
+    const data = this.parent.data;
+    const values =
+      getCollectionKind(data) === 'set'
+        ? [...(data as Set<unknown>).values()]
+        : [];
+    return {
+      values,
+      indexes: new Map(values.map((value, index) => [value, index])),
+    };
+  });
+  constructor(readonly parent: SetOwner) {}
+}
 
 /** A Set row follows its value, independently of the value's insertion index. */
 export class SetEntryIdentity {
   readonly id = nextEntryId++;
-
   constructor(
     public value: unknown,
-    private readonly registry: Map<unknown, SetEntryIdentity>,
+    private readonly registry: SetEntryRegistry,
   ) {
     makeObservable(this, { value: observable.ref, rebind: action });
   }
-
+  get index() {
+    return this.registry.snapshot.get().indexes.get(this.value);
+  }
   rebind(value: unknown) {
-    if (this.registry.get(this.value) === this)
-      this.registry.delete(this.value);
+    if (this.registry.entries.get(this.value) === this)
+      this.registry.entries.delete(this.value);
     this.value = value;
-    // Editing to an existing member merges rows, just as Set merges values.
-    if (!this.registry.has(value)) this.registry.set(value, this);
+    if (!this.registry.entries.has(value))
+      this.registry.entries.set(value, this);
   }
 }
 
-export function getSetEntryIdentities(parent: object, set: SetLike) {
+export function getSetEntryIdentities(parent: SetOwner) {
   let registry = registries.get(parent);
   if (!registry) {
-    registry = new Map();
+    registry = new SetEntryRegistry(parent);
     registries.set(parent, registry);
   }
-  const active = new Set(set.values());
-  for (const value of registry.keys()) {
-    if (!active.has(value)) registry.delete(value);
+  const { values, indexes } = registry.snapshot.get();
+  for (const value of registry.entries.keys()) {
+    if (!indexes.has(value)) registry.entries.delete(value);
   }
-  return [...active].map((value) => {
-    let entry = registry.get(value);
+  return values.map((value) => {
+    let entry = registry.entries.get(value);
     if (!entry) {
       entry = new SetEntryIdentity(value, registry);
-      registry.set(value, entry);
+      registry.entries.set(value, entry);
     }
     return entry;
   });

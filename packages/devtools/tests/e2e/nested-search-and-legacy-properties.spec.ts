@@ -38,30 +38,40 @@ test('product. offers nonempty nested hints and follows a selected property', as
   ).toBeVisible();
 });
 
-test('core 9 internals stay inside the collapsed vm properties group', async ({
-  page,
-}) => {
-  await page.goto('/compatibility.html?core=9&order=host-first&popup=opened');
-  await expect(page.getByText('legacyLabel', { exact: true })).toBeVisible();
-  const group = page.getByText('vm properties', { exact: true });
-  await expect(group).toBeVisible();
-  for (const key of [
-    'vmParams',
-    'vmConfig',
-    'isPayloadEqual',
-    '_isMounted',
-    '_payload',
-    'isUnmounting',
-    'beginUnmounting',
-    'finalizeUnmount',
-    'payloadChanged',
-    'getParentViewModel',
-  ]) {
-    await expect(page.getByText(key, { exact: true })).toHaveCount(0);
-  }
-  await group.click();
-  await expect(page.getByText('vmParams', { exact: true })).toBeVisible();
-  await group.click();
-  await expect(page.getByText('vmParams', { exact: true })).toHaveCount(0);
-  await expect(page.getByText('legacyLabel', { exact: true })).toBeVisible();
-});
+for (const core of ['8.0', '8', '9', '10', '11']) {
+  test(`core ${core} internals stay inside the collapsed vm properties group`, async ({
+    page,
+  }) => {
+    await page.goto(
+      `/compatibility.html?core=${core}&order=host-first&popup=opened`,
+    );
+    await expect(page.getByText('legacyLabel', { exact: true })).toBeVisible();
+    const representative = core === '11' ? 'vm' : 'vmParams';
+    const group = page.getByText('vm properties', { exact: true });
+    await expect(page.getByText(representative, { exact: true })).toHaveCount(
+      0,
+    );
+    await expect(group).toBeVisible();
+    for (const key of [
+      'vmParams',
+      'vmConfig',
+      'isPayloadEqual',
+      '_isMounted',
+      '_payload',
+      'isUnmounting',
+      'beginUnmounting',
+      'finalizeUnmount',
+      'payloadChanged',
+      'getParentViewModel',
+    ]) {
+      await expect(page.getByText(key, { exact: true })).toHaveCount(0);
+    }
+    await group.click();
+    await expect(page.getByText(representative, { exact: true })).toBeVisible();
+    await group.click();
+    await expect(page.getByText(representative, { exact: true })).toHaveCount(
+      0,
+    );
+    await expect(page.getByText('legacyLabel', { exact: true })).toBeVisible();
+  });
+}

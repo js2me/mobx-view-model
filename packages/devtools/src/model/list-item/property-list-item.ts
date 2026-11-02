@@ -75,7 +75,9 @@ export class PropertyListItem extends ListItem<any> {
         this.collectionEntryKind === 'set' &&
         getCollectionKind(parentData) === 'set'
       ) {
-        return getSetValueAt(parentData, this.collectionEntryIndex);
+        return this.setEntryIdentity
+          ? this.setEntryIdentity.value
+          : getSetValueAt(parentData, this.collectionEntryIndex);
       }
 
       return undefined;
@@ -111,20 +113,13 @@ export class PropertyListItem extends ListItem<any> {
 
   get collectionEntryIndex(): number | undefined {
     if (!this.setEntryIdentity) return this.entryIndex;
-    const data = this.parent.data;
-    if (getCollectionKind(data) !== 'set') return undefined;
-    const values = [...data.values()];
-    return values.findIndex(
-      (value) =>
-        Object.is(value, this.setEntryIdentity!.value) ||
-        value === this.setEntryIdentity!.value,
-    );
+    return this.setEntryIdentity.index;
   }
 
   get property() {
-    return this.setEntryIdentity
-      ? String(this.collectionEntryIndex)
-      : this.propertyKey;
+    if (!this.setEntryIdentity) return this.propertyKey;
+    const index = this.collectionEntryIndex;
+    return index == null ? undefined : String(index);
   }
 
   get path(): string {
@@ -248,7 +243,7 @@ export class PropertyListItem extends ListItem<any> {
       this.parent instanceof VMListItem &&
       this.parent.groupsBaseProperties &&
       this.property != null &&
-      getViewModelBaseKeys().has(this.property);
+      getViewModelBaseKeys(this.parent.data).has(this.property);
     return this.parent.depth + (grouped ? 2 : 1);
   }
 
@@ -311,7 +306,7 @@ export class PropertyListItem extends ListItem<any> {
 
     if (this.editor.isEditMode) {
       operations.push(
-        this.dataType === 'function'
+        this.editor.isFunctionCall
           ? {
               title: 'Call function',
               icon: Play,
@@ -336,10 +331,7 @@ export class PropertyListItem extends ListItem<any> {
       operations.push({
         title: 'Call',
         icon: Play,
-        action: () => {
-          this.editor.editContent = '';
-          this.editor.isEditMode = true;
-        },
+        action: this.editor.startFunctionCall,
       });
     } else {
       if (this.dataType === 'boolean' && this.editor.isEditable) {

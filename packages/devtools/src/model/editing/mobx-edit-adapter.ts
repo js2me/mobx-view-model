@@ -1,10 +1,5 @@
-import {
-  getAtom,
-  isObservableArray,
-  observable,
-  runInAction,
-  untracked,
-} from 'mobx';
+import { getAtom, isObservableArray, observable, runInAction } from 'mobx';
+import { isMobxObservableMap } from '../inspection/collection-like';
 
 // Read-only shape discovery shared with separately bundled MobX instances.
 // This module is the compatibility boundary for MobX internals.
@@ -91,58 +86,17 @@ function findMobxAdministration(
   return undefined;
 }
 
-function ensureMobxPropertyAtomLoaded(
-  object: object,
-  key: string,
-  adm?: MobxObjectAdministration,
-): MobxObjectAdministration | undefined {
-  const admin = adm ?? findMobxAdministration(object);
-
-  if (!admin) {
-    return undefined;
-  }
-
-  registerMobxAdministration(object, admin);
-
-  if (admin.values_.has(key)) {
-    return admin;
-  }
-
-  try {
-    untracked(() => {
-      void (object as Record<string, unknown>)[key];
-    });
-  } catch {
-    // Getter may throw while devtools still allow editing a fallback value.
-  }
-
-  return admin;
-}
-
+/** Metadata checks must not execute user accessors. The inspector reads a
+ * property before editing it, which also initializes lazy MobX annotations. */
 function getMobxPropertyAtom(
   object: object,
   key: string,
 ): MobxAtom | undefined {
-  const adm = ensureMobxPropertyAtomLoaded(object, key);
-  return adm?.values_.get(key);
+  return findMobxAdministration(object)?.values_.get(key);
 }
 
-export function getMobxComputedPropertyKeys(object: object): string[] {
-  const adm = findMobxAdministration(object);
-
-  if (!adm) {
-    return [];
-  }
-
-  const keys: string[] = [];
-
-  for (const [key, atom] of adm.values_) {
-    if (typeof atom.derivation === 'function') {
-      keys.push(key);
-    }
-  }
-
-  return keys;
+export function getMobxPropertyKeys(object: object): string[] {
+  return [...(findMobxAdministration(object)?.values_.keys() ?? [])];
 }
 
 export function isMobxComputedProperty(object: object, key: string) {
@@ -160,6 +114,8 @@ type ComputedAtom = MobxAtom & {
   derivation: () => unknown;
   dependenciesState_: number;
   onBecomeStale_: () => void;
+  get: () => unknown;
+  equals_: (left: unknown, right: unknown) => boolean;
 };
 
 const overrides = new WeakMap<
@@ -189,6 +145,8 @@ export function overrideComputedValue(
     let box = overrides.get(atom);
     if (box) {
       box.set(value);
+      // Isolated host runtimes cannot subscribe to this bundle's box.
+      invalidateComputed(atom);
       return;
     }
     box = observable.box(value, { deep: false });
@@ -203,6 +161,23 @@ function invalidateComputed(atom: ComputedAtom) {
   // Let MobX schedule downstream work, respect equality comparers and update
   // dependencies during the next normal read. Never execute reactions here.
   atom.onBecomeStale_();
+}
+
+/** Explicit in-place refresh must pass the identity comparison on the owner.
+ * Recompute only this computed through MobX's normal get(), never run reactions. */
+function refreshComputedOwner(atom: ComputedAtom) {
+  const equals = atom.equals_;
+  atom.equals_ = () => false;
+  try {
+    invalidateComputed(atom);
+    try {
+      atom.get();
+    } catch {
+      /* The computed retains its normal cached getter error. */
+    }
+  } finally {
+    atom.equals_ = equals;
+  }
 }
 
 const foreignArrayAtoms = new WeakMap<object, { reportChanged(): void }>();
@@ -248,7 +223,7 @@ export function notifyPropertyOwner(host: object, key?: string): boolean {
   const atom = key == null ? undefined : getMobxPropertyAtom(host, key);
   if (atom) {
     if (typeof atom.derivation === 'function')
-      invalidateComputed(atom as ComputedAtom);
+      refreshComputedOwner(atom as ComputedAtom);
     else atom.reportChanged?.();
     return true;
   }
@@ -275,6 +250,17 @@ export function notifyPropertyOwner(host: object, key?: string): boolean {
 
 /** A shallow ObservableMap value can contain plain, directly edited data. */
 export function notifyMapEntryOwner(map: object, key: unknown): boolean {
+  if (isMobxObservableMap(map)) {
+    // Public getAtom(map, undefined) selects the keys atom, not the undefined
+    // entry. Read the existing value atom; this also supports foreign symbols.
+    const data = Object.getOwnPropertyDescriptor(map, 'data_')?.value;
+    const valueAtom =
+      data instanceof Map ? (data.get(key) as MobxAtom | undefined) : undefined;
+    if (typeof valueAtom?.reportChanged === 'function') {
+      valueAtom.reportChanged();
+      return true;
+    }
+  }
   try {
     const atom = getAtom(map, key as string);
     if ('reportChanged' in atom && typeof atom.reportChanged === 'function') {

@@ -169,3 +169,17 @@ instances. A trailing-dot search such as `product.` must show nonempty child nam
 
 Run `pnpm --filter mobx-view-model-devtools test` and
 `pnpm --filter mobx-view-model-devtools check:ui-tests` for these checks.
+
+
+Metadata checks do not evaluate user getters. The explicit **Force update bound
+view** action refreshes all existing observable and computed properties on that
+VM, including plain in-place values whose reference did not change. Ordinary
+edits remain targeted. Map drafts are rejected when their entry disappears or
+changes identity, while an actual `undefined` key stays editable. The operation
+selected when opening an editor stays fixed even if the live value changes type.
+
+Base-property grouping uses each VM's actual base prototype, so core 11 business
+properties named `vmConfig`, `vmParams` or `payloadChanged` stay visible and
+searchable. Set rows share a reactive value-to-index snapshot instead of scanning
+the collection for each row. Regression tests also cover repeated computed
+overrides in an isolated MobX host and shallow Map values with foreign bundles.

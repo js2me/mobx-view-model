@@ -39,9 +39,24 @@ export function createPropertyChildren(
   const previews = createDatePreviewChildren(inspector, parent, path, data);
   const entries: PropertyListItem[] = [];
   const kind = getCollectionKind(data);
-  if (kind) {
-    const identities =
-      kind === 'set' ? getSetEntryIdentities(parent, data) : [];
+  if (kind === 'set') {
+    for (const [index, identity] of getSetEntryIdentities(parent).entries()) {
+      entries.push(
+        PropertyListItem.create(
+          inspector,
+          String(index),
+          `${path}[${index}]`,
+          index,
+          parent,
+          {
+            collectionEntryKind: kind,
+            collectionEntryIndex: index,
+            setEntryIdentity: identity,
+          },
+        ),
+      );
+    }
+  } else if (kind === 'map') {
     let index = 0;
     for (const _ of data.values()) {
       entries.push(
@@ -54,7 +69,6 @@ export function createPropertyChildren(
           {
             collectionEntryKind: kind,
             collectionEntryIndex: index,
-            setEntryIdentity: identities[index],
           },
         ),
       );

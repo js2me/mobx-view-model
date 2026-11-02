@@ -67,17 +67,32 @@ describe('nested search suggestions from the product. screenshot', () => {
   });
 });
 
-it.each(['product.di', "product['di", 'product.permissions.'])(
-  'shows nested completions for %s and supports Tab selection',
-  async (query) => {
+it.each([
+  {
+    query: 'product.di',
+    completed: 'product.displayName',
+    expected: 'displayName',
+  },
+  {
+    query: "product['di",
+    completed: "product['displayName",
+    expected: 'displayName',
+  },
+  {
+    query: 'product.permissions.',
+    completed: 'product.permissions.canEdit',
+    expected: 'canEdit',
+  },
+])(
+  'shows nested completions for $query and supports Tab selection',
+  async ({ query, completed, expected }) => {
     const { user, input } = mountSearch();
     await user.type(input, query.replaceAll('[', '[['));
-    const expected = query.endsWith('.') ? 'canEdit' : 'displayName';
     const listbox = await screen.findByRole('listbox');
     expect(
       within(listbox).getByRole('option', { name: expected }),
     ).toBeDefined();
     await user.keyboard('{Tab}');
-    expect((input as HTMLInputElement).value).toContain(expected);
+    expect((input as HTMLInputElement).value).toBe(completed);
   },
 );

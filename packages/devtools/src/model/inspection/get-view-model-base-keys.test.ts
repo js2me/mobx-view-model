@@ -1,5 +1,7 @@
 // @vitest-environment jsdom
-import { ViewModelBase } from 'mobx-view-model';
+
+import { runInAction } from 'mobx';
+import { ViewModelBase, ViewModelStoreBase } from 'mobx-view-model';
 import { ViewModelBase as Core8 } from 'mobx-view-model-v8';
 import { ViewModelBase as Core8Initial } from 'mobx-view-model-v8-initial';
 import { ViewModelBase as Core9 } from 'mobx-view-model-v9';
@@ -70,3 +72,50 @@ describe.each(versions)(
     });
   },
 );
+
+it('keeps core 11 application fields whose names were only reserved in legacy cores', () => {
+  class Model extends ViewModelBase {
+    vmParams = 'application params';
+    vmConfig = 'application config';
+    payloadChanged = 'application field';
+  }
+  const store = new ViewModelStoreBase();
+  const vm = store.define({ VM: Model, id: 'modern', payload: {} });
+  disposers.push(() => store.clean());
+  const settings = new DevtoolsSettings({});
+  const inspector = new DevtoolsInspector(settings, { push: vi.fn() });
+  disposers.push(
+    () => settings.destroy(),
+    () => inspector.destroy(),
+  );
+  inspector.setStore(store);
+  const owner = inspector.getVmItem(vm);
+  expect(
+    owner.children
+      .filter((item) => item instanceof PropertyListItem)
+      .map((item) => item.property),
+  ).toEqual(['vmParams', 'vmConfig', 'payloadChanged']);
+  settings.setGroupViewModelBaseMembers(false);
+  settings.setShowInternals(false);
+  expect(
+    inspector.rows
+      .slice()
+      .filter((item) => item instanceof PropertyListItem)
+      .map((item) => item.property),
+  ).toEqual(['vmParams', 'vmConfig', 'payloadChanged']);
+  runInAction(() => {
+    inspector.search.searchText = 'vmConfig';
+    inspector.search.searchTextToSearch = 'vmConfig';
+  });
+  expect(inspector.search.suggestionItems.map((item) => item.value)).toContain(
+    'vmConfig',
+  );
+  expect(
+    inspector.rows
+      .slice()
+      .some(
+        (item) =>
+          item instanceof PropertyListItem && item.property === 'vmConfig',
+      ),
+  ).toBe(true);
+});
