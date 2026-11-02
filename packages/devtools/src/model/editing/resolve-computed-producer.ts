@@ -4,6 +4,7 @@ import {
   isMobxObservableMap,
   isMobxObservableSet,
 } from '../inspection/collection-like';
+import { detectPropertyValueType } from '../inspection/detect-property-value-type';
 import type { MapLike, SetLike } from '../inspection/mobx-collection';
 import { PropertyListItem } from '../list-item/property-list-item';
 import {
@@ -142,6 +143,14 @@ export function resolveComputedProducerForEdit(
     ) {
       return null;
     }
+
+    // Class instances have methods and potentially private state. They are
+    // shared owners, not plain snapshots that can be copied into an override.
+    if (
+      detectPropertyValueType(current.data) === 'instance' &&
+      getCollectionKind(current.data) == null
+    )
+      return null;
 
     const host = current.parentListItem.data;
     const key = current.property;

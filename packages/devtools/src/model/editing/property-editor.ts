@@ -46,7 +46,12 @@ function formatEditError(error: unknown) {
 
 export class PropertyEditor {
   private readonly propagation: PropertyEditPropagation;
-  private mapEditTarget?: { collection: object; key: unknown };
+  private mapEditTargets: Array<{
+    item: PropertyEditorHost;
+    collection: object;
+    key: unknown;
+  }> = [];
+  private functionTarget?: { fn: Function; receiver: unknown };
   editContent = '';
   isEditMode = false;
   isFunctionCall = false;
@@ -120,8 +125,13 @@ export class PropertyEditor {
         switch (host.dataType) {
           case 'bigint':
             return `${String(host.data)}n`;
-          case 'symbol':
-            return `Symbol(${Symbol.keyFor(host.data as symbol) || ''})`;
+          case 'symbol': {
+            const symbol = host.data as symbol;
+            const key = Symbol.keyFor(symbol);
+            return key === undefined
+              ? `Symbol(${symbol.description === undefined ? '' : JSON.stringify(symbol.description)})`
+              : `Symbol.for(${JSON.stringify(key)})`;
+          }
           case 'string':
             return JSON.stringify(host.data);
         }
@@ -161,37 +171,48 @@ export class PropertyEditor {
 
   startFunctionCall = () => {
     this.isFunctionCall = true;
-    this.mapEditTarget = undefined;
+    this.captureMapEditTargets();
+    this.functionTarget = {
+      fn: this.host.data,
+      receiver: this.host.parentListItem.data,
+    };
     this.editContent = '';
     this.isEditMode = true;
   };
 
   callFunction() {
-    // biome-ignore lint/security/noGlobalEval: no way...
-    const args = eval(`[${this.editContent.trim()}]`);
-    this.host.data.apply(this.host.parentListItem.data, args);
-    this.cancelEdit();
+    try {
+      this.validateMapEditTargets();
+      const target = this.functionTarget;
+      if (
+        !target ||
+        this.host.data !== target.fn ||
+        this.host.parentListItem.data !== target.receiver
+      )
+        throw new Error('Function changed while editing; reopen the editor');
+      // biome-ignore lint/security/noGlobalEval: inspector function call args
+      const args = eval(`[${this.editContent.trim()}]`);
+      target.fn.apply(target.receiver, args);
+      this.cancelEdit();
+    } catch (error) {
+      this.host.inspector.notifications.push({
+        title: `Failed to call "${this.getEditTargetLabel()}": ${formatEditError(error)}`,
+      });
+    }
   }
 
   startEdit() {
     this.isFunctionCall = false;
-    const h = this.host;
-    const entry =
-      h.collectionEntryKind === 'map' &&
-      h.collectionEntryIndex != null &&
-      getCollectionKind(h.parentListItem.data) === 'map'
-        ? getMapEntryAt(h.parentListItem.data, h.collectionEntryIndex)
-        : undefined;
-    this.mapEditTarget = entry
-      ? { collection: h.parentListItem.data, key: entry[0] }
-      : undefined;
+    this.functionTarget = undefined;
+    this.captureMapEditTargets();
     this.editContent = this.editableContent;
     this.isEditMode = true;
   }
 
   cancelEdit() {
     this.isFunctionCall = false;
-    this.mapEditTarget = undefined;
+    this.mapEditTargets = [];
+    this.functionTarget = undefined;
     this.editContent = '';
     this.isEditMode = false;
   }
@@ -261,6 +282,42 @@ export class PropertyEditor {
     return String(host.property);
   }
 
+  private captureMapEditTargets() {
+    this.mapEditTargets = [];
+    let item = this.host;
+    while (true) {
+      if (item.collectionEntryKind === 'map') {
+        const collection = item.parentListItem.data;
+        const entry =
+          item.collectionEntryIndex != null &&
+          getCollectionKind(collection) === 'map'
+            ? getMapEntryAt(collection, item.collectionEntryIndex)
+            : undefined;
+        if (entry)
+          this.mapEditTargets.push({ item, collection, key: entry[0] });
+      }
+      if (!(item.parentListItem instanceof PropertyListItem)) break;
+      item = item.parentListItem;
+    }
+  }
+
+  private validateMapEditTargets() {
+    for (const { item, collection, key } of this.mapEditTargets) {
+      const current = item.parentListItem.data;
+      const entry =
+        getCollectionKind(current) === 'map' &&
+        item.collectionEntryIndex != null
+          ? getMapEntryAt(current, item.collectionEntryIndex)
+          : undefined;
+      if (!entry) throw new Error('Map entry was not found');
+      if (
+        current !== collection ||
+        !(Object.is(entry[0], key) || entry[0] === key)
+      )
+        throw new Error('Map entry changed while editing; reopen the editor');
+    }
+  }
+
   private applyParsedEdit(parsed: unknown): {
     ok: boolean;
     error?: string;
@@ -276,18 +333,7 @@ export class PropertyEditor {
     )
       return { ok: false, error: 'Map entry was not found' };
 
-    if (h.collectionEntryKind === 'map' && this.mapEditTarget) {
-      const { collection, key } = this.mapEditTarget;
-      if (
-        h.parentListItem.data !== collection ||
-        !(Object.is(h.mapEntryKey, key) || h.mapEntryKey === key)
-      ) {
-        return {
-          ok: false,
-          error: 'Map entry changed while editing; reopen the editor',
-        };
-      }
-    }
+    this.validateMapEditTargets();
 
     const producerTarget = resolveComputedProducerForEdit(
       h as PropertyListItem,
@@ -342,6 +388,11 @@ export class PropertyEditor {
   private parseEditContent(): unknown {
     const host = this.host;
     const content = this.editContent.trim();
+
+    // Applying the initial representation of a local symbol must retain its
+    // identity; JavaScript cannot recreate that symbol from its description.
+    if (host.dataType === 'symbol' && content === this.editableContent)
+      return host.data;
 
     if (
       host.type === 'object' ||

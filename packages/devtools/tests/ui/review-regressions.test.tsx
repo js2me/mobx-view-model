@@ -176,3 +176,161 @@ it('still supports explicit function calls through the Call editor', async () =>
   expect(called).toHaveBeenCalledWith(7);
   expect(ui.row.queryByRole('textbox')).not.toBeInTheDocument();
 });
+
+it('does not retarget an open nested Map value editor after deletion', async () => {
+  const model = observable({
+    entries: new Map([
+      ['old', { value: 1 }],
+      ['other', { value: 2 }],
+    ]),
+  });
+  const ui = inspect(model, ['entries', '0', 'value'], () => [
+    ...model.entries,
+  ]);
+  await ui.user.click(ui.row.getByTitle('Edit'));
+  await ui.user.clear(ui.row.getByRole('textbox'));
+  await ui.user.paste('99');
+  act(() =>
+    runInAction(() => {
+      model.entries.delete('old');
+    }),
+  );
+  await ui.user.keyboard('{Enter}');
+  expect(model.entries.get('other')!.value).toBe(2);
+  expect(ui.notifications[0].title).toContain(
+    'Map entry changed while editing',
+  );
+});
+
+it('does not retarget an open function caller after Map deletion', async () => {
+  const original = vi.fn();
+  const replacement = vi.fn();
+  const model = observable({
+    entries: new Map([
+      ['old', original],
+      ['other', replacement],
+    ]),
+  });
+  const ui = inspect(model, ['entries', '0'], () => [...model.entries.keys()]);
+  await ui.user.click(ui.row.getByTitle('Call'));
+  await ui.user.type(ui.row.getByRole('textbox'), '7');
+  act(() =>
+    runInAction(() => {
+      model.entries.delete('old');
+    }),
+  );
+  await ui.user.keyboard('{Enter}');
+  expect(original).not.toHaveBeenCalled();
+  expect(replacement).not.toHaveBeenCalled();
+  expect(ui.notifications[0].title).toContain(
+    'Map entry changed while editing',
+  );
+});
+
+it('preserves class identity and private state when editing computed outputs', async () => {
+  class Snapshot {
+    value = 1;
+    #factor = 2;
+    get total() {
+      return this.value * this.#factor;
+    }
+  }
+  const snapshot = new Snapshot();
+  const replacement = new Snapshot();
+  Object.defineProperty(snapshot, 'hidden', { value: 42 });
+  const model = observable({
+    useFirst: true,
+    get snapshot() {
+      return this.useFirst ? snapshot : replacement;
+    },
+    get total() {
+      return this.snapshot.total;
+    },
+  });
+  const ui = inspect(model, ['snapshot', 'value'], () => model.total);
+  await ui.edit('7');
+  expect(model.snapshot).toBeInstanceOf(Snapshot);
+  expect(model.snapshot).toBe(snapshot);
+  expect(Object.getOwnPropertyDescriptor(model.snapshot, 'hidden')?.value).toBe(
+    42,
+  );
+  expect(snapshot.value).toBe(7);
+  ui.expectApp(14);
+  act(() =>
+    runInAction(() => {
+      model.useFirst = false;
+    }),
+  );
+  expect(model.snapshot).toBe(replacement);
+  ui.expectApp(2);
+});
+
+it.each(['(', 'throw new Error("boom")'])(
+  'reports function argument errors without closing the editor: %s',
+  async (content) => {
+    const called = vi.fn();
+    const ui = inspect({ callback: called }, ['callback'], () => null);
+    await ui.user.click(ui.row.getByTitle('Call'));
+    await ui.user.click(ui.row.getByRole('textbox'));
+    await ui.user.paste(content);
+    await ui.user.keyboard('{Enter}');
+    expect(called).not.toHaveBeenCalled();
+    expect(ui.notifications[0].title).toContain('Failed to call');
+    expect(ui.row.getByRole('textbox')).toHaveValue(content);
+  },
+);
+
+it('reports a function execution error and allows correction', async () => {
+  const model = {
+    callback: (value: number) => {
+      if (value < 0) throw new Error('negative');
+    },
+  };
+  const ui = inspect(model, ['callback'], () => null);
+  await ui.user.click(ui.row.getByTitle('Call'));
+  await ui.user.type(ui.row.getByRole('textbox'), '-1{Enter}');
+  expect(ui.notifications[0].title).toContain('negative');
+  await ui.user.clear(ui.row.getByRole('textbox'));
+  await ui.user.type(ui.row.getByRole('textbox'), '1{Enter}');
+  expect(ui.row.queryByRole('textbox')).not.toBeInTheDocument();
+});
+
+it.each([
+  Symbol.for('key with "quotes"'),
+  Symbol.for(''),
+  Symbol('local "description"'),
+])(
+  'round-trips a symbol through its initial editor content: %s',
+  async (symbol) => {
+    const model = observable({ value: symbol });
+    const ui = inspect(model, ['value'], () => String(model.value));
+    await ui.user.click(ui.row.getByTitle('Edit'));
+    const content = ui.row.getByRole('textbox').getAttribute('value');
+    if (Symbol.keyFor(symbol) !== undefined)
+      expect(content).toBe(
+        `Symbol.for(${JSON.stringify(Symbol.keyFor(symbol))})`,
+      );
+    await ui.user.click(ui.row.getByTitle('Apply'));
+    expect(model.value).toBe(symbol);
+    expect(ui.notifications).toEqual([]);
+    expect(ui.row.queryByRole('textbox')).not.toBeInTheDocument();
+  },
+);
+
+it('rejects a replaced function even when its property path stays the same', async () => {
+  const original = vi.fn();
+  const replacement = vi.fn();
+  const model = observable({ callback: original });
+  const ui = inspect(model, ['callback'], () => null);
+  await ui.user.click(ui.row.getByTitle('Call'));
+  await ui.user.type(ui.row.getByRole('textbox'), '7');
+  act(() =>
+    runInAction(() => {
+      model.callback = replacement;
+    }),
+  );
+  await ui.user.click(ui.row.getByTitle('Call function'));
+  expect(original).not.toHaveBeenCalled();
+  expect(replacement).not.toHaveBeenCalled();
+  expect(ui.notifications[0].title).toContain('Function changed while editing');
+});

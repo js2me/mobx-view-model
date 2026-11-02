@@ -154,7 +154,9 @@ Editing a computed pins an override, including computeds with a setter. Its atom
 is retained so dependent computeds keep their normal MobX tracking and equality
 checks. Nested plain snapshot edits pin the nearest computed owner. Observable
 outputs are edited in place, and the parent getter can still replace them when
-its dependencies change. MobX-specific override internals are isolated in one
+its dependencies change. Class instances returned by computeds are also edited
+in place, preserving their prototype, private state and shared identity.
+MobX-specific override internals are isolated in one
 adapter; the shared-runtime behavior is tested with MobX 6.15.
 
 Set rows use value identity rather than insertion index. Direct replacement
@@ -177,6 +179,10 @@ VM, including plain in-place values whose reference did not change. Ordinary
 edits remain targeted. Map drafts are rejected when their entry disappears or
 changes identity, while an actual `undefined` key stays editable. The operation
 selected when opening an editor stays fixed even if the live value changes type.
+Map identity checks include every ancestor entry of a nested editor. Function
+calls also retain their original function and receiver; stale calls are rejected
+and argument or execution errors leave the draft open with a notification.
+Symbol editor content preserves registered keys and unchanged local identities.
 
 Base-property grouping uses each VM's actual base prototype, so core 11 business
 properties named `vmConfig`, `vmParams` or `payloadChanged` stay visible and
