@@ -20,6 +20,9 @@ export function detectObserverCalls(
       statement.importClause?.isTypeOnly
     )
       continue;
+    if (statement.importClause?.name) {
+      observerNames.add(statement.importClause.name.text);
+    }
     const bindings = statement.importClause?.namedBindings;
     if (bindings && ts.isNamedImports(bindings)) {
       for (const binding of bindings.elements) {

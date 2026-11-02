@@ -1,7 +1,13 @@
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { action, computed, makeObservable } from 'mobx';
+import {
+  action,
+  computed,
+  isComputedProp,
+  isObservableProp,
+  makeObservable,
+} from 'mobx';
 import { createServer } from 'vite';
 import { describe, expect, it, vi } from 'vitest';
 import { DependencyGraph } from '../dependency-graph.js';
@@ -29,9 +35,22 @@ function update(Old: any, Next: any, source: string, instance = new Old()) {
     dispose: vi.fn(),
     send: vi.fn(),
   };
-  new Function('VM', 'hot', 'globalThis', runtime)(Next, hot, {
-    __MOBX_VM_PLUGIN_STORES__: [store],
-  });
+  new Function(
+    'VM',
+    'hot',
+    'globalThis',
+    '__vm_isObservableProp__',
+    '__vm_isComputedProp__',
+    runtime,
+  )(
+    Next,
+    hot,
+    {
+      __MOBX_VM_PLUGIN_STORES__: [store],
+    },
+    isObservableProp,
+    isComputedProp,
+  );
   return { instance, store, hot };
 }
 
@@ -146,8 +165,18 @@ describe('HMR safety', () => {
       'VM',
       'hot',
       'globalThis',
-      generateHmrCode(['VM']).replaceAll('import.meta.hot', 'hot'),
-    )(Next, hot, { __MOBX_VM_PLUGIN_STORES__: stores });
+      '__vm_isObservableProp__',
+      '__vm_isComputedProp__',
+      generateHmrCode(['VM'])
+        .slice(generateHmrCode(['VM']).indexOf('if (import.meta.hot)'))
+        .replaceAll('import.meta.hot', 'hot'),
+    )(
+      Next,
+      hot,
+      { __MOBX_VM_PLUGIN_STORES__: stores },
+      isObservableProp,
+      isComputedProp,
+    );
     expect(hot.send).toHaveBeenCalledOnce();
     for (const store of stores)
       expect(store.viewModelIdsByClasses.has(Old)).toBe(true);

@@ -1,7 +1,11 @@
+import { normalizeModulePath } from './module-path.js';
 import type { VMClassInfo, VMUsageInfo } from './types.js';
 
 function consumerKey(name: string, sourceFile?: string) {
-  return JSON.stringify([sourceFile ?? null, name]);
+  return JSON.stringify([
+    sourceFile ? normalizeModulePath(sourceFile) : null,
+    name,
+  ]);
 }
 
 export class DependencyGraph {
@@ -14,6 +18,7 @@ export class DependencyGraph {
     classes: VMClassInfo[],
     usages: VMUsageInfo[],
   ): void {
+    filePath = normalizeModulePath(filePath);
     this.removeFile(filePath);
     if (classes.length) this.vmExports.set(filePath, classes);
     if (usages.length) {
@@ -28,6 +33,7 @@ export class DependencyGraph {
   }
 
   removeFile(filePath: string): void {
+    filePath = normalizeModulePath(filePath);
     this.vmExports.delete(filePath);
     for (const usage of this.vmUsage.get(filePath) ?? []) {
       const key = consumerKey(usage.vmClassName, usage.sourceFile);
@@ -39,7 +45,7 @@ export class DependencyGraph {
   }
 
   getVmExports(filePath: string): VMClassInfo[] {
-    return this.vmExports.get(filePath) ?? [];
+    return this.vmExports.get(normalizeModulePath(filePath)) ?? [];
   }
 
   getVmSourceFile(className: string): string | undefined {
@@ -54,8 +60,9 @@ export class DependencyGraph {
     sourceFile = this.getVmSourceFile(className),
   ): VMClassInfo['type'] | undefined {
     return sourceFile
-      ? this.vmExports.get(sourceFile)?.find((cls) => cls.name === className)
-          ?.type
+      ? this.vmExports
+          .get(normalizeModulePath(sourceFile))
+          ?.find((cls) => cls.name === className)?.type
       : undefined;
   }
 
@@ -66,6 +73,6 @@ export class DependencyGraph {
   }
 
   isVmFile(filePath: string): boolean {
-    return this.vmExports.has(filePath);
+    return this.vmExports.has(normalizeModulePath(filePath));
   }
 }

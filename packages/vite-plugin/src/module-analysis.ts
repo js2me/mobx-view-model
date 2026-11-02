@@ -7,6 +7,7 @@ import {
   detectViewModelClasses,
   extractImportBindings,
 } from './detect-vm-classes.js';
+import { normalizeModulePath } from './module-path.js';
 import type { VMClassInfo, VMUsageInfo } from './types.js';
 
 type ExportedVM = { filePath: string; info: VMClassInfo };
@@ -38,13 +39,14 @@ export class ModuleAnalysis {
   }
 
   setSource(filePath: string, code: string) {
-    this.sources.set(filePath, code);
+    this.sources.set(normalizeModulePath(filePath), code);
   }
   removeSource(filePath: string) {
-    this.sources.delete(filePath);
+    this.sources.delete(normalizeModulePath(filePath));
   }
 
   private readSource(filePath: string) {
+    filePath = normalizeModulePath(filePath);
     // Dependencies may have changed on disk before Vite transforms them again.
     try {
       return fs.readFileSync(filePath, 'utf8');
@@ -79,9 +81,9 @@ export class ModuleAnalysis {
       this.compilerOptions,
       host,
     ).resolvedModule?.resolvedFileName;
-    return resolved && !resolved.includes('/node_modules/')
-      ? resolve(resolved)
-      : undefined;
+    if (!resolved) return;
+    const filePath = normalizeModulePath(resolve(resolved));
+    return filePath.includes('/node_modules/') ? undefined : filePath;
   }
 
   importedClasses(
@@ -147,6 +149,15 @@ export class ModuleAnalysis {
       const localName = localExportName(statement, exportName);
       const info = classes.find((cls) => cls.name === localName);
       if (info) return { filePath, info };
+      if (localName) {
+        const imported = this.importedVMs(
+          code,
+          filePath,
+          nextSeen,
+          new Set([localName]),
+        ).find((binding) => binding.localName === localName);
+        if (imported) return imported.vm;
+      }
       if (!ts.isExportDeclaration(statement) || statement.isTypeOnly) continue;
       const vm = this.findReExport(statement, exportName, {
         filePath,
@@ -197,6 +208,7 @@ export class ModuleAnalysis {
     filePath: string,
     usages: VMUsageInfo[],
   ): VMUsageInfo[] {
+    filePath = normalizeModulePath(filePath);
     if (!usages.length) return [];
     const imports = this.importedVMs(
       code,

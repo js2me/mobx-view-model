@@ -233,7 +233,15 @@ export function mobxVmVitePlugin(options?: MobxVmVitePluginOptions): Plugin {
         file,
         detectViewModelUsage(content),
       );
+      const previousClasses = graph.getVmExports(file);
       graph.addFile(file, classes, usages);
+
+      // Removed or renamed classes cannot be matched to the previous instances.
+      const currentNames = new Set(classes.map((current) => current.name));
+      if (hmr && previousClasses.some((old) => !currentNames.has(old.name))) {
+        ctx.server.ws.send({ type: 'full-reload' });
+        return [];
+      }
 
       // If this file doesn't export ViewModel classes, no special handling needed
       if (classes.length === 0) return;
@@ -248,9 +256,7 @@ export function mobxVmVitePlugin(options?: MobxVmVitePluginOptions): Plugin {
 
       for (const cls of classes) {
         const consumers = graph.getVmConsumers(cls.name, file);
-        if (consumers.size > 0) {
-          log(`  ${cls.name} consumers:`, [...consumers]);
-        }
+        log(`  ${cls.name} consumers:`, [...consumers]);
         for (const consumerPath of consumers) {
           const mods = ctx.server.moduleGraph.getModulesByFile(consumerPath);
           if (mods) {
