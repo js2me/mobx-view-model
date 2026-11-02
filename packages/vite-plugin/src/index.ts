@@ -1,29 +1,24 @@
-import { createRequire } from 'node:module';
 import fs from 'node:fs';
-import { dirname, join } from 'node:path';
-import type { Plugin } from 'vite';
+import { createRequire } from 'node:module';
+import { dirname, join, resolve } from 'node:path';
 import MagicString from 'magic-string';
+import type { Plugin } from 'vite';
 import { DependencyGraph } from './dependency-graph.js';
-import {
-  detectViewModelClasses,
-  extractImportBindings,
-} from './detect-vm-classes.js';
-import type { ImportedVmClass } from './detect-vm-classes.js';
-import { detectViewModelUsage } from './detect-vm-usage.js';
 import { detectObserverCalls } from './detect-observer.js';
+import { detectViewModelClasses } from './detect-vm-classes.js';
+import { detectViewModelUsage } from './detect-vm-usage.js';
 import { generateHmrCode } from './hmr-runtime.js';
+import { ModuleAnalysis } from './module-analysis.js';
 import {
+  getRuntimeModuleSource,
   RUNTIME_MODULE_ID,
   RUNTIME_MODULE_RESOLVED,
-  getRuntimeModuleSource,
 } from './store-access.js';
 import type { MobxVmVitePluginOptions } from './types.js';
 
 const PLUGIN_NAME = 'mobx-view-model-vite-plugin';
 
 const _require = createRequire(import.meta.url);
-
-const MOBX_VM_IMPORT_RE = /from\s+['"]mobx-view-model(?:\/react|\/core)?['"]/;
 
 const DEFAULT_OBSERVER_SOURCES = ['mobx-react-lite', 'mobx-react'];
 
@@ -35,15 +30,54 @@ const DEFAULT_OBSERVER_SOURCES = ['mobx-react-lite', 'mobx-react'];
 function resolveEsmEntry(bareImport: string): string | undefined {
   try {
     const cjsPath = _require.resolve(bareImport);
-    const pkgDir = dirname(cjsPath);
-    const pkgJson = JSON.parse(
-      fs.readFileSync(join(pkgDir, 'package.json'), 'utf8'),
-    );
-    const esmEntry =
-      pkgJson.exports?.['.']?.import ?? pkgJson.module ?? 'index.js';
-    return join(pkgDir, esmEntry);
+    let pkgDir = dirname(cjsPath);
+    while (true) {
+      const manifest = join(pkgDir, 'package.json');
+      if (fs.existsSync(manifest)) {
+        const pkgJson = JSON.parse(fs.readFileSync(manifest, 'utf8'));
+        if (pkgJson.name === bareImport) {
+          const esmEntry =
+            importTarget(pkgJson.exports?.['.'] ?? pkgJson.exports) ??
+            pkgJson.module ??
+            cjsPath;
+          return resolve(pkgDir, esmEntry);
+        }
+      }
+      const parent = dirname(pkgDir);
+      if (parent === pkgDir) return;
+      pkgDir = parent;
+    }
   } catch {
     return undefined;
+  }
+}
+
+/** Read import/default conditions without treating an export-map object as a path. */
+function importTarget(target: unknown): string | undefined {
+  if (typeof target === 'string') return target;
+  if (!target || typeof target !== 'object') return;
+  const imported = conditionalImportTarget(target);
+  if (imported) return imported;
+  if (Array.isArray(target)) {
+    for (const candidate of target) {
+      const entry = importTarget(candidate);
+      if (entry) return entry;
+    }
+    return;
+  }
+  return importTarget((target as { default?: unknown }).default);
+}
+
+/** Find explicit import branches before considering default or module fallbacks. */
+function conditionalImportTarget(target: unknown): string | undefined {
+  if (!target || typeof target !== 'object') return;
+  const conditions = target as Record<string, unknown>;
+  const direct = importTarget(conditions.import);
+  if (direct) return direct;
+  for (const [condition, nested] of Object.entries(conditions)) {
+    if (['import', 'require', 'types'].includes(condition)) continue;
+    const entry = conditionalImportTarget(nested);
+    if (entry) return entry;
   }
 }
 
@@ -59,12 +93,21 @@ export function mobxVmVitePlugin(options?: MobxVmVitePluginOptions): Plugin {
     : () => {};
 
   const graph = new DependencyGraph();
+  const modules = new ModuleAnalysis();
 
   let isProduction = false;
-  let _root = '';
 
   return {
     name: PLUGIN_NAME,
+    enforce: 'pre',
+
+    configureServer(server) {
+      const reload = () => server.ws.send({ type: 'full-reload' as const });
+      server.ws.on('mobx-view-model:full-reload', reload);
+      server.httpServer?.once('close', () =>
+        server.ws.off('mobx-view-model:full-reload', reload),
+      );
+    },
 
     config() {
       // Force Vite to always resolve these packages from the project root,
@@ -88,7 +131,7 @@ export function mobxVmVitePlugin(options?: MobxVmVitePluginOptions): Plugin {
 
     configResolved(config) {
       isProduction = config.command === 'build';
-      _root = config.root;
+      modules.configure(config.root, config.resolve.alias);
     },
 
     resolveId(id, importer) {
@@ -100,9 +143,8 @@ export function mobxVmVitePlugin(options?: MobxVmVitePluginOptions): Plugin {
       // ESM entry (not CJS) because the virtual module uses named imports.
       // pnpm isolates deps, so this.resolve(id, root) fails — the package
       // is only accessible from the plugin's own node_modules context.
-      // We use createRequire (which resolves from the plugin's location)
-      // to find the CJS path, then read the adjacent package.json to
-      // determine the correct ESM entry point.
+      // Locate the package with createRequire, then find its root manifest:
+      // a CJS entry such as mobx/dist/index.js is below the package root.
       if (importer === RUNTIME_MODULE_RESOLVED) {
         // mobx-view-model-devtools
         if (id === 'mobx-view-model-devtools') {
@@ -131,37 +173,18 @@ export function mobxVmVitePlugin(options?: MobxVmVitePluginOptions): Plugin {
       if (id.includes('node_modules')) return;
       if (id === RUNTIME_MODULE_RESOLVED) return;
 
-      const isMobxVmFile = MOBX_VM_IMPORT_RE.test(code);
-      const isObserverFile = observerSources.some((source) => {
-        const re = new RegExp(
-          `from\\s+['"]${source.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}['"]`,
-        );
-        return re.test(code);
-      });
-
-      // Resolve imported VM classes from the dependency graph for cross-file inheritance
-      const importedVmClasses: ImportedVmClass[] = [];
-      const importBindings = extractImportBindings(code);
-      for (const binding of importBindings) {
-        const vmType = graph.getVmType(binding.importedName);
-        if (vmType) {
-          importedVmClasses.push({
-            localName: binding.localName,
-            type: vmType,
-          });
-        }
-      }
-
-      // Skip files that have no mobx-view-model imports, no observer imports,
-      // and don't import any known VM classes from other files
-      if (!isMobxVmFile && !isObserverFile && importedVmClasses.length === 0)
-        return;
+      modules.setSource(id, code);
+      const importedVmClasses = modules.importedClasses(code, id);
 
       const s = new MagicString(code);
       let hasEdits = false;
 
-      const classes = detectViewModelClasses(code, importedVmClasses);
-      const usages = detectViewModelUsage(code);
+      const classes = detectViewModelClasses(code, importedVmClasses, id);
+      const usages = modules.resolveUsages(
+        code,
+        id,
+        detectViewModelUsage(code),
+      );
 
       if (classes.length > 0) {
         log(
@@ -191,17 +214,18 @@ export function mobxVmVitePlugin(options?: MobxVmVitePluginOptions): Plugin {
       // Feature 1: Inject HMR code into ViewModel class files
       if (hmr && classes.length > 0) {
         const vmClassNames = classes.map((c) => c.name);
-        const hmrCode = generateHmrCode(vmClassNames);
-        if (hmrCode) {
-          log(`injecting HMR code into ${id} for:`, vmClassNames);
-          s.append(hmrCode);
-          hasEdits = true;
-        }
+        const hmrCode = generateHmrCode(
+          vmClassNames,
+          classes.filter((cls) => cls.hasPrivateFields).map((cls) => cls.name),
+        );
+        log(`injecting HMR code into ${id} for:`, vmClassNames);
+        s.append(hmrCode);
+        hasEdits = true;
       }
 
       // Feature 2: Inject displayName for observer() components
       if (autoDisplayName) {
-        const observerCalls = detectObserverCalls(code, observerSources);
+        const observerCalls = detectObserverCalls(code, observerSources, id);
         if (observerCalls.length > 0) {
           log(
             `detected observer calls in ${id}:`,
@@ -239,20 +263,23 @@ export function mobxVmVitePlugin(options?: MobxVmVitePluginOptions): Plugin {
         return;
       }
 
-      const importedVmClasses: ImportedVmClass[] = [];
-      const importBindings = extractImportBindings(content);
-      for (const binding of importBindings) {
-        const vmType = graph.getVmType(binding.importedName);
-        if (vmType) {
-          importedVmClasses.push({
-            localName: binding.localName,
-            type: vmType,
-          });
-        }
-      }
-      const classes = detectViewModelClasses(content, importedVmClasses);
-      const usages = detectViewModelUsage(content);
+      modules.setSource(file, content);
+      const importedVmClasses = modules.importedClasses(content, file);
+      const classes = detectViewModelClasses(content, importedVmClasses, file);
+      const usages = modules.resolveUsages(
+        content,
+        file,
+        detectViewModelUsage(content),
+      );
+      const previousClasses = graph.getVmExports(file);
       graph.addFile(file, classes, usages);
+
+      // Removed or renamed classes cannot be matched to the previous instances.
+      const currentNames = new Set(classes.map((current) => current.name));
+      if (hmr && previousClasses.some((old) => !currentNames.has(old.name))) {
+        ctx.server.ws.send({ type: 'full-reload' });
+        return [];
+      }
 
       // If this file doesn't export ViewModel classes, no special handling needed
       if (classes.length === 0) return;
@@ -266,10 +293,8 @@ export function mobxVmVitePlugin(options?: MobxVmVitePluginOptions): Plugin {
       const affectedModules = new Set(ctx.modules);
 
       for (const cls of classes) {
-        const consumers = graph.getVmConsumers(cls.name);
-        if (consumers.size > 0) {
-          log(`  ${cls.name} consumers:`, [...consumers]);
-        }
+        const consumers = graph.getVmConsumers(cls.name, file);
+        log(`  ${cls.name} consumers:`, [...consumers]);
         for (const consumerPath of consumers) {
           const mods = ctx.server.moduleGraph.getModulesByFile(consumerPath);
           if (mods) {

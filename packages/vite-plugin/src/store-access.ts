@@ -80,6 +80,7 @@ if (__lastStoreBeforeDefine__) {
     : '';
 
   return `import { viewModelsConfig } from 'mobx-view-model';
+export { isObservableProp as __vm_isObservableProp__, isComputedProp as __vm_isComputedProp__ } from 'mobx';
 ${devtoolsImport}
 ${mobxBridgeImport}
 

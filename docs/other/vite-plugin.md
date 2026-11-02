@@ -86,6 +86,10 @@ mobxVmVitePlugin({
 
 Enables smart HMR for ViewModel classes. When a ViewModel class file changes, the plugin remaps internal store references so `useViewModel()` keeps working without a full page reload.
 
+Ordinary prototype methods can be updated while keeping existing instances and their state. Observable field accessors and computed properties or actions inherited from an unchanged base class do not force a reload. If a live instance has private class fields, accessors or bound actions from a changed prototype, constructor-created functions (including arrow fields), or is non-extensible, the plugin reloads the page instead. These cannot be safely updated by replacing the prototype. All affected instances are checked before any store is changed. Removing or renaming a ViewModel class also reloads the page.
+
+Constructors and field initializers are not re-run during a state-preserving update. Reload the page after changing initialization logic.
+
 ### `autoDisplayName`
 
 - **Type:** `boolean`

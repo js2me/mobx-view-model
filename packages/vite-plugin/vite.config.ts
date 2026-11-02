@@ -15,6 +15,7 @@ export default defineLibViteConfig(
       'mobx-view-model-react',
       'vite',
       'magic-string',
+      'typescript',
     ],
   },
 );

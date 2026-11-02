@@ -5,8 +5,8 @@
 [![NPM version][npm-image]][npm-url]
 
 
-[npm-image]: http://img.shields.io/npm/v/mobx-view-model-solid.svg
-[npm-url]: http://npmjs.org/package/mobx-view-model-solid
+[npm-image]: https://img.shields.io/npm/v/mobx-view-model-solid.svg
+[npm-url]: https://www.npmjs.com/package/mobx-view-model-solid
 
 ⚡ SolidJS bindings for [mobx-view-model](https://www.npmjs.com/package/mobx-view-model) | HOCs, hooks & providers ⚡
 
