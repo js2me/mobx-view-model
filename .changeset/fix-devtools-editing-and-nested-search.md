@@ -2,16 +2,8 @@
 "mobx-view-model-devtools": patch
 ---
 
-Fix blank nested search suggestions after a trailing dot, including `product.`, and correctly group or hide core 8–10 internals alongside core 11 properties.
-
-Use native MobX writes and preserve computed dependency nodes when editing properties. Ordinary property edits avoid global ViewModel refreshes and payload lifecycle calls, retain shared observable owners, and persist edits inside computed object, array, Map and Set snapshots. The explicit Force update bound view action still refreshes existing property atoms and calls setPayload with a shallow copy for supported object or array payloads.
-
-Keep Set rows attached to their values across replacement and index changes without rebuilding unrelated members. Fix escaped strings, empty property names, undefined Map keys, sparse arrays and computed array length validation.
-
-Reject stale Map drafts without forbidding undefined keys, preserve explicit refreshes of same-reference data, avoid getter evaluation during metadata checks, and share Set index lookups. Determine base fields from each VM's actual core base, preserving core 11 application properties with legacy names.
-
-Validate Map ancestors for nested drafts and preserve function-call targets while editing. Report call errors without losing the draft, retain class identity and private state in computed outputs, and round-trip Symbol editor content correctly.
-
-Share an observed Map key index instead of rescanning entries for each row. Bound object-preview value reads to 256 fields, check expandability without allocating descendants, and serialize Copy values only on request with visible error notifications.
-
-Refresh native Map key snapshots and existing rows when child lists rebuild, use bounded scans for unobserved entry reads, and validate all required Map read methods.
+- Fix editing of observable and computed properties, including nested objects and collections. Dependent computed values now update correctly.
+- Restore nested search suggestions for paths such as `product.`.
+- Fix framework-property grouping for core 8–11.
+- Prevent open Map editors and function calls from switching to another entry when the collection changes.
+- Speed up inspection of large objects, Maps and Sets.
