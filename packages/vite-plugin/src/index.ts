@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import { createRequire } from 'node:module';
-import { dirname, join } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import MagicString from 'magic-string';
 import type { Plugin } from 'vite';
 import { DependencyGraph } from './dependency-graph.js';
@@ -30,16 +30,34 @@ const DEFAULT_OBSERVER_SOURCES = ['mobx-react-lite', 'mobx-react'];
 function resolveEsmEntry(bareImport: string): string | undefined {
   try {
     const cjsPath = _require.resolve(bareImport);
-    const pkgDir = dirname(cjsPath);
-    const pkgJson = JSON.parse(
-      fs.readFileSync(join(pkgDir, 'package.json'), 'utf8'),
-    );
-    const esmEntry =
-      pkgJson.exports?.['.']?.import ?? pkgJson.module ?? 'index.js';
-    return join(pkgDir, esmEntry);
+    let pkgDir = dirname(cjsPath);
+    while (true) {
+      const manifest = join(pkgDir, 'package.json');
+      if (fs.existsSync(manifest)) {
+        const pkgJson = JSON.parse(fs.readFileSync(manifest, 'utf8'));
+        if (pkgJson.name === bareImport) {
+          const esmEntry =
+            importTarget(pkgJson.exports?.['.'] ?? pkgJson.exports) ??
+            pkgJson.module ??
+            cjsPath;
+          return resolve(pkgDir, esmEntry);
+        }
+      }
+      const parent = dirname(pkgDir);
+      if (parent === pkgDir) return;
+      pkgDir = parent;
+    }
   } catch {
     return undefined;
   }
+}
+
+/** Read import/default conditions without treating an export-map object as a path. */
+function importTarget(target: unknown): string | undefined {
+  if (typeof target === 'string') return target;
+  if (!target || typeof target !== 'object') return;
+  const conditions = target as { import?: unknown; default?: unknown };
+  return importTarget(conditions.import ?? conditions.default);
 }
 
 export function mobxVmVitePlugin(options?: MobxVmVitePluginOptions): Plugin {
@@ -104,9 +122,8 @@ export function mobxVmVitePlugin(options?: MobxVmVitePluginOptions): Plugin {
       // ESM entry (not CJS) because the virtual module uses named imports.
       // pnpm isolates deps, so this.resolve(id, root) fails — the package
       // is only accessible from the plugin's own node_modules context.
-      // We use createRequire (which resolves from the plugin's location)
-      // to find the CJS path, then read the adjacent package.json to
-      // determine the correct ESM entry point.
+      // Locate the package with createRequire, then find its root manifest:
+      // a CJS entry such as mobx/dist/index.js is below the package root.
       if (importer === RUNTIME_MODULE_RESOLVED) {
         // mobx-view-model-devtools
         if (id === 'mobx-view-model-devtools') {

@@ -1,5 +1,5 @@
 import ts from 'typescript';
-import { hasModifier, parseSource } from './ast.js';
+import { createBindingChecker, hasModifier, parseSource } from './ast.js';
 import type { ObserverCallInfo } from './types.js';
 
 const DEFAULT_OBSERVER_SOURCES = ['mobx-react-lite', 'mobx-react'];
@@ -11,7 +11,7 @@ export function detectObserverCalls(
   fileName?: string,
 ): ObserverCallInfo[] {
   const source = parseSource(code, fileName);
-  const observerNames = new Set<string>();
+  const observerBindings: ts.Identifier[] = [];
   for (const statement of source.statements) {
     if (
       !ts.isImportDeclaration(statement) ||
@@ -21,7 +21,7 @@ export function detectObserverCalls(
     )
       continue;
     if (statement.importClause?.name) {
-      observerNames.add(statement.importClause.name.text);
+      observerBindings.push(statement.importClause.name);
     }
     const bindings = statement.importClause?.namedBindings;
     if (bindings && ts.isNamedImports(bindings)) {
@@ -30,11 +30,19 @@ export function detectObserverCalls(
           !binding.isTypeOnly &&
           (binding.propertyName ?? binding.name).text === 'observer'
         ) {
-          observerNames.add(binding.name.text);
+          observerBindings.push(binding.name);
         }
       }
     }
   }
+
+  if (!observerBindings.length) return [];
+  const checker = createBindingChecker(source);
+  const observerSymbols = new Set(
+    observerBindings
+      .map((binding) => checker.getSymbolAtLocation(binding))
+      .filter(Boolean),
+  );
 
   const results: ObserverCallInfo[] = [];
   function visit(node: ts.Node) {
@@ -46,7 +54,7 @@ export function detectObserverCalls(
           !call ||
           !ts.isCallExpression(call) ||
           !ts.isIdentifier(call.expression) ||
-          !observerNames.has(call.expression.text)
+          !observerSymbols.has(checker.getSymbolAtLocation(call.expression))
         )
           continue;
         results.push({

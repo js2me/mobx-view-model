@@ -17,7 +17,7 @@ if (import.meta.hot) {
     const __updates__ = [];
     let __needs_reload__ = Object.keys(__old_classes__).some(name => !Object.hasOwn(__vm_classes__, name));
     const __find_descriptor__ = (prototype, key) => {
-      while (prototype) {
+      while (prototype && prototype !== Object.prototype) {
         const descriptor = Object.getOwnPropertyDescriptor(prototype, key);
         if (descriptor) return descriptor;
         prototype = Object.getPrototypeOf(prototype);
@@ -37,11 +37,12 @@ if (import.meta.hot) {
           // prototype and constructor-created behavior need a full reload.
           const __own_behavior__ = Reflect.ownKeys(__instance__).some(key => {
             const descriptor = Object.getOwnPropertyDescriptor(__instance__, key);
-            if (__vm_isObservableProp__(__instance__, key) && !__vm_isComputedProp__(__instance__, key)) return false;
-            if (!descriptor.get && !descriptor.set && typeof descriptor.value !== 'function') return false;
             const old = __find_descriptor__(__OldClass__.prototype, key);
             const next = __find_descriptor__(__NewClass__.prototype, key);
-            return !old || !next || old.get !== next.get || old.set !== next.set || old.value !== next.value;
+            const unchanged = old?.get === next?.get && old?.set === next?.set && old?.value === next?.value;
+            if (__vm_isObservableProp__(__instance__, key) && !__vm_isComputedProp__(__instance__, key)) return !unchanged;
+            if (!descriptor.get && !descriptor.set && typeof descriptor.value !== 'function') return false;
+            return !old || !next || !unchanged;
           });
           if (__has_private__ || __own_behavior__ || !Object.isExtensible(__instance__)) {
             __needs_reload__ = true;

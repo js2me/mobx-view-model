@@ -1,6 +1,7 @@
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
 import { tmpdir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import {
   action,
   computed,
@@ -9,7 +10,7 @@ import {
   makeObservable,
   observable,
 } from 'mobx';
-import { normalizePath } from 'vite';
+import { createServer, normalizePath } from 'vite';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ViewModelBase } from '../../../core/src/view-model/view-model.base.js';
 import { detectObserverCalls } from '../detect-observer.js';
@@ -58,6 +59,116 @@ function runUpdate(Old: any, Next: any, instance: any, names = ['VM']) {
 }
 
 describe('review regressions', () => {
+  it.each(['getter', 'method'])(
+    'reloads when an observable field becomes a prototype %s',
+    (kind) => {
+      class Old {
+        value = 1;
+        constructor() {
+          makeObservable(this, { value: observable });
+        }
+      }
+      class Getter {
+        get value() {
+          return 2;
+        }
+      }
+      class Method {
+        value() {
+          return 2;
+        }
+      }
+      const instance = new Old();
+      const { hot } = runUpdate(
+        Old,
+        kind === 'getter' ? Getter : Method,
+        instance,
+      );
+      expect(hot.send).toHaveBeenCalledWith('mobx-view-model:full-reload');
+      expect(instance.constructor).toBe(Old);
+      expect(instance.value).toBe(1);
+    },
+  );
+
+  it('reloads constructor-created functions with Object.prototype names', () => {
+    class Old {
+      toString = () => 'old';
+    }
+    class Next {
+      toString = () => 'new';
+    }
+    const instance = new Old();
+    const { hot } = runUpdate(Old, Next, instance);
+    expect(hot.send).toHaveBeenCalledWith('mobx-view-model:full-reload');
+    expect(instance.constructor).toBe(Old);
+  });
+
+  it.each([
+    'function build(observe) { const Unrelated = observe(() => null); }',
+    'function build() { const Unrelated = observe(() => null); var observe = factory; }',
+    '{ const observe = factory; const Unrelated = observe(() => null); }',
+    'try {} catch (observe) { const Unrelated = observe(() => null); }',
+  ])('ignores shadowed observer bindings: %s', (nested) => {
+    const code = `import observe from 'custom-observer'; ${nested} const Real = observe(() => null);`;
+    expect(
+      detectObserverCalls(code, ['custom-observer']).map(
+        (call) => call.varName,
+      ),
+    ).toEqual(['Real']);
+  });
+
+  it('resolves the real MobX ESM entry from its package root', () => {
+    const require = createRequire(import.meta.url);
+    const root = dirname(require.resolve('mobx/package.json'));
+    const pkg = require('mobx/package.json');
+    const actual = (mobxVmVitePlugin().resolveId as Function)(
+      'mobx',
+      '\0mobx-view-model-vite-plugin/runtime',
+    );
+    expect(actual).toBe(join(root, pkg.module));
+  });
+
+  it('loads the virtual HMR runtime and its real MobX dependency through Vite', async () => {
+    const root = mkdtempSync(join(tmpdir(), 'vm-runtime-entry-'));
+    const server = await createServer({
+      configFile: false,
+      root,
+      plugins: [
+        mobxVmVitePlugin(),
+        {
+          name: 'core-fixture',
+          resolveId(id) {
+            if (id === 'mobx-view-model') return '\0core-fixture';
+          },
+          load(id) {
+            if (id === '\0core-fixture')
+              return 'export const viewModelsConfig = {};';
+          },
+        },
+      ],
+      server: { middlewareMode: true, watch: null, ws: false },
+      optimizeDeps: { noDiscovery: true },
+    });
+    try {
+      const runtime = await server.transformRequest(
+        '\0mobx-view-model-vite-plugin/runtime',
+      );
+      expect(runtime?.code).toContain('mobx.esm.js');
+      const require = createRequire(import.meta.url);
+      const entry = join(
+        dirname(require.resolve('mobx/package.json')),
+        require('mobx/package.json').module,
+      );
+      const dependency = await server.transformRequest(
+        `/@fs/${normalizePath(entry)}`,
+      );
+      expect(dependency?.code).toContain('isComputedProp');
+    } finally {
+      await server.close();
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   it('preserves a real ViewModelBase instance during an ordinary method update', () => {
     class Old extends ViewModelBase {
       count = 3;
