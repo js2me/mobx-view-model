@@ -1,29 +1,24 @@
-import { createRequire } from 'node:module';
 import fs from 'node:fs';
+import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
-import type { Plugin } from 'vite';
 import MagicString from 'magic-string';
+import type { Plugin } from 'vite';
 import { DependencyGraph } from './dependency-graph.js';
-import {
-  detectViewModelClasses,
-  extractImportBindings,
-} from './detect-vm-classes.js';
-import type { ImportedVmClass } from './detect-vm-classes.js';
-import { detectViewModelUsage } from './detect-vm-usage.js';
 import { detectObserverCalls } from './detect-observer.js';
+import { detectViewModelClasses } from './detect-vm-classes.js';
+import { detectViewModelUsage } from './detect-vm-usage.js';
 import { generateHmrCode } from './hmr-runtime.js';
+import { ModuleAnalysis } from './module-analysis.js';
 import {
+  getRuntimeModuleSource,
   RUNTIME_MODULE_ID,
   RUNTIME_MODULE_RESOLVED,
-  getRuntimeModuleSource,
 } from './store-access.js';
 import type { MobxVmVitePluginOptions } from './types.js';
 
 const PLUGIN_NAME = 'mobx-view-model-vite-plugin';
 
 const _require = createRequire(import.meta.url);
-
-const MOBX_VM_IMPORT_RE = /from\s+['"]mobx-view-model(?:\/react|\/core)?['"]/;
 
 const DEFAULT_OBSERVER_SOURCES = ['mobx-react-lite', 'mobx-react'];
 
@@ -59,12 +54,21 @@ export function mobxVmVitePlugin(options?: MobxVmVitePluginOptions): Plugin {
     : () => {};
 
   const graph = new DependencyGraph();
+  const modules = new ModuleAnalysis();
 
   let isProduction = false;
-  let _root = '';
 
   return {
     name: PLUGIN_NAME,
+    enforce: 'pre',
+
+    configureServer(server) {
+      const reload = () => server.ws.send({ type: 'full-reload' as const });
+      server.ws.on('mobx-view-model:full-reload', reload);
+      server.httpServer?.once('close', () =>
+        server.ws.off('mobx-view-model:full-reload', reload),
+      );
+    },
 
     config() {
       // Force Vite to always resolve these packages from the project root,
@@ -88,7 +92,7 @@ export function mobxVmVitePlugin(options?: MobxVmVitePluginOptions): Plugin {
 
     configResolved(config) {
       isProduction = config.command === 'build';
-      _root = config.root;
+      modules.configure(config.root, config.resolve.alias);
     },
 
     resolveId(id, importer) {
@@ -131,37 +135,18 @@ export function mobxVmVitePlugin(options?: MobxVmVitePluginOptions): Plugin {
       if (id.includes('node_modules')) return;
       if (id === RUNTIME_MODULE_RESOLVED) return;
 
-      const isMobxVmFile = MOBX_VM_IMPORT_RE.test(code);
-      const isObserverFile = observerSources.some((source) => {
-        const re = new RegExp(
-          `from\\s+['"]${source.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}['"]`,
-        );
-        return re.test(code);
-      });
-
-      // Resolve imported VM classes from the dependency graph for cross-file inheritance
-      const importedVmClasses: ImportedVmClass[] = [];
-      const importBindings = extractImportBindings(code);
-      for (const binding of importBindings) {
-        const vmType = graph.getVmType(binding.importedName);
-        if (vmType) {
-          importedVmClasses.push({
-            localName: binding.localName,
-            type: vmType,
-          });
-        }
-      }
-
-      // Skip files that have no mobx-view-model imports, no observer imports,
-      // and don't import any known VM classes from other files
-      if (!isMobxVmFile && !isObserverFile && importedVmClasses.length === 0)
-        return;
+      modules.setSource(id, code);
+      const importedVmClasses = modules.importedClasses(code, id);
 
       const s = new MagicString(code);
       let hasEdits = false;
 
-      const classes = detectViewModelClasses(code, importedVmClasses);
-      const usages = detectViewModelUsage(code);
+      const classes = detectViewModelClasses(code, importedVmClasses, id);
+      const usages = modules.resolveUsages(
+        code,
+        id,
+        detectViewModelUsage(code),
+      );
 
       if (classes.length > 0) {
         log(
@@ -191,17 +176,18 @@ export function mobxVmVitePlugin(options?: MobxVmVitePluginOptions): Plugin {
       // Feature 1: Inject HMR code into ViewModel class files
       if (hmr && classes.length > 0) {
         const vmClassNames = classes.map((c) => c.name);
-        const hmrCode = generateHmrCode(vmClassNames);
-        if (hmrCode) {
-          log(`injecting HMR code into ${id} for:`, vmClassNames);
-          s.append(hmrCode);
-          hasEdits = true;
-        }
+        const hmrCode = generateHmrCode(
+          vmClassNames,
+          classes.filter((cls) => cls.hasPrivateFields).map((cls) => cls.name),
+        );
+        log(`injecting HMR code into ${id} for:`, vmClassNames);
+        s.append(hmrCode);
+        hasEdits = true;
       }
 
       // Feature 2: Inject displayName for observer() components
       if (autoDisplayName) {
-        const observerCalls = detectObserverCalls(code, observerSources);
+        const observerCalls = detectObserverCalls(code, observerSources, id);
         if (observerCalls.length > 0) {
           log(
             `detected observer calls in ${id}:`,
@@ -239,19 +225,14 @@ export function mobxVmVitePlugin(options?: MobxVmVitePluginOptions): Plugin {
         return;
       }
 
-      const importedVmClasses: ImportedVmClass[] = [];
-      const importBindings = extractImportBindings(content);
-      for (const binding of importBindings) {
-        const vmType = graph.getVmType(binding.importedName);
-        if (vmType) {
-          importedVmClasses.push({
-            localName: binding.localName,
-            type: vmType,
-          });
-        }
-      }
-      const classes = detectViewModelClasses(content, importedVmClasses);
-      const usages = detectViewModelUsage(content);
+      modules.setSource(file, content);
+      const importedVmClasses = modules.importedClasses(content, file);
+      const classes = detectViewModelClasses(content, importedVmClasses, file);
+      const usages = modules.resolveUsages(
+        content,
+        file,
+        detectViewModelUsage(content),
+      );
       graph.addFile(file, classes, usages);
 
       // If this file doesn't export ViewModel classes, no special handling needed
@@ -266,7 +247,7 @@ export function mobxVmVitePlugin(options?: MobxVmVitePluginOptions): Plugin {
       const affectedModules = new Set(ctx.modules);
 
       for (const cls of classes) {
-        const consumers = graph.getVmConsumers(cls.name);
+        const consumers = graph.getVmConsumers(cls.name, file);
         if (consumers.size > 0) {
           log(`  ${cls.name} consumers:`, [...consumers]);
         }

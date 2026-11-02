@@ -45,6 +45,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "typescript": "^6.0.3",
     "magic-string": "^0.30.17",
     "mobx-view-model-devtools": "workspace:*"
   },

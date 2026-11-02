@@ -487,6 +487,9 @@ importers:
       mobx-view-model-devtools:
         specifier: workspace:*
         version: link:../devtools/dist
+      typescript:
+        specifier: ^6.0.3
+        version: 6.0.3
     publishDirectory: dist
 
   tests/react-regressions/react18:

@@ -22,6 +22,8 @@ export interface DevtoolsConfig {
 }
 
 export interface VMClassInfo {
+  /** Private brands cannot be transferred to existing instances during HMR. */
+  hasPrivateFields?: boolean;
   /** The class name, e.g. "CounterVM" */
   name: string;
   /** How the class is recognized */
@@ -31,6 +33,8 @@ export interface VMClassInfo {
 }
 
 export interface VMUsageInfo {
+  /** Resolved module identity, to distinguish same-name exports. */
+  sourceFile?: string;
   /** The class name being used, e.g. "CounterVM" */
   vmClassName: string;
   /** How it's being used */
