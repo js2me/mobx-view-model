@@ -1,4 +1,4 @@
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import fs, { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
@@ -24,6 +24,7 @@ vi.mock('node:path', async (importOriginal) => {
 });
 
 afterEach(() => {
+  vi.restoreAllMocks();
   vi.mocked(resolve).mockReset();
 });
 
@@ -59,6 +60,75 @@ function runUpdate(Old: any, Next: any, instance: any, names = ['VM']) {
 }
 
 describe('review regressions', () => {
+  it.each([
+    {
+      name: 'node.import before the default fallback',
+      exports: {
+        node: { import: './dist/node.mjs' },
+        default: './dist/fallback.cjs',
+      },
+      expected: './dist/node.mjs',
+    },
+    {
+      name: 'multiple nested conditions',
+      exports: {
+        node: {
+          development: { import: { default: './dist/development.mjs' } },
+        },
+      },
+      expected: './dist/development.mjs',
+    },
+    {
+      name: 'root import before nested imports',
+      exports: {
+        node: { import: './dist/node.mjs' },
+        import: './dist/import.mjs',
+      },
+      expected: './dist/import.mjs',
+    },
+    {
+      name: 'ignoring require and types branches',
+      exports: {
+        types: { import: './dist/types.d.ts' },
+        require: { import: './dist/wrong.cjs' },
+        node: { import: './dist/node.mjs' },
+      },
+      expected: './dist/node.mjs',
+    },
+    {
+      name: 'an import condition in an export array',
+      exports: ['./dist/fallback.cjs', { node: { import: './dist/node.mjs' } }],
+      expected: './dist/node.mjs',
+    },
+    {
+      name: 'the module field when there is no import or default target',
+      exports: { require: './dist/index.cjs', types: './dist/types.d.ts' },
+      expected: './dist/module.mjs',
+    },
+  ])('resolves conditional package exports: $name', ({ exports, expected }) => {
+    const require = createRequire(import.meta.url);
+    const manifest = require.resolve('mobx/package.json');
+    const read = fs.readFileSync;
+    const metadata = JSON.parse(read(manifest, 'utf8'));
+    vi.spyOn(fs, 'readFileSync').mockImplementation(((
+      file: any,
+      options: any,
+    ) => {
+      if (file === manifest)
+        return JSON.stringify({
+          ...metadata,
+          module: './dist/module.mjs',
+          exports: { '.': exports },
+        });
+      return read(file, options);
+    }) as typeof fs.readFileSync);
+    const actual = (mobxVmVitePlugin().resolveId as Function)(
+      'mobx',
+      '\0mobx-view-model-vite-plugin/runtime',
+    );
+    expect(actual).toBe(join(dirname(manifest), expected));
+  });
+
   it.each(['getter', 'method'])(
     'reloads when an observable field becomes a prototype %s',
     (kind) => {

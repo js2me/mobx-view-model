@@ -56,8 +56,29 @@ function resolveEsmEntry(bareImport: string): string | undefined {
 function importTarget(target: unknown): string | undefined {
   if (typeof target === 'string') return target;
   if (!target || typeof target !== 'object') return;
-  const conditions = target as { import?: unknown; default?: unknown };
-  return importTarget(conditions.import ?? conditions.default);
+  const imported = conditionalImportTarget(target);
+  if (imported) return imported;
+  if (Array.isArray(target)) {
+    for (const candidate of target) {
+      const entry = importTarget(candidate);
+      if (entry) return entry;
+    }
+    return;
+  }
+  return importTarget((target as { default?: unknown }).default);
+}
+
+/** Find explicit import branches before considering default or module fallbacks. */
+function conditionalImportTarget(target: unknown): string | undefined {
+  if (!target || typeof target !== 'object') return;
+  const conditions = target as Record<string, unknown>;
+  const direct = importTarget(conditions.import);
+  if (direct) return direct;
+  for (const [condition, nested] of Object.entries(conditions)) {
+    if (['import', 'require', 'types'].includes(condition)) continue;
+    const entry = conditionalImportTarget(nested);
+    if (entry) return entry;
+  }
 }
 
 export function mobxVmVitePlugin(options?: MobxVmVitePluginOptions): Plugin {
