@@ -1,5 +1,7 @@
 export type MapLike = {
   entries(): IterableIterator<[unknown, unknown]>;
+  keys(): IterableIterator<unknown>;
+  get(key: unknown): unknown;
 };
 
 export type SetLike = {
@@ -16,7 +18,7 @@ export function isMobxObservableMap(value: unknown): value is MapLike {
     !!value &&
     typeof value === 'object' &&
     (value as MobxCollectionMarker).isMobXObservableMap === true &&
-    typeof (value as MapLike).entries === 'function'
+    hasMapReadMethods(value)
   );
 }
 
@@ -30,7 +32,19 @@ export function isMobxObservableSet(value: unknown): value is SetLike {
 }
 
 export function isNativeMap(value: unknown): value is MapLike {
-  return hasPrototypeInChain(value, globalThis.Map.prototype);
+  return (
+    hasPrototypeInChain(value, globalThis.Map.prototype) &&
+    hasMapReadMethods(value as object)
+  );
+}
+
+function hasMapReadMethods(value: object): boolean {
+  const map = value as MapLike;
+  return (
+    typeof map.entries === 'function' &&
+    typeof map.keys === 'function' &&
+    typeof map.get === 'function'
+  );
 }
 
 export function isNativeSet(value: unknown): value is SetLike {

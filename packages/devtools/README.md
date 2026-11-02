@@ -141,3 +141,73 @@ ViewModelDevtools.connect(viewModelStore);
 ```
 
 The module entry is tested against both 8.0.0 and 8.10.1. The public store type uses their shared lookup API, so TypeScript consumers do not need casts to the current core version. A popup-scoped observer detects VM additions, replacements, removals and parent changes even when the host uses an isolated MobX runtime. Closing the popup stops observation; reopening refreshes immediately.
+
+
+## Editing behavior and regression tests
+
+Observable edits use native assignments or collection operations inside an action.
+Setters, enhancers, interception and reaction batching stay in effect. Changes
+inside plain ref/shallow values notify their nearest observable owner, without
+scanning every VM or calling payload lifecycle methods.
+
+Editing a computed pins an override, including computeds with a setter. Its atom
+is retained so dependent computeds keep their normal MobX tracking and equality
+checks. Nested plain snapshot edits pin the nearest computed owner. Observable
+outputs are edited in place, and the parent getter can still replace them when
+its dependencies change. Class instances returned by computeds are also edited
+in place, preserving their prototype, private state and shared identity.
+MobX-specific override internals are isolated in one
+adapter; the shared-runtime behavior is tested with MobX 6.15.
+
+Set rows use value identity rather than insertion index. Direct replacement
+adds the replacement and removes the old member; other members are untouched.
+Editing to an existing value merges rows. Interceptors remain authoritative; if
+removal and rollback are both rejected, the error explains that both values remain.
+
+The UI regression suite covers dependent computed graphs, repeated edits, keyboard
+controls, failures, native notifications, stable Set DOM rows and nested search
+completions. Legacy grouping is checked against real core 8.0, 8.10, 9, 10 and 11
+instances. A trailing-dot search such as `product.` must show nonempty child names.
+
+Run `pnpm --filter mobx-view-model-devtools test` and
+`pnpm --filter mobx-view-model-devtools check:ui-tests` for these checks.
+
+
+Metadata checks do not evaluate user getters. The explicit **Force update bound
+view** action refreshes all existing observable and computed properties on that
+VM, including plain in-place values whose reference did not change. Ordinary
+property edits remain targeted. The explicit action also calls `setPayload`
+with a shallow copy when the VM has an object or array payload and supports
+`setPayload`. This can invoke application payload lifecycle code; ordinary
+property edits do not call it.
+
+Map drafts are rejected when their entry disappears or
+changes identity, while an actual `undefined` key stays editable. The operation
+selected when opening an editor stays fixed even if the live value changes type.
+Map identity checks include every ancestor entry of a nested editor. Function
+calls also retain their original function and receiver; stale calls are rejected
+and argument or execution errors leave the draft open with a notification.
+Symbol editor content preserves registered keys and unchanged local identities.
+
+Base-property grouping uses each VM's actual base prototype, so core 11 business
+properties named `vmConfig`, `vmParams` or `payloadChanged` stay visible and
+searchable. Set rows share a reactive value-to-index snapshot instead of scanning
+the collection for each row. Regression tests also cover repeated computed
+overrides in an isolated MobX host and shallow Map values with foreign bundles.
+
+Computed-output boundaries are exercised through the real editor UI:
+[class identity and private state](tests/ui/review-regressions.test.tsx) stay
+intact during in-place edits, while
+[native Map snapshots](tests/ui/computed-dependencies.test.tsx) receive a pinned
+copy and update dependent computeds without changing the original snapshot.
+
+Map rows share a key index while observed. Value-only changes read their entry
+directly without rebuilding that index. Native Map child-list rebuilds reread
+their keys and invalidate existing positional rows when keys change. Reads
+outside an observer use an early-exit entry scan instead of constructing a full
+index. Map detection checks all required read methods (`entries`, `keys`, `get`).
+Collapsed rows check for children without
+creating their models, and object previews read at most 256 values. Copy performs
+full serialization only when requested; serialization or clipboard failures show
+a notification. These bounds are checked in
+[performance regressions](tests/ui/performance-regressions.test.tsx).

@@ -419,7 +419,7 @@ export class InspectorSearch {
   }
 
   isPropertyItemExpandable(item: PropertyListItem) {
-    return item.children.length > 0;
+    return item.isExpandable;
   }
 
   isVmItemExpanded(item: VMListItem) {

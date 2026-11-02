@@ -3,7 +3,7 @@ import { getCollectionKind } from '../inspection/collection-like';
 import type { MapLike, SetLike } from '../inspection/mobx-collection';
 
 export type SetCollectionEntryResult =
-  | { ok: true }
+  | { ok: true; value?: unknown }
   | { ok: false; error: string };
 
 type WritableMapLike = MapLike & {
@@ -11,6 +11,8 @@ type WritableMapLike = MapLike & {
 };
 
 type WritableSetLike = SetLike & {
+  readonly size: number;
+  has(value: unknown): boolean;
   delete(value: unknown): boolean;
   add(value: unknown): unknown;
 };
@@ -65,18 +67,32 @@ export function setSetEntryValue(
   }
 
   try {
+    let actualValue = newValue;
     runInAction(() => {
-      if (Object.is(oldValue, newValue)) {
-        return;
-      }
-
-      if (!writableSet.delete(oldValue)) {
+      if (!writableSet.has(oldValue))
         throw new Error('Set entry was not found');
-      }
-
+      if (Object.is(oldValue, newValue) || oldValue === newValue) return;
+      const existed = writableSet.has(newValue);
+      const previousSize = writableSet.size;
       writableSet.add(newValue);
+      // ObservableSet may enhance an object into an observable proxy.
+      if (!existed) {
+        if (writableSet.size === previousSize)
+          throw new Error('Set rejected the new value');
+        if (!writableSet.has(newValue)) {
+          for (const value of writableSet.values()) actualValue = value;
+        }
+      }
+      if (!writableSet.delete(oldValue)) {
+        if (!existed && !writableSet.delete(actualValue)) {
+          throw new Error(
+            'Set rejected removal and rollback; both the old and new values were retained',
+          );
+        }
+        throw new Error('Set rejected removal of the old value');
+      }
     });
-    return { ok: true };
+    return { ok: true, value: actualValue };
   } catch (error) {
     return { ok: false, error: formatError(error) };
   }

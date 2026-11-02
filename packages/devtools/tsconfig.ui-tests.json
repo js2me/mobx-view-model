@@ -1,0 +1,6 @@
+{
+  "extends": "./tsconfig.check.json",
+  "compilerOptions": { "target": "ES2022" },
+  "include": ["src/vite-env.d.ts", "tests/ui/**/*.ts", "tests/ui/**/*.tsx", "src/model/inspection/get-view-model-base-keys.test.ts"],
+  "exclude": []
+}

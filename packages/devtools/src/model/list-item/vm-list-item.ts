@@ -36,7 +36,7 @@ export class VMListItem extends ListItem<AnyVM> {
         this.inspector.search.isActive,
       )
     ) {
-      const baseKeys = getViewModelBaseKeys();
+      const baseKeys = getViewModelBaseKeys(this.data);
       keys = keys.filter((key) => !baseKeys.has(key));
     }
     return sortPropertyKeys(keys, this.inspector.settings.sortPropertiesBy);
@@ -50,7 +50,7 @@ export class VMListItem extends ListItem<AnyVM> {
   }
 
   get basePropertyKeys() {
-    const baseKeys = getViewModelBaseKeys();
+    const baseKeys = getViewModelBaseKeys(this.data);
     return this.propertyKeys.filter((key) => baseKeys.has(key));
   }
 
@@ -61,8 +61,11 @@ export class VMListItem extends ListItem<AnyVM> {
   private get propertyListItems(): ListItem<any>[] {
     this.dataWatchAtom.reportObserved();
 
-    const keys = this.groupsBaseProperties
-      ? this.propertyKeys.filter((key) => !getViewModelBaseKeys().has(key))
+    const baseKeys = this.groupsBaseProperties
+      ? getViewModelBaseKeys(this.data)
+      : null;
+    const keys = baseKeys
+      ? this.propertyKeys.filter((key) => !baseKeys.has(key))
       : this.propertyKeys;
     const items: ListItem<any>[] = keys.map((property, order) => {
       return PropertyListItem.create(

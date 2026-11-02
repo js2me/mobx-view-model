@@ -58,13 +58,13 @@ function appendProperties(
   const key = getViewModelItemKey(vm);
   const { settings } = inspector;
   const hiddenKeys = settings.shouldHideBaseProperties(Boolean(search))
-    ? getViewModelBaseKeys()
+    ? getViewModelBaseKeys(vm)
     : null;
   const appendItem = (item: import('./list-item/list-item').ListItem<any>) =>
     rows.append(() => item, isStickyTreeItem(item));
 
   const grouped = settings.groupViewModelBaseMembers && !search;
-  const baseKeys = getViewModelBaseKeys();
+  const baseKeys = getViewModelBaseKeys(vm);
   const visibleKeys = getAllKeys(vm).filter((key) => !hiddenKeys?.has(key));
   const keys = sortPropertyKeys(
     visibleKeys.filter((key) => !grouped || !baseKeys.has(key)),
@@ -123,7 +123,7 @@ function appendSearchRows(inspector: DevtoolsInspector, rows: InspectorRows) {
       vm.constructor.name.toLowerCase().includes(segment) ||
       (vm.id ?? '').toLowerCase().includes(segment);
     const hidden = inspector.settings.shouldHideBaseProperties(true)
-      ? getViewModelBaseKeys()
+      ? getViewModelBaseKeys(vm)
       : null;
     const propertyMatch = getAllKeys(vm).some(
       (key) => !hidden?.has(key) && key.toLowerCase().includes(segment),

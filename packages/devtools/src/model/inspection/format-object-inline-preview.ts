@@ -35,11 +35,14 @@ export function getObjectInlinePreviewEntries(
 export function prepareObjectInlinePreview(
   object: object,
 ): ObjectInlinePreviewModel {
-  const entries = getObjectInlinePreviewEntries(object);
-  const scannedEntries = entries.slice(0, INLINE_PREVIEW_MAX_ITEMS);
+  const keys = getAllKeys(object);
+  const scannedEntries = keys.slice(0, INLINE_PREVIEW_MAX_ITEMS).map((key) => ({
+    key,
+    value: (object as Record<string, unknown>)[key],
+  }));
 
   return {
-    totalCount: entries.length,
+    totalCount: keys.length,
     scannedEntries,
     formattedElements: scannedEntries.map(formatObjectInlineEntry),
   };

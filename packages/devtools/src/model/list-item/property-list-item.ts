@@ -13,10 +13,10 @@ import type { MouseEvent } from 'react';
 import type { Maybe } from 'yummies/types';
 import type { DevtoolsInspector } from '../devtools-inspector';
 import { PropertyEditor } from '../editing/property-editor';
+import type { SetEntryIdentity } from '../editing/set-entry-identity';
 import {
   type CollectionKind,
   getCollectionKind,
-  getMapEntryAt,
   getSetValueAt,
 } from '../inspection/collection-like';
 import {
@@ -24,9 +24,13 @@ import {
   getPropertyInstanceClassName,
 } from '../inspection/detect-property-value-type';
 import { getViewModelBaseKeys } from '../inspection/get-view-model-base-keys';
+import { getIndexedMapEntryAt } from '../inspection/map-entry-index';
 import { INACCESSIBLE } from '../inspection/safe-access';
 import { formatSearchSegmentKey } from '../search/format-search-key';
-import { createPropertyChildren } from './create-property-children';
+import {
+  createPropertyChildren,
+  hasPropertyChildren,
+} from './create-property-children';
 import { ListItem, type ListItemOperation } from './list-item';
 import { MetaListItem } from './meta-list-item';
 import { PropertyWatch } from './property-watch';
@@ -50,7 +54,7 @@ export class PropertyListItem extends ListItem<any> {
   }
 
   get isExpandable() {
-    return this.inspector.search.isPropertyItemExpandable(this);
+    return hasPropertyChildren(this.data, this.nestedValueType);
   }
 
   get data(): any {
@@ -67,20 +71,25 @@ export class PropertyListItem extends ListItem<any> {
         this.collectionEntryKind === 'map' &&
         getCollectionKind(parentData) === 'map'
       ) {
-        return getMapEntryAt(parentData, this.collectionEntryIndex)?.[1];
+        return getIndexedMapEntryAt(
+          this.parent,
+          this.collectionEntryIndex,
+        )?.[1];
       }
 
       if (
         this.collectionEntryKind === 'set' &&
         getCollectionKind(parentData) === 'set'
       ) {
-        return getSetValueAt(parentData, this.collectionEntryIndex);
+        return this.setEntryIdentity
+          ? this.setEntryIdentity.value
+          : getSetValueAt(parentData, this.collectionEntryIndex);
       }
 
       return undefined;
     }
 
-    if (!this.property) {
+    if (this.property == null) {
       return undefined;
     }
 
@@ -105,11 +114,37 @@ export class PropertyListItem extends ListItem<any> {
       return undefined;
     }
 
-    return getMapEntryAt(parentData, this.collectionEntryIndex)?.[0];
+    return getIndexedMapEntryAt(this.parent, this.collectionEntryIndex)?.[0];
+  }
+
+  get collectionEntryIndex(): number | undefined {
+    if (!this.setEntryIdentity) return this.entryIndex;
+    return this.setEntryIdentity.index;
+  }
+
+  get property() {
+    if (!this.setEntryIdentity) return this.propertyKey;
+    const index = this.collectionEntryIndex;
+    return index == null ? undefined : String(index);
+  }
+
+  get path(): string {
+    if (this.parent instanceof PropertyListItem) {
+      return this.collectionEntryKind
+        ? `${this.parent.path}[${this.collectionEntryIndex}]`
+        : `${this.parent.path}.${this.property}`;
+    }
+    return this.propertyPath;
+  }
+
+  get order() {
+    return this.setEntryIdentity
+      ? (this.collectionEntryIndex ?? this.itemOrder)
+      : this.itemOrder;
   }
 
   get descriptor() {
-    if (!this.property) {
+    if (this.property == null) {
       return null;
     }
 
@@ -214,7 +249,7 @@ export class PropertyListItem extends ListItem<any> {
       this.parent instanceof VMListItem &&
       this.parent.groupsBaseProperties &&
       this.property != null &&
-      getViewModelBaseKeys().has(this.property);
+      getViewModelBaseKeys(this.parent.data).has(this.property);
     return this.parent.depth + (grouped ? 2 : 1);
   }
 
@@ -236,12 +271,20 @@ export class PropertyListItem extends ListItem<any> {
   }
 
   get isCopiable() {
-    if (this.type === 'instance') return false;
+    return this.type !== 'instance' && !this.isInaccessible;
+  }
+
+  private async copyValue() {
     try {
-      JSON.stringify(this.data);
-      return true;
-    } catch {
-      return false;
+      const value =
+        this.nestedValueType === 'object' || this.nestedValueType === 'array'
+          ? JSON.stringify(this.data, null, 2)
+          : this.stringifiedData;
+      await navigator.clipboard.writeText(value);
+    } catch (error) {
+      this.inspector.notifications.push({
+        title: `Failed to copy "${this.property}": ${error instanceof Error ? error.message : String(error)}`,
+      });
     }
   }
 
@@ -277,7 +320,7 @@ export class PropertyListItem extends ListItem<any> {
 
     if (this.editor.isEditMode) {
       operations.push(
-        this.dataType === 'function'
+        this.editor.isFunctionCall
           ? {
               title: 'Call function',
               icon: Play,
@@ -302,10 +345,7 @@ export class PropertyListItem extends ListItem<any> {
       operations.push({
         title: 'Call',
         icon: Play,
-        action: () => {
-          this.editor.editContent = '';
-          this.editor.isEditMode = true;
-        },
+        action: this.editor.startFunctionCall,
       });
     } else {
       if (this.dataType === 'boolean' && this.editor.isEditable) {
@@ -329,7 +369,7 @@ export class PropertyListItem extends ListItem<any> {
       operations.push({
         title: 'Copy',
         icon: Copy,
-        action: () => navigator.clipboard.writeText(this.stringifiedData),
+        action: () => this.copyValue(),
       });
     }
 
@@ -393,16 +433,25 @@ export class PropertyListItem extends ListItem<any> {
 
   protected constructor(
     inspector: DevtoolsInspector,
-    public property: Maybe<string>,
-    public path: string,
-    public order: number,
+    private propertyKey: Maybe<string>,
+    private propertyPath: string,
+    private itemOrder: number,
     private parent: ListItem<any>,
     public collectionEntryKind?: CollectionKind,
-    public collectionEntryIndex?: number,
+    private entryIndex?: number,
     public getPreview?: () => unknown,
+    public readonly setEntryIdentity?: SetEntryIdentity,
   ) {
-    super(inspector, PropertyListItem.createKey(parent, property), undefined);
+    super(
+      inspector,
+      PropertyListItem.createKey(parent, propertyKey, setEntryIdentity),
+      undefined,
+    );
 
+    computed(this, 'order');
+    computed(this, 'property');
+    computed(this, 'path');
+    computed(this, 'collectionEntryIndex');
     computed(this, 'type');
     computed(this, 'searchData');
     computed(this, 'propertyClosingTag');
@@ -420,7 +469,12 @@ export class PropertyListItem extends ListItem<any> {
     makeObservable(this);
   }
 
-  static createKey(parent: ListItem<any>, property: Maybe<string>) {
+  static createKey(
+    parent: ListItem<any>,
+    property: Maybe<string>,
+    identity?: SetEntryIdentity,
+  ) {
+    if (identity) return `${parent.key}/set-entry/${identity.id}`;
     return `${parent.key}-${property}`;
   }
 
@@ -434,10 +488,11 @@ export class PropertyListItem extends ListItem<any> {
       collectionEntryKind?: CollectionKind;
       collectionEntryIndex?: number;
       getPreview?: () => unknown;
+      setEntryIdentity?: SetEntryIdentity;
     },
   ) {
     const cache = parent.cache;
-    const key = `${PropertyListItem.createKey(parent, property)}/list-item`;
+    const key = `${PropertyListItem.createKey(parent, property, options?.setEntryIdentity)}/list-item`;
 
     const cached = cache.get(key);
     if (
@@ -455,6 +510,7 @@ export class PropertyListItem extends ListItem<any> {
       options?.collectionEntryKind,
       options?.collectionEntryIndex,
       options?.getPreview,
+      options?.setEntryIdentity,
     );
     cache.set(key, item);
     item.watch.restore();

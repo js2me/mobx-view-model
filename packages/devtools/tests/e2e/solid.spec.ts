@@ -63,6 +63,9 @@ for (const entry of ['module', 'standalone']) {
           name: 'Search ViewModels and properties',
         });
         await search.fill('solid-counter');
+        // Wait for filtering before hovering: the debounced search scrolls the
+        // list and can move the row away from the pointer, hiding its controls.
+        await expect(parent).toHaveCount(0);
         const count = propertyRow(dialog, 'count');
         const doubled = propertyRow(dialog, 'doubled');
         await expect(count.getByText('2', { exact: true })).toBeVisible();
