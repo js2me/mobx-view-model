@@ -4,8 +4,56 @@ import { autorun, observable, runInAction } from 'mobx';
 import { expect, it, vi } from 'vitest';
 import { prepareObjectInlinePreview } from '../../src/model/inspection/format-object-inline-preview';
 import { INLINE_PREVIEW_MAX_ITEMS } from '../../src/model/inspection/inline-preview';
+import { getIndexedMapEntryAt } from '../../src/model/inspection/map-entry-index';
 import { PropertyListItem } from '../../src/model/list-item/property-list-item';
 import { inspect } from './inspect';
+
+it('refreshes native Map rows when their child list rebuilds after structural changes', () => {
+  const entries = new Map([
+    ['old', 1],
+    ['keep', 2],
+  ]);
+  const ui = inspect({ entries }, ['entries', '0'], () => null, {
+    siblings: true,
+  });
+  act(() => {
+    entries.delete('old');
+    entries.set('new', 3);
+    ui.item.inspector.settings.setSortPropertiesBy('desc');
+  });
+  const rows = ui.item.parentListItem.children.filter(
+    (row): row is PropertyListItem =>
+      row instanceof PropertyListItem && row.collectionEntryKind === 'map',
+  );
+  expect(rows.map((row) => [row.mapEntryKey, row.data])).toEqual([
+    ['keep', 2],
+    ['new', 3],
+  ]);
+  expect(ui.row.getByText('"keep"', { exact: true })).toBeInTheDocument();
+});
+
+it('uses a bounded scan for unobserved Map entry reads', () => {
+  const entries = observable.map(
+    Array.from({ length: 1000 }, (_, index) => [index, index] as const),
+  );
+  const keys = entries.keys.bind(entries);
+  let visited = 0;
+  const spy = vi.spyOn(entries, 'keys').mockImplementation(function* () {
+    for (const key of keys()) {
+      visited++;
+      yield key;
+    }
+    return undefined;
+  });
+  try {
+    const parent = { data: entries };
+    expect(getIndexedMapEntryAt(parent, 0)).toEqual([0, 0]);
+    expect(getIndexedMapEntryAt(parent, 0)).toEqual([0, 0]);
+    expect(visited).toBeLessThanOrEqual(2);
+  } finally {
+    spy.mockRestore();
+  }
+});
 
 it('indexes Map rows once and does not rescan keys for a value-only update', () => {
   const entries = observable.map(

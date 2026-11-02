@@ -202,7 +202,11 @@ intact during in-place edits, while
 copy and update dependent computeds without changing the original snapshot.
 
 Map rows share a key index while observed. Value-only changes read their entry
-directly without rebuilding that index. Collapsed rows check for children without
+directly without rebuilding that index. Native Map child-list rebuilds reread
+their keys and invalidate existing positional rows when keys change. Reads
+outside an observer use an early-exit entry scan instead of constructing a full
+index. Map detection checks all required read methods (`entries`, `keys`, `get`).
+Collapsed rows check for children without
 creating their models, and object previews read at most 256 values. Copy performs
 full serialization only when requested; serialization or clipboard failures show
 a notification. These bounds are checked in

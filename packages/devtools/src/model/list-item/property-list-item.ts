@@ -24,10 +24,7 @@ import {
   getPropertyInstanceClassName,
 } from '../inspection/detect-property-value-type';
 import { getViewModelBaseKeys } from '../inspection/get-view-model-base-keys';
-import {
-  getIndexedMapEntryAt,
-  getMapEntryKeys,
-} from '../inspection/map-entry-index';
+import { getIndexedMapEntryAt } from '../inspection/map-entry-index';
 import { INACCESSIBLE } from '../inspection/safe-access';
 import { formatSearchSegmentKey } from '../search/format-search-key';
 import {
@@ -117,7 +114,7 @@ export class PropertyListItem extends ListItem<any> {
       return undefined;
     }
 
-    return getMapEntryKeys(this.parent)[this.collectionEntryIndex];
+    return getIndexedMapEntryAt(this.parent, this.collectionEntryIndex)?.[0];
   }
 
   get collectionEntryIndex(): number | undefined {

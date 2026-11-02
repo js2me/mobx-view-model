@@ -13,3 +13,5 @@ Reject stale Map drafts without forbidding undefined keys, preserve explicit ref
 Validate Map ancestors for nested drafts and preserve function-call targets while editing. Report call errors without losing the draft, retain class identity and private state in computed outputs, and round-trip Symbol editor content correctly.
 
 Share an observed Map key index instead of rescanning entries for each row. Bound object-preview value reads to 256 fields, check expandability without allocating descendants, and serialize Copy values only on request with visible error notifications.
+
+Refresh native Map key snapshots and existing rows when child lists rebuild, use bounded scans for unobserved entry reads, and validate all required Map read methods.
