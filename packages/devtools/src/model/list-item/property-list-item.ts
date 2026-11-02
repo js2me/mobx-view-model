@@ -13,6 +13,7 @@ import type { MouseEvent } from 'react';
 import type { Maybe } from 'yummies/types';
 import type { DevtoolsInspector } from '../devtools-inspector';
 import { PropertyEditor } from '../editing/property-editor';
+import type { SetEntryIdentity } from '../editing/set-entry-identity';
 import {
   type CollectionKind,
   getCollectionKind,
@@ -80,7 +81,7 @@ export class PropertyListItem extends ListItem<any> {
       return undefined;
     }
 
-    if (!this.property) {
+    if (this.property == null) {
       return undefined;
     }
 
@@ -108,8 +109,41 @@ export class PropertyListItem extends ListItem<any> {
     return getMapEntryAt(parentData, this.collectionEntryIndex)?.[0];
   }
 
+  get collectionEntryIndex(): number | undefined {
+    if (!this.setEntryIdentity) return this.entryIndex;
+    const data = this.parent.data;
+    if (getCollectionKind(data) !== 'set') return undefined;
+    const values = [...data.values()];
+    return values.findIndex(
+      (value) =>
+        Object.is(value, this.setEntryIdentity!.value) ||
+        value === this.setEntryIdentity!.value,
+    );
+  }
+
+  get property() {
+    return this.setEntryIdentity
+      ? String(this.collectionEntryIndex)
+      : this.propertyKey;
+  }
+
+  get path(): string {
+    if (this.parent instanceof PropertyListItem) {
+      return this.collectionEntryKind
+        ? `${this.parent.path}[${this.collectionEntryIndex}]`
+        : `${this.parent.path}.${this.property}`;
+    }
+    return this.propertyPath;
+  }
+
+  get order() {
+    return this.setEntryIdentity
+      ? (this.collectionEntryIndex ?? this.itemOrder)
+      : this.itemOrder;
+  }
+
   get descriptor() {
-    if (!this.property) {
+    if (this.property == null) {
       return null;
     }
 
@@ -393,16 +427,25 @@ export class PropertyListItem extends ListItem<any> {
 
   protected constructor(
     inspector: DevtoolsInspector,
-    public property: Maybe<string>,
-    public path: string,
-    public order: number,
+    private propertyKey: Maybe<string>,
+    private propertyPath: string,
+    private itemOrder: number,
     private parent: ListItem<any>,
     public collectionEntryKind?: CollectionKind,
-    public collectionEntryIndex?: number,
+    private entryIndex?: number,
     public getPreview?: () => unknown,
+    public readonly setEntryIdentity?: SetEntryIdentity,
   ) {
-    super(inspector, PropertyListItem.createKey(parent, property), undefined);
+    super(
+      inspector,
+      PropertyListItem.createKey(parent, propertyKey, setEntryIdentity),
+      undefined,
+    );
 
+    computed(this, 'order');
+    computed(this, 'property');
+    computed(this, 'path');
+    computed(this, 'collectionEntryIndex');
     computed(this, 'type');
     computed(this, 'searchData');
     computed(this, 'propertyClosingTag');
@@ -420,7 +463,12 @@ export class PropertyListItem extends ListItem<any> {
     makeObservable(this);
   }
 
-  static createKey(parent: ListItem<any>, property: Maybe<string>) {
+  static createKey(
+    parent: ListItem<any>,
+    property: Maybe<string>,
+    identity?: SetEntryIdentity,
+  ) {
+    if (identity) return `${parent.key}/set-entry/${identity.id}`;
     return `${parent.key}-${property}`;
   }
 
@@ -434,10 +482,11 @@ export class PropertyListItem extends ListItem<any> {
       collectionEntryKind?: CollectionKind;
       collectionEntryIndex?: number;
       getPreview?: () => unknown;
+      setEntryIdentity?: SetEntryIdentity;
     },
   ) {
     const cache = parent.cache;
-    const key = `${PropertyListItem.createKey(parent, property)}/list-item`;
+    const key = `${PropertyListItem.createKey(parent, property, options?.setEntryIdentity)}/list-item`;
 
     const cached = cache.get(key);
     if (
@@ -455,6 +504,7 @@ export class PropertyListItem extends ListItem<any> {
       options?.collectionEntryKind,
       options?.collectionEntryIndex,
       options?.getPreview,
+      options?.setEntryIdentity,
     );
     cache.set(key, item);
     item.watch.restore();

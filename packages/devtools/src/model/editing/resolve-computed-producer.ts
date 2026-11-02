@@ -1,244 +1,100 @@
 import { untracked } from 'mobx';
-import type { ListItem } from '../list-item/list-item';
-import { PropertyListItem } from '../list-item/property-list-item';
-import { VMListItem } from '../list-item/vm-list-item';
 import {
-  ensureMobxPropertyAtomLoaded,
-  findMobxAdministration,
-  getMobxComputedPropertyKeys,
+  getCollectionKind,
+  isMobxObservableMap,
+  isMobxObservableSet,
+} from '../inspection/collection-like';
+import type { MapLike, SetLike } from '../inspection/mobx-collection';
+import { PropertyListItem } from '../list-item/property-list-item';
+import {
+  hasMobxObject,
   isMobxComputedProperty,
-} from './mobx-administration';
+  isObservableArrayOwner,
+} from './mobx-edit-adapter';
+import type { SetEntryIdentity } from './set-entry-identity';
 
 export type ComputedProducerTarget = {
   host: object;
   key: string;
   value: unknown;
+  identityUpdates?: SetEntryUpdate[];
 };
 
-function getPropertyOwnerHost(item: PropertyListItem): object {
-  const parent: ListItem<any> = item.parentListItem;
+type SetEntryUpdate = { entry: SetEntryIdentity; value: unknown };
 
-  if (parent instanceof PropertyListItem || parent instanceof VMListItem) {
-    return parent.data;
+type EditSegment =
+  | { kind: 'property'; key: string }
+  | { kind: 'map'; key: unknown }
+  | { kind: 'set'; index: number; identity?: SetEntryIdentity };
+
+function editSegment(item: PropertyListItem): EditSegment {
+  if (item.collectionEntryKind === 'map') {
+    return { kind: 'map', key: item.mapEntryKey };
   }
-
-  return parent.data;
-}
-
-type ComputedProducerCandidate = {
-  host: object;
-  key: string;
-  depth: number;
-};
-
-function isLiveMobxEditHost(value: unknown): value is object {
-  return (
-    !!value && typeof value === 'object' && !!findMobxAdministration(value)
-  );
-}
-
-function canEditPropertyDirectlyOnHost(host: object, propertyKey: string) {
-  const adm = ensureMobxPropertyAtomLoaded(host, propertyKey);
-
-  if (!adm) {
-    return false;
+  if (item.collectionEntryKind === 'set') {
+    return {
+      kind: 'set',
+      index: item.collectionEntryIndex!,
+      identity: item.setEntryIdentity,
+    };
   }
-
-  return adm.values_.has(propertyKey);
-}
-
-function isSameComputedSnapshot(
-  computedValue: unknown,
-  parentValue: unknown,
-  editedKey: string,
-): boolean {
-  if (computedValue === parentValue) {
-    // @computedModel and similar patterns return the same live model instance;
-    // nested edits must target that instance, not replace the parent computed.
-    return !isLiveMobxEditHost(parentValue);
-  }
-
-  if (
-    !computedValue ||
-    !parentValue ||
-    typeof computedValue !== 'object' ||
-    typeof parentValue !== 'object' ||
-    Array.isArray(computedValue) ||
-    Array.isArray(parentValue)
-  ) {
-    return false;
-  }
-
-  const computedRecord = computedValue as Record<string, unknown>;
-  const parentRecord = parentValue as Record<string, unknown>;
-  const computedKeys = Object.keys(computedRecord);
-  const parentKeys = Object.keys(parentRecord);
-
-  if (
-    computedKeys.length !== parentKeys.length ||
-    !computedKeys.every((key) => parentKeys.includes(key))
-  ) {
-    return false;
-  }
-
-  return computedKeys.every(
-    (key) =>
-      key === editedKey || Object.is(computedRecord[key], parentRecord[key]),
-  );
-}
-
-function collectComputedProducerCandidates(
-  parentItem: PropertyListItem,
-  parentValue: unknown,
-  editedKey: string,
-): ComputedProducerCandidate[] {
-  const candidates: ComputedProducerCandidate[] = [];
-  const seen = new Set<string>();
-  let current: ListItem<any> | null = parentItem;
-  let depth = 0;
-
-  const addCandidate = (host: object, key: string, candidateDepth: number) => {
-    const id = `${host}:${String(key)}`;
-
-    if (seen.has(id) || !isMobxComputedProperty(host, key)) {
-      return;
-    }
-
-    seen.add(id);
-    candidates.push({ host, key, depth: candidateDepth });
-  };
-
-  while (current instanceof PropertyListItem && current.property != null) {
-    const host = getPropertyOwnerHost(current);
-
-    if (!(depth === 0 && isLiveMobxEditHost(parentValue))) {
-      addCandidate(host, current.property, depth);
-    }
-
-    for (const computedKey of getMobxComputedPropertyKeys(host)) {
-      try {
-        const computedValue = untracked(
-          () => (host as Record<string, unknown>)[computedKey],
-        );
-
-        if (isSameComputedSnapshot(computedValue, parentValue, editedKey)) {
-          addCandidate(host, computedKey, depth);
-        }
-      } catch {
-        // Getter may throw while devtools still allow editing a fallback value.
-      }
-    }
-
-    current = current.parentListItem;
-    depth += 1;
-  }
-
-  return candidates;
-}
-
-function pickBestComputedProducerCandidate(
-  candidates: ComputedProducerCandidate[],
-): ComputedProducerCandidate | null {
-  if (candidates.length === 0) {
-    return null;
-  }
-
-  return (
-    [...candidates].sort((left, right) => right.depth - left.depth)[0] ?? null
-  );
-}
-
-function findProducerPropertyListItem(
-  item: PropertyListItem,
-  producer: ComputedProducerCandidate,
-): PropertyListItem | null {
-  let current: ListItem<any> | null = item.parentListItem;
-
-  while (current instanceof PropertyListItem) {
-    const host = getPropertyOwnerHost(current);
-
-    if (host === producer.host && current.property === producer.key) {
-      return current;
-    }
-
-    current = current.parentListItem;
-  }
-
-  return null;
-}
-
-function collectPathSegmentsFromProducer(
-  producerItem: PropertyListItem,
-  item: PropertyListItem,
-): string[] | null {
-  const replacesWholeValue = item.type === 'object' || item.type === 'array';
-
-  if (producerItem === item && replacesWholeValue) {
-    return [];
-  }
-
-  const segments: string[] = [];
-
-  if (!replacesWholeValue) {
-    if (item.property == null) {
-      return null;
-    }
-
-    segments.unshift(item.property);
-  }
-
-  let current: PropertyListItem | null =
-    item.parentListItem instanceof PropertyListItem
-      ? item.parentListItem
-      : null;
-
-  while (current && current !== producerItem) {
-    if (current.property == null) {
-      return null;
-    }
-
-    segments.unshift(current.property);
-    current =
-      current.parentListItem instanceof PropertyListItem
-        ? current.parentListItem
-        : null;
-  }
-
-  if (current !== producerItem) {
-    return null;
-  }
-
-  if (replacesWholeValue) {
-    if (item.property == null) {
-      return null;
-    }
-
-    segments.push(item.property);
-  }
-
-  return segments;
+  return { kind: 'property', key: item.property! };
 }
 
 function applyNestedEdit(
   value: unknown,
-  segments: string[],
+  segments: EditSegment[],
   parsed: unknown,
+  updates: SetEntryUpdate[],
 ): unknown {
   if (segments.length === 0) {
     return parsed;
   }
 
-  const [head, ...rest] = segments;
+  const [segment, ...rest] = segments;
+  if (segment.kind === 'map') {
+    if (getCollectionKind(value) !== 'map')
+      throw new Error('Map entry was not found');
+    const next = new Map((value as MapLike).entries());
+    if (!next.has(segment.key)) throw new Error('Map entry was not found');
+    next.set(
+      segment.key,
+      applyNestedEdit(next.get(segment.key), rest, parsed, updates),
+    );
+    return next;
+  }
+  if (segment.kind === 'set') {
+    if (getCollectionKind(value) !== 'set')
+      throw new Error('Set entry was not found');
+    const values = [...(value as SetLike).values()];
+    if (segment.index < 0 || segment.index >= values.length)
+      throw new Error('Set entry was not found');
+    values[segment.index] = applyNestedEdit(
+      values[segment.index],
+      rest,
+      parsed,
+      updates,
+    );
+    const nextValue = values[segment.index];
+    if (segment.identity)
+      updates.push({ entry: segment.identity, value: nextValue });
+    return new Set(values);
+  }
+  const head = segment.key;
 
   if (Array.isArray(value)) {
-    const index = Number(head);
-
-    if (Number.isNaN(index)) {
-      return value;
+    // slice preserves sparse entries; copying enumerable properties keeps
+    // custom keys (including an empty key) when editing another array member.
+    const next = Object.assign(value.slice(), value);
+    const nextValue = applyNestedEdit(
+      Reflect.get(value, head),
+      rest,
+      parsed,
+      updates,
+    );
+    if (!Reflect.set(next, head, nextValue)) {
+      throw new Error(`Cannot update array property "${head}"`);
     }
-
-    const next = [...value];
-    next[index] = applyNestedEdit(next[index], rest, parsed);
     return next;
   }
 
@@ -249,6 +105,7 @@ function applyNestedEdit(
         (value as Record<string, unknown>)[head],
         rest,
         parsed,
+        updates,
       ),
     };
   }
@@ -260,101 +117,54 @@ function applyNestedEdit(
   return value;
 }
 
-function buildProducerValueForComputed(
-  item: PropertyListItem,
-  parsed: unknown,
-  producer: ComputedProducerCandidate,
-): unknown | null {
-  const producerItem = findProducerPropertyListItem(item, producer);
-
-  if (!producerItem) {
-    return null;
-  }
-
-  const pathSegments = collectPathSegmentsFromProducer(producerItem, item);
-
-  if (pathSegments == null) {
-    return null;
-  }
-
-  let rootValue: unknown;
-
-  try {
-    rootValue = untracked(
-      () => (producer.host as Record<string, unknown>)[producer.key],
-    );
-  } catch {
-    return null;
-  }
-
-  return applyNestedEdit(rootValue, pathSegments, parsed);
-}
-
 /**
- * When a property is edited on a plain object returned by a computed getter
- * (e.g. service.permissions.editDescription), mutating the snapshot does nothing —
- * the computed recreates the object on the next read. Pin the producer computed instead.
+ * Pin the nearest plain computed snapshot on the edited path. Observable
+ * values are edited in place, retaining their owner's dependencies. If that
+ * owner later creates a new value, its normal recomputation remains authoritative.
  */
 export function resolveComputedProducerForEdit(
   item: PropertyListItem,
   parsed: unknown,
 ): ComputedProducerTarget | null {
-  const propertyKey = item.property;
-
-  if (propertyKey == null) {
+  if (item.property == null) {
     return null;
   }
 
-  const parentItem = item.parentListItem;
+  const segments = [editSegment(item)];
+  let current = item.parentListItem;
 
-  if (
-    !(parentItem instanceof PropertyListItem) ||
-    parentItem.property == null
-  ) {
-    return null;
-  }
+  while (current instanceof PropertyListItem && current.property != null) {
+    if (
+      hasMobxObject(current.data) ||
+      isObservableArrayOwner(current.data) ||
+      isMobxObservableMap(current.data) ||
+      isMobxObservableSet(current.data)
+    ) {
+      return null;
+    }
 
-  const parentValue = parentItem.data;
+    const host = current.parentListItem.data;
+    const key = current.property;
+    if (isMobxComputedProperty(host, key)) {
+      const rootValue = untracked(() => Reflect.get(host, key));
+      const updates: SetEntryUpdate[] = [];
+      const value = applyNestedEdit(rootValue, segments, parsed, updates);
+      return {
+        host,
+        key,
+        value,
+        ...(updates.length ? { identityUpdates: updates } : {}),
+      };
+    }
 
-  if (
-    isLiveMobxEditHost(parentValue) &&
-    canEditPropertyDirectlyOnHost(parentValue, propertyKey)
-  ) {
-    return null;
-  }
+    // An observable field (including observable.ref) owns the value below it.
+    // Editing that value must not pin a computed higher up the inspector tree.
+    if (hasMobxObject(host)) {
+      return null;
+    }
 
-  const candidates = collectComputedProducerCandidates(
-    parentItem,
-    parentValue,
-    propertyKey,
-  );
-  const producer = pickBestComputedProducerCandidate(candidates);
-
-  if (!producer) {
-    return null;
-  }
-
-  const producerValue = buildProducerValueForComputed(item, parsed, producer);
-
-  if (producerValue == null) {
-    return null;
-  }
-
-  return {
-    host: producer.host,
-    key: producer.key,
-    value: producerValue,
-  };
-}
-
-export function findMobxComputedPropertyHost(
-  object: object,
-  key: string,
-): { host: object; key: string } | null {
-  const adm = findMobxAdministration(object);
-
-  if (adm && isMobxComputedProperty(object, key)) {
-    return { host: object, key };
+    segments.unshift(editSegment(current));
+    current = current.parentListItem;
   }
 
   return null;

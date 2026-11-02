@@ -2,9 +2,13 @@ import { action, computed, makeObservable, observable } from 'mobx';
 import type { ChangeEventHandler, KeyboardEventHandler } from 'react';
 import type { Maybe } from 'yummies/types';
 import type { DevtoolsInspector } from '../devtools-inspector';
-import type { CollectionKind } from '../inspection/collection-like';
+import {
+  type CollectionKind,
+  isMobxObservableMap,
+  isMobxObservableSet,
+} from '../inspection/collection-like';
 import { isInaccessible } from '../inspection/safe-access';
-import type { PropertyListItem } from '../list-item/property-list-item';
+import { PropertyListItem } from '../list-item/property-list-item';
 import { formatSearchSegmentKey } from '../search/format-search-key';
 import { PropertyEditPropagation } from './property-edit-propagation';
 import { resolveComputedProducerForEdit } from './resolve-computed-producer';
@@ -114,7 +118,7 @@ export class PropertyEditor {
           case 'symbol':
             return `Symbol(${Symbol.keyFor(host.data as symbol) || ''})`;
           case 'string':
-            return `"${String(host.data)}"`;
+            return JSON.stringify(host.data);
         }
 
         return String(host.data);
@@ -209,7 +213,12 @@ export class PropertyEditor {
   }
 
   private commitParsedEdit(parsed: unknown): boolean {
-    const result = this.applyParsedEdit(parsed);
+    let result: ReturnType<PropertyEditor['applyParsedEdit']>;
+    try {
+      result = this.applyParsedEdit(parsed);
+    } catch (error) {
+      result = { ok: false, error: formatEditError(error) };
+    }
 
     if (!result.ok) {
       this.host.inspector.notifications.push({
@@ -218,7 +227,7 @@ export class PropertyEditor {
       return false;
     }
 
-    this.propagation.notify(result.producerTarget);
+    if (!result.notifies) this.propagation.notify();
     this.propagation.reportDataChanged();
     return true;
   }
@@ -235,26 +244,12 @@ export class PropertyEditor {
   private applyParsedEdit(parsed: unknown): {
     ok: boolean;
     error?: string;
-    producerTarget?: { host: object; key: string };
+    notifies?: boolean;
   } {
-    const host = this.host;
-
-    if (host.collectionEntryKind === 'map') {
-      const key = host.mapEntryKey;
-
-      if (key === undefined) {
-        return { ok: false, error: 'Map key is missing' };
-      }
-
-      return setMapEntryValue(host.parentListItem.data, key, parsed);
-    }
-
-    if (host.collectionEntryKind === 'set') {
-      return setSetEntryValue(host.parentListItem.data, host.data, parsed);
-    }
+    const h = this.host;
 
     const producerTarget = resolveComputedProducerForEdit(
-      host as PropertyListItem,
+      h as PropertyListItem,
       parsed,
     );
 
@@ -265,22 +260,42 @@ export class PropertyEditor {
         producerTarget.value,
       );
 
-      return result.ok
-        ? { ok: true, producerTarget }
-        : { ok: false, error: result.error };
+      if (!result.ok) return result;
+      for (const { entry, value } of producerTarget.identityUpdates ?? [])
+        entry.rebind(value);
+      return result;
     }
 
-    if (host.property == null) {
+    if (h.collectionEntryKind === 'map') {
+      const key = h.mapEntryKey;
+
+      return {
+        ...setMapEntryValue(h.parentListItem.data, key, parsed),
+        notifies: isMobxObservableMap(h.parentListItem.data),
+      };
+    }
+
+    if (h.collectionEntryKind === 'set') {
+      const oldValue =
+        h instanceof PropertyListItem && h.setEntryIdentity
+          ? h.setEntryIdentity.value
+          : h.data;
+      const result = setSetEntryValue(h.parentListItem.data, oldValue, parsed);
+      if (result.ok && h instanceof PropertyListItem)
+        h.setEntryIdentity?.rebind(result.value);
+      return {
+        ...result,
+        notifies: isMobxObservableSet(h.parentListItem.data),
+      };
+    }
+
+    if (h.property == null) {
       return { ok: false, error: 'Property key is missing' };
     }
 
-    const result = setPropertyValue(
-      host.parentListItem.data,
-      host.property,
-      parsed,
-    );
+    const result = setPropertyValue(h.parentListItem.data, h.property, parsed);
 
-    return result.ok ? { ok: true } : { ok: false, error: result.error };
+    return result;
   }
 
   private parseEditContent(): unknown {

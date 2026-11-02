@@ -1,3 +1,4 @@
+import { getSetEntryIdentities } from '../editing/set-entry-identity';
 import { getCollectionKind } from '../inspection/collection-like';
 import { createDatePreviewChildren } from '../inspection/create-date-preview-children';
 import { getAllKeys } from '../inspection/get-all-keys';
@@ -39,6 +40,8 @@ export function createPropertyChildren(
   const entries: PropertyListItem[] = [];
   const kind = getCollectionKind(data);
   if (kind) {
+    const identities =
+      kind === 'set' ? getSetEntryIdentities(parent, data) : [];
     let index = 0;
     for (const _ of data.values()) {
       entries.push(
@@ -48,7 +51,11 @@ export function createPropertyChildren(
           `${path}[${index}]`,
           index,
           parent,
-          { collectionEntryKind: kind, collectionEntryIndex: index },
+          {
+            collectionEntryKind: kind,
+            collectionEntryIndex: index,
+            setEntryIdentity: identities[index],
+          },
         ),
       );
       index++;

@@ -141,3 +141,31 @@ ViewModelDevtools.connect(viewModelStore);
 ```
 
 The module entry is tested against both 8.0.0 and 8.10.1. The public store type uses their shared lookup API, so TypeScript consumers do not need casts to the current core version. A popup-scoped observer detects VM additions, replacements, removals and parent changes even when the host uses an isolated MobX runtime. Closing the popup stops observation; reopening refreshes immediately.
+
+
+## Editing behavior and regression tests
+
+Observable edits use native assignments or collection operations inside an action.
+Setters, enhancers, interception and reaction batching stay in effect. Changes
+inside plain ref/shallow values notify their nearest observable owner, without
+scanning every VM or calling payload lifecycle methods.
+
+Editing a computed pins an override, including computeds with a setter. Its atom
+is retained so dependent computeds keep their normal MobX tracking and equality
+checks. Nested plain snapshot edits pin the nearest computed owner. Observable
+outputs are edited in place, and the parent getter can still replace them when
+its dependencies change. MobX-specific override internals are isolated in one
+adapter; the shared-runtime behavior is tested with MobX 6.15.
+
+Set rows use value identity rather than insertion index. Direct replacement
+adds the replacement and removes the old member; other members are untouched.
+Editing to an existing value merges rows. Interceptors remain authoritative; if
+removal and rollback are both rejected, the error explains that both values remain.
+
+The UI regression suite covers dependent computed graphs, repeated edits, keyboard
+controls, failures, native notifications, stable Set DOM rows and nested search
+completions. Legacy grouping is checked against real core 8.0, 8.10, 9, 10 and 11
+instances. A trailing-dot search such as `product.` must show nonempty child names.
+
+Run `pnpm --filter mobx-view-model-devtools test` and
+`pnpm --filter mobx-view-model-devtools check:ui-tests` for these checks.

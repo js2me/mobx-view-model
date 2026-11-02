@@ -35,7 +35,7 @@ export function getBestSuggestionAlias(
 ): { lower: string; original: string } {
   const { property, mapKey, mapKeyOriginal } = prop.searchData;
 
-  if (mapKey?.startsWith(prefix)) {
+  if (mapKey.length > 0 && mapKey.startsWith(prefix)) {
     return { lower: mapKey, original: mapKeyOriginal };
   }
 

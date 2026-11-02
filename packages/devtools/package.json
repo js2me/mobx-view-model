@@ -34,7 +34,7 @@
   },
   "scripts": {
     "clean": "rimraf dist",
-    "check": "pnpm lint && tsc --noEmit --project tsconfig.check.json && pnpm check:stories && pnpm check:compatibility",
+    "check": "pnpm lint && tsc --noEmit --project tsconfig.check.json && pnpm check:stories && pnpm check:compatibility && pnpm check:ui-tests",
     "build:dev": "cross-env NODE_ENV=development tsx scripts/build",
     "build": "tsc --noEmit --project tsconfig.check.json && cross-env NODE_ENV=production tsx scripts/build",
     "build:dev:global-only": "cross-env NODE_ENV=development GLOBAL_ONLY=true tsx scripts/build",
@@ -54,7 +54,8 @@
     "test:storybook": "playwright test --config playwright.storybook.config.ts",
     "test:e2e:container": "bash scripts/test-browser-container.sh",
     "capture:docs": "node scripts/capture-docs-screenshots.mjs",
-    "check:compatibility": "tsc --noEmit --project tsconfig.compatibility.json"
+    "check:compatibility": "tsc --noEmit --project tsconfig.compatibility.json",
+    "check:ui-tests": "tsc --noEmit --project tsconfig.ui-tests.json"
   },
   "dependencies": {
     "@gravity-ui/icons": "^2.18.0",
@@ -72,6 +73,9 @@
   "devDependencies": {
     "@playwright/test": "1.63.0",
     "@storybook/react-vite": "10.6.5",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.3",
+    "@testing-library/user-event": "^14.6.8",
     "@types/lodash-es": "^4.17.12",
     "@types/node": "^25.9.0",
     "@types/react": "^18.3.23",
