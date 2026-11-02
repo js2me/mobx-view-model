@@ -423,7 +423,11 @@ describe('collection snapshots returned by computed properties', () => {
       },
     });
     const ui = inspect(model, ['entries', '0'], () => model.total);
+    const original = model.entries;
     await ui.edit('7');
+    expect(model.entries).toBeInstanceOf(Map);
+    expect(model.entries).not.toBe(original);
+    expect(original.get('key')).toBe(2);
     expect(model.entries.get('key')).toBe(7);
     ui.expectApp(70);
     act(() =>

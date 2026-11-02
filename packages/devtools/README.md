@@ -176,7 +176,12 @@ Run `pnpm --filter mobx-view-model-devtools test` and
 Metadata checks do not evaluate user getters. The explicit **Force update bound
 view** action refreshes all existing observable and computed properties on that
 VM, including plain in-place values whose reference did not change. Ordinary
-edits remain targeted. Map drafts are rejected when their entry disappears or
+property edits remain targeted. The explicit action also calls `setPayload`
+with a shallow copy when the VM has an object or array payload and supports
+`setPayload`. This can invoke application payload lifecycle code; ordinary
+property edits do not call it.
+
+Map drafts are rejected when their entry disappears or
 changes identity, while an actual `undefined` key stays editable. The operation
 selected when opening an editor stays fixed even if the live value changes type.
 Map identity checks include every ancestor entry of a nested editor. Function
@@ -189,3 +194,9 @@ properties named `vmConfig`, `vmParams` or `payloadChanged` stay visible and
 searchable. Set rows share a reactive value-to-index snapshot instead of scanning
 the collection for each row. Regression tests also cover repeated computed
 overrides in an isolated MobX host and shallow Map values with foreign bundles.
+
+Computed-output boundaries are exercised through the real editor UI:
+[class identity and private state](tests/ui/review-regressions.test.tsx) stay
+intact during in-place edits, while
+[native Map snapshots](tests/ui/computed-dependencies.test.tsx) receive a pinned
+copy and update dependent computeds without changing the original snapshot.
