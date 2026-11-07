@@ -7,14 +7,12 @@ import { runInAction } from 'mobx';
 
 type VmInstance = AnyViewModel | AnyViewModelSimple;
 
-// Fallback for stores without staging (SSR / no-store).
+// Client VMs without a store cannot use staging.
 // setTimeout(0), not queueMicrotask: React 19 can yield to microtasks
 // between fibers in one render pass. Schedule cleanup from confirmCreation,
-// never from render. Map is keyed by VM instance (shared explicit ids dedup).
+// never from render. Instances are deduplicated across shared owners.
 
-export type UnconfirmedCreation = { vm: VmInstance };
-
-const unconfirmed = new Map<VmInstance, ViewModelStore | null>();
+const unconfirmed = new Set<VmInstance>();
 let orphanCleanupScheduled = false;
 const committedOwners = new WeakMap<VmInstance, number>();
 
@@ -42,34 +40,21 @@ export const releaseVm = (
 };
 
 /** Register a VM until its commit effect; cleanup is scheduled from {@link confirmCreation}. */
-export const registerUnconfirmed = (
-  vm: VmInstance,
-  store: ViewModelStore | null,
-): UnconfirmedCreation => {
-  unconfirmed.set(vm, store);
-  return { vm };
+export const registerUnconfirmed = (vm: VmInstance): VmInstance => {
+  unconfirmed.add(vm);
+  return vm;
 };
 
-const scheduleOrphanCleanup = () => {
-  if (orphanCleanupScheduled) return;
+/** Fiber committed. Remaining unconfirmed instances are orphans. */
+export const confirmCreation = (vm: VmInstance): void => {
+  unconfirmed.delete(vm);
+  if (!unconfirmed.size || orphanCleanupScheduled) return;
   orphanCleanupScheduled = true;
   setTimeout(() => {
     orphanCleanupScheduled = false;
-    if (unconfirmed.size === 0) return;
-    for (const [vm, store] of unconfirmed) {
-      unconfirmed.delete(vm);
-      runInAction(() => {
-        if (store) store.unmount(vm);
-        else vm.unmount?.();
-      });
+    for (const orphan of unconfirmed) {
+      unconfirmed.delete(orphan);
+      runInAction(() => orphan.unmount?.());
     }
   });
-};
-
-/** Fiber committed. Remaining unconfirmed entries are orphans. */
-export const confirmCreation = (entry: UnconfirmedCreation): void => {
-  unconfirmed.delete(entry.vm);
-  if (unconfirmed.size > 0) {
-    scheduleOrphanCleanup();
-  }
 };

@@ -212,7 +212,7 @@ export function useCreateViewModel(
     let creationEntry =
       staged || !isClient
         ? undefined
-        : registerUnconfirmed(model, viewModels);
+        : registerUnconfirmed(model);
 
     state = cache.current = {
       vm: model,
