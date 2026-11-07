@@ -15,6 +15,7 @@ type StagedVm = {
 };
 
 type StagedStore = {
+  renderStore?: ViewModelStore;
   entries: Map<string, StagedVm>;
   epoch: number;
   sweepScheduled: boolean;
@@ -35,9 +36,8 @@ const stagedVmRegistry: FinalizationRegistry<StagedRegistryEntry> | null =
   typeof FinalizationRegistry === 'function'
     ? new FinalizationRegistry<StagedRegistryEntry>(({ store, id, vm }) => {
         const stagedStore = stagedStores.get(store);
-        const staged = stagedStore?.entries.get(id);
-        if (staged?.vm === vm) {
-          stagedStore?.entries.delete(id);
+        if (stagedStore?.entries.get(id)?.vm === vm) {
+          stagedStore.entries.delete(id);
         }
       })
     : null;
@@ -45,81 +45,72 @@ const stagedVmRegistry: FinalizationRegistry<StagedRegistryEntry> | null =
 const getStagedStore = (store: ViewModelStore): StagedStore => {
   let stagedStore = stagedStores.get(store);
   if (!stagedStore) {
-    stagedStore = { entries: new Map(), epoch: 0, sweepScheduled: false };
+    stagedStore = {
+      entries: new Map(),
+      epoch: 0,
+      sweepScheduled: false,
+    };
     stagedStores.set(store, stagedStore);
   }
   return stagedStore;
-};
-
-const getStaged = <T extends VmInstance>(
-  store: ViewModelStore,
-  lookup: unknown,
-): T | null => {
-  const stagedStore = stagedStores.get(store);
-  if (!stagedStore) return null;
-
-  if (typeof lookup === 'string') {
-    return (stagedStore.entries.get(lookup)?.vm as T | undefined) ?? null;
-  }
-
-  for (const entry of [...stagedStore.entries.values()].reverse()) {
-    if (entry.config.VM === lookup || entry.config.anchors?.includes(lookup)) {
-      return entry.vm as T;
-    }
-  }
-  return null;
 };
 
 /** Lookup used by React hooks while a sibling VM is still in render phase. */
 export const getRenderPhaseViewModel = <T extends VmInstance>(
   store: ViewModelStore,
   lookup: unknown,
-): T | null => getStaged<T>(store, lookup) ?? (store.get(lookup as any) as T | null);
+): T | null => {
+  const entries = stagedStores.get(store)?.entries;
+  let vm: VmInstance | undefined;
+  if (typeof lookup === 'string') {
+    vm = entries?.get(lookup)?.vm;
+  } else if (entries) {
+    for (const entry of entries.values()) {
+      if (entry.config.VM === lookup || entry.config.anchors?.includes(lookup)) {
+        vm = entry.vm;
+      }
+    }
+  }
+  return (vm ?? store.get(lookup as any)) as T | null;
+};
 
-const createRenderPhaseStore = (store: ViewModelStore): ViewModelStore =>
-  new Proxy(store, {
-    get(target, property, receiver) {
-      if (property === 'get') {
-        return <T extends VmInstance>(lookup: unknown): T | null =>
-          getRenderPhaseViewModel<T>(target, lookup);
-      }
-      if (property === 'has') {
-        return (lookup: unknown): boolean =>
-          getRenderPhaseViewModel(target, lookup) != null;
-      }
-      if (property === 'getIds') {
-        return (lookup: unknown): string[] => {
-          const ids = target.getIds(lookup as any);
-          if (typeof lookup === 'string') return ids;
-          const stagedStore = stagedStores.get(target);
-          for (const [id, entry] of stagedStore?.entries ?? []) {
-            if (
-              (entry.config.VM === lookup ||
-                entry.config.anchors?.includes(lookup)) &&
-              !ids.includes(id)
-            ) {
-              ids.push(id);
-            }
+const createRenderPhaseStore = (store: ViewModelStore): ViewModelStore => {
+  const methods = {
+    get: <T extends VmInstance>(lookup: unknown): T | null =>
+      getRenderPhaseViewModel<T>(store, lookup),
+    has: (lookup: unknown): boolean => methods.get(lookup) != null,
+    getIds: (lookup: unknown): string[] => {
+      const ids = store.getIds(lookup as any);
+      if (typeof lookup !== 'string') {
+        for (const [id, entry] of stagedStores.get(store)!.entries) {
+          if (
+            (entry.config.VM === lookup || entry.config.anchors?.includes(lookup)) &&
+            !ids.includes(id)
+          ) {
+            ids.push(id);
           }
-          return ids;
-        };
+        }
       }
-      if (property === 'getId') {
-        return (lookup: unknown): string | null => {
-          const ids = (receiver as ViewModelStore).getIds(lookup as any);
-          return ids.at(-1) ?? null;
-        };
+      return ids;
+    },
+    getId: (lookup: unknown): string | null => methods.getIds(lookup).at(-1) ?? null,
+    getAll: <T extends VmInstance>(lookup: unknown): T[] => {
+      const instances: T[] = [];
+      for (const id of methods.getIds(lookup)) {
+        const vm = methods.get<T>(id);
+        if (vm != null) instances.push(vm);
       }
-      if (property === 'getAll') {
-        return <T extends VmInstance>(lookup: unknown): T[] =>
-          (receiver as ViewModelStore)
-            .getIds(lookup as any)
-            .map((id) => getRenderPhaseViewModel<T>(target, id))
-            .filter((vm): vm is T => vm != null);
-      }
-      return Reflect.get(target, property, receiver);
+      return instances;
+    },
+  };
+  return new Proxy(store, {
+    get(target, property, receiver) {
+      return Object.hasOwn(methods, property)
+        ? methods[property as keyof typeof methods]
+        : Reflect.get(target, property, receiver);
     },
   });
+};
 
 export const stageViewModel = (
   store: ViewModelStore,
@@ -136,26 +127,11 @@ export const stageViewModel = (
 
   const vm = store.create({
     ...config,
-    viewModels: createRenderPhaseStore(store),
+    viewModels: (stagedStore.renderStore ??= createRenderPhaseStore(store)),
   }) as VmInstance;
   stagedStore.entries.set(config.id, { vm, config, epoch: ++stagedStore.epoch });
   stagedVmRegistry?.register(owner, { store, id: config.id, vm }, vm);
   return vm;
-};
-
-const scheduleSweep = (stagedStore: StagedStore) => {
-  if (stagedStore.sweepScheduled) return;
-  stagedStore.sweepScheduled = true;
-  const epochAtCommit = stagedStore.epoch;
-  setTimeout(() => {
-    stagedStore.sweepScheduled = false;
-    for (const [id, entry] of stagedStore.entries) {
-      if (entry.epoch <= epochAtCommit) {
-        stagedStore.entries.delete(id);
-        stagedVmRegistry?.unregister(entry.vm);
-      }
-    }
-  });
 };
 
 /** Registers a render-phase VM after React has committed its owning fiber. */
@@ -172,13 +148,20 @@ export const commitStagedViewModel = (
 
   // Two committed fibers may share an explicit ID and the same staged VM.
   // connect() invokes init(), so it must run only for the first commit.
-  if (store.get(config.id) === vm) {
-    scheduleSweep(stagedStore);
-    return;
+  if (store.get(config.id) !== vm) {
+    runInAction(() => store.connect(vm, config));
   }
-
-  runInAction(() => {
-    store.connect(vm, config);
-  });
-  scheduleSweep(stagedStore);
+  if (!stagedStore.sweepScheduled) {
+    stagedStore.sweepScheduled = true;
+    const epochAtCommit = stagedStore.epoch;
+    setTimeout(() => {
+      stagedStore.sweepScheduled = false;
+      for (const [id, entry] of stagedStore.entries) {
+        if (entry.epoch <= epochAtCommit) {
+          stagedStore.entries.delete(id);
+          stagedVmRegistry?.unregister(entry.vm);
+        }
+      }
+    });
+  }
 };

@@ -251,6 +251,46 @@ describe('useCreateViewModel', () => {
       expect(screen.getByTestId('plain').textContent).toBe('second');
     });
 
+    test('refreshes a reused simple VM once per committed payload', async () => {
+      const vmStore = new ViewModelStoreBaseMock();
+      const setPayloadSpy = vi.fn();
+
+      class PlainVM implements ViewModelSimple<{ value: string }> {
+        id = 'reused';
+        value = 'existing';
+
+        setPayload(payload: { value: string }) {
+          setPayloadSpy(payload);
+          this.value = payload.value;
+        }
+      }
+
+      const existing = vmStore.define({
+        VM: PlainVM, id: 'reused', payload: { value: 'existing' },
+      });
+      const renderedValues: string[] = [];
+      const Page = ({ value }: { value: string }) => {
+        const vm = useCreateViewModel(PlainVM, { value }, {
+          VM: PlainVM, id: 'reused', payload: { value },
+        });
+        expect(vm).toBe(existing);
+        renderedValues.push(vm.value);
+        return <span data-testid="reused">{vm.value}</span>;
+      };
+
+      const view = await act(async () => render(<Page value="first" />, {
+        wrapper: createVMStoreWrapper(vmStore),
+      }));
+      expect(renderedValues).toEqual(['existing', 'first']);
+      expect(screen.getByTestId('reused').textContent).toBe('first');
+      expect(setPayloadSpy).toHaveBeenCalledTimes(1);
+
+      await act(async () => view.rerender(<Page value="second" />));
+      expect(screen.getByTestId('reused').textContent).toBe('second');
+      expect(setPayloadSpy).toHaveBeenCalledTimes(2);
+      expect(setPayloadSpy).toHaveBeenLastCalledWith({ value: 'second' });
+    });
+
     test('ViewModelSimple with literal payload type: useCreateViewModel accepts typed item', () => {
       type Foo = PartialKeys<
         {
