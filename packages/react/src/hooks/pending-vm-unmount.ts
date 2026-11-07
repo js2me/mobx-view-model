@@ -9,15 +9,28 @@ type VmInstance = AnyViewModel | AnyViewModelSimple;
 
 // Client VMs without a store cannot use staging.
 // setTimeout(0), not queueMicrotask: React 19 can yield to microtasks
-// between fibers in one render pass. Schedule cleanup from confirmCreation,
+// between fibers in one render pass. Schedule cleanup on the first acquire,
 // never from render. Instances are deduplicated across shared owners.
 
 const unconfirmed = new Set<VmInstance>();
 let orphanCleanupScheduled = false;
 const committedOwners = new WeakMap<VmInstance, number>();
 
-/** Only committed fibers own a VM. A speculative Suspense render does not. */
-export const acquireVm = (vm: VmInstance): void => {
+/** Only committed fibers own a VM; confirm a new no-store VM on first acquire. */
+export const acquireVm = (vm: VmInstance, confirmCreation?: boolean): void => {
+  if (confirmCreation) {
+    unconfirmed.delete(vm);
+    if (unconfirmed.size && !orphanCleanupScheduled) {
+      orphanCleanupScheduled = true;
+      setTimeout(() => {
+        orphanCleanupScheduled = false;
+        for (const orphan of unconfirmed) {
+          unconfirmed.delete(orphan);
+          runInAction(() => orphan.unmount?.());
+        }
+      });
+    }
+  }
   committedOwners.set(vm, (committedOwners.get(vm) ?? 0) + 1);
 };
 
@@ -39,22 +52,8 @@ export const releaseVm = (
   });
 };
 
-/** Register a VM until its commit effect; cleanup is scheduled from {@link confirmCreation}. */
+/** Register a VM until its commit effect confirms it via {@link acquireVm}. */
 export const registerUnconfirmed = (vm: VmInstance): VmInstance => {
   unconfirmed.add(vm);
   return vm;
-};
-
-/** Fiber committed. Remaining unconfirmed instances are orphans. */
-export const confirmCreation = (vm: VmInstance): void => {
-  unconfirmed.delete(vm);
-  if (!unconfirmed.size || orphanCleanupScheduled) return;
-  orphanCleanupScheduled = true;
-  setTimeout(() => {
-    orphanCleanupScheduled = false;
-    for (const orphan of unconfirmed) {
-      unconfirmed.delete(orphan);
-      runInAction(() => orphan.unmount?.());
-    }
-  });
 };

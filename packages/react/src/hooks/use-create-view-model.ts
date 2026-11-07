@@ -29,7 +29,6 @@ import {
 } from '../contexts/index.js';
 import {
   acquireVm,
-  confirmCreation,
   registerUnconfirmed,
   releaseVm,
 } from './pending-vm-unmount.js';
@@ -222,11 +221,6 @@ export function useCreateViewModel(
       promise: lifecycleResult,
       isSSR,
       fn: () => {
-        if (creationEntry) {
-          confirmCreation(creationEntry);
-          creationEntry = undefined;
-        }
-
         if (staged) {
           staged = false;
           commitStagedViewModel(viewModels!, config, model);
@@ -238,7 +232,8 @@ export function useCreateViewModel(
           });
         }
 
-        acquireVm(model);
+        acquireVm(model, !!creationEntry);
+        creationEntry = undefined;
         const mountResult = runInAction(() => mountLifecycle(model));
         if (mountResult) {
           state.promise = mountResult;

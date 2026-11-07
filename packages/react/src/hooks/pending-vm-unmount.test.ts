@@ -1,6 +1,6 @@
 import { ViewModelStoreBase, type ViewModelSimple } from 'mobx-view-model';
 import { afterEach, expect, test, vi } from 'vitest';
-import { acquireVm, confirmCreation, registerUnconfirmed, releaseVm } from './pending-vm-unmount.js';
+import { acquireVm, registerUnconfirmed, releaseVm } from './pending-vm-unmount.js';
 
 class SimpleVM implements ViewModelSimple {
   id = 'shared';
@@ -21,7 +21,7 @@ test('cleans deduplicated no-store orphans only after a commit', () => {
   const entry = registerUnconfirmed(committed);
   expect(vi.getTimerCount()).toBe(0);
 
-  confirmCreation(entry);
+  acquireVm(entry, true);
   expect(orphan.unmount).not.toHaveBeenCalled();
   vi.runAllTimers();
   expect(orphan.unmount).toHaveBeenCalledTimes(1);
@@ -33,10 +33,10 @@ test('a VM committed before the cleanup timer runs survives the sweep', () => {
   const first = registerUnconfirmed(new SimpleVM());
   const second = registerUnconfirmed(new SimpleVM());
   const third = registerUnconfirmed(new SimpleVM());
-  confirmCreation(first);
-  confirmCreation(second);
+  acquireVm(first, true);
+  acquireVm(second, true);
   expect(vi.getTimerCount()).toBe(1);
-  confirmCreation(third);
+  acquireVm(third, true);
   vi.runAllTimers();
   for (const vm of [first, second, third]) expect(vm.unmount).not.toHaveBeenCalled();
 });

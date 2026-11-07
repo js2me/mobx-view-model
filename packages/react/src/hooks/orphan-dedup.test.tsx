@@ -45,7 +45,7 @@ afterEach(() => {
  * When two fibers create the same VM instance (viewModels.define returns the
  * existing instance for the same id), both fibers register the VM as
  * unconfirmed. Without dedup, the orphan cleanup kills the VM after only one
- * confirmCreation call removes one entry — the other entry remains and the
+ * commit confirmation removes one entry — the other entry remains and the
  * cleanup unmounts a VM that's still in use.
  */
 describe('Orphan cleanup dedup: same VM instance from two fibers', () => {

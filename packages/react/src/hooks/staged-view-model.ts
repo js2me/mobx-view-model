@@ -55,31 +55,24 @@ const getStagedStore = (store: ViewModelStore): StagedStore => {
   return stagedStore;
 };
 
-const getStaged = <T extends VmInstance>(
-  store: ViewModelStore,
-  lookup: unknown,
-): T | null => {
-  const stagedStore = stagedStores.get(store);
-  if (!stagedStore) return null;
-
-  if (typeof lookup === 'string') {
-    return (stagedStore.entries.get(lookup)?.vm as T | undefined) ?? null;
-  }
-
-  let result: T | null = null;
-  for (const entry of stagedStore.entries.values()) {
-    if (entry.config.VM === lookup || entry.config.anchors?.includes(lookup)) {
-      result = entry.vm as T;
-    }
-  }
-  return result;
-};
-
 /** Lookup used by React hooks while a sibling VM is still in render phase. */
 export const getRenderPhaseViewModel = <T extends VmInstance>(
   store: ViewModelStore,
   lookup: unknown,
-): T | null => getStaged<T>(store, lookup) ?? (store.get(lookup as any) as T | null);
+): T | null => {
+  const entries = stagedStores.get(store)?.entries;
+  let vm: VmInstance | undefined;
+  if (typeof lookup === 'string') {
+    vm = entries?.get(lookup)?.vm;
+  } else if (entries) {
+    for (const entry of entries.values()) {
+      if (entry.config.VM === lookup || entry.config.anchors?.includes(lookup)) {
+        vm = entry.vm;
+      }
+    }
+  }
+  return (vm ?? store.get(lookup as any)) as T | null;
+};
 
 const createRenderPhaseStore = (store: ViewModelStore): ViewModelStore => {
   const methods = {
@@ -141,21 +134,6 @@ export const stageViewModel = (
   return vm;
 };
 
-const scheduleSweep = (stagedStore: StagedStore) => {
-  if (stagedStore.sweepScheduled) return;
-  stagedStore.sweepScheduled = true;
-  const epochAtCommit = stagedStore.epoch;
-  setTimeout(() => {
-    stagedStore.sweepScheduled = false;
-    for (const [id, entry] of stagedStore.entries) {
-      if (entry.epoch <= epochAtCommit) {
-        stagedStore.entries.delete(id);
-        stagedVmRegistry?.unregister(entry.vm);
-      }
-    }
-  });
-};
-
 /** Registers a render-phase VM after React has committed its owning fiber. */
 export const commitStagedViewModel = (
   store: ViewModelStore,
@@ -173,5 +151,17 @@ export const commitStagedViewModel = (
   if (store.get(config.id) !== vm) {
     runInAction(() => store.connect(vm, config));
   }
-  scheduleSweep(stagedStore);
+  if (!stagedStore.sweepScheduled) {
+    stagedStore.sweepScheduled = true;
+    const epochAtCommit = stagedStore.epoch;
+    setTimeout(() => {
+      stagedStore.sweepScheduled = false;
+      for (const [id, entry] of stagedStore.entries) {
+        if (entry.epoch <= epochAtCommit) {
+          stagedStore.entries.delete(id);
+          stagedVmRegistry?.unregister(entry.vm);
+        }
+      }
+    });
+  }
 };
