@@ -157,7 +157,7 @@ export function useCreateViewModel(
   let state = cache.current;
   const reactId = useId();
   const isUpdate = !!state;
-  const [, forceRender] = useState(0);
+  const [revision, forceRender] = useState(0);
 
   // The VM and store belong to this fiber until unmount. Only commit may
   // revive a detached VM: a render can still be discarded by React.
@@ -232,12 +232,7 @@ export function useCreateViewModel(
           commitStagedViewModel(viewModels!, config, model);
         }
 
-        if (
-          viewModels &&
-          isViewModel(model) &&
-          model.id != null &&
-          !viewModels.has(model.id)
-        ) {
+        if (viewModels && !viewModels.has(model.id ?? config.id)) {
           runInAction(() => {
             viewModels.define({ ...config, factory: () => model });
           });
@@ -264,11 +259,11 @@ export function useCreateViewModel(
 
   const model = state.vm;
 
-  useCommitEffect(state.fn, EMPTY_ARR);
-
   // Defer mutations of an existing VM until React commits this render.
   // The initial render already binds the payload when the VM is created.
   useCommitEffect(() => {
+    // Include revision in dependencies so even a stable payload clears the
+    // forced-render guard before the next external update.
     if (state.skipForcedCommit) {
       state.skipForcedCommit = false;
       if (state.appliedProps === props) return;
@@ -276,6 +271,8 @@ export function useCreateViewModel(
     if (state.bindAfterCommit) {
       state.bindAfterCommit = false;
       runInAction(() => bindModel(model, payload, parentViewModel));
+      state.appliedPayload = payload;
+      state.appliedProps = props;
     } else if (isUpdate && !Object.is(state.appliedPayload, payload)) {
       state.appliedPayload = payload;
       state.appliedProps = props;
@@ -291,7 +288,10 @@ export function useCreateViewModel(
       state.skipForcedCommit = true;
       forceRender((revision) => revision + 1);
     }
-  }, [payload]);
+  }, [payload, revision]);
+
+  // Bind a reused VM before mount() starts work from its committed payload.
+  useCommitEffect(state.fn, EMPTY_ARR);
 
   if (state.isSSR) {
     const pending = state.promise;
