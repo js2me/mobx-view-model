@@ -1,0 +1,130 @@
+---
+id: vue-integration-guide
+title: Vue integration guide
+sidebar_label: Integration
+sidebar_position: 1
+slug: /vue/integration
+---
+
+# Integration with Vue
+
+Integration consists of **2–3 steps**.
+
+## 1. Connect ViewModel with View
+
+Your [ViewModel](/api/view-models/interface) should be connected to a Vue component.  
+To achieve this you can use:
+
+- [`withViewModel()`](/vue/api/with-view-model) — recommended way
+- [`withPropsViewModel()`](/vue/api/with-props-view-model) — all props become the model payload
+- [`useCreateViewModel()`](/vue/api/use-create-view-model) — simplest way, often more performant
+
+## 2. Render in the Vue tree
+
+### Using [`withViewModel()`](/vue/api/with-view-model)
+
+Render the component returned from `withViewModel`. Pass `payload` as a prop when your view model expects a payload.
+
+```vue
+<script setup lang="ts">
+import { ViewModelBase } from 'mobx-view-model';
+import { viewModelProps, withViewModel } from 'mobx-view-model-vue';
+import { defineComponent, h } from 'vue';
+
+class YourComponentVM extends ViewModelBase {}
+
+const YourComponent = withViewModel(
+  YourComponentVM,
+  defineComponent({
+    props: viewModelProps<YourComponentVM>(),
+    setup(props) {
+      return () => h('div', props.model.id);
+    },
+  }),
+);
+</script>
+
+<template>
+  <YourComponent />
+</template>
+```
+
+You can also pass a separate view component as the second argument; the wrapper will forward props (except `payload`) and inject `model`.
+
+### Using [`useCreateViewModel()`](/vue/api/use-create-view-model)
+
+Call the composable inside `setup` (or `<script setup>`) and use the returned model in your template or render function. Wrap the view in [`observer()`](/vue/api/with-view-model#observer-wrapper) from `mobx-view-model-vue` when you read MobX observables, or rely on `withViewModel`, which applies `observer` to the inner view by default.
+
+```vue
+<script setup lang="ts">
+import { ViewModelBase } from 'mobx-view-model';
+import { observer, useCreateViewModel } from 'mobx-view-model-vue';
+
+class YourComponentVM extends ViewModelBase {}
+
+const model = useCreateViewModel(YourComponentVM);
+</script>
+
+<template>
+  <div>{{ model.id }}</div>
+</template>
+```
+
+`<script setup>` alone does **not** subscribe to MobX observables on the template. If the view reads **observable** view-model state, wrap the component with `observer()` (e.g. move logic into a child component wrapped by `observer`, or use [`withViewModel`](/vue/api/with-view-model), which wraps the inner view by default).
+
+For render-function components, use `observer(defineComponent({ ... }))` so MobX-driven updates trigger re-renders.
+
+## 3. _[Optional]_ Use [ViewModelStore](/api/view-model-store/interface)
+
+[ViewModelStore](/api/view-model-store/interface) lets you look up and access view model instances across the tree.
+
+1. Create an instance of `ViewModelStore` (for example `ViewModelStoreBase`).
+2. Wrap your app with [`ViewModelsProvider`](/vue/api/view-models-provider).
+
+```vue
+<script setup lang="ts">
+import { ViewModelStoreBase } from 'mobx-view-model';
+import { ViewModelsProvider } from 'mobx-view-model-vue';
+
+const vmStore = new ViewModelStoreBase();
+</script>
+
+<template>
+  <ViewModelsProvider :value="vmStore">
+    <!-- app -->
+  </ViewModelsProvider>
+</template>
+```
+
+With a store in place, you can use [`useViewModel()`](/vue/api/use-view-model) with a lookup argument (ID, class constructor, or anchor component).
+
+::: tip [`isMounted`](/api/view-models/interface#ismounted-boolean) state
+
+As in Solid, [`mount()`](/api/view-models/interface#mount-void-promise-void) starts during setup. Synchronous full models are ready on the first render. `withViewModel` and `withPropsViewModel` show a fallback while a full model mounts asynchronously; `OnlyViewModel` hides its content. The `useCreateViewModel` composable itself returns immediately and does not gate rendering. Simple models render immediately.
+
+:::
+
+::: warning Do not call [`mount()`](/api/view-models/interface#mount-void-promise-void) or [`unmount()`](/api/view-models/interface#unmount-void-promise-void) manually
+
+For component-owned models, these methods are managed by [`useCreateViewModel()`](/vue/api/use-create-view-model) and the HOCs that use it.
+
+Models created manually with `store.define()` or `store.create()` need explicit lifecycle handling: `await model.mount()`, followed by `store.unmount(model)` when their owner is disposed. The store does not automatically mount a manually created model.
+
+:::
+
+Install `mobx-view-model`, `mobx-view-model-vue`, `mobx`, and `vue` (3.5 or newer).
+
+String lookup arguments are model IDs. For a class lookup, pass the constructor: `useViewModel(YourComponentVM)`.
+
+## Shared API with Solid
+
+The core calls match `mobx-view-model-solid`:
+
+```ts
+withViewModel(VM, render, config);
+withPropsViewModel(VM, render, config);
+useCreateViewModel(VM, () => payload, config, props);
+useViewModel(ConnectedComponent);
+```
+
+Vue uses Vue render functions (`h` or Vue JSX) and slots. `vueHook` corresponds to `solidHook`. The Solid-specific `enableObservableTracking` and `obs` exports come from `mobx-solid`; Vue uses `observer` instead, applied automatically by both HOCs.
