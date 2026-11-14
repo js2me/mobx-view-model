@@ -1,12 +1,34 @@
-import { action, computed, makeObservable, observable, reaction } from 'mobx';
+import { reaction } from 'mobx';
 import SimpleBar from 'simplebar-core';
-import { createRef } from 'yummies/mobx';
+import {
+  annotation,
+  applyObservable,
+  createRef,
+  type ObservableAnnotationsArray,
+  observableMap,
+} from 'yummies/mobx';
 import type { InspectorViewport } from '@/model/devtools-inspector';
 import { isStickyTreeItem, LIST_ITEM_HEIGHT } from '@/model/inspector-scroll';
 import { ViewModelImpl } from '@/model/lib/view-model.impl';
 import type { ViewModelDevtools } from '@/model/view-model-devtools';
 
 const BUFFER_SIZE = 10;
+
+const annotations: ObservableAnnotationsArray<DevtoolsContentVM> = [
+  [annotation.observable('ref'), 'scrollOffset', 'viewportHeight'],
+  [
+    annotation.computed(),
+    'startIndex',
+    'endIndex',
+    'visibleItems',
+    'topOffset',
+    'bottomOffset',
+    'virtualHeight',
+    'stickyVmItemIndex',
+    'stickyVmItem',
+  ],
+  [observableMap.action.bound, 'measure'],
+];
 
 export class DevtoolsContentVM
   extends ViewModelImpl<{ devtools: ViewModelDevtools }>
@@ -66,19 +88,7 @@ export class DevtoolsContentVM
   }
 
   willMount() {
-    makeObservable<this, 'measure'>(this, {
-      scrollOffset: observable.ref,
-      viewportHeight: observable.ref,
-      startIndex: computed,
-      endIndex: computed,
-      visibleItems: computed,
-      topOffset: computed,
-      bottomOffset: computed,
-      virtualHeight: computed,
-      stickyVmItemIndex: computed,
-      stickyVmItem: computed,
-      measure: action.bound,
-    });
+    applyObservable(this, annotations);
   }
   scrollTo(offset: number) {
     this.scrollElement?.scrollTo({ top: offset });

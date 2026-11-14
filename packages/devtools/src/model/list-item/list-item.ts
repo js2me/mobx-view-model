@@ -1,6 +1,12 @@
 import { ArrowsRotateRight, FileArrowRightOut } from '@gravity-ui/icons';
-import { action, computed, createAtom, makeObservable } from 'mobx';
+import { action, createAtom } from 'mobx';
 import type { ComponentType } from 'react';
+import {
+  annotation,
+  applyObservable,
+  type ObservableAnnotationsArray,
+  observableMap,
+} from 'yummies/mobx';
 import type { AnyObject } from 'yummies/types';
 import type { DevtoolsInspector } from '../devtools-inspector';
 import { isInaccessible } from '../inspection/safe-access';
@@ -16,6 +22,29 @@ export type ListItemOperation<T> =
       persistent?: boolean;
     }
   | ComponentType<ListItemViewProps<ListItem<T>>>;
+
+const annotations: ObservableAnnotationsArray<ListItem<any>> = [
+  [
+    annotation.computed(),
+    'isExpanded',
+    'depthLine',
+    'depth',
+    'isInaccessible',
+    'stringifiedData',
+    'data',
+    'isExpandable',
+  ],
+  [
+    observableMap.computed.struct,
+    'operations',
+    'children',
+    'expandedChildren',
+    'trailingItems',
+    'expandedChildrenWithSelf',
+  ],
+  [observableMap.action.bound, 'toggleExpand'],
+  [action, 'expand', 'collapse'],
+];
 
 export abstract class ListItem<T> {
   position: number = 0;
@@ -149,21 +178,6 @@ export abstract class ListItem<T> {
     private getChildren?: (item: ListItem<T>) => ListItem<any>[],
   ) {
     this.cache = inspector.items;
-    computed(this, 'isExpanded');
-    computed(this, 'depthLine');
-    computed(this, 'depth');
-    computed(this, 'isInaccessible');
-    computed(this, 'stringifiedData');
-    computed.struct(this, 'operations');
-    computed.struct(this, 'children');
-    computed.struct(this, 'expandedChildren');
-    computed.struct(this, 'trailingItems');
-    computed.struct(this, 'expandedChildrenWithSelf');
-    computed(this, 'data');
-    computed(this, 'isExpandable');
-    action.bound(this, 'toggleExpand');
-    action(this, 'expand');
-    action(this, 'collapse');
-    makeObservable(this);
+    applyObservable(this, annotations);
   }
 }

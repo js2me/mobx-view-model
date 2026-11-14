@@ -1,5 +1,11 @@
-import { action, computed, makeObservable, observable } from 'mobx';
+import { action } from 'mobx';
 import type { ChangeEventHandler, KeyboardEventHandler } from 'react';
+import {
+  annotation,
+  applyObservable,
+  type ObservableAnnotationsArray,
+  observableMap,
+} from 'yummies/mobx';
 import type { Maybe } from 'yummies/types';
 import type { DevtoolsInspector } from '../devtools-inspector';
 import {
@@ -44,6 +50,22 @@ function formatEditError(error: unknown) {
   return String(error);
 }
 
+const annotations: ObservableAnnotationsArray<PropertyEditor> = [
+  [annotation.observable('ref'), 'editContent'],
+  [annotation.observable(), 'isEditMode', 'isFunctionCall'],
+  [annotation.computed(), 'isEditable', 'editableContent'],
+  [action, 'handleChangeEditContent', 'handleEditKeyDown', 'confirmEdit'],
+  [
+    observableMap.action.bound,
+    'startEdit',
+    'startFunctionCall',
+    'cancelEdit',
+    'applyEdit',
+    'toggleBoolean',
+    'callFunction',
+  ],
+];
+
 export class PropertyEditor {
   private readonly propagation: PropertyEditPropagation;
   private mapEditTargets: Array<{
@@ -58,22 +80,7 @@ export class PropertyEditor {
 
   constructor(private readonly host: PropertyEditorHost) {
     this.propagation = new PropertyEditPropagation(host);
-    makeObservable(this, {
-      editContent: observable.ref,
-      isEditMode: observable,
-      isFunctionCall: observable,
-      isEditable: computed,
-      editableContent: computed,
-      handleChangeEditContent: action,
-      handleEditKeyDown: action,
-      startEdit: action.bound,
-      startFunctionCall: action.bound,
-      cancelEdit: action.bound,
-      applyEdit: action.bound,
-      toggleBoolean: action.bound,
-      confirmEdit: action,
-      callFunction: action.bound,
-    });
+    applyObservable(this, annotations);
   }
 
   get isEditable() {

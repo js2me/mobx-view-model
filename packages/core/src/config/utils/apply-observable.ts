@@ -6,8 +6,8 @@ import type { AnyObject } from 'yummies/types';
 
 import type { ViewModelObservableConfig } from '../index.js';
 
-export const applyObservable = (
-  context: AnyObject,
+export const applyObservable = <T extends AnyObject>(
+  context: T,
   annotationsArray: ObservableAnnotationsArray,
   observableConfig: ViewModelObservableConfig,
 ) => {
@@ -15,5 +15,9 @@ export const applyObservable = (
     return observableConfig.custom(context, annotationsArray);
   }
 
-  applyObservableLib(context, annotationsArray, observableConfig.useDecorators);
+  applyObservableLib(
+    context,
+    annotationsArray as ObservableAnnotationsArray<T>,
+    observableConfig.useDecorators,
+  );
 };

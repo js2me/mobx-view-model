@@ -1,7 +1,14 @@
-import { computed, makeObservable } from 'mobx';
+import {
+  annotation,
+  applyObservable,
+  type ObservableAnnotationsArray,
+} from 'yummies/mobx';
 import type { DevtoolsInspector } from '../devtools-inspector';
 import { ListItem } from './list-item';
 import type { PropertyListItem } from './property-list-item';
+
+const annotations: ObservableAnnotationsArray<PropertyWatchHistoryHeaderListItem> =
+  [[annotation.computed(), 'label']];
 
 export class PropertyWatchHistoryHeaderListItem extends ListItem<any> {
   get depth() {
@@ -18,8 +25,7 @@ export class PropertyWatchHistoryHeaderListItem extends ListItem<any> {
   ) {
     super(inspector, `${parent.key}-watch-header`, undefined);
 
-    computed(this, 'label');
-    makeObservable(this);
+    applyObservable(this, annotations);
   }
 
   static create(parent: PropertyListItem) {

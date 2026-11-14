@@ -44,10 +44,10 @@
     "directory": "dist"
   },
   "dependencies": {
-    "yummies": "^7.20.1"
+    "yummies": "^7.22.0"
   },
   "peerDependencies": {
-    "mobx": "^6.12.4"
+    "mobx": "^6.12.4 || ^7.0.0"
   },
   "devDependencies": {
     "jsdom": "^26.1.0"

@@ -1,6 +1,11 @@
 import { ArrowsRotateRight } from '@gravity-ui/icons';
-import { computed, makeObservable } from 'mobx';
 import { isViewModel } from 'mobx-view-model';
+import {
+  annotation,
+  applyObservable,
+  type ObservableAnnotationsArray,
+  observableMap,
+} from 'yummies/mobx';
 import type { DevtoolsInspector } from '../devtools-inspector';
 import { forceUpdateViewModel } from '../editing/force-update-view-model';
 import { getAllKeys } from '../inspection/get-all-keys';
@@ -10,6 +15,11 @@ import type { AnyVM } from '../types';
 import { ListItem, type ListItemOperation } from './list-item';
 import { PropertyListItem } from './property-list-item';
 import { VMPropertiesListItem } from './vm-properties-list-item';
+
+const annotations: ObservableAnnotationsArray<VMListItem> = [
+  [annotation.computed(), 'propertyKeys'],
+  [observableMap.computed.struct, 'childVMListItems', 'propertyListItems'],
+];
 
 export class VMListItem extends ListItem<AnyVM> {
   get isExpanded() {
@@ -155,10 +165,7 @@ export class VMListItem extends ListItem<AnyVM> {
       id: (vm.id || '').toLowerCase().trim(),
     };
 
-    computed(this, 'propertyKeys');
-    computed.struct(this, 'childVMListItems');
-    computed.struct(this, 'propertyListItems');
-    makeObservable(this);
+    applyObservable(this, annotations);
   }
 }
 

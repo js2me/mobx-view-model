@@ -59,16 +59,16 @@
   },
   "dependencies": {
     "@gravity-ui/icons": "^2.18.0",
-    "mobx": "^6.15.0",
+    "mobx": "^6.15.0 || ^7.0.0",
     "mobx-react-lite": "^4.1.1",
-    "mobx-swiss-knife": "^1.15.0",
+    "mobx-swiss-knife": "^1.16.0",
     "mobx-view-model": "workspace:*",
     "mobx-view-model-react": "workspace:*",
-    "mobx-web-api": "^1.13.0",
+    "mobx-web-api": "^1.19.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "simplebar-core": "^1.3.2",
-    "yummies": "^7.20.1"
+    "yummies": "^7.22.0"
   },
   "devDependencies": {
     "@playwright/test": "1.63.0",
@@ -84,7 +84,7 @@
     "http-server": "^14.1.1",
     "jsdom": "^26.1.0",
     "lodash-es": "^4.17.21",
-    "mobx-solid": "^0.3.1",
+    "mobx-solid": "^0.4.0",
     "mobx-view-model-solid": "workspace:*",
     "mobx-view-model-v10": "npm:mobx-view-model@10.2.2",
     "mobx-view-model-v8": "npm:mobx-view-model@8.10.1",

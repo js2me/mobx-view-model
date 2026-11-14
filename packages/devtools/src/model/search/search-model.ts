@@ -1,11 +1,11 @@
-import {
-  action,
-  computed,
-  makeObservable,
-  observable,
-  runInAction,
-} from 'mobx';
+import { action, runInAction } from 'mobx';
 import type { ChangeEvent, FocusEvent, KeyboardEvent } from 'react';
+import {
+  annotation,
+  applyObservable,
+  type ObservableAnnotationsArray,
+  observableMap,
+} from 'yummies/mobx';
 import {
   getStickyHeaderScrollPadding,
   LIST_ITEM_HEIGHT,
@@ -40,6 +40,42 @@ interface InspectorSearchConfig {
 }
 
 export type { OwnerInfo };
+
+const annotations: ObservableAnnotationsArray<InspectorSearch> = [
+  [
+    annotation.observable('ref'),
+    'searchText',
+    'searchTextToSearch',
+    'selectedSuggestionIndex',
+    'isSearchInputFocused',
+    'isSuggestionsDismissed',
+    'selectedPathOwnerKey',
+    'selectedPathSegment',
+  ],
+  [
+    annotation.computed(),
+    'formattedSearchText',
+    'endsWithDot',
+    'isNestedSearch',
+    'isActive',
+    'isSearchTextDebouncing',
+    'shouldShowSuggestions',
+    'selectedSuggestion',
+    'suggestionSuffix',
+  ],
+  [observableMap.computed.struct, 'segments', 'suggestionItems'],
+  [
+    action,
+    'selectSuggestionAtIndex',
+    'applySuggestion',
+    'applySuggestionFromClick',
+    'handleSearchInput',
+    'handleSearchInputFocus',
+    'handleSearchInputBlur',
+    'handleKeyDown',
+    'resetSearch',
+  ],
+];
 
 export class InspectorSearch {
   searchInputRef: FocusableRef<HTMLInputElement>;
@@ -457,32 +493,6 @@ export class InspectorSearch {
       this.searchTextToSearch = config.initialSearchText;
     }
 
-    makeObservable(this, {
-      searchText: observable.ref,
-      searchTextToSearch: observable.ref,
-      selectedSuggestionIndex: observable.ref,
-      isSearchInputFocused: observable.ref,
-      isSuggestionsDismissed: observable.ref,
-      selectedPathOwnerKey: observable.ref,
-      selectedPathSegment: observable.ref,
-      formattedSearchText: computed,
-      segments: computed.struct,
-      endsWithDot: computed,
-      isNestedSearch: computed,
-      isActive: computed,
-      isSearchTextDebouncing: computed,
-      shouldShowSuggestions: computed,
-      suggestionItems: computed.struct,
-      selectedSuggestion: computed,
-      suggestionSuffix: computed,
-      selectSuggestionAtIndex: action,
-      applySuggestion: action,
-      applySuggestionFromClick: action,
-      handleSearchInput: action,
-      handleSearchInputFocus: action,
-      handleSearchInputBlur: action,
-      handleKeyDown: action,
-      resetSearch: action,
-    });
+    applyObservable(this, annotations);
   }
 }

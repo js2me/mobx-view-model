@@ -1,6 +1,11 @@
-import { action, computed, makeObservable, observable } from 'mobx';
 import { Storage } from 'mobx-swiss-knife';
 import { colorScheme } from 'mobx-web-api';
+import {
+  annotation,
+  applyObservable,
+  type ObservableAnnotationsArray,
+  observableMap,
+} from 'yummies/mobx';
 import type {
   DevtoolsPosition,
   ViewModelDevtoolsConfig,
@@ -16,6 +21,33 @@ import {
   type ResolvedDevtoolsTheme,
 } from './devtools-settings-storage';
 import type { InspectorSearch } from './search/search-model';
+
+const annotations: ObservableAnnotationsArray<DevtoolsSettings> = [
+  [
+    annotation.observable('ref'),
+    'presentationMode',
+    'sortPropertiesBy',
+    'position',
+    'groupViewModelBaseMembers',
+  ],
+  [
+    annotation.computed(),
+    'theme',
+    'resolvedTheme',
+    'hideViewModelBaseMembers',
+    'highlightUpdates',
+  ],
+  [
+    observableMap.action.bound,
+    'setPresentationMode',
+    'setSortPropertiesBy',
+    'setTheme',
+    'setShowInternals',
+    'setGroupViewModelBaseMembers',
+    'setHighlightUpdates',
+    'setPosition',
+  ],
+];
 
 export class DevtoolsSettings {
   private readonly lifetime = new AbortController();
@@ -57,23 +89,7 @@ export class DevtoolsSettings {
       !hasPersistedDevtoolsSetting('highlightUpdates')
     )
       devtoolsHighlightUpdatesKey.value = display.highlightUpdates;
-    makeObservable(this, {
-      presentationMode: observable.ref,
-      sortPropertiesBy: observable.ref,
-      position: observable.ref,
-      groupViewModelBaseMembers: observable.ref,
-      theme: computed,
-      resolvedTheme: computed,
-      hideViewModelBaseMembers: computed,
-      highlightUpdates: computed,
-      setPresentationMode: action.bound,
-      setSortPropertiesBy: action.bound,
-      setTheme: action.bound,
-      setShowInternals: action.bound,
-      setGroupViewModelBaseMembers: action.bound,
-      setHighlightUpdates: action.bound,
-      setPosition: action.bound,
-    });
+    applyObservable(this, annotations);
     this.storage.syncProperty(this, 'presentationMode');
     this.storage.syncProperty(this, 'sortPropertiesBy');
     this.storage.syncProperty(this, 'position');

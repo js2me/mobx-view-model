@@ -1,4 +1,4 @@
-import { computed, makeObservable, observable } from 'mobx';
+import { annotation, applyObservable } from 'yummies/mobx';
 
 export type DetailedPermission = {
   value: boolean;
@@ -15,12 +15,15 @@ export class PermissionsModel {
   flags = { hasUserEditRoles: false };
 
   constructor() {
-    makeObservable(this, {
-      flags: observable.ref,
-      hasUserEditRoles: computed,
-      paasDefaultPermission: computed,
-      promoteDeployment: computed,
-    });
+    applyObservable(this, [
+      [annotation.observable('ref'), 'flags'],
+      [
+        annotation.computed(),
+        'hasUserEditRoles',
+        'paasDefaultPermission',
+        'promoteDeployment',
+      ],
+    ]);
   }
 
   get hasUserEditRoles() {
@@ -43,9 +46,7 @@ export class ServiceInfo {
   private permissionsModel = new PermissionsModel();
 
   constructor() {
-    makeObservable(this, {
-      permissions: computed,
-    });
+    applyObservable(this, [[annotation.computed(), 'permissions']]);
   }
 
   get permissions() {
@@ -57,10 +58,10 @@ export class ServiceDeploysTabVM {
   service = new ServiceInfo();
 
   constructor() {
-    makeObservable(this, {
-      service: observable.ref,
-      canPromoteDeployment: computed,
-    });
+    applyObservable(this, [
+      [annotation.observable('ref'), 'service'],
+      [annotation.computed(), 'canPromoteDeployment'],
+    ]);
   }
 
   get canPromoteDeployment() {

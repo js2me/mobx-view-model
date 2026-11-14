@@ -7,6 +7,39 @@ on:
 permissions: read-all
 
 jobs:
+  mobx-7-compatibility:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout tree
+        uses: actions/checkout@v6
+
+      - name: Set-up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+
+      - run: corepack enable
+
+      - name: Pin MobX 7 for compatibility checks
+        run: |
+          node --input-type=module -e "import fs from 'node:fs'; const path = 'pnpm-workspace.yaml'; const workspace = fs.readFileSync(path, 'utf8'); fs.writeFileSync(path, workspace.replace(/^overrides:\\n/m, 'overrides:\\n  mobx: 7.0.0\\n'));"
+
+      - name: Install deps
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Build runtime packages with MobX 7
+        run: |
+          pnpm --filter mobx-view-model run build
+          pnpm --filter mobx-view-model-react run build
+          pnpm --filter mobx-view-model-solid run build
+          pnpm --filter mobx-view-model-devtools run build
+
+      - name: Core type checks with MobX 7
+        run: pnpm --filter mobx-view-model run check
+
+      - name: Core tests with MobX 7
+        run: pnpm --filter mobx-view-model test
+
   build-and-test:
     strategy:
       fail-fast: false

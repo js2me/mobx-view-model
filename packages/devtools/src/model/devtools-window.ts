@@ -1,7 +1,17 @@
-import { action, makeObservable, observable } from 'mobx';
 import { Storage } from 'mobx-swiss-knife';
+import {
+  annotation,
+  applyObservable,
+  type ObservableAnnotationsArray,
+  observableMap,
+} from 'yummies/mobx';
 import type { ViewModelDevtoolsConfig } from './devtools-config';
 import { PopupLayout } from './window/popup-layout';
+
+const annotations: ObservableAnnotationsArray<DevtoolsWindow> = [
+  [annotation.observable('ref'), 'isOpened'],
+  [observableMap.action.bound, 'show', 'hide', 'toggle'],
+];
 
 export class DevtoolsWindow {
   private readonly lifetime = new AbortController();
@@ -20,12 +30,7 @@ export class DevtoolsWindow {
       this.storage.get({ key: 'isPopupOpened' }) ??
       config.defaultIsOpened ??
       false;
-    makeObservable(this, {
-      isOpened: observable.ref,
-      show: action.bound,
-      hide: action.bound,
-      toggle: action.bound,
-    });
+    applyObservable(this, annotations);
     this.storage.syncProperty(this, 'isOpened', { key: 'isPopupOpened' });
   }
 

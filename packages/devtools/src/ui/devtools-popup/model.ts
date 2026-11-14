@@ -1,5 +1,11 @@
-import { action, makeObservable, observable } from 'mobx';
-import { createRef } from 'yummies/mobx';
+import { action } from 'mobx';
+import {
+  annotation,
+  applyObservable,
+  createRef,
+  type ObservableAnnotationsArray,
+  observableMap,
+} from 'yummies/mobx';
 import { ViewModelImpl } from '@/model/lib/view-model.impl';
 import {
   getViewport,
@@ -9,6 +15,11 @@ import {
 } from '@/model/window/geometry';
 import { MouseGesture } from '@/model/window/mouse-gesture';
 import type { DevtoolsClientVM } from '../devtools-client/model';
+
+const annotations: ObservableAnnotationsArray<VmDevtoolsPopupVM> = [
+  [annotation.observable('ref'), 'mode'],
+  [observableMap.action.bound, 'handleMouseDown'],
+];
 
 export class VmDevtoolsPopupVM extends ViewModelImpl<{}, DevtoolsClientVM> {
   readonly devtools = this.parentViewModel.devtools;
@@ -21,10 +32,7 @@ export class VmDevtoolsPopupVM extends ViewModelImpl<{}, DevtoolsClientVM> {
   });
 
   willMount() {
-    makeObservable(this, {
-      mode: observable.ref,
-      handleMouseDown: action.bound,
-    });
+    applyObservable(this, annotations);
     this.gesture = new MouseGesture(
       {
         start: (event) => {

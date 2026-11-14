@@ -1,7 +1,17 @@
-import { action, makeObservable, observable } from 'mobx';
-import { createRef } from 'yummies/mobx';
+import {
+  annotation,
+  applyObservable,
+  createRef,
+  type ObservableAnnotationsArray,
+  observableMap,
+} from 'yummies/mobx';
 import type { DevtoolsSettings } from '@/model/devtools-settings';
 import { ViewModelImpl } from '@/model/lib/view-model.impl';
+
+const annotations: ObservableAnnotationsArray<SettingsButtonVM> = [
+  [annotation.observable('ref'), 'isOpened'],
+  [observableMap.action.bound, 'toggle', 'close'],
+];
 
 export class SettingsButtonVM extends ViewModelImpl<{
   settings: DevtoolsSettings;
@@ -11,11 +21,7 @@ export class SettingsButtonVM extends ViewModelImpl<{
   readonly ref = createRef<HTMLSpanElement>();
 
   willMount() {
-    makeObservable(this, {
-      isOpened: observable.ref,
-      toggle: action.bound,
-      close: action.bound,
-    });
+    applyObservable(this, annotations);
     document.addEventListener(
       'mousedown',
       (event) => {

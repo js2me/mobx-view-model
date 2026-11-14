@@ -1,4 +1,10 @@
-import { action, makeObservable, observable, reaction } from 'mobx';
+import { reaction } from 'mobx';
+import {
+  annotation,
+  applyObservable,
+  type ObservableAnnotationsArray,
+  observableMap,
+} from 'yummies/mobx';
 import type { PropertyListItem } from './property-list-item';
 import { capturePropertyWatchValue } from './watch/capture-property-watch-value';
 import { formatPropertyWatchValue } from './watch/format-property-watch-value';
@@ -12,6 +18,12 @@ export interface PropertyWatchHistoryEntry {
 const HISTORY_LIMIT = 100;
 let entryId = 0;
 
+const annotations: ObservableAnnotationsArray<PropertyWatch> = [
+  [annotation.observable('ref'), 'isWatching'],
+  [annotation.observable('shallow'), 'history'],
+  [observableMap.action.bound, 'toggle', 'clear', 'record'],
+];
+
 export class PropertyWatch {
   isWatching = false;
   readonly history: PropertyWatchHistoryEntry[] = [];
@@ -19,13 +31,7 @@ export class PropertyWatch {
   private restoreTimer?: ReturnType<typeof setTimeout>;
 
   constructor(private readonly item: PropertyListItem) {
-    makeObservable<this, 'record'>(this, {
-      isWatching: observable.ref,
-      history: observable.shallow,
-      toggle: action.bound,
-      clear: action.bound,
-      record: action.bound,
-    });
+    applyObservable(this, annotations);
   }
   restore() {
     if (this.item.inspector.watchedPropertyKeys.includes(this.item.key))

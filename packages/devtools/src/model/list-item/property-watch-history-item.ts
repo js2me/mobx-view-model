@@ -1,5 +1,9 @@
 import { Copy } from '@gravity-ui/icons';
-import { computed, makeObservable } from 'mobx';
+import {
+  annotation,
+  applyObservable,
+  type ObservableAnnotationsArray,
+} from 'yummies/mobx';
 import type { Maybe } from 'yummies/types';
 import type { DevtoolsInspector } from '../devtools-inspector';
 import {
@@ -13,6 +17,16 @@ import { MetaListItem } from './meta-list-item';
 import type { PropertyListItem } from './property-list-item';
 import type { PropertyWatchHistoryEntry } from './property-watch';
 import { formatPropertyWatchValue } from './watch/format-property-watch-value';
+
+const annotations: ObservableAnnotationsArray<PropertyWatchHistoryListItem> = [
+  [
+    annotation.computed(),
+    'formattedTime',
+    'type',
+    'dataType',
+    'instanceClassName',
+  ],
+];
 
 export class PropertyWatchHistoryListItem extends ListItem<any> {
   get depth() {
@@ -121,11 +135,7 @@ export class PropertyWatchHistoryListItem extends ListItem<any> {
   ) {
     super(inspector, `${parent.key}-watch-${entry.id}`, undefined);
 
-    computed(this, 'formattedTime');
-    computed(this, 'type');
-    computed(this, 'dataType');
-    computed(this, 'instanceClassName');
-    makeObservable(this);
+    applyObservable(this, annotations);
   }
 
   static create(
