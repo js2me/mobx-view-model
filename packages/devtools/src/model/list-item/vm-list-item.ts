@@ -1,10 +1,7 @@
 import { ArrowsRotateRight } from '@gravity-ui/icons';
 import { isViewModel } from 'mobx-view-model';
-import {
-  annotation,
-  applyObservable,
-  type ObservableAnnotationsArray,
-} from 'yummies/mobx';
+import * as annotation from 'yummies/mobx';
+import { applyObservable, type ObservableAnnotationsArray } from 'yummies/mobx';
 import type { DevtoolsInspector } from '../devtools-inspector';
 import { forceUpdateViewModel } from '../editing/force-update-view-model';
 import { getAllKeys } from '../inspection/get-all-keys';

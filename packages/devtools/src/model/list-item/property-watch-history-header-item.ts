@@ -1,8 +1,5 @@
-import {
-  annotation,
-  applyObservable,
-  type ObservableAnnotationsArray,
-} from 'yummies/mobx';
+import * as annotation from 'yummies/mobx';
+import { applyObservable, type ObservableAnnotationsArray } from 'yummies/mobx';
 import type { DevtoolsInspector } from '../devtools-inspector';
 import { ListItem } from './list-item';
 import type { PropertyListItem } from './property-list-item';

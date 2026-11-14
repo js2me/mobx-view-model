@@ -1,10 +1,7 @@
 import { createAtom, observable, reaction } from 'mobx';
 import { Storage } from 'mobx-swiss-knife';
-import {
-  annotation,
-  applyObservable,
-  type ObservableAnnotationsArray,
-} from 'yummies/mobx';
+import * as annotation from 'yummies/mobx';
+import { applyObservable, type ObservableAnnotationsArray } from 'yummies/mobx';
 import type { AnyObject, Maybe } from 'yummies/types';
 import { createInspectorRows } from './create-inspector-rows';
 import type { ViewModelStoreSource } from './devtools-config';

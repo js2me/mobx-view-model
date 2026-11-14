@@ -1,4 +1,5 @@
-import { annotation, applyObservable } from 'yummies/mobx';
+import * as annotation from 'yummies/mobx';
+import { applyObservable } from 'yummies/mobx';
 
 export type DetailedPermission = {
   value: boolean;

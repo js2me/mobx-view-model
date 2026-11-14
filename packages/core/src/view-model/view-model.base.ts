@@ -3,12 +3,8 @@ import {
   runInAction,
 } from 'mobx';
 import { startViewTransitionSafety } from 'yummies/html';
-import {
-  annotation,
-  applyObservable as applyObservableLib,
-  type ObservableAnnotationsArray,
-  observableMap,
-} from 'yummies/mobx';
+import * as annotation from 'yummies/mobx';
+import { applyObservable as applyObservableLib, type ObservableAnnotationsArray, observableVariants } from 'yummies/mobx';
 import type { AnyObject, EmptyObject, Maybe, MaybePromise } from 'yummies/types';
 import { applyObservable, mergeVMConfigs } from '../config/index.js';
 import type { ViewModel } from './view-model.js';
@@ -71,7 +67,7 @@ export class ViewModelBase<
     const payloadAnnotation =
       config.payloadObservable === false
         ? false
-        : observableMap[config.payloadObservable];
+        : observableVariants[config.payloadObservable];
     applyObservableLib(vm, [
       [annotation.observableRef, 'state'],
       [payloadAnnotation, 'payload'],

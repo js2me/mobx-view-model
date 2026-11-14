@@ -1,10 +1,7 @@
 import { action, runInAction } from 'mobx';
 import type { ChangeEvent, FocusEvent, KeyboardEvent } from 'react';
-import {
-  annotation,
-  applyObservable,
-  type ObservableAnnotationsArray,
-} from 'yummies/mobx';
+import * as annotation from 'yummies/mobx';
+import { applyObservable, type ObservableAnnotationsArray } from 'yummies/mobx';
 import {
   getStickyHeaderScrollPadding,
   LIST_ITEM_HEIGHT,

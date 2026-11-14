@@ -1,10 +1,7 @@
 import { Storage } from 'mobx-swiss-knife';
 import { colorScheme } from 'mobx-web-api';
-import {
-  annotation,
-  applyObservable,
-  type ObservableAnnotationsArray,
-} from 'yummies/mobx';
+import * as annotation from 'yummies/mobx';
+import { applyObservable, type ObservableAnnotationsArray } from 'yummies/mobx';
 import type {
   DevtoolsPosition,
   ViewModelDevtoolsConfig,

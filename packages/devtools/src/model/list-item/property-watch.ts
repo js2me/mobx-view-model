@@ -1,9 +1,6 @@
 import { reaction } from 'mobx';
-import {
-  annotation,
-  applyObservable,
-  type ObservableAnnotationsArray,
-} from 'yummies/mobx';
+import * as annotation from 'yummies/mobx';
+import { applyObservable, type ObservableAnnotationsArray } from 'yummies/mobx';
 import type { PropertyListItem } from './property-list-item';
 import { capturePropertyWatchValue } from './watch/capture-property-watch-value';
 import { formatPropertyWatchValue } from './watch/format-property-watch-value';

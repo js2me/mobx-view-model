@@ -10,11 +10,8 @@ import {
 } from '@gravity-ui/icons';
 import { action } from 'mobx';
 import type { MouseEvent } from 'react';
-import {
-  annotation,
-  applyObservable,
-  type ObservableAnnotationsArray,
-} from 'yummies/mobx';
+import * as annotation from 'yummies/mobx';
+import { applyObservable, type ObservableAnnotationsArray } from 'yummies/mobx';
 import type { Maybe } from 'yummies/types';
 import type { DevtoolsInspector } from '../devtools-inspector';
 import { PropertyEditor } from '../editing/property-editor';

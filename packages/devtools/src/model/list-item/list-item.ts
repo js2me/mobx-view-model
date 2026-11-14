@@ -1,11 +1,8 @@
 import { ArrowsRotateRight, FileArrowRightOut } from '@gravity-ui/icons';
 import { action, createAtom } from 'mobx';
 import type { ComponentType } from 'react';
-import {
-  annotation,
-  applyObservable,
-  type ObservableAnnotationsArray,
-} from 'yummies/mobx';
+import * as annotation from 'yummies/mobx';
+import { applyObservable, type ObservableAnnotationsArray } from 'yummies/mobx';
 import type { AnyObject } from 'yummies/types';
 import type { DevtoolsInspector } from '../devtools-inspector';
 import { isInaccessible } from '../inspection/safe-access';

@@ -1,7 +1,7 @@
 import { AnyObject } from "yummies/types";
 import { PayloadComparator } from "./config/types.js";
 import { isShallowEqual } from "yummies/data";
-import { annotation } from "yummies/mobx";
+import * as annotation from "yummies/mobx";
 
 const emptyObject: AnyObject = Object.freeze({});
 const noop = (): undefined => {}

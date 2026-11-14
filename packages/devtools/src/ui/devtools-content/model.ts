@@ -1,11 +1,7 @@
 import { reaction } from 'mobx';
 import SimpleBar from 'simplebar-core';
-import {
-  annotation,
-  applyObservable,
-  createRef,
-  type ObservableAnnotationsArray,
-} from 'yummies/mobx';
+import * as annotation from 'yummies/mobx';
+import { applyObservable, createRef, type ObservableAnnotationsArray } from 'yummies/mobx';
 import type { InspectorViewport } from '@/model/devtools-inspector';
 import { isStickyTreeItem, LIST_ITEM_HEIGHT } from '@/model/inspector-scroll';
 import { ViewModelImpl } from '@/model/lib/view-model.impl';

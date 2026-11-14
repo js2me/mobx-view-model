@@ -1,10 +1,6 @@
 import { action } from 'mobx';
-import {
-  annotation,
-  applyObservable,
-  createRef,
-  type ObservableAnnotationsArray,
-} from 'yummies/mobx';
+import * as annotation from 'yummies/mobx';
+import { applyObservable, createRef, type ObservableAnnotationsArray } from 'yummies/mobx';
 import { ViewModelImpl } from '@/model/lib/view-model.impl';
 import {
   getViewport,
