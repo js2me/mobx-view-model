@@ -3,14 +3,13 @@ import {
   applyObservable,
   createRef,
   type ObservableAnnotationsArray,
-  observableMap,
 } from 'yummies/mobx';
 import type { DevtoolsSettings } from '@/model/devtools-settings';
 import { ViewModelImpl } from '@/model/lib/view-model.impl';
 
 const annotations: ObservableAnnotationsArray<SettingsButtonVM> = [
-  [annotation.observable('ref'), 'isOpened'],
-  [observableMap.action.bound, 'toggle', 'close'],
+  [annotation.observableRef, 'isOpened'],
+  [annotation.actionBound, 'toggle', 'close'],
 ];
 
 export class SettingsButtonVM extends ViewModelImpl<{

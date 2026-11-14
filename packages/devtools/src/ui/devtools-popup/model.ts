@@ -4,7 +4,6 @@ import {
   applyObservable,
   createRef,
   type ObservableAnnotationsArray,
-  observableMap,
 } from 'yummies/mobx';
 import { ViewModelImpl } from '@/model/lib/view-model.impl';
 import {
@@ -17,8 +16,8 @@ import { MouseGesture } from '@/model/window/mouse-gesture';
 import type { DevtoolsClientVM } from '../devtools-client/model';
 
 const annotations: ObservableAnnotationsArray<VmDevtoolsPopupVM> = [
-  [annotation.observable('ref'), 'mode'],
-  [observableMap.action.bound, 'handleMouseDown'],
+  [annotation.observableRef, 'mode'],
+  [annotation.actionBound, 'handleMouseDown'],
 ];
 
 export class VmDevtoolsPopupVM extends ViewModelImpl<{}, DevtoolsClientVM> {

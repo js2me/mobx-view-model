@@ -45,7 +45,7 @@ import { VMListItem } from './vm-list-item';
 
 const annotations: ObservableAnnotationsArray<PropertyListItem> = [
   [
-    annotation.computed(),
+    annotation.computed,
     'order',
     'property',
     'path',

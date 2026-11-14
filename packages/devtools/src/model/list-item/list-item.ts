@@ -5,7 +5,6 @@ import {
   annotation,
   applyObservable,
   type ObservableAnnotationsArray,
-  observableMap,
 } from 'yummies/mobx';
 import type { AnyObject } from 'yummies/types';
 import type { DevtoolsInspector } from '../devtools-inspector';
@@ -25,7 +24,7 @@ export type ListItemOperation<T> =
 
 const annotations: ObservableAnnotationsArray<ListItem<any>> = [
   [
-    annotation.computed(),
+    annotation.computed,
     'isExpanded',
     'depthLine',
     'depth',
@@ -35,14 +34,14 @@ const annotations: ObservableAnnotationsArray<ListItem<any>> = [
     'isExpandable',
   ],
   [
-    observableMap.computed.struct,
+    annotation.computedStruct,
     'operations',
     'children',
     'expandedChildren',
     'trailingItems',
     'expandedChildrenWithSelf',
   ],
-  [observableMap.action.bound, 'toggleExpand'],
+  [annotation.actionBound, 'toggleExpand'],
   [action, 'expand', 'collapse'],
 ];
 

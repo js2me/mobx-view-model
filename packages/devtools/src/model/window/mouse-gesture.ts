@@ -2,7 +2,6 @@ import {
   annotation,
   applyObservable,
   type ObservableAnnotationsArray,
-  observableMap,
 } from 'yummies/mobx';
 import type { Point } from './geometry';
 
@@ -13,8 +12,8 @@ export interface MouseGestureOptions {
 }
 
 const annotations: ObservableAnnotationsArray<MouseGesture> = [
-  [annotation.observable('ref'), 'isActive', 'hasMoved'],
-  [observableMap.action.bound, 'begin', 'move', 'end'],
+  [annotation.observableRef, 'isActive', 'hasMoved'],
+  [annotation.actionBound, 'begin', 'move', 'end'],
 ];
 
 /** One mouse interaction, cancelled by release, focus loss, or owner disposal. */

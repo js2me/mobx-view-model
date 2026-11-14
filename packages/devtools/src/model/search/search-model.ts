@@ -4,7 +4,6 @@ import {
   annotation,
   applyObservable,
   type ObservableAnnotationsArray,
-  observableMap,
 } from 'yummies/mobx';
 import {
   getStickyHeaderScrollPadding,
@@ -43,7 +42,7 @@ export type { OwnerInfo };
 
 const annotations: ObservableAnnotationsArray<InspectorSearch> = [
   [
-    annotation.observable('ref'),
+    annotation.observableRef,
     'searchText',
     'searchTextToSearch',
     'selectedSuggestionIndex',
@@ -53,7 +52,7 @@ const annotations: ObservableAnnotationsArray<InspectorSearch> = [
     'selectedPathSegment',
   ],
   [
-    annotation.computed(),
+    annotation.computed,
     'formattedSearchText',
     'endsWithDot',
     'isNestedSearch',
@@ -63,7 +62,7 @@ const annotations: ObservableAnnotationsArray<InspectorSearch> = [
     'selectedSuggestion',
     'suggestionSuffix',
   ],
-  [observableMap.computed.struct, 'segments', 'suggestionItems'],
+  [annotation.computedStruct, 'segments', 'suggestionItems'],
   [
     action,
     'selectSuggestionAtIndex',

@@ -28,7 +28,7 @@ class SetEntryRegistry {
 }
 
 const annotations: ObservableAnnotationsArray<SetEntryIdentity> = [
-  [annotation.observable('ref'), 'value'],
+  [annotation.observableRef, 'value'],
   [action, 'rebind'],
 ];
 

@@ -16,9 +16,9 @@ export class PermissionsModel {
 
   constructor() {
     applyObservable(this, [
-      [annotation.observable('ref'), 'flags'],
+      [annotation.observableRef, 'flags'],
       [
-        annotation.computed(),
+        annotation.computed,
         'hasUserEditRoles',
         'paasDefaultPermission',
         'promoteDeployment',
@@ -46,7 +46,7 @@ export class ServiceInfo {
   private permissionsModel = new PermissionsModel();
 
   constructor() {
-    applyObservable(this, [[annotation.computed(), 'permissions']]);
+    applyObservable(this, [[annotation.computed, 'permissions']]);
   }
 
   get permissions() {
@@ -59,8 +59,8 @@ export class ServiceDeploysTabVM {
 
   constructor() {
     applyObservable(this, [
-      [annotation.observable('ref'), 'service'],
-      [annotation.computed(), 'canPromoteDeployment'],
+      [annotation.observableRef, 'service'],
+      [annotation.computed, 'canPromoteDeployment'],
     ]);
   }
 

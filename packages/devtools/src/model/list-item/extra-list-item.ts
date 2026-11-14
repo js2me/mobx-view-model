@@ -2,7 +2,6 @@ import { untracked } from 'mobx';
 import {
   applyObservable,
   type ObservableAnnotationsArray,
-  observableMap,
 } from 'yummies/mobx';
 import type { AnyObject } from 'yummies/types';
 import type { DevtoolsInspector } from '../devtools-inspector';
@@ -12,7 +11,7 @@ import { ListItem, type ListItemOperation } from './list-item';
 import { PropertyListItem } from './property-list-item';
 
 const annotations: ObservableAnnotationsArray<ExtraListItem> = [
-  [observableMap.computed.struct, 'propertyListItems'],
+  [annotation.computedStruct, 'propertyListItems'],
 ];
 
 export class ExtraListItem extends ListItem<AnyVM> {

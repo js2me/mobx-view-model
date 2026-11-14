@@ -3,14 +3,13 @@ import {
   annotation,
   applyObservable,
   type ObservableAnnotationsArray,
-  observableMap,
 } from 'yummies/mobx';
 import type { ViewModelDevtoolsConfig } from './devtools-config';
 import { PopupLayout } from './window/popup-layout';
 
 const annotations: ObservableAnnotationsArray<DevtoolsWindow> = [
-  [annotation.observable('ref'), 'isOpened'],
-  [observableMap.action.bound, 'show', 'hide', 'toggle'],
+  [annotation.observableRef, 'isOpened'],
+  [annotation.actionBound, 'show', 'hide', 'toggle'],
 ];
 
 export class DevtoolsWindow {

@@ -4,7 +4,6 @@ import {
   annotation,
   applyObservable,
   type ObservableAnnotationsArray,
-  observableMap,
 } from 'yummies/mobx';
 import type { DevtoolsInspector } from '../devtools-inspector';
 import { forceUpdateViewModel } from '../editing/force-update-view-model';
@@ -17,8 +16,8 @@ import { PropertyListItem } from './property-list-item';
 import { VMPropertiesListItem } from './vm-properties-list-item';
 
 const annotations: ObservableAnnotationsArray<VMListItem> = [
-  [annotation.computed(), 'propertyKeys'],
-  [observableMap.computed.struct, 'childVMListItems', 'propertyListItems'],
+  [annotation.computed, 'propertyKeys'],
+  [annotation.computedStruct, 'childVMListItems', 'propertyListItems'],
 ];
 
 export class VMListItem extends ListItem<AnyVM> {

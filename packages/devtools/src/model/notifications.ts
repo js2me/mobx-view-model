@@ -2,7 +2,6 @@ import { action, observable } from 'mobx';
 import {
   applyObservable,
   type ObservableAnnotationsArray,
-  observableMap,
 } from 'yummies/mobx';
 
 export interface NotificationData {
@@ -14,7 +13,7 @@ export interface NotificationSink {
 }
 
 const annotations: ObservableAnnotationsArray<DevtoolsNotifications> = [
-  [observableMap.action.bound, 'push'],
+  [annotation.actionBound, 'push'],
 ];
 
 export class DevtoolsNotifications implements NotificationSink {

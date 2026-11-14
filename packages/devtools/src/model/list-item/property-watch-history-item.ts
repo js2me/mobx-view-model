@@ -20,7 +20,7 @@ import { formatPropertyWatchValue } from './watch/format-property-watch-value';
 
 const annotations: ObservableAnnotationsArray<PropertyWatchHistoryListItem> = [
   [
-    annotation.computed(),
+    annotation.computed,
     'formattedTime',
     'type',
     'dataType',

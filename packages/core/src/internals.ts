@@ -1,7 +1,7 @@
 import { AnyObject } from "yummies/types";
 import { PayloadComparator } from "./config/types.js";
 import { isShallowEqual } from "yummies/data";
-import { observableMap } from "yummies/mobx";
+import { annotation } from "yummies/mobx";
 
 const emptyObject: AnyObject = Object.freeze({});
 const noop = (): undefined => {}
@@ -23,6 +23,6 @@ export const _internals = {
   marker,
   comparer: {
     shallow: isShallowEqual,
-    strict: observableMap.comparer.structural,
+    strict: annotation.comparer.structural,
   } satisfies Record<Extract<PayloadComparator, string>, any>
 }

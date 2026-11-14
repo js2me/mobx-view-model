@@ -3,7 +3,6 @@ import {
   annotation,
   applyObservable,
   type ObservableAnnotationsArray,
-  observableMap,
 } from 'yummies/mobx';
 import type { PropertyListItem } from './property-list-item';
 import { capturePropertyWatchValue } from './watch/capture-property-watch-value';
@@ -19,9 +18,9 @@ const HISTORY_LIMIT = 100;
 let entryId = 0;
 
 const annotations: ObservableAnnotationsArray<PropertyWatch> = [
-  [annotation.observable('ref'), 'isWatching'],
-  [annotation.observable('shallow'), 'history'],
-  [observableMap.action.bound, 'toggle', 'clear', 'record'],
+  [annotation.observableRef, 'isWatching'],
+  [annotation.observableShallow, 'history'],
+  [annotation.actionBound, 'toggle', 'clear', 'record'],
 ];
 
 export class PropertyWatch {

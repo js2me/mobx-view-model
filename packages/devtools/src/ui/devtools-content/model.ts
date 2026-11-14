@@ -5,7 +5,6 @@ import {
   applyObservable,
   createRef,
   type ObservableAnnotationsArray,
-  observableMap,
 } from 'yummies/mobx';
 import type { InspectorViewport } from '@/model/devtools-inspector';
 import { isStickyTreeItem, LIST_ITEM_HEIGHT } from '@/model/inspector-scroll';
@@ -15,9 +14,9 @@ import type { ViewModelDevtools } from '@/model/view-model-devtools';
 const BUFFER_SIZE = 10;
 
 const annotations: ObservableAnnotationsArray<DevtoolsContentVM> = [
-  [annotation.observable('ref'), 'scrollOffset', 'viewportHeight'],
+  [annotation.observableRef, 'scrollOffset', 'viewportHeight'],
   [
-    annotation.computed(),
+    annotation.computed,
     'startIndex',
     'endIndex',
     'visibleItems',
@@ -27,7 +26,7 @@ const annotations: ObservableAnnotationsArray<DevtoolsContentVM> = [
     'stickyVmItemIndex',
     'stickyVmItem',
   ],
-  [observableMap.action.bound, 'measure'],
+  [annotation.actionBound, 'measure'],
 ];
 
 export class DevtoolsContentVM

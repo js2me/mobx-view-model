@@ -4,7 +4,6 @@ import {
   annotation,
   applyObservable,
   type ObservableAnnotationsArray,
-  observableMap,
 } from 'yummies/mobx';
 import type {
   DevtoolsPosition,
@@ -24,21 +23,21 @@ import type { InspectorSearch } from './search/search-model';
 
 const annotations: ObservableAnnotationsArray<DevtoolsSettings> = [
   [
-    annotation.observable('ref'),
+    annotation.observableRef,
     'presentationMode',
     'sortPropertiesBy',
     'position',
     'groupViewModelBaseMembers',
   ],
   [
-    annotation.computed(),
+    annotation.computed,
     'theme',
     'resolvedTheme',
     'hideViewModelBaseMembers',
     'highlightUpdates',
   ],
   [
-    observableMap.action.bound,
+    annotation.actionBound,
     'setPresentationMode',
     'setSortPropertiesBy',
     'setTheme',

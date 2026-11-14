@@ -4,7 +4,6 @@ import {
   annotation,
   applyObservable,
   type ObservableAnnotationsArray,
-  observableMap,
 } from 'yummies/mobx';
 import type { Maybe } from 'yummies/types';
 import type { DevtoolsInspector } from '../devtools-inspector';
@@ -51,12 +50,12 @@ function formatEditError(error: unknown) {
 }
 
 const annotations: ObservableAnnotationsArray<PropertyEditor> = [
-  [annotation.observable('ref'), 'editContent'],
-  [annotation.observable(), 'isEditMode', 'isFunctionCall'],
-  [annotation.computed(), 'isEditable', 'editableContent'],
+  [annotation.observableRef, 'editContent'],
+  [annotation.observable, 'isEditMode', 'isFunctionCall'],
+  [annotation.computed, 'isEditable', 'editableContent'],
   [action, 'handleChangeEditContent', 'handleEditKeyDown', 'confirmEdit'],
   [
-    observableMap.action.bound,
+    annotation.actionBound,
     'startEdit',
     'startFunctionCall',
     'cancelEdit',

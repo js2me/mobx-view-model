@@ -4,7 +4,6 @@ import {
   annotation,
   applyObservable,
   type ObservableAnnotationsArray,
-  observableMap,
 } from 'yummies/mobx';
 import type { AnyObject, Maybe } from 'yummies/types';
 import { createInspectorRows } from './create-inspector-rows';
@@ -28,11 +27,11 @@ export interface InspectorViewport {
 }
 
 const annotations: ObservableAnnotationsArray<DevtoolsInspector> = [
-  [annotation.observable('ref'), 'store', 'extras', 'watchedPropertyKeys'],
-  [annotation.computed('shallow'), 'allVms'],
-  [annotation.computed(), 'tree', 'rootItems', 'rows', 'isActive'],
+  [annotation.observableRef, 'store', 'extras', 'watchedPropertyKeys'],
+  [annotation.computedShallow, 'allVms'],
+  [annotation.computed, 'tree', 'rootItems', 'rows', 'isActive'],
   [
-    observableMap.action.bound,
+    annotation.actionBound,
     'setStore',
     'setExtras',
     'addWatchedPropertyKey',

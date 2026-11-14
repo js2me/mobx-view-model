@@ -7,6 +7,7 @@ import {
   annotation,
   applyObservable as applyObservableLib,
   type ObservableAnnotationsArray,
+  observableMap,
 } from 'yummies/mobx';
 import type { AnyObject, EmptyObject, Maybe, MaybePromise } from 'yummies/types';
 import { applyObservable, mergeVMConfigs } from '../config/index.js';
@@ -22,7 +23,7 @@ import type {
 import { _internals } from '../internals.js';
 
 const baseAnnotations: ObservableAnnotationsArray = [
-  [annotation.computed(), 'isMounted', 'isHydrated', 'parentViewModel'],
+  [annotation.computed, 'isMounted', 'isHydrated', 'parentViewModel'],
   [
     action,
     'willMount',
@@ -67,9 +68,13 @@ export class ViewModelBase<
       payloadComparator: _internals.comparer[config.comparePayload as 'strict'] || config.comparePayload || undefined,
       payload: params.payload,
     };
+    const payloadAnnotation =
+      config.payloadObservable === false
+        ? false
+        : observableMap[config.payloadObservable];
     applyObservableLib(vm, [
-      [annotation.observable('ref'), 'state'],
-      [annotation.observable(config.payloadObservable), 'payload'],
+      [annotation.observableRef, 'state'],
+      [payloadAnnotation, 'payload'],
     ]);
     this.#vm = vm;
     this.vm = this.#vm;
@@ -82,16 +87,14 @@ export class ViewModelBase<
     if (this.#vm.config.payloadComputed) {
       if (this.#vm.config.payloadComputed === 'struct') {
         annotations.push([
-          annotation.computed('struct'),
+          annotation.computedStruct,
           'payload',
         ]);
       } else {
         annotations.push([
-          annotation.computed(
-            this.#vm.config.payloadComputed === true
-              ? undefined
-              : this.#vm.config.payloadComputed,
-          ),
+          typeof this.#vm.config.payloadComputed === 'function'
+            ? annotation.computedEquals(this.#vm.config.payloadComputed)
+            : annotation.computed,
           'payload',
         ]);
       }

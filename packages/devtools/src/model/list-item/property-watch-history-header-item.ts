@@ -8,7 +8,7 @@ import { ListItem } from './list-item';
 import type { PropertyListItem } from './property-list-item';
 
 const annotations: ObservableAnnotationsArray<PropertyWatchHistoryHeaderListItem> =
-  [[annotation.computed(), 'label']];
+  [[annotation.computed, 'label']];
 
 export class PropertyWatchHistoryHeaderListItem extends ListItem<any> {
   get depth() {
