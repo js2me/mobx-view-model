@@ -1,4 +1,5 @@
 import { untracked } from 'mobx';
+import * as annotation from 'yummies/mobx';
 import {
   applyObservable,
   type ObservableAnnotationsArray,
