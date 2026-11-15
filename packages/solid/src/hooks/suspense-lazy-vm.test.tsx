@@ -1,6 +1,7 @@
 import { render, screen, waitFor } from '@solidjs/testing-library';
-import { action, makeObservable, observable } from 'mobx';
+import { action, makeObservable } from 'mobx';
 import { enableObservableTracking } from 'mobx-solid';
+import * as annotation from 'yummies/mobx';
 import {
   createSignal,
   lazy,
@@ -29,7 +30,7 @@ class RouteStore {
 
   constructor() {
     makeObservable(this, {
-      currentRoute: observable.ref,
+      currentRoute: annotation.observableRef,
       navigate: action,
     });
   }
