@@ -276,8 +276,8 @@ importers:
   packages/core:
     dependencies:
       yummies:
-        specifier: ^7.20.1
-        version: 7.20.1(mobx@6.15.0)(react@19.2.5)
+        specifier: ^7.23.1
+        version: 7.23.1(mobx@6.15.0)(react@19.2.5)
     devDependencies:
       jsdom:
         specifier: ^26.1.0
@@ -290,14 +290,14 @@ importers:
         specifier: ^2.18.0
         version: 2.18.0(react@18.3.1)
       mobx:
-        specifier: ^6.15.0
+        specifier: ^6.15.0 || ^7.0.0
         version: 6.15.0
       mobx-react-lite:
         specifier: ^4.1.1
         version: 4.1.1(mobx@6.15.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       mobx-swiss-knife:
-        specifier: ^1.15.0
-        version: 1.15.1(mobx@6.15.0)(react@18.3.1)
+        specifier: ^1.16.1
+        version: 1.16.1(mobx@6.15.0)(react@18.3.1)
       mobx-view-model:
         specifier: workspace:*
         version: link:../core/dist
@@ -305,8 +305,8 @@ importers:
         specifier: workspace:*
         version: link:../react/dist
       mobx-web-api:
-        specifier: ^1.13.0
-        version: 1.13.0(mobx@6.15.0)(react@18.3.1)
+        specifier: ^1.19.1
+        version: 1.19.1(mobx@6.15.0)(react@18.3.1)
       react:
         specifier: ^18.3.1
         version: 18.3.1
@@ -317,8 +317,8 @@ importers:
         specifier: ^1.3.2
         version: 1.3.2
       yummies:
-        specifier: ^7.20.1
-        version: 7.20.1(mobx@6.15.0)(react@18.3.1)
+        specifier: ^7.23.1
+        version: 7.23.1(mobx@6.15.0)(react@18.3.1)
     devDependencies:
       '@playwright/test':
         specifier: 1.63.0
@@ -360,8 +360,8 @@ importers:
         specifier: ^4.17.21
         version: 4.18.1
       mobx-solid:
-        specifier: ^0.3.1
-        version: 0.3.1(mobx@6.15.0)(solid-js@1.9.14)
+        specifier: ^0.4.0
+        version: 0.4.0(mobx@6.15.0)(solid-js@1.9.14)
       mobx-view-model-solid:
         specifier: workspace:*
         version: link:../solid/dist
@@ -434,7 +434,7 @@ importers:
         specifier: ^26.1.0
         version: 26.1.0(supports-color@5.5.0)
       mobx:
-        specifier: ^6.12.4
+        specifier: ^6.12.4 || ^7.0.0
         version: 6.15.0
       mobx-react-lite:
         specifier: ^4.0.7
@@ -446,8 +446,8 @@ importers:
         specifier: ^19.2.4
         version: 19.2.5(react@19.2.5)
       yummies:
-        specifier: ^7.20.1
-        version: 7.20.1(mobx@6.15.0)(react@19.2.5)
+        specifier: ^7.23.1
+        version: 7.23.1(mobx@6.15.0)(react@19.2.5)
     publishDirectory: dist
 
   packages/solid:
@@ -456,8 +456,8 @@ importers:
         specifier: workspace:*
         version: link:../core/dist
       yummies:
-        specifier: ^7.20.1
-        version: 7.20.1(mobx@6.15.0)(react@19.2.5)
+        specifier: ^7.23.1
+        version: 7.23.1(mobx@6.15.0)(react@19.2.5)
     devDependencies:
       '@solidjs/testing-library':
         specifier: ^0.8.10
@@ -466,11 +466,11 @@ importers:
         specifier: ^26.1.0
         version: 26.1.0(supports-color@5.5.0)
       mobx:
-        specifier: ^6.12.4
+        specifier: ^6.12.4 || ^7.0.0
         version: 6.15.0
       mobx-solid:
-        specifier: ^0.3.1
-        version: 0.3.1(mobx@6.15.0)(solid-js@1.9.14)
+        specifier: ^0.4.0
+        version: 0.4.0(mobx@6.15.0)(solid-js@1.9.14)
       solid-js:
         specifier: ^1.9.9
         version: 1.9.14
@@ -5302,16 +5302,16 @@ packages:
       react-native:
         optional: true
 
-  mobx-solid@0.3.1:
-    resolution: {integrity: sha512-pZ4azDJjtflP+G+vzVXkeXORGDd0xaerfOVNzHpD2sszj9/7zVjyx7aY508cmQp/CfJ4hYzLmtbYl7RVRhz/dQ==}
+  mobx-solid@0.4.0:
+    resolution: {integrity: sha512-UbOevizEI3lHWH/suoeOtBzVBIZDOjWgLoRbZxa60kErGzEfextwDN6aEaNHtwIzvegmZ2rsMCyziZ2LSN1h0A==}
     peerDependencies:
-      mobx: ^6.0.0
+      mobx: ^6.0.0 || ^7.0.0
       solid-js: ^1.6.0 || ^2.0.0-0
 
-  mobx-swiss-knife@1.15.1:
-    resolution: {integrity: sha512-7yotsnAqcBawsEWcKUu77VHrzmhLnbOFzkC1phwBI6K3P7wbt7pxfYPRdcGFzZQhQV58laSui7tnWzvcDKAfqg==}
+  mobx-swiss-knife@1.16.1:
+    resolution: {integrity: sha512-6v7YJFLS+RhSbBmjh3mDDBj28g2N5u5rMjY/8Pe+l0pKkxn/aW1H18vy+7xzDwi0RpLB2UNCHLr9HvnNMQz1wg==}
     peerDependencies:
-      mobx: ^6.12.4
+      mobx: ^6.12.4 || ^7.0.0
 
   mobx-view-model-react@10.3.2:
     resolution: {integrity: sha512-y4SAk7OXwsyYrkbAj1psS77m97JtfYPNPPR4tPSSkruZj5g3d/Q62FGZ+NCgJTOP5zadln864NroIX/caClMTQ==}
@@ -5373,10 +5373,10 @@ packages:
       react:
         optional: true
 
-  mobx-web-api@1.13.0:
-    resolution: {integrity: sha512-UG8fNjRiU2r8bops3RW9thavQfx/HYGjI/JkNPsdrSrxuNWayK1QK9/AybiFkEUq93mN0z05iiH16Akib2kuIw==}
+  mobx-web-api@1.19.1:
+    resolution: {integrity: sha512-IRe99btO3biHLLszcbZdIh6tWmHDmwVIHJMeMYmIQrC3yjyrWvpHzhfXoSQr2AmhUGiaVOfh9stCiheWZl6l1w==}
     peerDependencies:
-      mobx: ^6.13.6
+      mobx: ^6.13.6 || ^7.0.0
 
   mobx@6.15.0:
     resolution: {integrity: sha512-UczzB+0nnwGotYSgllfARAqWCJ5e/skuV2K/l+Zyck/H6pJIhLXuBnz+6vn2i211o7DtbE78HQtsYEKICHGI+g==}
@@ -6930,6 +6930,28 @@ packages:
     resolution: {integrity: sha512-H/AxRy+SjVlfpeI0TkiVkU/M2n+XpR1XGt5yS5r7GsP9Iz3mr17dbq9DLW18PmMlyKO78+yvH/9Z9VAnVuV3og==}
     peerDependencies:
       mobx: ^6.12.4
+      react: ^18 || ^19
+    peerDependenciesMeta:
+      mobx:
+        optional: true
+      react:
+        optional: true
+
+  yummies@7.21.0:
+    resolution: {integrity: sha512-Mqfut/o/WQC1JEhxgr1pcVRupQ27hhCzarjREckDcFt/BjIjUvJEBRW8/qBm6Vs4YDluV13cTRRWYwp0pOwV4w==}
+    peerDependencies:
+      mobx: ^6.12.4 || ^7.0.0
+      react: ^18 || ^19
+    peerDependenciesMeta:
+      mobx:
+        optional: true
+      react:
+        optional: true
+
+  yummies@7.23.1:
+    resolution: {integrity: sha512-JvK1LuZIeLkG2vSRErqf9JZbKAglqJMeXWPY0byfYQbarWRq5NGExKaiJa6s+77FiIAhslI0SA1y3fp3d9fzZw==}
+    peerDependencies:
+      mobx: ^6.12.4 || ^7.0.0
       react: ^18 || ^19
     peerDependenciesMeta:
       mobx:
@@ -11616,19 +11638,19 @@ snapshots:
     optionalDependencies:
       react-dom: 19.2.5(react@19.2.5)
 
-  mobx-solid@0.3.1(mobx@6.15.0)(solid-js@1.9.14):
+  mobx-solid@0.4.0(mobx@6.15.0)(solid-js@1.9.14):
     dependencies:
       mobx: 6.15.0
       solid-js: 1.9.14
 
-  mobx-swiss-knife@1.15.1(mobx@6.15.0)(react@18.3.1):
+  mobx-swiss-knife@1.16.1(mobx@6.15.0)(react@18.3.1):
     dependencies:
       '@faker-js/faker': 9.9.0
       '@types/lodash-es': 4.17.12
       linked-abort-controller: 1.1.1
       lodash-es: 4.18.1
       mobx: 6.15.0
-      yummies: 7.20.1(mobx@6.15.0)(react@18.3.1)
+      yummies: 7.23.1(mobx@6.15.0)(react@18.3.1)
     transitivePeerDependencies:
       - react
 
@@ -11644,7 +11666,7 @@ snapshots:
     dependencies:
       mobx: 6.15.0
       mobx-view-model-react: 10.3.2(mobx-react-lite@4.1.1(mobx@6.15.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(mobx@6.15.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      yummies: 7.20.1(mobx@6.15.0)(react@18.3.1)
+      yummies: 7.21.0(mobx@6.15.0)(react@18.3.1)
     optionalDependencies:
       react: 18.3.1
     transitivePeerDependencies:
@@ -11655,7 +11677,7 @@ snapshots:
     dependencies:
       mobx: 6.15.0
       mobx-view-model-react: 10.3.2(mobx-react-lite@4.1.1(mobx@6.15.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(mobx@6.15.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      yummies: 7.20.1(mobx@6.15.0)(react@18.3.1)
+      yummies: 7.21.0(mobx@6.15.0)(react@18.3.1)
     optionalDependencies:
       react: 18.3.1
     transitivePeerDependencies:
@@ -11675,7 +11697,7 @@ snapshots:
     dependencies:
       mobx: 6.15.0
       react-simple-loadable: 2.3.9(react@18.3.1)
-      yummies: 7.20.1(mobx@6.15.0)(react@18.3.1)
+      yummies: 7.21.0(mobx@6.15.0)(react@18.3.1)
     optionalDependencies:
       mobx-react-lite: 4.1.1(mobx@6.15.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react: 18.3.1
@@ -11686,14 +11708,14 @@ snapshots:
       mobx: 6.15.0
       mobx-react-lite: 4.1.1(mobx@6.15.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react-dom: 18.3.1(react@18.3.1)
-      yummies: 7.20.1(mobx@6.15.0)(react@18.3.1)
+      yummies: 7.21.0(mobx@6.15.0)(react@18.3.1)
     optionalDependencies:
       react: 18.3.1
 
-  mobx-web-api@1.13.0(mobx@6.15.0)(react@18.3.1):
+  mobx-web-api@1.19.1(mobx@6.15.0)(react@18.3.1):
     dependencies:
       mobx: 6.15.0
-      yummies: 7.20.1(mobx@6.15.0)(react@18.3.1)
+      yummies: 7.23.1(mobx@6.15.0)(react@18.3.1)
     transitivePeerDependencies:
       - react
 
@@ -12071,7 +12093,7 @@ snapshots:
 
   postcss@8.4.31:
     dependencies:
-      nanoid: 3.3.11
+      nanoid: 3.3.12
       picocolors: 1.1.1
       source-map-js: 1.2.1
 
@@ -13648,7 +13670,19 @@ snapshots:
       mobx: 6.15.0
       react: 18.3.1
 
-  yummies@7.20.1(mobx@6.15.0)(react@18.3.1):
+  yummies@7.20.1(mobx@6.15.0)(react@19.2.5):
+    dependencies:
+      class-variance-authority: 0.7.1
+      clsx: 2.1.1
+      dayjs: 1.11.21
+      dompurify: 3.4.11
+      nanoid: 5.1.15
+      tailwind-merge: 3.6.0
+    optionalDependencies:
+      mobx: 6.15.0
+      react: 19.2.5
+
+  yummies@7.21.0(mobx@6.15.0)(react@18.3.1):
     dependencies:
       class-variance-authority: 0.7.1
       clsx: 2.1.1
@@ -13660,7 +13694,19 @@ snapshots:
       mobx: 6.15.0
       react: 18.3.1
 
-  yummies@7.20.1(mobx@6.15.0)(react@19.2.5):
+  yummies@7.23.1(mobx@6.15.0)(react@18.3.1):
+    dependencies:
+      class-variance-authority: 0.7.1
+      clsx: 2.1.1
+      dayjs: 1.11.21
+      dompurify: 3.4.11
+      nanoid: 5.1.15
+      tailwind-merge: 3.6.0
+    optionalDependencies:
+      mobx: 6.15.0
+      react: 18.3.1
+
+  yummies@7.23.1(mobx@6.15.0)(react@19.2.5):
     dependencies:
       class-variance-authority: 0.7.1
       clsx: 2.1.1
