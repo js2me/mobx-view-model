@@ -40,6 +40,9 @@ jobs:
       - name: Core tests with MobX 7
         run: pnpm --filter mobx-view-model test
 
+      - name: Solid tests with MobX 7
+        run: pnpm --filter mobx-view-model-solid test
+
   build-and-test:
     strategy:
       fail-fast: false
