@@ -14,15 +14,12 @@ allowBuilds:
   esbuild: true
   lefthook: true
   sharp: false
+minimumReleaseAge: 0
 minimumReleaseAgeExclude:
   - mobx-view-model-react@10.2.2
   - mobx-view-model@10.2.2
   - docusite@0.1.0 || 0.1.1 || 0.1.2
   - mobx-solid@0.0.1
-  - mobx-solid@0.4.0
-  - mobx-swiss-knife@1.16.1
-  - mobx-web-api@1.19.1
-  - yummies@7.23.1
 overrides:
   '@types/react': 19.2.14
   '@types/react-dom': 19.2.3
