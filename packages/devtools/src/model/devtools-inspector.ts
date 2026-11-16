@@ -1,13 +1,7 @@
-import {
-  action,
-  comparer,
-  computed,
-  createAtom,
-  makeObservable,
-  observable,
-  reaction,
-} from 'mobx';
+import { createAtom, observable, reaction } from 'mobx';
 import { Storage } from 'mobx-swiss-knife';
+import * as annotation from 'yummies/mobx';
+import { applyObservable, type ObservableAnnotationsArray } from 'yummies/mobx';
 import type { AnyObject, Maybe } from 'yummies/types';
 import { createInspectorRows } from './create-inspector-rows';
 import type { ViewModelStoreSource } from './devtools-config';
@@ -28,6 +22,21 @@ export interface InspectorViewport {
   scrollTo(offset: number): void;
   scrollBy(offset: number): void;
 }
+
+const annotations: ObservableAnnotationsArray<DevtoolsInspector> = [
+  [annotation.observableRef, 'store', 'extras', 'watchedPropertyKeys'],
+  [annotation.computedShallow, 'allVms'],
+  [annotation.computed, 'tree', 'rootItems', 'rows', 'isActive'],
+  [
+    annotation.actionBound,
+    'setStore',
+    'setExtras',
+    'addWatchedPropertyKey',
+    'removeWatchedPropertyKey',
+    'expandAll',
+    'collapseAll',
+  ],
+];
 
 export class DevtoolsInspector {
   private readonly lifetime = new AbortController();
@@ -60,22 +69,7 @@ export class DevtoolsInspector {
       scrollToOffset: (offset) => this.viewport?.scrollTo(offset),
       initialSearchText: settings.savedSearchText,
     });
-    makeObservable(this, {
-      store: observable.ref,
-      extras: observable.ref,
-      watchedPropertyKeys: observable.ref,
-      allVms: computed({ equals: comparer.shallow }),
-      tree: computed,
-      rootItems: computed,
-      rows: computed,
-      isActive: computed,
-      setStore: action.bound,
-      setExtras: action.bound,
-      addWatchedPropertyKey: action.bound,
-      removeWatchedPropertyKey: action.bound,
-      expandAll: action.bound,
-      collapseAll: action.bound,
-    });
+    applyObservable(this, annotations);
     reaction(
       () => this.tree,
       (tree, previous) => {

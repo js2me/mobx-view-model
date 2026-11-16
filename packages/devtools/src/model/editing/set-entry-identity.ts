@@ -1,4 +1,6 @@
-import { action, computed, makeObservable, observable } from 'mobx';
+import { action, computed } from 'mobx';
+import * as annotation from 'yummies/mobx';
+import { applyObservable, type ObservableAnnotationsArray } from 'yummies/mobx';
 import { getCollectionKind } from '../inspection/collection-like';
 
 let nextEntryId = 0;
@@ -22,6 +24,11 @@ class SetEntryRegistry {
   constructor(readonly parent: SetOwner) {}
 }
 
+const annotations: ObservableAnnotationsArray<SetEntryIdentity> = [
+  [annotation.observableRef, 'value'],
+  [action, 'rebind'],
+];
+
 /** A Set row follows its value, independently of the value's insertion index. */
 export class SetEntryIdentity {
   readonly id = nextEntryId++;
@@ -29,7 +36,7 @@ export class SetEntryIdentity {
     public value: unknown,
     private readonly registry: SetEntryRegistry,
   ) {
-    makeObservable(this, { value: observable.ref, rebind: action });
+    applyObservable(this, annotations);
   }
   get index() {
     return this.registry.snapshot.get().indexes.get(this.value);

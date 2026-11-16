@@ -1,4 +1,5 @@
-import { action, makeObservable, observable } from 'mobx';
+import * as annotation from 'yummies/mobx';
+import { applyObservable, type ObservableAnnotationsArray } from 'yummies/mobx';
 import type { Point } from './geometry';
 
 export interface MouseGestureOptions {
@@ -6,6 +7,11 @@ export interface MouseGestureOptions {
   move(delta: Point): void;
   end?(): void;
 }
+
+const annotations: ObservableAnnotationsArray<MouseGesture> = [
+  [annotation.observableRef, 'isActive', 'hasMoved'],
+  [annotation.actionBound, 'begin', 'move', 'end'],
+];
 
 /** One mouse interaction, cancelled by release, focus loss, or owner disposal. */
 export class MouseGesture {
@@ -16,13 +22,7 @@ export class MouseGesture {
     private readonly options: MouseGestureOptions,
     signal: AbortSignal,
   ) {
-    makeObservable<this, 'move'>(this, {
-      isActive: observable.ref,
-      hasMoved: observable.ref,
-      begin: action.bound,
-      move: action.bound,
-      end: action.bound,
-    });
+    applyObservable(this, annotations);
     document.addEventListener('mousemove', this.move, { signal });
     document.addEventListener('mouseup', this.end, { signal });
     window.addEventListener('blur', this.end, { signal });
