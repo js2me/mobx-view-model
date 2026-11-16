@@ -40,7 +40,7 @@
   },
   "dependencies": {
     "mobx-view-model": "workspace:*",
-    "yummies": "^7.23.1"
+    "yummies": "^7.23.2"
   },
   "peerDependencies": {
     "mobx": "^6.12.4 || ^7.0.0",
