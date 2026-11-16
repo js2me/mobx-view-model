@@ -1,10 +1,30 @@
 import * as annotation from 'yummies/mobx';
-import { applyObservable } from 'yummies/mobx';
+import { applyObservable, type ObservableAnnotationsArray } from 'yummies/mobx';
 
 export type DetailedPermission = {
   value: boolean;
   reason: string;
 };
+
+const permissionsAnnotations: ObservableAnnotationsArray<PermissionsModel> = [
+  [annotation.observableRef, 'flags'],
+  [
+    annotation.computed,
+    'hasUserEditRoles',
+    'paasDefaultPermission',
+    'promoteDeployment',
+  ],
+];
+
+const serviceInfoAnnotations: ObservableAnnotationsArray<ServiceInfo> = [
+  [annotation.computed, 'permissions'],
+];
+
+const serviceDeploysTabAnnotations: ObservableAnnotationsArray<ServiceDeploysTabVM> =
+  [
+    [annotation.observableRef, 'service'],
+    [annotation.computed, 'canPromoteDeployment'],
+  ];
 
 /**
  * Minimal reproduction of Nova's ServicePermissions + ServiceInfo pattern:
@@ -16,15 +36,7 @@ export class PermissionsModel {
   flags = { hasUserEditRoles: false };
 
   constructor() {
-    applyObservable(this, [
-      [annotation.observableRef, 'flags'],
-      [
-        annotation.computed,
-        'hasUserEditRoles',
-        'paasDefaultPermission',
-        'promoteDeployment',
-      ],
-    ]);
+    applyObservable(this, permissionsAnnotations);
   }
 
   get hasUserEditRoles() {
@@ -47,7 +59,7 @@ export class ServiceInfo {
   private permissionsModel = new PermissionsModel();
 
   constructor() {
-    applyObservable(this, [[annotation.computed, 'permissions']]);
+    applyObservable(this, serviceInfoAnnotations);
   }
 
   get permissions() {
@@ -59,10 +71,7 @@ export class ServiceDeploysTabVM {
   service = new ServiceInfo();
 
   constructor() {
-    applyObservable(this, [
-      [annotation.observableRef, 'service'],
-      [annotation.computed, 'canPromoteDeployment'],
-    ]);
+    applyObservable(this, serviceDeploysTabAnnotations);
   }
 
   get canPromoteDeployment() {
