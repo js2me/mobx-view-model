@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { render } from '@testing-library/react';
+import { version as reactVersion } from 'react';
 import { App } from '../app';
 import { RootStore } from '../stores/root-store';
 import { RootStoreProvider } from '../stores/root-store/components/provider';
@@ -16,6 +17,6 @@ describe('Main page', () => {
       </RootStoreProvider>,
     );
 
-    expect(container.innerHTML).toMatchSnapshot();
+    expect(container.innerHTML.replace(`React ${reactVersion}`, 'React VERSION')).toMatchSnapshot();
   });
 });
