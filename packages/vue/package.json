@@ -1,0 +1,62 @@
+{
+  "name": "mobx-view-model-vue",
+  "version": "0.0.0",
+  "scripts": {
+    "clean": "rimraf dist",
+    "ts:check": "tsc --noEmit --project tsconfig.check.json && tsc --noEmit --project tsconfig.test.json",
+    "ts-test-types:check": "tsc --noEmit --project tsconfig.test.json",
+    "check": "pnpm run ts:check",
+    "prebuild": "pnpm run clean",
+    "build:watch": "pnpm build && nodemon --watch src --ext ts,tsx --exec \"pnpm build\"",
+    "build": "vite build && node ./scripts/normalize-dist-dts-imports.mjs && node ./scripts/validate-dist-dts-imports.mjs && node ./scripts/patch-dist-package-json.mjs",
+    "test": "vitest run --config vitest.config.ts",
+    "test:watch": "vitest watch --config vitest.config.ts",
+    "test:coverage": "vitest run --config vitest.config.ts --coverage"
+  },
+  "keywords": [
+    "mobx",
+    "vue",
+    "view-model",
+    "mvvm"
+  ],
+  "author": "js2me",
+  "license": "MIT",
+  "description": "Vue 3 bindings for mobx-view-model",
+  "bugs": {
+    "url": "https://github.com/js2me/mobx-view-model/issues"
+  },
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./src/index.ts",
+  "homepage": "https://github.com/js2me/mobx-view-model",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/js2me/mobx-view-model"
+  },
+  "publishConfig": {
+    "directory": "dist"
+  },
+  "dependencies": {
+    "mobx-view-model": "workspace:*",
+    "yummies": "^7.20.1"
+  },
+  "peerDependencies": {
+    "mobx": "^6.12.4",
+    "vue": "^3.5.0"
+  },
+  "devDependencies": {
+    "jsdom": "^26.1.0",
+    "mobx": "^6.12.4",
+    "vue": "^3.5.0",
+    "@vue/server-renderer": "^3.5.0"
+  },
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./package.json": "./package.json"
+  }
+}
