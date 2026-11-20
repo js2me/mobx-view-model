@@ -56,7 +56,7 @@ type Cache = {
   bindAfterCommit?: boolean;
   promise?: PromiseLike<void>;
   isSSR: boolean;
-  fn: () => () => void;
+  mount: () => () => void;
 };
 
 const bindModel = (
@@ -155,7 +155,6 @@ export function useCreateViewModel(
   const cache = useRef<Cache>(null!);
   let state = cache.current;
   const reactId = useId();
-  const isUpdate = !!state;
   const [revision, forceRender] = useState(0);
 
   // The VM and store belong to this fiber until unmount. Only commit may
@@ -171,8 +170,6 @@ export function useCreateViewModel(
       ? (existing as { vm?: { data?: any } }).vm?.data
       : vmResource?.read(vmId);
 
-    let staged = isClient && viewModels != null;
-
     let config!: ViewModelCreateConfig<any>;
     const model: VmInstance = runInAction(() => {
       config = {
@@ -187,7 +184,7 @@ export function useCreateViewModel(
         props: props ?? rawCfg?.props,
       };
       const instance = viewModels
-        ? staged
+        ? isClient
           ? stageViewModel(viewModels, config, cache)
           : viewModels.define(config)
         : (config.factory?.(config) ?? viewModelsConfig.factory(config));
@@ -208,10 +205,8 @@ export function useCreateViewModel(
           return mountLifecycle(model);
         });
 
-    let creationEntry =
-      staged || !isClient
-        ? undefined
-        : registerUnconfirmed(model);
+    let firstClientCommit = isClient;
+    if (isClient && !viewModels) registerUnconfirmed(model);
 
     state = cache.current = {
       vm: model,
@@ -220,10 +215,9 @@ export function useCreateViewModel(
       bindAfterCommit,
       promise: lifecycleResult,
       isSSR,
-      fn: () => {
-        if (staged) {
-          staged = false;
-          commitStagedViewModel(viewModels!, config, model);
+      mount: () => {
+        if (firstClientCommit && viewModels) {
+          commitStagedViewModel(viewModels, config, model);
         }
 
         if (viewModels && !viewModels.has(model.id ?? config.id)) {
@@ -232,8 +226,8 @@ export function useCreateViewModel(
           });
         }
 
-        acquireVm(model, !!creationEntry);
-        creationEntry = undefined;
+        acquireVm(model, firstClientCommit && !viewModels);
+        firstClientCommit = false;
         const mountResult = runInAction(() => mountLifecycle(model));
         if (mountResult) {
           state.promise = mountResult;
@@ -268,7 +262,7 @@ export function useCreateViewModel(
       runInAction(() => bindModel(model, payload, parentViewModel));
       state.appliedPayload = payload;
       state.appliedProps = props;
-    } else if (isUpdate && !Object.is(state.appliedPayload, payload)) {
+    } else if (!Object.is(state.appliedPayload, payload)) {
       state.appliedPayload = payload;
       state.appliedProps = props;
       model.setPayload?.(payload);
@@ -286,7 +280,7 @@ export function useCreateViewModel(
   }, [payload, revision]);
 
   // Bind a reused VM before mount() starts work from its committed payload.
-  useCommitEffect(state.fn, EMPTY_ARR);
+  useCommitEffect(state.mount, EMPTY_ARR);
 
   if (state.isSSR) {
     const pending = state.promise;

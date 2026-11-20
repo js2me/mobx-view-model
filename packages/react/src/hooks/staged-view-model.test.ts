@@ -54,6 +54,7 @@ test('committing shared staged IDs initializes once and does not duplicate looku
 
   commitStagedViewModel(store, config, vm);
   commitStagedViewModel(store, config, vm);
+  expect(vi.getTimerCount()).toBe(0);
   expect(vm.init).toHaveBeenCalledTimes(1);
   expect(vm.renderStore.getIds(SimpleVM)).toEqual(['shared']);
   expect(vm.renderStore.getAll(SimpleVM)).toEqual([vm]);
@@ -75,4 +76,14 @@ test('a scheduled sweep preserves VMs staged after its commit epoch', () => {
   expect(getRenderPhaseViewModel(store, 'committed')).toBe(committed);
   commitStagedViewModel(store, laterConfig, later);
   expect(store.get('later')).toBe(later);
+});
+
+test('a staged VM shadows a committed instance with the same lookup ID', () => {
+  vi.useFakeTimers();
+  const store = new ViewModelStoreBase();
+  const staged = stageViewModel(store, configFor('shared'), {}) as SimpleVM;
+  store.define(configFor('shared'));
+
+  expect(staged.renderStore.getIds(SimpleVM)).toEqual(['shared']);
+  expect(staged.renderStore.getAll(SimpleVM)).toEqual([staged]);
 });

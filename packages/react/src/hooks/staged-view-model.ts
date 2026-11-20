@@ -15,7 +15,7 @@ type StagedVm = {
 };
 
 type StagedStore = {
-  renderStore?: ViewModelStore;
+  renderStore: ViewModelStore;
   entries: Map<string, StagedVm>;
   epoch: number;
   sweepScheduled: boolean;
@@ -42,19 +42,6 @@ const stagedVmRegistry: FinalizationRegistry<StagedRegistryEntry> | null =
       })
     : null;
 
-const getStagedStore = (store: ViewModelStore): StagedStore => {
-  let stagedStore = stagedStores.get(store);
-  if (!stagedStore) {
-    stagedStore = {
-      entries: new Map(),
-      epoch: 0,
-      sweepScheduled: false,
-    };
-    stagedStores.set(store, stagedStore);
-  }
-  return stagedStore;
-};
-
 /** Lookup used by React hooks while a sibling VM is still in render phase. */
 export const getRenderPhaseViewModel = <T extends VmInstance>(
   store: ViewModelStore,
@@ -66,7 +53,7 @@ export const getRenderPhaseViewModel = <T extends VmInstance>(
     vm = entries?.get(lookup)?.vm;
   } else if (entries) {
     for (const entry of entries.values()) {
-      if (entry.config.VM === lookup || entry.config.anchors?.includes(lookup)) {
+      if (matchesLookup(entry, lookup)) {
         vm = entry.vm;
       }
     }
@@ -74,22 +61,24 @@ export const getRenderPhaseViewModel = <T extends VmInstance>(
   return (vm ?? store.get(lookup as any)) as T | null;
 };
 
-const createRenderPhaseStore = (store: ViewModelStore): ViewModelStore => {
+const matchesLookup = ({ config }: StagedVm, lookup: unknown) =>
+  config.VM === lookup || config.anchors?.includes(lookup);
+
+const createRenderPhaseStore = (
+  store: ViewModelStore,
+  entries: StagedStore['entries'],
+): ViewModelStore => {
   const methods = {
     get: <T extends VmInstance>(lookup: unknown): T | null =>
       getRenderPhaseViewModel<T>(store, lookup),
     has: (lookup: unknown): boolean => methods.get(lookup) != null,
     getIds: (lookup: unknown): string[] => {
       const ids = store.getIds(lookup as any);
-      if (typeof lookup !== 'string') {
-        for (const [id, entry] of stagedStores.get(store)!.entries) {
-          if (
-            (entry.config.VM === lookup || entry.config.anchors?.includes(lookup)) &&
-            !ids.includes(id)
-          ) {
-            ids.push(id);
-          }
-        }
+      if (typeof lookup === 'string' || !entries.size) return ids;
+      // Map keys are unique, so only committed IDs can overlap.
+      const committed = ids.length ? new Set(ids) : undefined;
+      for (const [id, entry] of entries) {
+        if (matchesLookup(entry, lookup) && !committed?.has(id)) ids.push(id);
       }
       return ids;
     },
@@ -121,13 +110,23 @@ export const stageViewModel = (
   const existing = store.get(config.id) as VmInstance | null;
   if (existing) return existing;
 
-  const stagedStore = getStagedStore(store);
+  let stagedStore = stagedStores.get(store);
+  if (!stagedStore) {
+    const entries = new Map<string, StagedVm>();
+    stagedStore = {
+      entries,
+      renderStore: createRenderPhaseStore(store, entries),
+      epoch: 0,
+      sweepScheduled: false,
+    };
+    stagedStores.set(store, stagedStore);
+  }
   const staged = stagedStore.entries.get(config.id);
   if (staged) return staged.vm;
 
   const vm = store.create({
     ...config,
-    viewModels: (stagedStore.renderStore ??= createRenderPhaseStore(store)),
+    viewModels: stagedStore.renderStore,
   }) as VmInstance;
   stagedStore.entries.set(config.id, { vm, config, epoch: ++stagedStore.epoch });
   stagedVmRegistry?.register(owner, { store, id: config.id, vm }, vm);
@@ -140,8 +139,8 @@ export const commitStagedViewModel = (
   config: ViewModelCreateConfig<any>,
   vm: VmInstance,
 ): void => {
-  const stagedStore = getStagedStore(store);
-  if (stagedStore.entries.get(config.id)?.vm === vm) {
+  const stagedStore = stagedStores.get(store);
+  if (stagedStore?.entries.get(config.id)?.vm === vm) {
     stagedStore.entries.delete(config.id);
   }
   stagedVmRegistry?.unregister(vm);
@@ -151,7 +150,7 @@ export const commitStagedViewModel = (
   if (store.get(config.id) !== vm) {
     runInAction(() => store.connect(vm, config));
   }
-  if (!stagedStore.sweepScheduled) {
+  if (stagedStore?.entries.size && !stagedStore.sweepScheduled) {
     stagedStore.sweepScheduled = true;
     const epochAtCommit = stagedStore.epoch;
     setTimeout(() => {

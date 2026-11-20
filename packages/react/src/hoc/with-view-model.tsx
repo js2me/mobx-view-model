@@ -14,7 +14,7 @@ import {
   createElement,
   forwardRef,
   useContext,
-  useRef,
+  useMemo,
   useSyncExternalStore,
 } from 'react';
 import type {
@@ -231,7 +231,18 @@ type VMHocFullConfig = ViewModelSimpleHocConfig<any> & ViewModelHocConfig<any> &
 }
 
 const ReactMemoSymbol = Symbol.for('react.memo');
-const getServerReadySnapshot = () => true;
+const readySnapshot = () => true;
+const alwaysReady = { subscribe: () => _internals.noop, getSnapshot: readySnapshot };
+
+function getReadiness(model: AnyViewModel | AnyViewModelSimple) {
+  if (!isViewModel(model)) return alwaysReady;
+  return {
+    subscribe: (notify: () => void) => reaction(() => model.isMounted, notify),
+    // Suspense can hide and retry this fiber after layout-effect cleanup.
+    getSnapshot: () => model.isMounted !== false ||
+      model.vm.state === 'unmounting' || model.vm.state === 'unmounted',
+  };
+}
 
 /**
  * A Higher-Order Component that connects React components to their ViewModels, providing seamless MobX integration.
@@ -306,9 +317,8 @@ export function withViewModel(
     throw new Error('Error #4: https://js2me.github.io/mobx-view-model/errors/4');
   }
 
-  const simpleView = !isViewModelClass(VM);
-  const PayloadVersionContext = createContext(0);
-  const View = observer((simpleView
+  const PayloadVersionContext = isViewModelClass(VM) ? null : createContext(0);
+  const View = observer((PayloadVersionContext
     ? (props: any) => {
         // Subscribe to the revision: plain ViewModelSimple fields do not notify
         // observer, and unchanged props alone would not rerender this view.
@@ -339,53 +349,15 @@ export function withViewModel(
       ref,
     );
 
-    // @ts-expect-error it's ok
-    const cacheRef = useRef<{
-      value: typeof model;
-      subscribe: (onStoreChange: () => void) => () => void;
-      getSnapshot: () => boolean;
-    }>();
-
-    if (cacheRef.current) {
-      cacheRef.current.value = model;
-    } else {
-      cacheRef.current = {
-        value: model,
-        subscribe: (onStoreChange) =>
-          reaction(
-            () => {
-              const current = cacheRef.current.value;
-              return !isViewModel(current) || current.isMounted;
-            },
-            () => {
-              onStoreChange();
-            },
-          ),
-        getSnapshot: () => {
-          const current = cacheRef.current.value as AnyViewModel;
-          // Suspense hide unmounts via layout-effect cleanup, then retries
-          // the same fiber. Stay ready so we don't empty-commit → remount →
-          // suspend → loop.
-          return (
-            current.isMounted !== false ||
-            current.vm.state === 'unmounting' ||
-            current.vm.state === 'unmounted'
-          );
-        },
-      };
-    }
-
-    const getServerSnapshot =
+    const { subscribe, getSnapshot } = useMemo(() => getReadiness(model), [model]);
+    const isReadyToRender = useSyncExternalStore(
+      subscribe,
+      getSnapshot,
       typeof window !== 'undefined' &&
       viewModelsConfig.mode === 'ssr' &&
       typeof reactUse === 'function'
-        ? getServerReadySnapshot
-        : cacheRef.current.getSnapshot;
-
-    const isReadyToRender = useSyncExternalStore(
-      cacheRef.current.subscribe,
-      cacheRef.current.getSnapshot,
-      getServerSnapshot,
+        ? readySnapshot
+        : getSnapshot,
     );
 
     let child: RReactNode = null;
@@ -397,7 +369,7 @@ export function withViewModel(
         viewProps.ref = ref;
       }
       child = createElement(View, viewProps);
-      if (simpleView) {
+      if (PayloadVersionContext) {
         // The revision is internal; never add it to the user's view props.
         child = createElement(
           PayloadVersionContext.Provider,
@@ -409,7 +381,7 @@ export function withViewModel(
       child = createElement(Fallback);
     }
 
-    return createElement(ActiveViewModelProvider, cacheRef.current, child);
+    return createElement(ActiveViewModelProvider, { value: model }, child);
   };
 
   if (process.env.NODE_ENV !== 'production') {

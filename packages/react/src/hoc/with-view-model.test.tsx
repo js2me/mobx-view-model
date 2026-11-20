@@ -1616,6 +1616,15 @@ describe('withViewModel', () => {
   });
 
   describe('ViewModelSimple', () => {
+    test('renders a simple model with its own isMounted field', () => {
+      class VM {
+        isMounted = false;
+      }
+      const Component = withViewModel(VM, ({ model }) => <div>{String(model.isMounted)}</div>);
+      render(<Component />);
+      expect(screen.getByText('false')).toBeDefined();
+    });
+
     test('renders (1 overload)', async () => {
       class VM implements ViewModelSimple {
         id: string = '1234';
