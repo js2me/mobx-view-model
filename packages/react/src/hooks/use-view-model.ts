@@ -21,10 +21,6 @@ export const useViewModel = <T extends AnyViewModel | AnyViewModelSimple>(
 ): T => {
   const viewModels = useContext(ViewModelsContext);
   const activeViewModel = useContext(ActiveViewModelContext);
-  const model = viewModels
-    ? getRenderPhaseViewModel<T>(viewModels, vmLookup)
-    : undefined;
-
   // This ref is needed only for development
   // support better HMR in vite
   let devModeModelRef = undefined as unknown as React.MutableRefObject<any>;
@@ -64,32 +60,22 @@ export const useViewModel = <T extends AnyViewModel | AnyViewModelSimple>(
     return activeViewModel as unknown as T;
   }
 
+  const model = getRenderPhaseViewModel<T>(viewModels, vmLookup);
   if (!model) {
-    let displayName: string = '';
-
-    if (typeof vmLookup === 'string') {
-      displayName = vmLookup;
-    } else if ('name' in vmLookup) {
-      displayName = vmLookup.name;
-    } else {
-      displayName = (vmLookup as AnyObject).displayName;
-    }
-
     if (process.env.NODE_ENV !== 'production') {
-      if (devModeModelRef.current) {
-        return devModeModelRef.current;
-      } else {
-        throw new Error(
-          `Error #2: View model not found for ${displayName}.\n` +
-            'This happened because your "vmLookup" provided for hook "useViewModel" is not found in "ViewModelStore".\n' +
-            'More info: https://js2me.github.io/mobx-view-model/errors/2',
-        );
-      }
-    } else {
+      if (devModeModelRef.current) return devModeModelRef.current;
+      const displayName = typeof vmLookup === 'string'
+        ? vmLookup
+        : 'name' in vmLookup ? vmLookup.name : (vmLookup as AnyObject).displayName;
       throw new Error(
-        'Error #2: https://js2me.github.io/mobx-view-model/errors/2',
+        `Error #2: View model not found for ${displayName}.\n` +
+          'This happened because your "vmLookup" provided for hook "useViewModel" is not found in "ViewModelStore".\n' +
+          'More info: https://js2me.github.io/mobx-view-model/errors/2',
       );
     }
+    throw new Error(
+      'Error #2: https://js2me.github.io/mobx-view-model/errors/2',
+    );
   }
 
   if (process.env.NODE_ENV !== 'production') {

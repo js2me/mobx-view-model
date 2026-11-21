@@ -1616,6 +1616,38 @@ describe('withViewModel', () => {
   });
 
   describe('ViewModelSimple', () => {
+    test('keeps payload updates local to each nested simple view', () => {
+      class Label implements ViewModelSimple<{ text: string }> {
+        text = '';
+        setPayload({ text }: { text: string }) { this.text = text; }
+      }
+      const renderInner = vi.fn();
+      const Inner = withViewModel(Label, ({ model }) => {
+        renderInner();
+        return <span>{model.text}</span>;
+      });
+      const innerPayload = { text: 'inner' };
+      const Outer = withViewModel(Label, ({ model }) => (
+        <><span>{model.text}</span><Inner payload={innerPayload} /></>
+      ));
+
+      const view = render(<Outer payload={{ text: 'first' }} />);
+      const initialRenders = renderInner.mock.calls.length;
+      view.rerender(<Outer payload={{ text: 'second' }} />);
+      expect(view.getByText('second')).toBeDefined();
+      expect(view.getByText('inner')).toBeDefined();
+      expect(renderInner).toHaveBeenCalledTimes(initialRenders);
+    });
+
+    test('renders a simple model with its own isMounted field', () => {
+      class VM {
+        isMounted = false;
+      }
+      const Component = withViewModel(VM, ({ model }) => <div>{String(model.isMounted)}</div>);
+      render(<Component />);
+      expect(screen.getByText('false')).toBeDefined();
+    });
+
     test('renders (1 overload)', async () => {
       class VM implements ViewModelSimple {
         id: string = '1234';

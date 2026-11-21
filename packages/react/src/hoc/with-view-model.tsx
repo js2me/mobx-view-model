@@ -14,7 +14,7 @@ import {
   createElement,
   forwardRef,
   useContext,
-  useRef,
+  useMemo,
   useSyncExternalStore,
 } from 'react';
 import type {
@@ -109,80 +109,47 @@ export type WithViewModelReactHook = (
   ref?: any,
 ) => void;
 
+interface SharedViewModelHocConfig {
+  /**
+   * Component to render if the view model initialization takes too long
+   *
+   * [**Documentation**](https://js2me.github.io/mobx-view-model/react/api/with-view-model.html#fallback)
+   */
+  fallback?: RComponentType;
+
+  /**
+   * Function to invoke additional React hooks in the resulting component
+   *
+   * [**Documentation**](https://js2me.github.io/mobx-view-model/react/api/with-view-model.html#reacthook)
+   */
+  reactHook?: WithViewModelReactHook;
+
+  /**
+   * Function that should return the payload for the VM
+   * by default, it is - (props) => props.payload
+   *
+   * [**Documentation**](https://js2me.github.io/mobx-view-model/react/api/with-view-model.html#getpayload)
+   */
+  getPayload?: (allProps: any) => any;
+
+  /**
+   * Forwards ref using `RforwardRef` but pass it to props as prop `ref`
+   *
+   * [**Documentation**](https://js2me.github.io/mobx-view-model/react/api/with-view-model.html#forwardref)
+   */
+  forwardRef?: boolean;
+
+  /**
+   * Additional component anchors for the same VM instance.
+   * useViewModel(AnchorComponent) will return this VM when the connected component is mounted.
+   */
+  anchors?: RComponentType[];
+}
+
 export interface ViewModelHocConfig<VM extends AnyViewModel>
-  extends Omit<UseCreateViewModelConfig<VM>, 'component' | 'componentProps'> {
-  /**
-   * Component to render if the view model initialization takes too long
-   *
-   * [**Documentation**](https://js2me.github.io/mobx-view-model/react/api/with-view-model.html#fallback)
-   */
-  fallback?: RComponentType;
+  extends Omit<UseCreateViewModelConfig<VM>, 'component' | 'componentProps' | 'anchors'>, SharedViewModelHocConfig {}
 
-  /**
-   * Function to invoke additional React hooks in the resulting component
-   *
-   * [**Documentation**](https://js2me.github.io/mobx-view-model/react/api/with-view-model.html#reacthook)
-   */
-  reactHook?: WithViewModelReactHook;
-
-  /**
-   * Function that should return the payload for the VM
-   * by default, it is - (props) => props.payload
-   *
-   * [**Documentation**](https://js2me.github.io/mobx-view-model/react/api/with-view-model.html#getpayload)
-   */
-  getPayload?: (allProps: any) => any;
-
-  /**
-   * Forwards ref using `RforwardRef` but pass it to props as prop `ref`
-   *
-   * [**Documentation**](https://js2me.github.io/mobx-view-model/react/api/with-view-model.html#forwardref)
-   */
-  forwardRef?: boolean;
-
-  /**
-   * Additional component anchors for the same VM instance.
-   * useViewModel(AnchorComponent) will return this VM when the connected component is mounted.
-   */
-  anchors?: RComponentType[];
-}
-
-export interface ViewModelSimpleHocConfig<_VM> {
-  /**
-   * Component to render if the view model initialization takes too long
-   *
-   * [**Documentation**](https://js2me.github.io/mobx-view-model/react/api/with-view-model.html#fallback)
-   */
-  fallback?: RComponentType;
-
-  /**
-   * Function to invoke additional React hooks in the resulting component
-   *
-   * [**Documentation**](https://js2me.github.io/mobx-view-model/react/api/with-view-model.html#reacthook)
-   */
-  reactHook?: WithViewModelReactHook;
-
-  /**
-   * Function that should return the payload for the VM
-   * by default, it is - (props) => props.payload
-   *
-   * [**Documentation**](https://js2me.github.io/mobx-view-model/react/api/with-view-model.html#getpayload)
-   */
-  getPayload?: (allProps: any) => any;
-
-  /**
-   * Forwards ref using `RforwardRef` but pass it to props as prop `ref`
-   *
-   * [**Documentation**](https://js2me.github.io/mobx-view-model/react/api/with-view-model.html#forwardref)
-   */
-  forwardRef?: boolean;
-
-  /**
-   * Additional component anchors for the same VM instance.
-   * useViewModel(AnchorComponent) will return this VM when the connected component is mounted.
-   */
-  anchors?: RComponentType[];
-}
+export interface ViewModelSimpleHocConfig<_VM> extends SharedViewModelHocConfig {}
 
 export type AllViewModelPropsKeys = keyof Required<ViewModelProps<any, any>>;
 
@@ -226,12 +193,20 @@ export interface VMComponent<
   ): VMComponent<TViewModel, TComponentOriginProps, TForwardedRef>;
 }
 
-type VMHocFullConfig = ViewModelSimpleHocConfig<any> & ViewModelHocConfig<any> & {
-  component: VMComponent<any>;
-}
-
+let simplePayloadContext: React.Context<number> | undefined;
 const ReactMemoSymbol = Symbol.for('react.memo');
-const getServerReadySnapshot = () => true;
+const readySnapshot = () => true;
+const alwaysReady = { subscribe: () => _internals.noop, getSnapshot: readySnapshot };
+
+function getReadiness(model: AnyViewModel | AnyViewModelSimple) {
+  if (!isViewModel(model)) return alwaysReady;
+  return {
+    subscribe: (notify: () => void) => reaction(() => model.isMounted, notify),
+    // Suspense can hide and retry this fiber after layout-effect cleanup.
+    getSnapshot: () => model.isMounted !== false ||
+      model.vm.state === 'unmounting' || model.vm.state === 'unmounted',
+  };
+}
 
 /**
  * A Higher-Order Component that connects React components to their ViewModels, providing seamless MobX integration.
@@ -274,14 +249,12 @@ export function withViewModel<
 export function withViewModel(
   VM: Class<any>,
   rawRenderFn?: RRenderFn<AnyObject>,
-  rawConfig?: ViewModelSimpleHocConfig<any> & ViewModelHocConfig<any>,
+  rawConfig?: ViewModelHocConfig<any>,
 ): any {
-  const config = (rawConfig ?? {}) as VMHocFullConfig;
+  const config = rawConfig ?? {};
   const anchors = (config.anchors ??= []);
-  // Defensive fallback: a duplicated/older mobx-view-model copy can poison the
-  // shared viewModelsConfig singleton (Symbol.for) and leave getPayload undefined.
-  const getPayload: Defined<VMHocFullConfig['getPayload']> = config.getPayload ?? viewModelsConfig.getPayload;
-  const forwardRefMode = !!config.forwardRef;
+  const getPayload = config.getPayload ?? viewModelsConfig.getPayload;
+  const forwardRefMode = config.forwardRef;
   const Fallback = (config.fallback ??
     config.vmConfig?.fallbackComponent ??
     viewModelsConfig.fallbackComponent) as RComponentType | undefined;
@@ -306,9 +279,10 @@ export function withViewModel(
     throw new Error('Error #4: https://js2me.github.io/mobx-view-model/errors/4');
   }
 
-  const simpleView = !isViewModelClass(VM);
-  const PayloadVersionContext = createContext(0);
-  const View = observer((simpleView
+  const PayloadVersionContext = isViewModelClass(VM)
+    ? null
+    : (simplePayloadContext ??= createContext(0));
+  const View = observer((PayloadVersionContext
     ? (props: any) => {
         // Subscribe to the revision: plain ViewModelSimple fields do not notify
         // observer, and unchanged props alone would not rerender this view.
@@ -339,53 +313,15 @@ export function withViewModel(
       ref,
     );
 
-    // @ts-expect-error it's ok
-    const cacheRef = useRef<{
-      value: typeof model;
-      subscribe: (onStoreChange: () => void) => () => void;
-      getSnapshot: () => boolean;
-    }>();
-
-    if (cacheRef.current) {
-      cacheRef.current.value = model;
-    } else {
-      cacheRef.current = {
-        value: model,
-        subscribe: (onStoreChange) =>
-          reaction(
-            () => {
-              const current = cacheRef.current.value;
-              return !isViewModel(current) || current.isMounted;
-            },
-            () => {
-              onStoreChange();
-            },
-          ),
-        getSnapshot: () => {
-          const current = cacheRef.current.value as AnyViewModel;
-          // Suspense hide unmounts via layout-effect cleanup, then retries
-          // the same fiber. Stay ready so we don't empty-commit → remount →
-          // suspend → loop.
-          return (
-            current.isMounted !== false ||
-            current.vm.state === 'unmounting' ||
-            current.vm.state === 'unmounted'
-          );
-        },
-      };
-    }
-
-    const getServerSnapshot =
+    const { subscribe, getSnapshot } = useMemo(() => getReadiness(model), [model]);
+    const isReadyToRender = useSyncExternalStore(
+      subscribe,
+      getSnapshot,
       typeof window !== 'undefined' &&
       viewModelsConfig.mode === 'ssr' &&
       typeof reactUse === 'function'
-        ? getServerReadySnapshot
-        : cacheRef.current.getSnapshot;
-
-    const isReadyToRender = useSyncExternalStore(
-      cacheRef.current.subscribe,
-      cacheRef.current.getSnapshot,
-      getServerSnapshot,
+        ? readySnapshot
+        : getSnapshot,
     );
 
     let child: RReactNode = null;
@@ -397,7 +333,7 @@ export function withViewModel(
         viewProps.ref = ref;
       }
       child = createElement(View, viewProps);
-      if (simpleView) {
+      if (PayloadVersionContext) {
         // The revision is internal; never add it to the user's view props.
         child = createElement(
           PayloadVersionContext.Provider,
@@ -409,7 +345,7 @@ export function withViewModel(
       child = createElement(Fallback);
     }
 
-    return createElement(ActiveViewModelProvider, cacheRef.current, child);
+    return createElement(ActiveViewModelProvider, { value: model }, child);
   };
 
   if (process.env.NODE_ENV !== 'production') {
