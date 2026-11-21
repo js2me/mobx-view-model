@@ -5,13 +5,21 @@ async function expectPage(page: Page, path: string, title: string) {
   await expect(page.getByRole('heading', { level: 1 })).toHaveText(title);
 }
 
-test('cart and committed page payload survive browser history and reload', async ({ page }) => {
+function collectBrowserErrors(page: Page, expected404URL?: string) {
   const errors: string[] = [];
   page.on('pageerror', error => errors.push(error.message));
   page.on('console', message => {
-    if (message.type() === 'error') errors.push(message.text());
+    if (message.type() !== 'error') return;
+    // Chromium also logs the HTTP status of the intentionally missing document.
+    if (message.location().url === expected404URL &&
+        message.text() === 'Failed to load resource: the server responded with a status of 404 (Not Found)') return;
+    errors.push(message.text());
   });
+  return errors;
+}
 
+test('cart and committed page payload survive browser history and reload', async ({ page }) => {
+  const errors = collectBrowserErrors(page);
   await page.goto('/');
   await expectPage(page, '/', 'Catalog');
   await page.getByRole('link', { name: 'Notebook' }).click();
@@ -42,9 +50,8 @@ test('cart and committed page payload survive browser history and reload', async
   expect(errors).toEqual([]);
 });
 
-test('server-rendered content survives hydration on a direct 404', async ({ page }) => {
-  const errors: string[] = [];
-  page.on('pageerror', error => errors.push(error.message));
+test('server-rendered content survives hydration on a direct 404', async ({ page, baseURL }) => {
+  const errors = collectBrowserErrors(page, new URL('/missing', baseURL).href);
   // Hold the client bundle until the assertion has seen the server HTML.
   let hydrate!: () => void;
   const gate = new Promise<void>(resolve => { hydrate = resolve; });
