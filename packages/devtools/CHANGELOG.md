@@ -1,5 +1,17 @@
 # mobx-view-model-devtools
 
+## 0.5.0
+
+### Minor Changes
+
+- dbc4b5d: Add MobX 7 peer dependency support. Core and devtools use the tree-shakeable annotation namespace from yummies 7.23.
+
+### Patch Changes
+
+- Updated dependencies [dbc4b5d]
+  - mobx-view-model@11.1.0
+  - mobx-view-model-react@11.1.0
+
 ## 0.4.1
 
 ### Patch Changes

@@ -1,4 +1,9 @@
-import { action, makeObservable, observable } from 'mobx';
+import { action, observable } from 'mobx';
+import * as annotation from 'yummies/mobx';
+import {
+  applyObservable,
+  type ObservableAnnotationsArray,
+} from 'yummies/mobx';
 
 export interface NotificationData {
   title: string;
@@ -8,12 +13,16 @@ export interface NotificationSink {
   push(data: { title: string; id?: string }): void;
 }
 
+const annotations: ObservableAnnotationsArray<DevtoolsNotifications> = [
+  [annotation.actionBound, 'push'],
+];
+
 export class DevtoolsNotifications implements NotificationSink {
   readonly items = observable.map<string, NotificationData>();
   private readonly timers = new Set<ReturnType<typeof setTimeout>>();
 
   constructor() {
-    makeObservable(this, { push: action.bound });
+    applyObservable(this, annotations);
   }
   push(data: { title: string; id?: string }) {
     const id = data.id ?? crypto.randomUUID();

@@ -8,8 +8,10 @@ import {
   ToggleOn,
   Xmark,
 } from '@gravity-ui/icons';
-import { action, computed, makeObservable } from 'mobx';
+import { action } from 'mobx';
 import type { MouseEvent } from 'react';
+import * as annotation from 'yummies/mobx';
+import { applyObservable, type ObservableAnnotationsArray } from 'yummies/mobx';
 import type { Maybe } from 'yummies/types';
 import type { DevtoolsInspector } from '../devtools-inspector';
 import { PropertyEditor } from '../editing/property-editor';
@@ -37,6 +39,29 @@ import { PropertyWatch } from './property-watch';
 import { PropertyWatchHistoryHeaderListItem } from './property-watch-history-header-item';
 import { PropertyWatchHistoryListItem } from './property-watch-history-item';
 import { VMListItem } from './vm-list-item';
+
+const annotations: ObservableAnnotationsArray<PropertyListItem> = [
+  [
+    annotation.computed,
+    'order',
+    'property',
+    'path',
+    'collectionEntryIndex',
+    'type',
+    'searchData',
+    'propertyClosingTag',
+    'dataType',
+    'stringifiedDataType',
+    'instanceClassName',
+    'nestedValueType',
+    'mapEntryKey',
+    'isInaccessibleDisplay',
+    'extraContent',
+    'isWatching',
+    'watchHistory',
+  ],
+  [action, 'handleWatchClick', 'clearWatchHistory'],
+];
 
 export class PropertyListItem extends ListItem<any> {
   editor = new PropertyEditor(this);
@@ -448,25 +473,7 @@ export class PropertyListItem extends ListItem<any> {
       undefined,
     );
 
-    computed(this, 'order');
-    computed(this, 'property');
-    computed(this, 'path');
-    computed(this, 'collectionEntryIndex');
-    computed(this, 'type');
-    computed(this, 'searchData');
-    computed(this, 'propertyClosingTag');
-    computed(this, 'dataType');
-    computed(this, 'stringifiedDataType');
-    computed(this, 'instanceClassName');
-    computed(this, 'nestedValueType');
-    computed(this, 'mapEntryKey');
-    computed(this, 'isInaccessibleDisplay');
-    computed(this, 'extraContent');
-    computed(this, 'isWatching');
-    computed(this, 'watchHistory');
-    action(this, 'handleWatchClick');
-    action(this, 'clearWatchHistory');
-    makeObservable(this);
+    applyObservable(this, annotations);
   }
 
   static createKey(

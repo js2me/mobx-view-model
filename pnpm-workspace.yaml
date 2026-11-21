@@ -14,7 +14,9 @@ allowBuilds:
   esbuild: true
   lefthook: true
   sharp: false
+minimumReleaseAge: 1440
 minimumReleaseAgeExclude:
+  - yummies@7.23.2
   - mobx-view-model-react@10.2.2
   - mobx-view-model@10.2.2
   - docusite@0.1.0 || 0.1.1 || 0.1.2

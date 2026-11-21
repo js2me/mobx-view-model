@@ -1,10 +1,19 @@
-import { computed, makeObservable, untracked } from 'mobx';
+import { untracked } from 'mobx';
+import * as annotation from 'yummies/mobx';
+import {
+  applyObservable,
+  type ObservableAnnotationsArray,
+} from 'yummies/mobx';
 import type { AnyObject } from 'yummies/types';
 import type { DevtoolsInspector } from '../devtools-inspector';
 import { sortPropertyKeys } from '../inspection/sort-property-keys';
 import type { AnyVM } from '../types';
 import { ListItem, type ListItemOperation } from './list-item';
 import { PropertyListItem } from './property-list-item';
+
+const annotations: ObservableAnnotationsArray<ExtraListItem> = [
+  [annotation.computedStruct, 'propertyListItems'],
+];
 
 export class ExtraListItem extends ListItem<AnyVM> {
   private get propertyListItems(): PropertyListItem[] {
@@ -52,8 +61,7 @@ export class ExtraListItem extends ListItem<AnyVM> {
       name: displayName.toLowerCase().trim(),
     };
 
-    computed.struct(this, 'propertyListItems');
-    makeObservable(this);
+    applyObservable(this, annotations);
 
     untracked(() => {
       if (!this.inspector.expansion.has(this.key)) {

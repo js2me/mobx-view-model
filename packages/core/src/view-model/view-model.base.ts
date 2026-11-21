@@ -1,18 +1,12 @@
 import {
   action,
-  comparer,
-  computed,
-  makeObservable,
-  observable,
   runInAction,
 } from 'mobx';
 import { startViewTransitionSafety } from 'yummies/html';
-import type { ObservableAnnotationsArray } from 'yummies/mobx';
+import * as annotation from 'yummies/mobx';
+import { applyObservable as applyObservableLib, type ObservableAnnotationsArray, observableVariants } from 'yummies/mobx';
 import type { AnyObject, EmptyObject, Maybe, MaybePromise } from 'yummies/types';
-import {
-  applyObservable,
-  mergeVMConfigs
-} from '../config/index.js';
+import { applyObservable, mergeVMConfigs } from '../config/index.js';
 import type { ViewModel } from './view-model.js';
 import type { ViewModelStore } from './view-model.store.js';
 import type {
@@ -25,7 +19,7 @@ import type {
 import { _internals } from '../internals.js';
 
 const baseAnnotations: ObservableAnnotationsArray = [
-  [computed, 'isMounted', 'isHydrated', 'parentViewModel'],
+  [annotation.computed, 'isMounted', 'isHydrated', 'parentViewModel'],
   [
     action,
     'willMount',
@@ -62,17 +56,23 @@ export class ViewModelBase<
     this.id = params.id;
     const config = mergeVMConfigs(params.vmConfig);
 
-    this.#vm = makeObservable({
+    const vm: ViewModelFullInfo<Payload, ParentViewModel, ComponentProps> = {
       params,
       config,
       data: params.data,
       state: 'init',
       payloadComparator: _internals.comparer[config.comparePayload as 'strict'] || config.comparePayload || undefined,
       payload: params.payload,
-    }, {
-      state: observable.ref,
-      payload: config.payloadObservable && observable[config.payloadObservable],
-    });
+    };
+    const payloadAnnotation =
+      config.payloadObservable === false
+        ? false
+        : observableVariants[config.payloadObservable];
+    applyObservableLib(vm, [
+      [annotation.observableRef, 'state'],
+      [payloadAnnotation, 'payload'],
+    ]);
+    this.#vm = vm;
     this.vm = this.#vm;
     this.props = params.props ?? ({} as ComponentProps);
     this.abortController = new AbortController();
@@ -83,17 +83,14 @@ export class ViewModelBase<
     if (this.#vm.config.payloadComputed) {
       if (this.#vm.config.payloadComputed === 'struct') {
         annotations.push([
-          computed({ equals: comparer.structural }),
+          annotation.computedStruct,
           'payload',
         ]);
       } else {
         annotations.push([
-          computed({
-            equals:
-              this.#vm.config.payloadComputed === true
-                ? undefined
-                : this.#vm.config.payloadComputed,
-          }),
+          typeof this.#vm.config.payloadComputed === 'function'
+            ? annotation.computedEquals(this.#vm.config.payloadComputed)
+            : annotation.computed,
           'payload',
         ]);
       }

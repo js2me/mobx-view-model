@@ -1,6 +1,6 @@
 {
   "name": "mobx-view-model",
-  "version": "11.0.1",
+  "version": "11.1.0",
   "scripts": {
     "clean": "rimraf dist",
     "ts:check": "tsc --noEmit --project tsconfig.check.json",
@@ -44,10 +44,10 @@
     "directory": "dist"
   },
   "dependencies": {
-    "yummies": "^7.20.1"
+    "yummies": "^7.23.2"
   },
   "peerDependencies": {
-    "mobx": "^6.12.4"
+    "mobx": "^6.12.4 || ^7.0.0"
   },
   "devDependencies": {
     "jsdom": "^26.1.0"
