@@ -183,14 +183,13 @@ export function useCreateViewModel(
         ctx: rawCfg?.ctx ?? emptyObject,
         props: props ?? rawCfg?.props,
       };
-      const instance = viewModels
-        ? isClient
+      if (viewModels) {
+        return isClient
           ? stageViewModel(viewModels, config, cache)
-          : viewModels.define(config)
-        : (config.factory?.(config) ?? viewModelsConfig.factory(config));
-      if (!viewModels) {
-        instance.init?.({ ...config, viewModels: undefined } as any);
+          : viewModels.define(config);
       }
+      const instance = config.factory?.(config) ?? viewModelsConfig.factory(config);
+      instance.init?.({ ...config, viewModels: undefined } as any);
       return instance;
     });
     const bindAfterCommit =
@@ -233,9 +232,7 @@ export function useCreateViewModel(
           state.promise = mountResult;
         }
 
-        const shouldHydrate =
-          isViewModel(model) && model.vm.state === 'mounted' && isSSR;
-        if (shouldHydrate) {
+        if (isSSR && isViewModel(model) && model.vm.state === 'mounted') {
           runInAction(() => {
             model.vm.state = 'hydrated';
           });

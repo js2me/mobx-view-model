@@ -22,7 +22,7 @@ type StagedStore = {
 };
 
 type StagedRegistryEntry = {
-  store: ViewModelStore;
+  entries: StagedStore['entries'];
   id: string;
   vm: VmInstance;
 };
@@ -34,11 +34,8 @@ const stagedStores = new WeakMap<ViewModelStore, StagedStore>();
 /** Releases a VM whose React fiber was discarded before it could commit. */
 const stagedVmRegistry: FinalizationRegistry<StagedRegistryEntry> | null =
   typeof FinalizationRegistry === 'function'
-    ? new FinalizationRegistry<StagedRegistryEntry>(({ store, id, vm }) => {
-        const stagedStore = stagedStores.get(store);
-        if (stagedStore?.entries.get(id)?.vm === vm) {
-          stagedStore.entries.delete(id);
-        }
+    ? new FinalizationRegistry<StagedRegistryEntry>(({ entries, id, vm }) => {
+        if (entries.get(id)?.vm === vm) entries.delete(id);
       })
     : null;
 
@@ -46,8 +43,8 @@ const stagedVmRegistry: FinalizationRegistry<StagedRegistryEntry> | null =
 export const getRenderPhaseViewModel = <T extends VmInstance>(
   store: ViewModelStore,
   lookup: unknown,
+  entries = stagedStores.get(store)?.entries,
 ): T | null => {
-  const entries = stagedStores.get(store)?.entries;
   let vm: VmInstance | undefined;
   if (typeof lookup === 'string') {
     vm = entries?.get(lookup)?.vm;
@@ -70,7 +67,7 @@ const createRenderPhaseStore = (
 ): ViewModelStore => {
   const methods = {
     get: <T extends VmInstance>(lookup: unknown): T | null =>
-      getRenderPhaseViewModel<T>(store, lookup),
+      getRenderPhaseViewModel<T>(store, lookup, entries),
     has: (lookup: unknown): boolean => methods.get(lookup) != null,
     getIds: (lookup: unknown): string[] => {
       const ids = store.getIds(lookup as any);
@@ -129,7 +126,7 @@ export const stageViewModel = (
     viewModels: stagedStore.renderStore,
   }) as VmInstance;
   stagedStore.entries.set(config.id, { vm, config, epoch: ++stagedStore.epoch });
-  stagedVmRegistry?.register(owner, { store, id: config.id, vm }, vm);
+  stagedVmRegistry?.register(owner, { entries: stagedStore.entries, id: config.id, vm }, vm);
   return vm;
 };
 
