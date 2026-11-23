@@ -205,7 +205,7 @@ export function useCreateViewModel(
         });
 
     let firstClientCommit = isClient;
-    if (isClient && !viewModels) registerUnconfirmed(model);
+    if (isClient && !viewModels) registerUnconfirmed(model, cache);
 
     state = cache.current = {
       vm: model,
@@ -225,7 +225,7 @@ export function useCreateViewModel(
           });
         }
 
-        acquireVm(model, firstClientCommit && !viewModels);
+        acquireVm(model, viewModels, firstClientCommit && !viewModels ? cache : undefined);
         firstClientCommit = false;
         const mountResult = runInAction(() => mountLifecycle(model));
         if (mountResult) {
@@ -238,7 +238,7 @@ export function useCreateViewModel(
           });
         }
 
-        return () => releaseVm(model, viewModels);
+        return () => releaseVm(model);
       },
     };
   }

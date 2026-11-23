@@ -7,53 +7,42 @@ import { runInAction } from 'mobx';
 
 type VmInstance = AnyViewModel | AnyViewModelSimple;
 
-// Client VMs without a store cannot use staging.
-// setTimeout(0), not queueMicrotask: React 19 can yield to microtasks
-// between fibers in one render pass. Schedule cleanup on the first acquire,
-// never from render. Instances are deduplicated across shared owners.
+type Ownership = { count: number; store: ViewModelStore | null };
+const owners = new WeakMap<VmInstance, Ownership>();
 
-const unconfirmed = new Set<VmInstance>();
-let orphanCleanupScheduled = false;
-const committedOwners = new WeakMap<VmInstance, number>();
-
-/** Only committed fibers own a VM; confirm a new no-store VM on first acquire. */
-export const acquireVm = (vm: VmInstance, confirmCreation?: boolean): void => {
-  if (confirmCreation) {
-    unconfirmed.delete(vm);
-    if (unconfirmed.size && !orphanCleanupScheduled) {
-      orphanCleanupScheduled = true;
-      setTimeout(() => {
-        orphanCleanupScheduled = false;
-        for (const orphan of unconfirmed) {
-          unconfirmed.delete(orphan);
-          runInAction(() => orphan.unmount?.());
-        }
-      });
-    }
-  }
-  committedOwners.set(vm, (committedOwners.get(vm) ?? 0) + 1);
-};
-
-export const releaseVm = (
-  vm: VmInstance,
-  store: ViewModelStore | null,
-): void => {
-  const owners = committedOwners.get(vm);
-  if (!owners) return;
-  if (owners > 1) {
-    committedOwners.set(vm, owners - 1);
-    return;
-  }
-  committedOwners.delete(vm);
+export function releaseVm(vm: VmInstance): void {
+  const ownership = owners.get(vm);
+  if (!ownership || --ownership.count > 0) return;
+  owners.delete(vm);
+  const { store } = ownership;
   // The store may already have replaced this ID with a different instance.
   runInAction(() => {
     if (store && (vm.id == null || store.get(vm.id) === vm)) store.unmount(vm);
     else vm.unmount?.();
   });
-};
+}
 
-/** Register a VM until its commit effect confirms it via {@link acquireVm}. */
-export const registerUnconfirmed = (vm: VmInstance): VmInstance => {
-  unconfirmed.add(vm);
-  return vm;
-};
+// A render may stay hidden across arbitrary commits. Only collection of its
+// hook ref proves that an uncommitted owner can no longer mount.
+const pendingOwners = typeof FinalizationRegistry === 'function'
+  ? new FinalizationRegistry<VmInstance>(releaseVm)
+  : undefined;
+
+export function acquireVm(vm: VmInstance, store: ViewModelStore | null, pendingOwner?: object): void {
+  // Transfer this render's existing ownership to its commit effect.
+  if (pendingOwner && pendingOwners?.unregister(pendingOwner)) return;
+  const ownership = owners.get(vm);
+  if (ownership) {
+    ownership.count++;
+    if (store) ownership.store = store;
+  } else {
+    owners.set(vm, { count: 1, store });
+  }
+}
+
+export function registerUnconfirmed(vm: VmInstance, owner: object): void {
+  if (pendingOwners) {
+    acquireVm(vm, null);
+    pendingOwners.register(owner, vm, owner);
+  }
+}

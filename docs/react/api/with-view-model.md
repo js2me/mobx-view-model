@@ -262,10 +262,9 @@ You can still use `loadable()` from `react-simple-loadable` (or similar) and reg
 
 ### Concurrent Mode
 
-In concurrent mode, React may discard a render without committing it, which means cleanup effects never run. Since `define()` / `mount()` run during render (required for SSR) and [`unmount`](/api/view-model-store/interface#unmount-instance) runs only in an effect, an orphaned instance can occur for **both** store-backed and no-store paths when a concurrent render is discarded.
+On the client, a hidden or suspended render can keep its VM while other components commit. Store-backed VMs are registered at commit. Without a store, each pending render holds a reference to its VM. When React commits that render, its cleanup effect takes over the reference and releases it on unmount.
 
-**Recommendation:** Prefer patterns that avoid discarded mounts when possible. The no-store path is mainly for simple client-side cases where SSR is not needed; a store alone does not give full concurrent-mode safety.
-
+For a render discarded before commit, `FinalizationRegistry` releases the reference when the hook owner is garbage-collected. The timing is nondeterministic. In environments without this API, abandoned renders have no automatic cleanup callback. Start subscriptions that require deterministic teardown in `mount()` and dispose them in `unmount()`.
 
 ## Generic types for your wrapped `ViewModel` in this HOC   
 
