@@ -14,7 +14,7 @@ import {
   createElement,
   forwardRef,
   useContext,
-  useMemo,
+  useRef,
   useSyncExternalStore,
 } from 'react';
 import type {
@@ -196,17 +196,11 @@ export interface VMComponent<
 let simplePayloadContext: React.Context<number> | undefined;
 const ReactMemoSymbol = Symbol.for('react.memo');
 const readySnapshot = () => true;
-const alwaysReady = { subscribe: () => _internals.noop, getSnapshot: readySnapshot };
-
-function getReadiness(model: AnyViewModel | AnyViewModelSimple) {
-  if (!isViewModel(model)) return alwaysReady;
-  return {
-    subscribe: (notify: () => void) => reaction(() => model.isMounted, notify),
-    // Suspense can hide and retry this fiber after layout-effect cleanup.
-    getSnapshot: () => model.isMounted !== false ||
-      model.vm.state === 'unmounting' || model.vm.state === 'unmounted',
-  };
-}
+type Readiness = {
+  subscribe: (notify: () => void) => () => void;
+  getSnapshot: () => boolean;
+};
+const alwaysReady: Readiness = { subscribe: () => _internals.noop, getSnapshot: readySnapshot };
 
 /**
  * A Higher-Order Component that connects React components to their ViewModels, providing seamless MobX integration.
@@ -313,7 +307,17 @@ export function withViewModel(
       ref,
     );
 
-    const { subscribe, getSnapshot } = useMemo(() => getReadiness(model), [model]);
+    // useCreateViewModel keeps the same instance for this wrapper's lifetime.
+    const readiness = useRef<Readiness | null>(null);
+    if (readiness.current === null) {
+      readiness.current = isViewModel(model) ? {
+        subscribe: notify => reaction(() => model.isMounted, notify),
+        // Suspense can hide and retry this fiber after layout-effect cleanup.
+        getSnapshot: () => model.isMounted !== false ||
+          model.vm.state === 'unmounting' || model.vm.state === 'unmounted',
+      } : alwaysReady;
+    }
+    const { subscribe, getSnapshot } = readiness.current;
     const isReadyToRender = useSyncExternalStore(
       subscribe,
       getSnapshot,
