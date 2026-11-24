@@ -924,6 +924,24 @@ describe('withViewModel', () => {
     expect(useHookSpy).toHaveBeenCalledTimes(2);
   });
 
+  test('reactHook sees the current provider while the VM retains its original store', () => {
+    class VM extends ViewModelBaseMock {}
+    const first = new ViewModelStoreBaseMock();
+    const second = new ViewModelStoreBaseMock();
+    const reactHook = vi.fn();
+    const Component = withViewModel(VM, () => null, { id: 'retained', reactHook });
+    const tree = (store: ViewModelStore) => <ViewModelsProvider value={store}><Component /></ViewModelsProvider>;
+    const view = render(tree(first));
+    const model = first.get('retained');
+    expect(model).toBeInstanceOf(VM);
+    view.rerender(tree(second));
+    expect(reactHook.mock.lastCall?.[2]).toBe(second);
+    expect(first.get('retained')).toBe(model);
+    expect(second.get('retained')).toBeNull();
+    view.unmount();
+    expect(first.get('retained')).toBeNull();
+  });
+
   describe('payload manipulations', () => {
     test('View should be updated when payload is changed (no touching payload in View)', async () => {
       class VM extends ViewModelBaseMock<{ counter: number }> {}
@@ -1616,6 +1634,38 @@ describe('withViewModel', () => {
   });
 
   describe('ViewModelSimple', () => {
+    test('keeps payload updates local to each nested simple view', () => {
+      class Label implements ViewModelSimple<{ text: string }> {
+        text = '';
+        setPayload({ text }: { text: string }) { this.text = text; }
+      }
+      const renderInner = vi.fn();
+      const Inner = withViewModel(Label, ({ model }) => {
+        renderInner();
+        return <span>{model.text}</span>;
+      });
+      const innerPayload = { text: 'inner' };
+      const Outer = withViewModel(Label, ({ model }) => (
+        <><span>{model.text}</span><Inner payload={innerPayload} /></>
+      ));
+
+      const view = render(<Outer payload={{ text: 'first' }} />);
+      const initialRenders = renderInner.mock.calls.length;
+      view.rerender(<Outer payload={{ text: 'second' }} />);
+      expect(view.getByText('second')).toBeDefined();
+      expect(view.getByText('inner')).toBeDefined();
+      expect(renderInner).toHaveBeenCalledTimes(initialRenders);
+    });
+
+    test('renders a simple model with its own isMounted field', () => {
+      class VM {
+        isMounted = false;
+      }
+      const Component = withViewModel(VM, ({ model }) => <div>{String(model.isMounted)}</div>);
+      render(<Component />);
+      expect(screen.getByText('false')).toBeDefined();
+    });
+
     test('renders (1 overload)', async () => {
       class VM implements ViewModelSimple {
         id: string = '1234';

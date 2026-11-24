@@ -74,6 +74,9 @@ jobs:
       - name: Build
         run: pnpm build
 
+      - name: React SSR browser navigation
+        run: pnpm --filter mobx-view-model-example-ssr-expressjs test:browser
+
       - name: DevTools browser regressions
         run: |
           pnpm --filter mobx-view-model-devtools exec playwright test --workers=2

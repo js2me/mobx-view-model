@@ -10,7 +10,8 @@
     "build": "pnpm build:styles && pnpm build:client && tsc --noEmit",
     "check": "tsc --noEmit --project tsconfig.check.json",
     "start": "NODE_ENV=production pnpm build:styles && pnpm build:client && tsx src/server.tsx",
-    "test": "vitest run --config vitest.config.ts"
+    "test": "vitest run --config vitest.config.ts",
+    "test:browser": "playwright test --config e2e/playwright.config.ts"
   },
   "dependencies": {
     "express": "^4.21.2",
@@ -23,6 +24,7 @@
     "yummies": "^7.20.1"
   },
   "devDependencies": {
+    "@playwright/test": "1.63.0",
     "@tailwindcss/cli": "^4.1.14",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/react": "^16.3.2",
