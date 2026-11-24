@@ -3,6 +3,7 @@ import type {
   AnyViewModelSimple,
   ViewModelCreateConfig,
   ViewModelSimple,
+  ViewModelStore,
   ViewModelsConfig,
 } from 'mobx-view-model';
 import {
@@ -22,6 +23,7 @@ import {
   useSyncExternalStore,
 } from 'react';
 import type { AnyObject, Class, IsPartial, Maybe } from 'yummies/types';
+import { readySnapshot, subscribeNoop } from '../lib/ready-snapshot.js';
 import { reactUse } from '../lib/react-use.js';
 import {
   ActiveViewModelContext,
@@ -35,11 +37,10 @@ import {
 import { commitStagedViewModel, stageViewModel } from './staged-view-model.js';
 
 const EMPTY_ARR: any[] = [];
-const { emptyObject, noop } = _internals;
+const { emptyObject } = _internals;
 const isProd = process.env.NODE_ENV === 'production';
 
-const subscribeNoop = () => noop;
-const getClientHydrated = () => true;
+const incrementRevision = (revision: number) => revision + 1;
 const getServerHydrated = () => false;
 const useCommitEffect =
   typeof window === 'undefined' ? useEffect : useLayoutEffect;
@@ -57,6 +58,10 @@ type Cache = {
   promise?: PromiseLike<void>;
   isSSR: boolean;
   mount: () => () => void;
+  readiness?: {
+    subscribe: (notify: () => void) => () => void;
+    getSnapshot: () => boolean;
+  };
 };
 
 const bindModel = (
@@ -150,7 +155,17 @@ export function useCreateViewModel(
   rawCfg?: any,
   props?: any,
 ) {
-  const viewModels = useContext(ViewModelsContext);
+  return useViewModelState(useContext(ViewModelsContext), VM, payload, rawCfg, props).vm;
+}
+
+// The HOC also needs the current store for its custom React hook.
+export function useViewModelState(
+  viewModels: ViewModelStore | null,
+  VM: Class<any>,
+  payload: any = emptyObject,
+  rawCfg?: any,
+  props?: any,
+) {
   const parentViewModel = useContext(ActiveViewModelContext);
   const cache = useRef<Cache>(null!);
   let state = cache.current;
@@ -165,10 +180,9 @@ export function useCreateViewModel(
     const explicitId = rawCfg?.id as string | null | undefined;
     const vmId = explicitId ?? (isProd ? reactId : `${reactId}:${VM.name}`);
     const existing = viewModels?.get(vmId) as VmInstance | null;
-    const vmResource = viewModels?.resource ?? viewModelsConfig.resource;
     const data = existing
       ? (existing as { vm?: { data?: any } }).vm?.data
-      : vmResource?.read(vmId);
+      : (viewModels?.resource ?? viewModelsConfig.resource)?.read(vmId);
 
     let config!: ViewModelCreateConfig<any>;
     const model: VmInstance = runInAction(() => {
@@ -192,21 +206,19 @@ export function useCreateViewModel(
       instance.init?.({ ...config, viewModels: undefined } as any);
       return instance;
     });
-    const bindAfterCommit =
-      isClient && !!viewModels && viewModels.get(config.id) === model;
-    if (isClient && !bindAfterCommit) {
-      bindModel(model, payload, parentViewModel);
+    const bindAfterCommit = isClient && viewModels?.get(config.id) === model;
+    let lifecycleResult;
+    if (isClient) {
+      if (!bindAfterCommit) bindModel(model, payload, parentViewModel);
+      if (!viewModels) registerUnconfirmed(model, cache);
+    } else {
+      lifecycleResult = runInAction(() => {
+        bindModel(model, payload, parentViewModel);
+        return mountLifecycle(model);
+      });
     }
-    const lifecycleResult = isClient
-      ? undefined
-      : runInAction(() => {
-          bindModel(model, payload, parentViewModel);
-          return mountLifecycle(model);
-        });
 
     let firstClientCommit = isClient;
-    if (isClient && !viewModels) registerUnconfirmed(model, cache);
-
     state = cache.current = {
       vm: model,
       appliedPayload: payload,
@@ -272,7 +284,7 @@ export function useCreateViewModel(
         (viewModelPayloadVersions.get(model) ?? 0) + 1,
       );
       state.skipForcedCommit = true;
-      forceRender((revision) => revision + 1);
+      forceRender(incrementRevision);
     }
   }, [payload, revision]);
 
@@ -283,7 +295,7 @@ export function useCreateViewModel(
     const pending = state.promise;
     const isHydrated = useSyncExternalStore(
       subscribeNoop,
-      getClientHydrated,
+      readySnapshot,
       getServerHydrated,
     );
     if (reactUse && pending && (!_internals.isClient || !isHydrated)) {
@@ -291,5 +303,5 @@ export function useCreateViewModel(
     }
   }
 
-  return model;
+  return state;
 }

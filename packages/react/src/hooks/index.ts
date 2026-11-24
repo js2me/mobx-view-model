@@ -1,2 +1,2 @@
-export * from './use-create-view-model.js';
+export { useCreateViewModel, viewModelPayloadVersions, type UseCreateViewModelConfig } from './use-create-view-model.js';
 export * from './use-view-model.js';

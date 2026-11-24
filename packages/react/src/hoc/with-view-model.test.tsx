@@ -924,6 +924,24 @@ describe('withViewModel', () => {
     expect(useHookSpy).toHaveBeenCalledTimes(2);
   });
 
+  test('reactHook sees the current provider while the VM retains its original store', () => {
+    class VM extends ViewModelBaseMock {}
+    const first = new ViewModelStoreBaseMock();
+    const second = new ViewModelStoreBaseMock();
+    const reactHook = vi.fn();
+    const Component = withViewModel(VM, () => null, { id: 'retained', reactHook });
+    const tree = (store: ViewModelStore) => <ViewModelsProvider value={store}><Component /></ViewModelsProvider>;
+    const view = render(tree(first));
+    const model = first.get('retained');
+    expect(model).toBeInstanceOf(VM);
+    view.rerender(tree(second));
+    expect(reactHook.mock.lastCall?.[2]).toBe(second);
+    expect(first.get('retained')).toBe(model);
+    expect(second.get('retained')).toBeNull();
+    view.unmount();
+    expect(first.get('retained')).toBeNull();
+  });
+
   describe('payload manipulations', () => {
     test('View should be updated when payload is changed (no touching payload in View)', async () => {
       class VM extends ViewModelBaseMock<{ counter: number }> {}

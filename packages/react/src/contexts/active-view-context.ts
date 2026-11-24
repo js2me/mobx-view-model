@@ -1,16 +1,7 @@
-import { _internals, type AnyViewModel, type AnyViewModelSimple } from 'mobx-view-model';
-import { createContext } from 'react';
+import type { AnyViewModel, AnyViewModelSimple } from 'mobx-view-model';
+import { sharedContext } from './shared-context.js';
 
-const symbol = Symbol.for(`${_internals.key}/react/avm-ctx`);
-
-type Context = ReturnType<typeof createContext<AnyViewModel | AnyViewModelSimple>>
-
-declare const globalThis: { [symbol]?: Context }
-
-globalThis[symbol] ??= createContext(null as any);
-
-// will contains the view model
-export const ActiveViewModelContext = globalThis[symbol];
+export const ActiveViewModelContext = sharedContext<AnyViewModel | AnyViewModelSimple>('avm-ctx');
 
 if (process.env.NODE_ENV !== 'production') {
   ActiveViewModelContext.displayName = 'ActiveViewModel';

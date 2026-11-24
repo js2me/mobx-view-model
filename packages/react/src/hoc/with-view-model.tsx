@@ -14,7 +14,6 @@ import {
   createElement,
   forwardRef,
   useContext,
-  useRef,
   useSyncExternalStore,
 } from 'react';
 import type {
@@ -27,13 +26,15 @@ import type {
   IsUnknown,
   Maybe
 } from 'yummies/types';
+import { viewModelError } from '../lib/view-model-error.js';
 import { ActiveViewModelProvider } from '../components/index.js';
 import { ViewModelsContext } from '../contexts/index.js';
 import {
   type UseCreateViewModelConfig,
-  useCreateViewModel,
-} from '../hooks/index.js';
-import { viewModelPayloadVersions } from '../hooks/use-create-view-model.js';
+  useViewModelState,
+  viewModelPayloadVersions,
+} from '../hooks/use-create-view-model.js';
+import { readySnapshot, subscribeNoop } from '../lib/ready-snapshot.js';
 import { reactUse } from '../lib/react-use.js';
 import {
   RComponentClass,
@@ -195,12 +196,7 @@ export interface VMComponent<
 
 let simplePayloadContext: React.Context<number> | undefined;
 const ReactMemoSymbol = Symbol.for('react.memo');
-const readySnapshot = () => true;
-type Readiness = {
-  subscribe: (notify: () => void) => () => void;
-  getSnapshot: () => boolean;
-};
-const alwaysReady: Readiness = { subscribe: () => _internals.noop, getSnapshot: readySnapshot };
+const alwaysReady = { subscribe: subscribeNoop, getSnapshot: readySnapshot };
 
 /**
  * A Higher-Order Component that connects React components to their ViewModels, providing seamless MobX integration.
@@ -264,13 +260,9 @@ export function withViewModel(
     _internals.noop;
 
   if ((renderFn as any)?.$$typeof === ReactMemoSymbol) {
-    if (process.env.NODE_ENV !== 'production') {
-      const nestedObserverError = 
-        '[mobx-view-model-react] You are trying to wrap a View component in `observer` or `React.memo` inside `withViewModel`. `withViewModel` already applies `observer` automatically, so do not wrap the View component manually.\n' +
-  'More info: https://js2me.github.io/mobx-view-model/errors/4';
-      throw new Error(`Error #4: ${nestedObserverError}`);
-    }
-    throw new Error('Error #4: https://js2me.github.io/mobx-view-model/errors/4');
+    throw viewModelError(4, process.env.NODE_ENV !== 'production'
+      ? '[mobx-view-model-react] You are trying to wrap a View component in `observer` or `React.memo` inside `withViewModel`. `withViewModel` already applies `observer` automatically, so do not wrap the View component manually.'
+      : undefined);
   }
 
   const PayloadVersionContext = isViewModelClass(VM)
@@ -293,12 +285,8 @@ export function withViewModel(
     const viewModels = useContext(ViewModelsContext);
     const payload = getPayload(allProps);
 
-    const model = useCreateViewModel(
-      VM,
-      payload,
-      config,
-      allProps,
-    ) as AnyViewModel | AnyViewModelSimple;
+    const state = useViewModelState(viewModels, VM, payload, config, allProps);
+    const model = state.vm;
 
     (config.reactHook ?? viewModelsConfig.reactHook)?.(
       allProps,
@@ -307,17 +295,14 @@ export function withViewModel(
       ref,
     );
 
-    // useCreateViewModel keeps the same instance for this wrapper's lifetime.
-    const readiness = useRef<Readiness | null>(null);
-    if (readiness.current === null) {
-      readiness.current = isViewModel(model) ? {
+    const { subscribe, getSnapshot } = state.readiness ??= isViewModel(model)
+      ? {
         subscribe: notify => reaction(() => model.isMounted, notify),
         // Suspense can hide and retry this fiber after layout-effect cleanup.
         getSnapshot: () => model.isMounted !== false ||
           model.vm.state === 'unmounting' || model.vm.state === 'unmounted',
-      } : alwaysReady;
-    }
-    const { subscribe, getSnapshot } = readiness.current;
+      }
+      : alwaysReady;
     const isReadyToRender = useSyncExternalStore(
       subscribe,
       getSnapshot,

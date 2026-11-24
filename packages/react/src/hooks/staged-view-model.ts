@@ -66,6 +66,7 @@ const createRenderPhaseStore = (
   entries: StagedStore['entries'],
 ): ViewModelStore => {
   const methods = {
+    __proto__: null,
     get: <T extends VmInstance>(lookup: unknown): T | null =>
       getRenderPhaseViewModel<T>(store, lookup, entries),
     has: (lookup: unknown): boolean => methods.get(lookup) != null,
@@ -91,9 +92,7 @@ const createRenderPhaseStore = (
   };
   return new Proxy(store, {
     get(target, property, receiver) {
-      return Object.hasOwn(methods, property)
-        ? methods[property as keyof typeof methods]
-        : Reflect.get(target, property, receiver);
+      return methods[property as keyof typeof methods] ?? Reflect.get(target, property, receiver);
     },
   });
 };
@@ -125,7 +124,7 @@ export const stageViewModel = (
     ...config,
     viewModels: stagedStore.renderStore,
   }) as VmInstance;
-  stagedStore.entries.set(config.id, { vm, config, epoch: ++stagedStore.epoch });
+  stagedStore.entries.set(config.id, { vm, config, epoch: stagedStore.epoch });
   stagedVmRegistry?.register(owner, { entries: stagedStore.entries, id: config.id, vm }, vm);
   return vm;
 };
@@ -149,7 +148,8 @@ export const commitStagedViewModel = (
   }
   if (stagedStore?.entries.size && !stagedStore.sweepScheduled) {
     stagedStore.sweepScheduled = true;
-    const epochAtCommit = stagedStore.epoch;
+    // Entries staged after this commit belong to the next sweep.
+    const epochAtCommit = stagedStore.epoch++;
     setTimeout(() => {
       stagedStore.sweepScheduled = false;
       for (const [id, entry] of stagedStore.entries) {
